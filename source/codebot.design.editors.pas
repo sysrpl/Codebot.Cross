@@ -1,7 +1,7 @@
 (********************************************************)
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
-(*  http://www.codebot.org                              *)
+(*  http://cross.codebot.org                            *)
 (*  Modified September 2013                             *)
 (*                                                      *)
 (********************************************************)
