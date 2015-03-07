@@ -24,15 +24,15 @@ uses
 
 type
   TImageMode = (
-  	{ Center the image in the client area and apply auto sizing if enabled }
-  	imCenter,
-  	{ Center the image in the client area and shrink if it cannot fit }
+    { Center the image in the client area and apply auto sizing if enabled }
+    imCenter,
+    { Center the image in the client area and shrink if it cannot fit }
     imFit,
-  	{ Fill the client area without distortion }
+    { Fill the client area without distortion }
     imFill,
-  	{ Stretch the image to cover the entire client area }
+    { Stretch the image to cover the entire client area }
     imStretch,
-  	{ Repeat the image across the client area }
+    { Repeat the image across the client area }
     imTile);
 
 { TRenderImage }
@@ -53,15 +53,15 @@ type
     function GetOpacity: Byte;
     procedure SetOpacity(Value: Byte);
     procedure SetSaturation(Value: Float);
-	protected
+  protected
     procedure SetColor(Value: TColor); override;
     procedure GetPreferredSize(var PreferredWidth, PreferredHeight: integer;
-			Raw: Boolean = False; WithThemeSpace: Boolean = True); override;
+      Raw: Boolean = False; WithThemeSpace: Boolean = True); override;
     procedure Render; override;
-	public
+  public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-	published
+  published
     property Image: TSurfaceBitmap read FImage write SetImage;
     property Angle: Float read FAngle write SetAngle;
     property Saturation: Float read FSaturation write SetSaturation;
@@ -244,46 +244,46 @@ begin
   if csDesigning in ComponentState then
   begin
     Pen := NewPen(clBlack);
-		Pen.LinePattern := pnDash;
+    Pen.LinePattern := pnDash;
   end;
   if FImage.Empty then
   begin
     if csDesigning in ComponentState then
-			Surface.StrokeRect(Pen, ClientRect);
-  	Exit;
+      Surface.StrokeRect(Pen, ClientRect);
+    Exit;
   end;
   if FColorized  or (FSaturation < 1) then
   begin
-  	if FCopy = nil then
+    if FCopy = nil then
     begin
       FCopy := TSurfaceBitmap.Create;
       FCopy.Assign(FImage);
       if FColorized then
-	      FCopy.Colorize(Color)
-			else
-    		FCopy.Desaturate(1 - FSaturation);
-		end;
-		Bitmap := FCopy;
+        FCopy.Colorize(Color)
+      else
+        FCopy.Desaturate(1 - FSaturation);
+    end;
+    Bitmap := FCopy;
   end
   else
-		Bitmap := FImage;
+    Bitmap := FImage;
   NeedsFit := FMode = imFit;
   if NeedsFit then
-  	if (Bitmap.Width > Width) or (Bitmap.Height > Height) then
-    	FMode := imFill
-		else
+    if (Bitmap.Width > Width) or (Bitmap.Height > Height) then
+      FMode := imFill
+    else
       FMode := imCenter;
   M := NewMatrix;
-	M.Translate(-Width / 2, -Height / 2);
-	M.Rotate(DegToRad(Angle));
-	M.Translate(Width / 2, Height / 2);
+  M.Translate(-Width / 2, -Height / 2);
+  M.Rotate(DegToRad(Angle));
+  M.Translate(Width / 2, Height / 2);
   case FMode of
-  	imCenter:
-		begin
-			Surface.Matrix := M;
-	    Bitmap.Draw(Surface, (Width - FImage.Width) div 2,
-  	  	(Height - Bitmap.Height) div 2);
-	  end;
+    imCenter:
+    begin
+      Surface.Matrix := M;
+      Bitmap.Draw(Surface, (Width - FImage.Width) div 2,
+        (Height - Bitmap.Height) div 2);
+    end;
     imFill:
     begin
       if Width / Height > Bitmap.Width / Bitmap.Height then
@@ -293,7 +293,7 @@ begin
         R.Height := Height;
         R.Width := Round(Height * (Bitmap.Width / Bitmap.Height));
         R.X := (Width - R.Width) div 2;
-			end
+      end
       else
       begin
         R.Top := 0;
@@ -301,8 +301,8 @@ begin
         R.Width := Width;
         R.Height := Round(Width * (Bitmap.Height / Bitmap.Width));
         R.Y := (Height - R.Height) div 2;
-			end;
-			Surface.Matrix := M;
+      end;
+      Surface.Matrix := M;
       Bitmap.Draw(Surface, Bitmap.ClientRect, R);
     end;
     imStretch:
@@ -310,26 +310,26 @@ begin
       Bitmap.Draw(Surface, Bitmap.ClientRect, ClientRect);
     end;
     imTile:
-	  begin
-			Brush := NewBrush(Bitmap.Bitmap);
+    begin
+      Brush := NewBrush(Bitmap.Bitmap);
       M := NewMatrix;
       {TODO: Fix brush matrix}
       {$ifdef windows}
-    	M.Rotate(DegToRad(Angle));
-    	M.Translate(Width / 2, Height / 2);
+      M.Rotate(DegToRad(Angle));
+      M.Translate(Width / 2, Height / 2);
       {$else}
-    	M.Translate(Width / 2, Height / 2);
-    	M.Rotate(DegToRad(Angle));
+      M.Translate(Width / 2, Height / 2);
+      M.Rotate(DegToRad(Angle));
       {$endif}
-    	Brush.Matrix := M;
-	    Brush.Opacity := Opacity;
-  	  Surface.FillRect(Brush, ClientRect);
-	  end;
+      Brush.Matrix := M;
+      Brush.Opacity := Opacity;
+      Surface.FillRect(Brush, ClientRect);
+    end;
   end;
   if NeedsFit then
-	  FMode := imFit;
+    FMode := imFit;
   if csDesigning in ComponentState then
-		Surface.StrokeRect(Pen, ClientRect);
+    Surface.StrokeRect(Pen, ClientRect);
 end;
 
 procedure TRenderImage.ImageChange(Sender: TObject);
@@ -371,14 +371,14 @@ end;
 
 function TRenderImage.GetOpacity: Byte;
 begin
-	Result := FImage.Opacity;
+  Result := FImage.Opacity;
 end;
 
 procedure TRenderImage.SetOpacity(Value: Byte);
 begin
-	FImage.Opacity := Value;
+  FImage.Opacity := Value;
   if FCopy <> nil then
-	  FCopy.Opacity := Value;
+    FCopy.Opacity := Value;
   Invalidate;
 end;
 
@@ -388,7 +388,7 @@ begin
   if FSaturation = Value then Exit;
   FSaturation := Value;
   FCopy.Free;
-	FCopy := nil;
+  FCopy := nil;
   Invalidate;
 end;
 
@@ -406,8 +406,8 @@ procedure TRenderImage.GetPreferredSize(var PreferredWidth,
 begin
   if (not FImage.Empty) and (FMode = imCenter) then
   begin
-		PreferredWidth := FImage.Width;
-		PreferredHeight := FImage.Height;
+    PreferredWidth := FImage.Width;
+    PreferredHeight := FImage.Height;
   end;
 end;
 
@@ -421,8 +421,8 @@ begin
   if csDesigning in ComponentState then
   begin
     Pen := NewPen(clBlack);
-		Pen.LinePattern := pnDash;
-		Surface.StrokeRect(Pen, ClientRect);
+    Pen.LinePattern := pnDash;
+    Surface.StrokeRect(Pen, ClientRect);
   end;
 end;
 

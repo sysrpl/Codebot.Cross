@@ -532,7 +532,7 @@ begin
     F := FBitmap.Format;
     FBitmap := B;
     FBitmap.Format := F;
-		Modified := True;
+    Modified := True;
   end;
 end;
 
@@ -651,7 +651,7 @@ end;
 
 function TSurfaceBitmap.GetWidth: Integer;
 begin
-	Result := FWidth;
+  Result := FWidth;
 end;
 
 procedure TSurfaceBitmap.SetWidth(Value: Integer);
@@ -667,7 +667,7 @@ end;
 
 function TSurfaceBitmap.GetHeight: Integer;
 begin
-	Result := FHeight;
+  Result := FHeight;
 end;
 
 procedure TSurfaceBitmap.SetHeight(Value: Integer);
@@ -747,16 +747,16 @@ begin
     FOpacity := Image.Opacity;
     FWidth := FBitmap.Width;
     FHeight := FBitmap.Height;
-		Modified := True;
+    Modified := True;
   end
   else if Source is TGraphic then
   begin
     Graphic := Source as TGraphic;
     Stream := TMemoryStream.Create;
     try
-			Graphic.SaveToStream(Stream);
+      Graphic.SaveToStream(Stream);
       Stream.Position := 0;
-			LoadFromStream(Stream);
+      LoadFromStream(Stream);
       Modified := True;
     finally
       Stream.Free;
@@ -1884,9 +1884,9 @@ begin
   begin
     Surface.FillRoundRect(NewBrush(clHighlight), R, 4);
     if Orientation = toVertical then
-	    R.Inflate(-4, 0)
+      R.Inflate(-4, 0)
     else
-	    R.Inflate(0, -4);
+      R.Inflate(0, -4);
     Surface.FillRect(NewBrush(clBtnFace), R);
   end
   else
