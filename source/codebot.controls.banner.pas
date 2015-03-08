@@ -87,6 +87,60 @@ type
     property ImageBalance: Float read FImageBalance write SetImageBalance;
   end;
 
+{ TBanner }
+
+  TBanner = class(TRenderGraphicControl)
+  private
+    FLogo: TSurfaceBitmap;
+    FBackground: TBannerBackground;
+    FTitle: TBannerText;
+    FTitleSub: TBannerText;
+    FShadow: Boolean;
+    procedure SetLogo(Value: TSurfaceBitmap);
+    procedure SetBackground(Value: TBannerBackground);
+    procedure SetTitle(Value: TBannerText);
+    procedure SetTitleSub(Value: TBannerText);
+    procedure SetShadow(Value: Boolean);
+    procedure PartChange(Sender: TObject);
+  protected
+    procedure Render; override;
+    procedure Loaded; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  published
+    property Logo: TSurfaceBitmap read FLogo write SetLogo;
+    property Background: TBannerBackground read FBackground write SetBackground;
+    property Title: TBannerText read FTitle write SetTitle;
+    property TitleSub: TBannerText read FTitleSub write SetTitleSub;
+    property Shadow: Boolean read FShadow write SetShadow default True;
+    property Action;
+    property Align;
+    property Anchors;
+    property AutoSize;
+    property BidiMode;
+    property BorderSpacing;
+    property Constraints;
+    property Caption;
+    property Color;
+    property ShowHint;
+    property ParentBidiMode;
+    property ParentShowHint;
+    property PopupMenu;
+    property Visible;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnMouseWheel;
+    property OnMouseWheelDown;
+    property OnMouseWheelUp;
+    property OnRender;
+    property OnResize;
+    property OnChangeBounds;
+  end;
+
 { TBannerFormOptions displays a banner across the top along with images
   See also
   <link Overview.Codebot.Controls.Banner.TBannerFormOptions, TBannerFormOptions members>
@@ -223,7 +277,6 @@ type
     property UseDockManager;
     property Visible;
     property WindowState;
-
   end;
 
 implementation
@@ -402,6 +455,138 @@ begin
   Change;
 end;
 
+{$R banner_blank.res}
+
+{ TBanner }
+
+constructor TBanner.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Width := 256;
+  Height := 160;
+  FLogo := TSurfaceBitmap.Create;
+  FLogo.SetSize(1, 1);
+  FLogo.OnChange := PartChange;
+  FBackground := TBannerBackground.Create;
+  FBackground.OnChange.Add(PartChange);
+  FTitle := TBannerText.Create;
+  FTitle.Text := 'Your title here';
+  FTitle.ParentFont := False;
+  FTitle.Font.Height := 20;
+  FTitle.Font.Style := [fsBold];
+  FTitle.OnChange.Add(PartChange);
+  FTitleSub := TBannerText.Create;
+  FTitleSub.Text := 'Your description here';
+  FTitleSub.ParentFont := True;
+  FTitleSub.OnChange.Add(PartChange);
+  FShadow := True;
+end;
+
+destructor TBanner.Destroy;
+begin
+  FLogo.Free;
+  inherited Destroy;
+end;
+
+procedure TBanner.Loaded;
+begin
+  inherited Loaded;
+  if (FLogo.Width = 1) and (FLogo.Height = 1) then
+    FLogo.Clear;
+end;
+
+procedure TBanner.PartChange(Sender: TObject);
+begin
+  Invalidate;
+end;
+
+procedure TBanner.Render;
+const
+  Margin = 8;
+var
+  Pen: IPen;
+  F: IFont;
+  R: TRectI;
+  S: string;
+  I: Integer;
+begin
+  if (FLogo.Width = 1) and (FLogo.Height = 1) then
+    FLogo.LoadFromResourceName(HINSTANCE, 'banner_blank');
+  FBackground.Draw(Surface);
+  if not FLogo.Empty then
+    FLogo.Draw(Surface, 8, 8);
+  if FShadow then
+  begin
+    I := FBackground.Height;
+    if not FBackground.Image.Empty then
+      I := FBackground.Image.Height;
+    Theme.DrawHeaderShadow(I);
+  end;
+  R := ClientRect;
+  R.Inflate(-Margin, -Margin);
+  R.Bottom := FBackground.Height;
+  R.Left := R.Left + FLogo.Width + Margin;
+  S := Title.Text.Trim;
+  if S <> '' then
+  begin
+    if Title.ParentFont then
+      F := NewFont(Font)
+    else
+      F := NewFont(Title.Font);
+    F.Color := Title.Font.Color;
+    Surface.TextOut(F, S, R, drWrap);
+    R.Top := R.Top + Round(Surface.TextHeight(F, S, R.Width));
+  end;
+  S := TitleSub.Text.Trim;
+  if S <> '' then
+  begin
+    if TitleSub.ParentFont then
+      F := NewFont(Font)
+    else
+      F := NewFont(TitleSub.Font);
+    F.Color := TitleSub.Font.Color;
+    Surface.TextOut(F, S, R, drWrap);
+  end;
+  if csDesigning in ComponentState then
+  begin
+    Pen := NewPen(clBlack);
+    Pen.LinePattern := pnDash;
+    Surface.StrokeRect(Pen, ClientRect);
+  end;
+  inherited Render;
+end;
+
+procedure TBanner.SetBackground(Value: TBannerBackground);
+begin
+  if FBackground = Value then Exit;
+  FBackground := Value;
+end;
+
+procedure TBanner.SetLogo(Value: TSurfaceBitmap);
+begin
+  if FLogo = Value then Exit;
+  FLogo.Assign(Value);
+end;
+
+procedure TBanner.SetTitle(Value: TBannerText);
+begin
+  if FTitle = Value then Exit;
+  FTitle.Assign(Value);
+end;
+
+procedure TBanner.SetTitleSub(Value: TBannerText);
+begin
+  if FTitleSub = Value then Exit;
+  FTitleSub.Assign(Value);
+end;
+
+procedure TBanner.SetShadow(Value: Boolean);
+begin
+  if FShadow = Value then Exit;
+  FShadow := Value;
+  Invalidate;
+end;
+
 { TBannerForm }
 
 constructor TBannerForm.CreateNew(AOwner: TComponent; Num: Integer);
@@ -409,12 +594,19 @@ begin
   inherited CreateNew(AOwner, Num);
   Position := poDesktopCenter;
   FLogo := TSurfaceBitmap.Create;
+  FLogo.SetSize(1, 1);
   FLogo.OnChange := PartChange;
   FBanner := TBannerBackground.Create;
   FBanner.OnChange.Add(PartChange);
   FTitle := TBannerText.Create;
+  FTitle.Text := 'Your title here';
+  FTitle.ParentFont := False;
+  FTitle.Font.Height := 20;
+  FTitle.Font.Style := [fsBold];
   FTitle.OnChange.Add(PartChange);
   FTitleSub := TBannerText.Create;
+  FTitleSub.Text := 'Your description here';
+  FTitleSub.ParentFont := True;
   FTitleSub.OnChange.Add(PartChange);
   FOptions := [boReanchor, boBannerShadow, boFooterShadow, boFooterGrip];
 end;
@@ -456,6 +648,8 @@ var
   I: Integer;
 begin
   inherited Loaded;
+  if (FLogo.Width = 1) and (FLogo.Height = 1) then
+    FLogo.Clear;
   if csDesigning in ComponentState then
     Exit;
   if (ControlCount < 1) or ([boReanchor] * Options = []) then
@@ -487,6 +681,8 @@ var
   S: string;
   I: Integer;
 begin
+  if (FLogo.Width = 1) and (FLogo.Height = 1) then
+    FLogo.LoadFromResourceName(HINSTANCE, 'banner_blank');
   FBanner.Draw(Surface);
   if not FLogo.Empty then
     FLogo.Draw(Surface, 8, 8);

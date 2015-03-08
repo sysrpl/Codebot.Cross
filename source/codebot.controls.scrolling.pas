@@ -14,7 +14,7 @@ unit Codebot.Controls.Scrolling;
 interface
 
 uses
-  Classes, SysUtils, Graphics, Controls, Forms, Themes,
+  Classes, SysUtils, Graphics, Controls, Forms,
   LCLType, LCLIntf, LMessages,
   Codebot.System,
   Codebot.Graphics,
@@ -331,6 +331,9 @@ const
 constructor TScrollList.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  BorderStyle := bsSingle;
+  ControlStyle := [csAcceptsControls, csCaptureMouse, csClickEvents,
+    csDoubleClicks, csOpaque];
   FDownIndex := -1;
   FHotIndex := -1;
   FShiftIndex := -1;
@@ -338,8 +341,6 @@ begin
   FHintWindow.Control := Self;
   FItemHeight := 15;
   FItemIndex := -1;
-  ControlStyle := [csAcceptsControls, csCaptureMouse, csClickEvents,
-    csDoubleClicks, csOpaque];
   ParentColor := False;
   ParentFont := True;
   Width := 100;
@@ -1113,7 +1114,11 @@ var
 begin
   inherited Create(AOwner);
   S := TStringList.Create;
+  S.Add('item one');
+  S.Add('item two');
+  S.Add('item three');
   S.OnChange := ItemsChange;
+  ItemsChange(Self);
   FAutoScroll := False;
   FAutoHeight := True;
   ItemHeight := TextHeight + 2;

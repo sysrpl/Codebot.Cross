@@ -34,7 +34,7 @@
     <Description Value="Codebot.Cross a set of tools"/>
     <License Value="LGPL"/>
     <Version Major="1"/>
-    <Files Count="41">
+    <Files Count="42">
       <Item1>
         <Filename Value="codebot.inc"/>
         <Type Value="Binary"/>
@@ -176,29 +176,33 @@
         <UnitName Value="Codebot.Controls.Colors"/>
       </Item35>
       <Item36>
-        <Filename Value="codebot.controls.containers.pas"/>
-        <UnitName Value="Codebot.Controls.Containers"/>
-      </Item36>
-      <Item37>
         <Filename Value="codebot.controls.edits.pas"/>
         <UnitName Value="Codebot.Controls.Edits"/>
-      </Item37>
-      <Item38>
+      </Item36>
+      <Item37>
         <Filename Value="codebot.controls.banner.pas"/>
         <UnitName Value="Codebot.Controls.Banner"/>
-      </Item38>
-      <Item39>
+      </Item37>
+      <Item38>
         <Filename Value="codebot.controls.grids.pas"/>
         <UnitName Value="Codebot.Controls.Grids"/>
-      </Item39>
-      <Item40>
+      </Item38>
+      <Item39>
         <Filename Value="codebot.design.imagelisteditor.pas"/>
         <UnitName Value="Codebot.Design.ImageListEditor"/>
-      </Item40>
-      <Item41>
+      </Item39>
+      <Item40>
         <Filename Value="codebot.design.surfacebitmapeditor.pas"/>
         <UnitName Value="Codebot.Design.SurfaceBitmapEditor"/>
+      </Item40>
+      <Item41>
+        <Filename Value="codebot.controls.buttons.pas"/>
+        <UnitName Value="Codebot.Controls.Buttons"/>
       </Item41>
+      <Item42>
+        <Filename Value="codebot.graphics.markup.pas"/>
+        <UnitName Value="codebot.graphics.markup"/>
+      </Item42>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

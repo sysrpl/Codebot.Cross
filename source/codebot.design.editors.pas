@@ -14,21 +14,40 @@ unit Codebot.Design.Editors;
 interface
 
 uses
-  Classes, PropEdits, ComponentEditors, ProjectIntf, NewItemIntf,
+  SysUtils, Classes, Graphics, PropEdits, ComponentEditors, ProjectIntf,
+  NewItemIntf, TypInfo,
   Codebot.Graphics,
+  Codebot.Graphics.Types,
   Codebot.Controls.Extras,
   Codebot.Design.SurfaceBitmapEditor,
   Codebot.Design.ImageListEditor;
 
-{ TThemeNamePropertyEditor }
+{ TImageStripIndexPropertyEditor }
 
 type
+  TImageStripIndexPropertyEditor = class(TIntegerPropertyEditor)
+  private
+    FImages: TImageStrip;
+    FFont: IFont;
+    FBrush: IBrush;
+  public
+    procedure Activate; override;
+    procedure Deactivate; override;
+    function GetAttributes: TPropertyAttributes; override;
+    procedure GetValues(Proc: TGetStrProc); override;
+    procedure ListDrawValue(const AValue: string; Index: Integer;
+      ACanvas: TCanvas; const ARect: TRect; AState: TPropEditDrawState); override;
+    procedure ListMeasureHeight(const AValue: string; Index: Integer;
+      ACanvas:TCanvas; var AHeight: Integer); override;
+  end;
+
+{ TThemeNamePropertyEditor }
+
   TThemeNamePropertyEditor = class(TStringPropertyEditor)
   public
     function GetAttributes: TPropertyAttributes; override;
     procedure GetValues(Proc: TGetStrProc); override;
   end;
-
 
 { TSurfaceBitmapPropertyEditor }
 
@@ -60,6 +79,97 @@ type
   end;
 
 implementation
+
+{ TImageStripIndexPropertyEditor }
+
+procedure TImageStripIndexPropertyEditor.Activate;
+var
+  Obj: TObject;
+begin
+  inherited Activate;
+  Obj := GetComponent(0);
+  Obj := GetObjectProp(Obj, 'Images');
+  if Obj is TImageStrip then
+    FImages := Obj as TImageStrip;
+end;
+
+procedure TImageStripIndexPropertyEditor.Deactivate;
+begin
+  FImages := nil;
+  FFont := nil;
+  FBrush := nil;
+  inherited Deactivate;
+end;
+
+function TImageStripIndexPropertyEditor.GetAttributes: TPropertyAttributes;
+begin
+  Result := [paValueList, paNotNestable, paCustomDrawn];
+end;
+
+procedure TImageStripIndexPropertyEditor.GetValues(Proc: TGetStrProc);
+var
+  I: Integer;
+begin
+  Proc('-1');
+  if FImages <> nil then
+    for I := 0 to FImages.Count - 1 do
+      Proc(IntToStr(I));
+end;
+
+procedure TImageStripIndexPropertyEditor.ListDrawValue(const AValue: string; Index: Integer;
+  ACanvas: TCanvas; const ARect: TRect; AState: TPropEditDrawState);
+var
+  Surface: ISurface;
+  C: TColorB;
+  R: TRectI;
+begin
+  if (FImages <> nil) and (pedsInComboList in AState) and not (pedsInEdit in AState) then
+  begin
+    Surface := NewSurface(ACanvas);
+    R := ARect;
+    if pedsSelected in AState then
+    begin
+      C := clHighlight;
+      Surface.FillRect(NewBrush(C.Blend(clWindow, 0.3)), R);
+      Surface.StrokeRect(NewPen(C), R);
+    end
+    else
+      Surface.FillRect(FBrush, R);
+    if Index < 1 then
+    begin
+      R.Left := R.Height;
+      R.Inflate(-6, 0);
+      Surface.TextOut(FFont, 'No image', R, drLeft);
+    end
+    else
+    begin
+      FImages.Draw(Surface, Index - 1, 2, R.MidPoint.Y - FImages.Size div 2);
+      R.Left := R.Height;
+      R.Inflate(-6, 0);
+      Surface.TextOut(FFont, IntToStr(Index - 1), R, drLeft);
+    end;
+  end
+  else
+    inherited ListDrawValue(AValue, Index, ACanvas, ARect, AState);
+end;
+
+procedure TImageStripIndexPropertyEditor.ListMeasureHeight(
+  const AValue: string; Index: Integer; ACanvas: TCanvas; var AHeight: Integer);
+begin
+  if (Index > -1) and (FImages <> nil) then
+  begin
+    AHeight := FImages.Size + 6;
+    if AHeight < 20 then
+      AHeight := 20;
+    if FFont = nil then
+    begin
+      FFont := NewFont(ACanvas.Font);
+      FFont.Color := clWindowText;
+    end;
+    if FBrush = nil then
+      FBrush := NewBrush(clWindow);
+  end;
+end;
 
 { TThemeNamePropertyEditor }
 

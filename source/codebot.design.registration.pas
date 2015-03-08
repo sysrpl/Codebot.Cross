@@ -21,6 +21,7 @@ uses
   Codebot.Controls,
   Codebot.Controls.Grids,
   Codebot.Controls.Banner,
+  Codebot.Controls.Buttons,
   Codebot.Controls.Colors,
   Codebot.Controls.Extras,
   Codebot.Controls.Scrolling,
@@ -35,9 +36,12 @@ implementation
 procedure Register;
 begin
   { Components }
-  RegisterComponents('Codebot', [TIndeterminateProgress, TBorderContainer, TRenderBox, TRenderImage, TImageStrip,
-    TContentGrid, TDrawList, TDrawTextList, THuePicker, TSaturationPicker, TSlideBar]);
+  RegisterComponents('Codebot', [TIndeterminateProgress, TBorderContainer, TBanner,
+    TRenderBox, TRenderImage, TImageStrip, TThinButton, TContentGrid, TDrawList,
+    TDrawTextList, THuePicker, TSaturationPicker, TSlideBar]);
   { Property editors }
+  RegisterPropertyEditor(TypeInfo(Integer), TThinButton, 'ImageIndex',
+    TImageStripIndexPropertyEditor);
   RegisterPropertyEditor(TypeInfo(string), nil, 'ThemeName',
     TThemeNamePropertyEditor);
   RegisterPropertyEditor(TSurfaceBitmap.ClassInfo, nil, '',

@@ -23,9 +23,9 @@ function NewMatrix: IMatrix;
 { Create a new pen using a brush as the color }
 function NewPen(Brush: IBrush; Width: Float = 1): IPen; overload;
 { Create a new solid color pen }
-function NewPen(Color: TBGRA; Width: Float = 1): IPen; overload;
+function NewPen(Color: TColorB; Width: Float = 1): IPen; overload;
 { Create a new solid color brush }
-function NewBrush(Color: TBGRA): ISolidBrush; overload;
+function NewBrush(Color: TColorB): ISolidBrush; overload;
 { Create a new bitmap pattern brush }
 function NewBrush(Bitmap: IBitmap): IBitmapBrush; overload;
 { Create a new linear gradient brush using four coordinates for endpoints }
@@ -264,6 +264,8 @@ type
     class procedure Select(ThemeName: string); overload;
     class procedure Deselect;
     class function Name: string;
+    class procedure DrawButton(const Rect: TRectI); virtual; abstract;
+    class procedure DrawButtonThin(const Rect: TRectI); virtual; abstract;
     class procedure DrawSplit(const Rect: TRectI; Orientation: TThemeOrientation); virtual; abstract;
     class function MeasureThumbThin(Orientation: TThemeOrientation): TPointI; virtual; abstract;
     class procedure DrawThumbThin(const Rect: TRectI; Orientation: TThemeOrientation); virtual; abstract;
@@ -290,6 +292,8 @@ type
 { TDefaultTheme }
 
   TDefaultTheme = class(TTheme)
+    class procedure DrawButton(const Rect: TRectI); override;
+    class procedure DrawButtonThin(const Rect: TRectI); override;
     class procedure DrawSplit(const Rect: TRectI; Orientation: TThemeOrientation); override;
     class function MeasureThumbThin(Orientation: TThemeOrientation): TPointI; override;
     class procedure DrawThumbThin(const Rect: TRectI; Orientation: TThemeOrientation); override;
@@ -306,6 +310,8 @@ type
 { TRedmondTheme }
 
   TRedmondTheme = class(TTheme)
+    class procedure DrawButton(const Rect: TRectI); override;
+    class procedure DrawButtonThin(const Rect: TRectI); override;
     class procedure DrawSplit(const Rect: TRectI; Orientation: TThemeOrientation); override;
     class function MeasureThumbThin(Orientation: TThemeOrientation): TPointI; override;
     class procedure DrawThumbThin(const Rect: TRectI; Orientation: TThemeOrientation); override;
@@ -1272,15 +1278,12 @@ begin
     B.Draw(Surface, X, Y);
     B.Free;
   end
-  else if dsHot in State then
+  else if [dsHot, dsPressed] * State = [dsHot, dsPressed] then
   begin
     B := TSurfaceBitmap.Create;
     B.SetSize(Size, Size);
     FBitmap.Draw(B.Surface, 0, 0, Index);
-    if dsPressed in State then
-      B.Darken(0.25)
-    else
-      B.Lighten(0.25);
+    B.Darken(0.2);
     B.Draw(Surface, X, Y);
     B.Free;
   end
@@ -1849,6 +1852,42 @@ end;
 
 { TDefaultTheme }
 
+class procedure TDefaultTheme.DrawButton(const Rect: TRectI);
+begin
+
+end;
+
+class procedure TDefaultTheme.DrawButtonThin(const Rect: TRectI);
+var
+  R: TRectI;
+  C: TColorB;
+  G: IGradientBrush;
+  P: IPen;
+begin
+  R := Rect;
+  C := Control.CurrentColor;
+  if dsHot in State then
+    if dsPressed in State then
+    begin
+      G := NewBrush(0, 0, 0, R.Height);
+      G.AddStop(C.Fade(0.6).Darken(0.5), 0);
+      G.AddStop(C.Fade(0).Darken(0.5), 1);
+      Surface.FillRoundRect(G, Rect, 3);
+      Surface.StrokeRoundRect(NewPen(C.Fade(0.6).Darken(0.6)), Rect, 3);
+    end
+    else
+    begin
+      R.Inflate(R.Width, R.Height);
+      G := NewBrush(R);
+      G.AddStop(C.Fade(0), 0);
+      G.AddStop(C.Fade(0), 0.25);
+      G.AddStop(C.Fade(0.5).Darken(0.25), 0.3);
+      G.AddStop(C.Fade(1).Darken(0.8), 1);
+      Surface.FillRoundRect(G, Rect, 3);
+      Surface.StrokeRoundRect(NewPen(C.Fade(0.5).Darken(0.5)), Rect, 3);
+    end;
+end;
+
 class procedure TDefaultTheme.DrawSplit(const Rect: TRectI; Orientation: TThemeOrientation);
 var
   R: TRectI;
@@ -2005,6 +2044,29 @@ end;
 
 { TRedmondTheme }
 
+class procedure TRedmondTheme.DrawButton(const Rect: TRectI);
+begin
+
+end;
+
+class procedure TRedmondTheme.DrawButtonThin(const Rect: TRectI);
+var
+  R: TRectI;
+begin
+  R := Rect;
+  if not (dsHot in State) then
+    Exit;
+  Surface.StrokeRect(NewPen(cl3DDkShadow), R);
+  R.Width := R.Width - 1;
+  R.Height := R.Height - 1;
+  Surface.StrokeRect(NewPen(clBtnShadow), R);
+  R.Width := R.Width - 1;
+  R.Height := R.Height - 1;
+  R.Offset(1, 1);
+  Surface.FillRect(NewBrush(clBtnFace), R);
+  Surface.StrokeRect(NewPen(clBtnHighlight), R);
+end;
+
 class procedure TRedmondTheme.DrawSplit(const Rect: TRectI; Orientation: TThemeOrientation);
 var
   R: TRectI;
@@ -2050,15 +2112,6 @@ begin
   R.Offset(1, 1);
   Surface.FillRect(NewBrush(clBtnFace), R);
   Surface.StrokeRect(NewPen(clBtnHighlight), R);
-  { Toolbar button
-  Surface.StrokeRect(NewPen(clBtnShadow), R);
-  R.Width := R.Width - 1;
-  R.Height := R.Height - 1;
-  Surface.StrokeRect(NewPen(clBtnHighlight), R);
-  R.Width := R.Width - 1;
-  R.Height := R.Height - 1;
-  R.Offset(1, 1);
-  Surface.FillRect(NewBrush(clBtnFace), R);}
 end;
 
 class function TRedmondTheme.MeasureBorder: TPointI;
