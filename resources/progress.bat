@@ -1,1 +1,1 @@
-..\..\..\..\FreePascal\lazarus\tools\lazres.exe ..\progress_icons.res progress_busy.png progress_status.png
+..\..\..\..\FreePascal\lazarus\tools\lazres.exe ..\source\progress_icons.res progress_busy.png progress_status.png

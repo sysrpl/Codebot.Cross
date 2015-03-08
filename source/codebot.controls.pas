@@ -42,6 +42,8 @@ type
   protected
     { Allow controls direct access to draw state }
     FDrawState: TDrawState;
+    { Update draw state when enabled is changed }
+    procedure EnabledChanged; override;
     { Override ThemeAware and return true to subscribe to glabal theme changes }
     function ThemeAware: Boolean; virtual;
     { Invoked when the theme is changed }
@@ -292,6 +294,18 @@ begin
   Invalidate;
 end;
 
+procedure TRenderGraphicControl.EnabledChanged;
+begin
+  inherited EnabledChanged;
+  if Enabled then
+    Exclude(FDrawState, dsDisabled)
+  else
+  begin
+    Include(FDrawState, dsDisabled);
+    Exclude(FDrawState, dsHot);
+  end;
+end;
+
 { TRenderCustomControl }
 
 constructor TRenderCustomControl.Create(AOwner: TComponent);
@@ -468,7 +482,6 @@ constructor TBorderContainer.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle + [csAcceptsControls];
-  BorderStyle := bsSingle;
   Color := clWindow;
   Width := 160;
   Height := 160;

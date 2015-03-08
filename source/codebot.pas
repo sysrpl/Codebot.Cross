@@ -19,10 +19,10 @@ uses
   Codebot.Graphics.Windows.SurfaceD2D, Codebot.Graphics.Linux.SurfaceCairo, 
   Codebot.Controls.Extras, Codebot.Controls.Scrolling, 
   Codebot.Controls.Sliders, Codebot.Forms.Popup, Codebot.Input.MouseMonitor, 
-  Codebot.Controls, Codebot.Controls.Colors, Codebot.Controls.Containers, 
-  Codebot.Controls.Edits, Codebot.Controls.Banner, Codebot.Controls.Grids, 
+  Codebot.Controls, Codebot.Controls.Colors, Codebot.Controls.Edits, 
+  Codebot.Controls.Banner, Codebot.Controls.Grids, 
   Codebot.Design.ImageListEditor, Codebot.Design.SurfaceBitmapEditor, 
-  LazarusPackageIntf;
+  Codebot.Controls.Buttons, Codebot.Graphics.Markup, LazarusPackageIntf;
 
 implementation
 

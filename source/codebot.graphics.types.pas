@@ -249,6 +249,10 @@ type
     class operator Explicit(Value: TColorB): THSL;
     class operator Implicit(Value: TColor): TColorB;
     class operator Explicit(Value: TColorB): TColor;
+    class operator Negative(A: TColorB): TColorB;
+    class operator Positive(A: TColorB): TColorB;
+    class operator Equal(A: TColorB; B: TColorB): Boolean;
+    class operator NotEqual(A: TColorB; B: TColorB): Boolean;
     class function Create(B, G, R: Byte; A: Byte = $FF): TColorB; static;
     function Invert: TColorB;
     function Blend(Value: TColorB; Percent: Float): TColorB;
@@ -359,7 +363,7 @@ const
   clLightSalmon = TColor($7AA0FF);
   clLightSeaGreen = TColor($AAB220);
   clLightSkyBlue = TColor($FACE87);
-  clLightSlategray = TColor($998877);
+  clLightSlateGray = TColor($998877);
   clLightSteelBlue = TColor($DEC4B0);
   clLightYellow = TColor($E0FFFF);
   clLimeGreen = TColor($32CD32);
@@ -388,7 +392,7 @@ const
   clPaleGreen = TColor($98FB98);
   clPaleTurquoise = TColor($EEEEAF);
   clPalevioletRed = TColor($9370DB);
-  clPapayawhip = TColor($D5EFFF);
+  clPapayaWhip = TColor($D5EFFF);
   clPeachPuff = TColor($B9DAFF);
   clPeru = TColor($3F85CD);
   clPink = TColor($CBC0FF);
@@ -418,6 +422,10 @@ const
   clYellowGreen = TColor($32CD9A);
 
 { Color routines }
+
+function StrToColor(S: string): TColorB;
+function ColorToStr(C: TColorB): string;
+procedure RegisterColorName(Color: TColorB; Name: string);
 
 function Hue(H: Float): TColorB;
 function HueInvert(H: Float): TColorB;
@@ -1762,6 +1770,29 @@ begin
   Result := TColor(S);
 end;
 
+class operator TColorB.Negative(A: TColorB): TColorB;
+begin
+  Result.Red := High(Byte) - A.Red;
+  Result.Green := High(Byte) - A.Green;
+  Result.Blue := High(Byte) - A.Blue;
+  Result.Alpha := A.Alpha;
+end;
+
+class operator TColorB.Positive(A: TColorB): TColorB;
+begin
+  Result := A;
+end;
+
+class operator TColorB.Equal(A: TColorB; B: TColorB): Boolean;
+begin
+  Result := PInteger(@A)^ = PInteger(@B)^;
+end;
+
+class operator TColorB.NotEqual(A: TColorB; B: TColorB): Boolean;
+begin
+  Result := PInteger(@A)^ <> PInteger(@B)^;
+end;
+
 class function TColorB.Create(B, G, R: Byte; A: Byte = $FF): TColorB;
 begin
   Result.Blue := B;
@@ -1856,11 +1887,24 @@ begin
   if Percent = 0 then
     Exit(Self);
   Result.Alpha := Alpha;
-  if Percent = 1 then
+  if (Alpha = 0) or (Percent = 0) then
+  begin
+    Result.Blue := 0;
+    Result.Green := 0;
+    Result.Red := 0;
+  end
+  else if (Alpha = $FF) and (Percent = 1) then
   begin
     Result.Blue := HiByte;
     Result.Green := HiByte;
     Result.Red := HiByte;
+  end
+  else if Alpha = $FF then
+  begin
+    Compliment := 1 - Percent;
+    Result.Blue := MixB(HiByte, Percent, Blue, Compliment);
+    Result.Green := MixB(HiByte, Percent, Green, Compliment);
+    Result.Red := MixB(HiByte, Percent, Red, Compliment);
   end
   else
   begin
@@ -1868,6 +1912,10 @@ begin
     Result.Blue := MixB(HiByte, Percent, Blue, Compliment);
     Result.Green := MixB(HiByte, Percent, Green, Compliment);
     Result.Red := MixB(HiByte, Percent, Red, Compliment);
+    Compliment := Alpha / $FF;
+    Result.Blue := Round(Result.Blue * Compliment);
+    Result.Green := Round(Result.Green * Compliment);
+    Result.Red := Round(Result.Red * Compliment);
   end;
 end;
 
@@ -2000,6 +2048,246 @@ begin
 end;
 
 { Color routines }
+
+type
+  TColorName = record
+    Color: TColorB;
+    Name: string;
+  end;
+  TColorNames = TArrayList<TColorName>;
+
+var
+  ColorNames: TColorNames;
+
+procedure InitColorNames;
+var
+  I: Integer;
+
+  procedure Add(Color: TColorB; Name: string);
+  begin
+    ColorNames.Items[I].Color := Color;
+    ColorNames.Items[I].Name := Name;
+    Inc(I);
+  end;
+
+begin
+  if ColorNames.Length > 0 then
+    Exit;
+  ColorNames.Length := 200;
+  I := 0;
+  Add(clTransparent, 'Transparent');
+  Add(clWhite, 'White');
+  Add(clBlack, 'Black');
+  Add(clLtGray, 'Light Gray');
+  Add(clMedGray, 'Medium Gray');
+  Add(clDkGray, 'Dark Gray');
+  Add(clMaroon, 'Maroon');
+  Add(clGreen, 'Green');
+  Add(clOlive, 'Olive');
+  Add(clNavy, 'Navy');
+  Add(clPurple, 'Purple');
+  Add(clTeal, 'Teal');
+  Add(clGray, 'Gray');
+  Add(clSilver, 'Silver');
+  Add(clRed, 'Red');
+  Add(clLime, 'Lime');
+  Add(clYellow, 'Yellow');
+  Add(clBlue, 'Blue');
+  Add(clFuchsia, 'Fuchsia');
+  Add(clAqua, 'Aqua');
+  Add(clMoneyGreen, 'Money Green');
+  Add(clSkyBlue, 'Sky Blue');
+  Add(clCream, 'Cream');
+  Add(clAliceBlue, 'Alice Blue');
+  Add(clAntiqueWhite, 'Antique White');
+  Add(clAquamarine, 'Aquamarine');
+  Add(clAzure, 'Azure');
+  Add(clBeige, 'Beige');
+  Add(clBisque, 'Bisque');
+  Add(clBlanchedAlmond, 'Blanched Almond');
+  Add(clBlueViolet, 'Blue Violet');
+  Add(clBrown, 'Brown');
+  Add(clBurlywood, 'Burlywood');
+  Add(clCadetBlue, 'Cadet Blue');
+  Add(clChartreuse, 'Chartreuse');
+  Add(clChocolate, 'Chocolate');
+  Add(clCoral, 'Coral');
+  Add(clCornFlowerBlue, 'Corn Flower Blue');
+  Add(clCornSilk, 'Corn Silk');
+  Add(clCrimson, 'Crimson');
+  Add(clCyan, 'Cyan');
+  Add(clDarkBlue, 'Dark Blue');
+  Add(clDarkCyan, 'Dark Cyan');
+  Add(clDarkGoldenrod, 'Dark Goldenrod');
+  Add(clDarkGreen, 'Dark Green');
+  Add(clDarkKhaki, 'Dark Khaki');
+  Add(clDarkMagenta, 'Dark Magenta');
+  Add(clDarkOliveGreen, 'Dark Olive Green');
+  Add(clDarkOrange, 'Dark Orange');
+  Add(clDarkOrchid, 'Dark Orchid');
+  Add(clDarkRed, 'Dark Red');
+  Add(clDarkSalmon, 'Dark Salmon');
+  Add(clDarkseaGreen, 'Darksea Green');
+  Add(clDarkslateBlue, 'Darkslate Blue');
+  Add(clDarkSlateGray, 'DarkSlate Gray');
+  Add(clDarkTurquoise, 'Dark Turquoise');
+  Add(clDarkViolet, 'Dark Violet');
+  Add(clDeepPink, 'Deep Pink');
+  Add(clDeepSkyBlue, 'Deep Sky Blue');
+  Add(clDimGray, 'Dim Gray');
+  Add(clDodgerBlue, 'Dodger Blue');
+  Add(clFireBrick, 'Fire Brick');
+  Add(clFloralWhite, 'Floral White');
+  Add(clForestGreen, 'Forest Green');
+  Add(clGainsboro, 'Gainsboro');
+  Add(clGhostWhite, 'Ghost White');
+  Add(clGold, 'Gold');
+  Add(clGoldenrod, 'Goldenrod');
+  Add(clGreenYellow, 'Green Yellow');
+  Add(clHoneydew, 'Honeydew');
+  Add(clHotPink, 'Hot Pink');
+  Add(clIndianRed, 'Indian Red');
+  Add(clIndigo, 'Indigo');
+  Add(clIvory, 'Ivory');
+  Add(clKhaki, 'Khaki');
+  Add(clLavender, 'Lavender');
+  Add(clLavenderBlush, 'Lavender Blush');
+  Add(clLawnGreen, 'Lawn Green');
+  Add(clLemonChiffon, 'Lemon Chiffon');
+  Add(clLightBlue, 'Light Blue');
+  Add(clLightCoral, 'Light Coral');
+  Add(clLightCyan, 'Light Cyan');
+  Add(clLightGoldenrodYellow, 'Light Goldenrod Yellow');
+  Add(clLightGreen, 'LightGreen');
+  Add(clLightGray, 'Light Gray');
+  Add(clLightPink, 'Light Pink');
+  Add(clLightSalmon, 'Light Salmon');
+  Add(clLightSeaGreen, 'Light Sea Green');
+  Add(clLightSkyBlue, 'Light Sky Blue');
+  Add(clLightSlateGray, 'Light Slate Gray');
+  Add(clLightSteelBlue, 'Light Steel Blue');
+  Add(clLightYellow, 'Light Yellow');
+  Add(clLimeGreen, 'Lime Green');
+  Add(clLinen, 'Linen');
+  Add(clMagenta, 'Magenta');
+  Add(clMediumAquamarine, 'Medium Aquamarine');
+  Add(clMediumBlue, 'Medium Blue');
+  Add(clMediumOrchid, 'Medium Orchid');
+  Add(clMediumPurple, 'Medium Purple');
+  Add(clMediumSeaGreen, 'Medium Sea Green');
+  Add(clMediumSlateBlue, 'Medium Slate Blue');
+  Add(clMediumSpringGreen, 'Medium Spring Green');
+  Add(clMediumTurquoise, 'Medium Turquoise');
+  Add(clMediumVioletRed, 'Medium Violet Red');
+  Add(clMidnightBlue, 'Midnight Blue');
+  Add(clMintCream, 'Mint Cream');
+  Add(clMistyRose, 'Misty Rose');
+  Add(clMoccasin, 'Moccasin');
+  Add(clNavajoWhite, 'Navajo White');
+  Add(clOldLace, 'Old Lace');
+  Add(clOliveDrab, 'Olive Drab');
+  Add(clOrange, 'Orange');
+  Add(clOrangeRed, 'Orange Red');
+  Add(clOrchid, 'Orchid');
+  Add(clPaleGoldenrod, 'Pale Goldenrod');
+  Add(clPaleGreen, 'Pale Green');
+  Add(clPaleTurquoise, 'Pale Turquoise');
+  Add(clPalevioletRed, 'Paleviolet Red');
+  Add(clPapayaWhip, 'Papaya Whip');
+  Add(clPeachPuff, 'Peach Puff');
+  Add(clPeru, 'Peru');
+  Add(clPink, 'Pink');
+  Add(clPlum, 'Plum');
+  Add(clPowderBlue, 'Powder Blue');
+  Add(clRosyBrown, 'Rosy Brown');
+  Add(clRoyalBlue, 'Royal Blue');
+  Add(clSaddleBrown, 'Saddle Brown');
+  Add(clSalmon, 'Salmon');
+  Add(clSandyBrown, 'Sandy Brown');
+  Add(clSeaGreen, 'Sea Green');
+  Add(clSeaShell, 'Sea Shell');
+  Add(clSienna, 'Sienna');
+  Add(clSkyBlue, 'Sky Blue');
+  Add(clSlateBlue, 'Slate Blue');
+  Add(clSlateGray, 'Slate Gray');
+  Add(clSnow, 'Snow');
+  Add(clSpringGreen, 'Spring Green');
+  Add(clSteelBlue, 'Steel Blue');
+  Add(clTan, 'Tan');
+  Add(clThistle, 'Thistle');
+  Add(clTomato, 'Tomato');
+  Add(clTurquoise, 'Turquoise');
+  Add(clViolet, 'Violet');
+  Add(clWheat, 'Wheat');
+  Add(clWhiteSmoke, 'White Smoke');
+  Add(clYellowGreen, 'Yellow Green');
+end;
+
+function StrToColor(S: string): TColorB;
+var
+  N: string;
+  I: Integer;
+begin
+  InitColorNames;
+  Result := clTransparent;
+  S := S.ToUpper;
+  for I := ColorNames.Lo to ColorNames.Hi do
+  begin
+    N := ColorNames[I].Name;
+    if N = '' then
+      Exit;
+    if N.ToUpper = S then
+      Exit(ColorNames[I].Color);
+  end;
+end;
+
+function ColorToStr(C: TColorB): string;
+var
+  N: string;
+  I: Integer;
+begin
+  InitColorNames;
+  Result := '';
+  for I := ColorNames.Lo to ColorNames.Hi do
+  begin
+    N := ColorNames[I].Name;
+    if N = '' then
+      Exit;
+    if ColorNames[I].Color = C then
+      Exit(N);
+  end;
+end;
+
+procedure RegisterColorName(Color: TColorB; Name: string);
+var
+  ColorName: TColorName;
+  S: string;
+  N: string;
+  I: Integer;
+begin
+  Name := Name.Trim;
+  S := Name.ToUpper;
+  if S.Length = 0 then
+    Exit;
+  InitColorNames;
+  if ColorNames.Last.Name <> '' then
+    ColorNames.Length := ColorNames.Length + 50;
+  for I := ColorNames.Lo to ColorNames.Hi do
+  begin
+    N := ColorNames[I].Name;
+    if N = '' then
+    begin
+      ColorName.Color := Color;
+      ColorName.Name := Name;
+      ColorNames[I] := ColorName;
+      Exit;
+    end;
+    if ColorNames[I].Color = Color then
+      Exit;
+    if ColorNames[I].Name.ToUpper = S then
+      Exit;
+  end;
+end;
 
 function Hue(H: Float): TColorB;
 begin
