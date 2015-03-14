@@ -331,14 +331,14 @@ const
 constructor TScrollList.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  BorderStyle := bsSingle;
   ControlStyle := [csAcceptsControls, csCaptureMouse, csClickEvents,
     csDoubleClicks, csOpaque];
+  BorderStyle := bsNone;
   FDownIndex := -1;
   FHotIndex := -1;
   FShiftIndex := -1;
-  FHintWindow := TControlHintWindow.Create(Self);
-  FHintWindow.Control := Self;
+  {FHintWindow := TControlHintWindow.Create(Self);
+  FHintWindow.Control := Self;}
   FItemHeight := 15;
   FItemIndex := -1;
   ParentColor := False;
@@ -490,7 +490,8 @@ procedure TScrollList.MouseDown(Button: TMouseButton; Shift: TShiftState;
 
 begin
   FShift := Shift;
-  FHintWindow.Active := False;
+  if FHintWindow <> nil then
+    FHintWindow.Active := False;
   if Button = mbLeft then
   begin
     // Bug with Gtk3 scrollbars causes MouseCapture to fail
@@ -578,7 +579,8 @@ var
   I: Integer;
 begin
   inherited MouseLeave;
-  FHintWindow.Active := False;
+  if FHintWindow <> nil then
+    FHintWindow.Active := False;
   if FHotIndex > -1 then
   begin
     I := FHotIndex;

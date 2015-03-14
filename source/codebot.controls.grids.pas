@@ -195,7 +195,7 @@ type
     procedure SetItemIndex(Value: Integer);
     procedure CMMouseLeave(var Msg: TMessage); message CM_MOUSELEAVE;
     procedure WMGetDlgCode(var Msg: TWMGetDlgCode); message WM_GETDLGCODE;
-    procedure WMTimer(var Msg: TWMTimer); message WM_TIMER;
+    procedure LMTimer(var Msg: TLMTimer); message LM_TIMER;
     procedure WMSetFocus(var Msg: TWMSetFocus); message WM_SETFOCUS;
     procedure WMKillFocus(var Msg: TWMKillFocus); message WM_KILLFOCUS;
   protected
@@ -1042,7 +1042,7 @@ begin
   end;
 end;
 
-procedure TContentGrid.WMTimer(var Msg: TWMTimer);
+procedure TContentGrid.LMTimer(var Msg: TLMTimer);
 var
   A: TGridCoord;
   P: TPoint;

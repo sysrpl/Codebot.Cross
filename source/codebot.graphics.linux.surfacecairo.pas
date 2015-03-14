@@ -2061,17 +2061,37 @@ end;
 
 procedure TBitmapCairo.SetSize(Width, Height: Integer);
 var
+  NewPixels: Boolean;
+  W, H: Integer;
+  P: PPixel;
   B: PGdkPixbuf;
 begin
+  NewPixels := False;
   if (Width < 1) or (Height < 1) then
     B := nil
   else if FBuffer = nil then
-    B := gdk_pixbuf_new(GDK_COLORSPACE_RGB, True, 8, Width, Height)
+  begin
+    B := gdk_pixbuf_new(GDK_COLORSPACE_RGB, True, 8, Width, Height);
+    NewPixels := True;
+  end
   else if (Width <> GetWidth) or (Height <> GetHeight) then
-    B := gdk_pixbuf_new(GDK_COLORSPACE_RGB, True, 8, Width, Height)
+  begin
+    B := gdk_pixbuf_new(GDK_COLORSPACE_RGB, True, 8, Width, Height);
+    NewPixels := True;
+  end
   else
     Exit;
   SetBuffer(B);
+  if NewPixels then
+  begin
+    P := Pixels;
+    for W := 1 to Width do
+      for H := 1 to Height do
+      begin
+        P^ := clTransparent;
+        Inc(P);
+      end;
+  end;
 end;
 
 procedure TBitmapCairo.LoadFromFile(const FileName: string);
