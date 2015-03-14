@@ -37,6 +37,7 @@ type
   public
     { Copy padding }
     procedure Assign(Source: TPersistent); override;
+  published
     { Space on the left }
     property Left: Integer read FLeft write SetLeft default 0;
     { Space on the top }

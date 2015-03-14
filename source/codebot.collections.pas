@@ -196,6 +196,7 @@ type
     function Last: T;
     function Remove(Item: T): Integer;
     function Data: Pointer;
+    property Item[Index: Integer]: T read Get write Put; default;
   end;
 
 { TObjects<T> where T is TObject }
