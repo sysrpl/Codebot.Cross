@@ -22,6 +22,7 @@ uses
   Codebot.Controls.Grids,
   Codebot.Controls.Banner,
   Codebot.Controls.Buttons,
+  Codebot.Controls.Containers,
   Codebot.Controls.Colors,
   Codebot.Controls.Extras,
   Codebot.Controls.Scrolling,
@@ -36,7 +37,7 @@ implementation
 procedure Register;
 begin
   { Components }
-  RegisterComponents('Codebot', [TIndeterminateProgress, TBorderContainer, TBanner,
+  RegisterComponents('Codebot', [TIndeterminateProgress, TSizingPanel, TBanner,
     TRenderBox, TRenderImage, TImageStrip, TThinButton, TContentGrid, TDrawList,
     TDrawTextList, THuePicker, TSaturationPicker, TSlideBar]);
   { Property editors }
@@ -47,6 +48,7 @@ begin
   RegisterPropertyEditor(TSurfaceBitmap.ClassInfo, nil, '',
     TSurfaceBitmapPropertyEditor);
   { Component editors }
+  RegisterComponentEditor(TSizingPanel, TSizingPanelEditor);
   RegisterComponentEditor(TRenderImage, TRenderImageEditor);
   RegisterComponentEditor(TImageStrip, TImageStripEditor);
   { Custom forms }

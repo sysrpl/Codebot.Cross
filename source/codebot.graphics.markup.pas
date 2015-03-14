@@ -128,20 +128,41 @@ type
 
   TExpressionArray = TArrayList<TExpression>;
 
+{ TSurfaceHeader }
+
+  TSurfaceHeader = record
+  public
+    procedure Reset;
+    procedure Normalize;
+  public
+    Title: string;
+    Width: Integer;
+    Height: Integer;
+    Opacity: Byte;
+    Scale: Float;
+    Display: string;
+  end;
+
 { TSurfaceData }
 
   TSurfaceData = record
   private
+    function GetScale: Float;
+  private
+    function FindBrush(const Name: string): IBrush;
+    function FindPen(const Name: string): IPen;
+    function FindFont(const Name: string): IFont;
+    property Scale: Float read GetScale;
+  public
+    Doc: IDocument;
+    Valid: Boolean;
+    Header: TSurfaceHeader;
+    Expressions: TExpressionArray;
     Brushes: TArrayList<TBrushData>;
     Pens: TArrayList<TPenData>;
     Fonts: TArrayList<TFontData>;
     Commands: TArrayList<TCommandData>;
-    function FindBrush(const Name: string): IBrush;
-    function FindPen(const Name: string): IPen;
-    function FindFont(const Name: string): IFont;
-  public
-    Expressions: TExpressionArray;
-    procedure Parse(const Markup: string);
+    procedure Process(Document: IDocument; constref Defaults: TSurfaceHeader);
     procedure Render(Surface: ISurface);
   end;
 
@@ -223,9 +244,38 @@ begin
     end;
 end;
 
+
+procedure TSurfaceHeader.Reset;
+begin
+  Title := '(untitled)';
+  Width := 256;
+  Height := 256;
+  Opacity := 255;
+  Scale := 1;
+  Display := 'fit';
+end;
+
+procedure TSurfaceHeader.Normalize;
+begin
+  if Scale > 5 then
+    Scale := 5
+  else if Scale < 0.25 then
+    Scale := 0.25;
+  if Width < 32 then
+    Width := 32
+  else if Width > 512 then
+    Width := 512;
+  if Height < 32 then
+    Height := 32
+  else if Height > 512 then
+    Height := 512;
+  if Display.ArrayIndex(['fit', 'tile', 'overlay']) < 0 then
+    Display := 'fit';
+end;
+
 { TSurfaceData }
 
-procedure TSurfaceData.Parse(const Markup: string);
+procedure TSurfaceData.Process(Document: IDocument; constref Defaults: TSurfaceHeader);
 var
   Added: TExpressionArray;
 
@@ -323,9 +373,9 @@ var
     else
       Brush := nil;
     if Brush <> nil then
-      Result.Pen := NewPen(Brush, W)
+      Result.Pen := NewPen(Brush, W * Scale)
     else
-      Result.Pen := NewPen(C, W);
+      Result.Pen := NewPen(C, W * Scale);
   end;
 
   function ParseFont(F: IFiler): TFontData;
@@ -362,7 +412,7 @@ var
     if S <> '' then
     begin
       I := StrToIntDef(S, 0);
-      if I > 10 then
+      if I > 0 then
         Font.Height := I;
     end;
     Style := [];
@@ -514,21 +564,31 @@ var
   end;
 
 var
-  D: IDocument;
   R: INode;
   N: INode;
   L: INodeList;
   F: IFiler;
   S: string;
 begin
+  Doc := Document;
+  Header := Defaults;
   Brushes.Length := 0;
   Pens.Length := 0;
   Fonts.Length := 0;
   Commands.Length := 0;
-  D := DocumentCreate;
-  D.Xml := Markup;
-  R := D.Force('surface');
-  L := R.SelectList('brush');
+  R := Doc.Root;
+  Valid := (R <> nil) and (R.Name = 'surface');
+  if not Valid then
+    Exit;
+  F := R.Filer;
+  Header.Title := F.ReadStr('@title', Defaults.Title, True).Trim;
+  Header.Width := F.ReadInt('@width', Defaults.Width, True);
+  Header.Height := F.ReadInt('@height', Defaults.Height, True);
+  Header.Opacity := F.ReadInt('@opacity', Defaults.Opacity, True);
+  Header.Scale := F.ReadFloat('@scale', Defaults.Scale, True);
+  Header.Display := F.ReadStr('@display', Defaults.Display, True);
+  Header.Normalize;
+  L := R.SelectList('resources/brush');
   if L <> nil then
     for N in L do
     begin
@@ -538,7 +598,7 @@ begin
       else
         Brushes.Push(ParseBrush(F));
     end;
-  L := R.SelectList('pen');
+  L := R.SelectList('resources/pen');
   if L <> nil then
     for N in L do
     begin
@@ -548,7 +608,7 @@ begin
       else
         Pens.Push(ParsePen(F, Self));
     end;
-  L := R.SelectList('font');
+  L := R.SelectList('resources/font');
   if L <> nil then
     for N in L do
     begin
@@ -558,7 +618,11 @@ begin
       else
         Fonts.Push(ParseFont(F));
     end;
-  L := R.Nodes;
+  N := R.SelectNode('commands');
+  if N <> nil then
+    L := N.Nodes
+  else
+    L := nil;
   if L <> nil then
     for N in L do
     begin
@@ -608,6 +672,11 @@ begin
         Commands.Push(ParseStroke(ckFill, F));
     end;
   Expressions := Added;
+end;
+
+function TSurfaceData.GetScale: Float;
+begin
+  Result := Header.Scale;
 end;
 
 function TSurfaceData.FindBrush(const Name: string): IBrush;
@@ -666,13 +735,13 @@ begin
     Data := Commands[I];
     Resolve(Data);
     case Data.Kind of
-      ckMoveTo: Surface.MoveTo(Data.X, Data.Y);
-      ckLineTo: Surface.LineTo(Data.X, Data.Y);
-      ckArcTo: Surface.ArcTo(Data.Area, Data.BeginAngle, Data.EndAngle);
-      ckCurveTo: Surface.CurveTo(Data.P.X, Data.P.Y, Data.C1, Data.C2);
-      ckEllipse: Surface.Ellipse(Data.Rect);
-      ckRectangle: Surface.Rectangle(Data.Rect);
-      ckRoundRectangle: Surface.RoundRectangle(Data.RoundRect, Data.Radius);
+      ckMoveTo: Surface.MoveTo(Data.X * Scale, Data.Y * Scale);
+      ckLineTo: Surface.LineTo(Data.X * Scale, Data.Y * Scale);
+      ckArcTo: Surface.ArcTo(Data.Area * Scale, Data.BeginAngle, Data.EndAngle);
+      ckCurveTo: Surface.CurveTo(Data.P.X * Scale, Data.P.Y * Scale, Data.C1 * Scale, Data.C2 * Scale);
+      ckEllipse: Surface.Ellipse(Data.Rect * Scale);
+      ckRectangle: Surface.Rectangle(Data.Rect * Scale);
+      ckRoundRectangle: Surface.RoundRectangle(Data.RoundRect * Scale, Data.Radius * Scale);
       ckText:
         begin
           F := FindFont(Data.Font);
@@ -690,8 +759,8 @@ begin
       ckStatePop: Surface.Restore;
       ckIdentity: Surface.Matrix.Identity;
       ckRotate: Surface.Matrix.Rotate(Data.Angle);
-      ckScale: Surface.Matrix.Scale(Data.X, Data.Y);
-      ckTranslate: Surface.Matrix.Translate(Data.X, Data.Y);
+      ckScale: Surface.Matrix.Scale(Data.X * Scale, Data.Y * Scale);
+      ckTranslate: Surface.Matrix.Translate(Data.X * Scale, Data.Y * Scale);
       ckStroke:
         begin
           P := FindPen(Data.Resource);

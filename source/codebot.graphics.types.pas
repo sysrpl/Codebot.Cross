@@ -76,7 +76,9 @@ type
     procedure SetBottom(Value: Integer);
     function GetSize: TPointI;
     function GetTopLeft: TPointI;
+    function GetBottomLeft: TPointI;
     function GetBottomRight: TPointI;
+    function GetTopRight: TPointI;
     function GetMidPoint: TPointI;
   public
     X, Y, Width, Height: Integer;
@@ -104,7 +106,9 @@ type
     property Bottom: Integer read GetBottom write SetBottom;
     property Size: TPointI read GetSize;
     property TopLeft: TPointI read GetTopLeft;
+    property BottomLeft: TPointI read GetBottomLeft;
     property BottomRight: TPointI read GetBottomRight;
+    property TopRight: TPointI read GetTopRight;
     property MidPoint: TPointI read GetMidPoint;
   end;
   PRectI = ^TRectI;
@@ -123,6 +127,7 @@ type
     class operator NotEqual(const A, B: TPointF): Boolean;
     class operator Add(const A, B: TPointF): TPointF;
     class operator Subtract(const A, B: TPointF): TPointF;
+    class operator Multiply(const A: TPointF; B: Float): TPointF;
     function Equals(const Value: TPointF): Boolean;
     class function Create: TPointF; overload; static;
     class function Create(X, Y: Float): TPointF; overload; static;
@@ -167,6 +172,7 @@ type
     class operator Explicit(const Value: TRectF): TRect;
     class operator Equal(const A, B: TRectF): Boolean;
     class operator NotEqual(const A, B: TRectF): Boolean;
+    class operator Multiply(const A: TRectF; B: Float): TRectF;
     class function Create: TRectF; overload; static;
     class function Create(Size: TPointF): TRectF; overload; static;
     class function Create(W, H: Float): TRectF; overload; static;
@@ -1019,9 +1025,19 @@ begin
   Result := TPointI.Create(X, Y);
 end;
 
+function TRectI.GetBottomLeft: TPointI;
+begin
+  Result := TPointI.Create(X, Y + Height);
+end;
+
 function TRectI.GetBottomRight: TPointI;
 begin
   Result := TPointI.Create(X + Width, Y + Height);
+end;
+
+function TRectI.GetTopRight: TPointI;
+begin
+  Result := TPointI.Create(X + Width, Y);
 end;
 
 function TRectI.GetMidPoint: TPointI;
@@ -1081,6 +1097,12 @@ class operator TPointF.Subtract(const A, B: TPointF): TPointF;
 begin
   Result.X := A.X - B.X;
   Result.Y := A.Y - B.Y;
+end;
+
+class operator TPointF.Multiply(const A: TPointF; B: Float): TPointF;
+begin
+  Result.X := A.X * B;
+  Result.Y := A.Y * B;
 end;
 
 class function TPointF.Create: TPointF;
@@ -1223,6 +1245,14 @@ end;
 class operator TRectF.NotEqual(const A, B: TRectF): Boolean;
 begin
   Result := not A.Equals(B);
+end;
+
+class operator TRectF.Multiply(const A: TRectF; B: Float): TRectF;
+begin
+  Result.X := A.X * B;
+  Result.Y := A.Y * B;
+  Result.Width := A.Width * B;
+  Result.Height := A.Height * B;
 end;
 
 class function TRectF.Create: TRectF;
@@ -1862,10 +1892,10 @@ function TColorB.Darken(Percent: Float): TColorB;
 var
   Compliment: Float;
 begin
-  if Percent = 0 then
+  if Percent <= 0.005 then
     Exit(Self);
   Result.Alpha := Alpha;
-  if Percent = 1 then
+  if Percent >= 0.995 then
   begin
     Result.Blue := 0;
     Result.Green := 0;
@@ -1884,16 +1914,16 @@ function TColorB.Lighten(Percent: Float): TColorB;
 var
   Compliment: Float;
 begin
-  if Percent = 0 then
+  if Percent <= 0.005 then
     Exit(Self);
   Result.Alpha := Alpha;
-  if (Alpha = 0) or (Percent = 0) then
+  if Alpha = 0 then
   begin
     Result.Blue := 0;
     Result.Green := 0;
     Result.Red := 0;
   end
-  else if (Alpha = $FF) and (Percent = 1) then
+  else if (Alpha = $FF) and (Percent >= 0.995) then
   begin
     Result.Blue := HiByte;
     Result.Green := HiByte;

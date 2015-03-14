@@ -15,9 +15,10 @@ interface
 
 uses
   SysUtils, Classes, Graphics, PropEdits, ComponentEditors, ProjectIntf,
-  NewItemIntf, TypInfo,
+  TypInfo,
   Codebot.Graphics,
   Codebot.Graphics.Types,
+  Codebot.Controls.Containers,
   Codebot.Controls.Extras,
   Codebot.Design.SurfaceBitmapEditor,
   Codebot.Design.ImageListEditor;
@@ -56,6 +57,16 @@ type
     procedure Edit; override;
     function GetAttributes: TPropertyAttributes; override;
     function GetValue: AnsiString; override;
+  end;
+
+{ TSizingPanelEditor }
+
+  TSizingPanelEditor = class(TComponentEditor)
+  public
+    procedure Edit; override;
+    procedure ExecuteVerb(Index: Integer); override;
+    function GetVerb(Index: Integer): string; override;
+    function GetVerbCount: Integer; override;
   end;
 
 { TRenderImageEditor }
@@ -218,6 +229,35 @@ begin
     if EditSurfaceBitmap(Bitmap) then
       Modified;
   end;
+end;
+
+{ TSizingPanelEditor }
+
+function TSizingPanelEditor.GetVerb(Index: Integer): string;
+begin
+  Result := 'Arrange controls';
+end;
+
+function TSizingPanelEditor.GetVerbCount: Integer;
+begin
+  Result := 1;
+end;
+
+procedure TSizingPanelEditor.Edit;
+var
+  Panel: TSizingPanel;
+begin
+  if Component is TSizingPanel then
+  begin
+    Panel := Component as TSizingPanel;
+    Panel.ArrangeControls;
+    Designer.Modified;
+  end;
+end;
+
+procedure TSizingPanelEditor.ExecuteVerb(Index: Integer);
+begin
+  Edit;
 end;
 
 { TRenderImageEditor }

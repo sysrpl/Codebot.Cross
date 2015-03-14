@@ -175,7 +175,7 @@ begin
     if FMin = FMax then
       I := 0
     else
-      I := Round(FPosition / (FMax - FMin) * (Width - P.X));
+      I := Round((FPosition - FMin) / (FMax - FMin) * (Width - P.X));
     Result.Offset(I, Height div 2 - P.Y div 2);
   end;
 end;

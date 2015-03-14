@@ -21,13 +21,14 @@ uses
   Codebot.Graphics,
   Codebot.Graphics.Types,
   Codebot.Controls.Banner,
+  Codebot.Controls.Containers,
   Codebot.Controls.Extras;
 
 { TSurfaceBitmapEditor }
 
 type
   TSurfaceBitmapEditor = class(TBannerForm)
-    BorderContainer: TBorderContainer;
+    BorderContainer: TSizingPanel;
     RenderImage: TRenderImage;
     OKButton: TButton;
     CancelButton: TButton;

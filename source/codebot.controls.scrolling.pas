@@ -1113,16 +1113,16 @@ var
   S: TStringList;
 begin
   inherited Create(AOwner);
+  FAutoScroll := False;
+  FAutoHeight := True;
   S := TStringList.Create;
   S.Add('item one');
   S.Add('item two');
   S.Add('item three');
   S.OnChange := ItemsChange;
-  ItemsChange(Self);
-  FAutoScroll := False;
-  FAutoHeight := True;
-  ItemHeight := TextHeight + 2;
   FItems := S;
+  ItemHeight := TextHeight + 2;
+  ItemsChange(S);
 end;
 
 destructor TDrawTextList.Destroy;

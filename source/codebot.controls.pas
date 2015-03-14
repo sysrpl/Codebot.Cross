@@ -19,9 +19,44 @@ uses
   Codebot.Graphics,
   Codebot.Graphics.Types;
 
-{ ESurfaceAccessError }
+{ TEdgeOffset represents a padding or margin on a control
+  See also
+  <link Overview.Codebot.Controls.TEdgeOffset, TEdgeOffset members> }
 
 type
+  TEdgeOffset = class(TChangeNotifier)
+  private
+    FBottom: Integer;
+    FLeft: Integer;
+    FRight: Integer;
+    FTop: Integer;
+    procedure SetBottom(Value: Integer);
+    procedure SetLeft(Value: Integer);
+    procedure SetRight(Value: Integer);
+    procedure SetTop(Value: Integer);
+  public
+    { Copy padding }
+    procedure Assign(Source: TPersistent); override;
+    { Space on the left }
+    property Left: Integer read FLeft write SetLeft default 0;
+    { Space on the top }
+    property Top: Integer read FTop write SetTop default 0;
+    { Space on the right }
+    property Right: Integer read FRight write SetRight default 0;
+    { Space on the bottom }
+    property Bottom: Integer read FBottom write SetBottom default 0;
+  end;
+
+{ TEdge represents information about the border of a control }
+
+  TEdge = (edLeft, edTop, edRight, edBottom);
+
+{ TEdges represents information about multiple borders on a control }
+
+  TEdges = set of TEdge;
+
+{ ESurfaceAccessError }
+
 {doc off}
   ESurfaceAccessError = class(Exception);
 {doc on}
@@ -142,75 +177,62 @@ type
     property ThemeName: string read FThemeName write SetThemeName;
   end;
 
-{ TBorderContainer }
-
-  TBorderContainer = class(TRenderCustomControl)
-  protected
-    procedure Render; override;
-  public
-    constructor Create(AOwner: TComponent); override;
-  published
-    property Align;
-    property Anchors;
-    property AutoSize;
-    property BorderSpacing;
-    property BidiMode;
-    property BorderWidth;
-    property BorderStyle;
-    property Caption;
-    property ChildSizing;
-    property ClientHeight;
-    property ClientWidth;
-    property Color;
-    property Constraints;
-    property DockSite;
-    property DragCursor;
-    property DragKind;
-    property DragMode;
-    property Enabled;
-    property Font;
-    property ParentBidiMode;
-    property ParentColor;
-    property ParentFont;
-    property ParentShowHint;
-    property PopupMenu;
-    property ShowHint;
-    property TabOrder;
-    property TabStop;
-    property UseDockManager default True;
-    property Visible;
-    property OnClick;
-    property OnContextPopup;
-    property OnDockDrop;
-    property OnDockOver;
-    property OnDblClick;
-    property OnDragDrop;
-    property OnDragOver;
-    property OnEndDock;
-    property OnEndDrag;
-    property OnEnter;
-    property OnExit;
-    property OnGetSiteInfo;
-    property OnGetDockCaption;
-    property OnMouseDown;
-    property OnMouseEnter;
-    property OnMouseLeave;
-    property OnMouseMove;
-    property OnMouseUp;
-    property OnMouseWheel;
-    property OnMouseWheelDown;
-    property OnMouseWheelUp;
-    property OnResize;
-    property OnRender;
-    property OnStartDock;
-    property OnStartDrag;
-    property OnUnDock;
-  end;
+procedure ArrangeControls(Container: TWinControl; Bounds: TRectI; Offset: Integer = 0);
 
 implementation
 
 uses
   Codebot.Constants;
+
+{ TEdgeOffset }
+
+procedure TEdgeOffset.Assign(Source: TPersistent);
+var
+  E: TEdgeOffset;
+begin
+  if Source is TEdgeOffset then
+  begin
+    E := Source as TEdgeOffset;
+    FLeft := E.Left;
+    FTop := E.Top;
+    FRight := E.Right;
+    FBottom := E.Bottom;
+    Change;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+procedure TEdgeOffset.SetLeft(Value: Integer);
+begin
+  if Value < 0 then Value := 0;
+  if FLeft = Value then Exit;
+  FLeft := Value;
+end;
+
+procedure TEdgeOffset.SetTop(Value: Integer);
+begin
+  if Value < 0 then Value := 0;
+  if FTop = Value then Exit;
+  FTop := Value;
+  Change;
+end;
+
+procedure TEdgeOffset.SetRight(Value: Integer);
+begin
+  if Value < 0 then Value := 0;
+  if FRight = Value then Exit;
+  FRight := Value;
+  Change;
+end;
+
+procedure TEdgeOffset.SetBottom(Value: Integer);
+begin
+  if Value < 0 then Value := 0;
+  if FBottom = Value then Exit;
+  FBottom := Value;
+  Change;
+end;
 
 { TRenderGraphicControl }
 
@@ -476,22 +498,66 @@ begin
   Invalidate;
 end;
 
-{ TBorderContainer }
-
-constructor TBorderContainer.Create(AOwner: TComponent);
+function CompareControls(constref A: TControl; constref B: TControl): Integer;
 begin
-  inherited Create(AOwner);
-  ControlStyle := ControlStyle + [csAcceptsControls];
-  Color := clWindow;
-  Width := 160;
-  Height := 160;
+  Result := A.Left - B.Left;
 end;
 
-procedure TBorderContainer.Render;
+procedure ArrangeControls(Container: TWinControl; Bounds: TRectI; Offset: Integer = 0);
+
+  function IsLabel(C: TControl): Boolean;
+  var
+    S: string;
+  begin
+    S := C.ClassName;
+    Result := S.EndsWith('Label');
+  end;
+
+  function IsSlider(C: TControl): Boolean;
+  var
+    S: string;
+  begin
+    S := C.ClassName;
+    Result := S.EndsWith('SlideBar');
+  end;
+
+var
+  Controls: TArrayList<TControl>;
+  Control: TControl;
+  X, Y: Integer;
+  I: Integer;
 begin
-  inherited Render;
-  if csDesigning in ComponentState then
-    Surface.FillRect(Brushes.Checker, ClientRect);
+  for I := 0 to Container.ControlCount - 1 do
+  begin
+    Control := Container.Controls[I];
+    if Bounds.Contains(Control.Left, Control.Top) then
+    Controls.Push(Control);
+  end;
+  Controls.Sort(CompareControls);
+  X := Bounds.Left + Offset;
+  Y := Bounds.Height;
+  for Control in Controls do
+  begin
+    if IsLabel(Control) then
+    begin
+      X := X + 8;
+      Control.Left := X;
+      Control.Top := (Y - Control.Height) div 2 + Bounds.Top;
+      X := X + Control.Width + 8;
+    end
+    else if IsSlider(Control) then
+    begin
+      Control.Left := X;
+      Control.Top := (Y - Control.Height) div 2 + Bounds.Top;
+      X := X + Control.Width;
+    end
+    else
+    begin
+      Control.Left := X;
+      Control.Top := (Y - Control.Height) div 2 + Bounds.Top;
+      X := X + Control.Width;
+    end;
+  end;
 end;
 
 end.

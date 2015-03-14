@@ -23,16 +23,21 @@ uses
 { TCustomThinButton }
 
 type
+  TButtonKind = (bkButton, skDropDown, bkSplitter);
+
+type
   TCustomThinButton = class(TRenderGraphicControl)
   private
+    FKind: TButtonKind;
     FImages: TImageStrip;
     FImageIndex: Integer;
     FDown: Boolean;
     FOnDrawButton: TDrawStateEvent;
+    procedure SetKind(Value: TButtonKind);
+    procedure SetDown(Value: Boolean);
     procedure SetImages(Value: TImageStrip);
     procedure SetImageIndex(Value: Integer);
     procedure ImagesChanged(Sender: TObject);
-    procedure SetDown(Value: Boolean);
   protected
     function ThemeAware: Boolean; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
@@ -46,10 +51,12 @@ type
     procedure MouseLeave; override;
     procedure Render; override;
     property Down: Boolean read FDown write SetDown;
+    property Kind: TButtonKind read FKind write SetKind default bkButton;
     property OnDrawButton: TDrawStateEvent read FOnDrawButton write FOnDrawButton;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure Click;
   end;
 
 { TThinButton }
@@ -69,6 +76,7 @@ type
     property Enabled;
     property Images;
     property ImageIndex;
+    property Kind;
     property Visible;
     property OnClick;
     property OnDblClick;
@@ -107,6 +115,12 @@ destructor TCustomThinButton.Destroy;
 begin
   Images := nil;
   inherited Destroy;
+end;
+
+procedure TCustomThinButton.Click;
+begin
+  if Assigned(OnClick) then
+    OnClick(Self);
 end;
 
 procedure TCustomThinButton.ImagesChanged(Sender: TObject);
@@ -148,6 +162,31 @@ begin
   end;
 end;
 
+procedure TCustomThinButton.SetKind(Value: TButtonKind);
+begin
+  if FKind = Value then Exit;
+  FKind := Value;
+  FDown := False;
+  if FKind = bkSplitter then
+    Width := 16
+  else
+    Width := 32;
+  DrawState := [];
+  Invalidate;
+end;
+
+procedure TCustomThinButton.SetDown(Value: Boolean);
+begin
+  if FKind <> bkButton then
+    Value := False;
+  if FDown = Value then Exit;
+  FDown := Value;
+  if FDown then
+    DrawState := [dsHot, dsPressed]
+  else
+    DrawState := [];
+end;
+
 function TCustomThinButton.ThemeAware: Boolean;
 begin
   Result := True;
@@ -157,6 +196,8 @@ procedure TCustomThinButton.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
   inherited MouseDown(Button, Shift, X, Y);
+  if FKind = bkSplitter then
+    Exit;
   if not FDown then
     if Button = mbLeft then
       DrawState := DrawState + [dsPressed];
@@ -169,6 +210,8 @@ begin
   inherited MouseMove(Shift, X, Y);
   if FDown then
     Exit;
+  if FKind = bkSplitter then
+    Exit;
   R := ClientRect;
   if R.Contains(X, Y) then
     DrawState := DrawState + [dsHot]
@@ -180,6 +223,8 @@ procedure TCustomThinButton.MouseUp(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
   inherited MouseUp(Button, Shift, X, Y);
+  if FKind = bkSplitter then
+    Exit;
   if not FDown then
     if Button = mbLeft then
       DrawState := DrawState - [dsPressed];
@@ -188,6 +233,8 @@ end;
 procedure TCustomThinButton.MouseEnter;
 begin
   inherited MouseEnter;
+  if FKind = bkSplitter then
+    Exit;
   if not FDown then
     DrawState := DrawState + [dsHot];
 end;
@@ -195,6 +242,8 @@ end;
 procedure TCustomThinButton.MouseLeave;
 begin
   inherited MouseLeave;
+  if FKind = bkSplitter then
+    Exit;
   if not FDown then
     DrawState := DrawState - [dsHot];
 end;
@@ -202,6 +251,7 @@ end;
 procedure TCustomThinButton.Render;
 var
   D: TDrawState;
+  R: TRectI;
 begin
   inherited Render;
   if csDesigning in ComponentState then
@@ -212,26 +262,24 @@ begin
       D := [dsHot];
     Theme.Select(D);
   end;
-  if Assigned(FOnDrawButton) then
-    FOnDrawButton(Self, Surface, ClientRect, DrawState)
+  R := ClientRect;
+  if FKind = bkSplitter then
+  begin
+    if csDesigning in ComponentState then
+      Surface.StrokeRoundRect(NewPen(CurrentColor.Darken(0.05)), R, 3);
+    R.Inflate(0, -2);
+    Theme.DrawSplit(R, toVertical);
+  end
+  else if Assigned(FOnDrawButton) then
+    FOnDrawButton(Self, Surface, R, DrawState)
   else
-    Theme.DrawButtonThin(ClientRect);
+    Theme.DrawButtonThin(R);
   if FImages <> nil then
   begin
     FImages.Draw(Surface, FImageIndex,
       Width div 2 - FImages.Size div 2, Height div 2 - FImages.Size div 2,
       DrawState);
   end;
-end;
-
-procedure TCustomThinButton.SetDown(Value: Boolean);
-begin
-  if FDown = Value then Exit;
-  FDown := Value;
-  if FDown then
-    DrawState := [dsHot, dsPressed]
-  else
-    DrawState := [];
 end;
 
 end.
