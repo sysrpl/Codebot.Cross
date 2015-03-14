@@ -799,8 +799,7 @@ end;
 
 function CreateTextFormat(Font: IFont): IDWriteTextFormat;
 const
-  PointsPerInch = 72;
-  DeviceIndependentPixels = 96;
+  Factor = 72 / 96;
   Eng = 'en-us';
   Weight: array[Boolean] of DWRITE_FONT_WEIGHT =
     (DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_WEIGHT_BOLD);
@@ -810,7 +809,7 @@ var
   Size: Float;
   Name: WideString;
 begin
-  Size := Font.Size / PointsPerInch * DeviceIndependentPixels;
+  Size := Font.Size * Factor;
   Name := Font.Name;
   if WriteFactory.CreateTextFormat(PWideChar(Name), nil, Weight[fsBold in Font.Style],
     Style[fsItalic in Font.Style], DWRITE_FONT_STRETCH_NORMAL, Size,
@@ -1267,9 +1266,12 @@ begin
   FStyle := F.Style;
   GetObject(F.Handle, SizeOf(LogFont), @LogFont);
   if LogFont.lfHeight < 0 then
-    FSize := MulDiv(-LogFont.lfHeight, Points, Dpi)
+  begin
+    FSize := -LogFont.lfHeight / Points;
+    FSize := FSize  * Dpi;
+  end
   else
-    FSize := LogFont.lfHeight * (Points / Dpi);
+    FSize := LogFont.lfHeight;
 end;
 
 function TFontD2D.Format: IDWriteTextFormat;
@@ -2195,7 +2197,7 @@ begin
   WriteFactory.CreateRenderingParams(Params1);
   WriteFactory.CreateCustomRenderingParams(Params1.GetGamma,
     Params1.GetEnhancedContrast, 1, Params1.GetPixelGeometry,
-    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL,
+    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
     Params2);
   FTarget.SetTextRenderingParams(Params2);
   FTarget.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);

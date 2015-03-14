@@ -155,10 +155,13 @@ type
     class var DefaultConvertString: TConvertString<T>;
     { The array acting as a list }
     var Items: TArray<T>;
+    class function Convert: TArrayList<T>; static;
     { Convert a list to an array }
     class operator Implicit(const Value: TArrayList<T>): TArray<T>;
     { Convert an array to a list }
     class operator Implicit(const Value: TArray<T>): TArrayList<T>;
+    { Convert an open array to a list }
+    class operator Implicit(const Value: array of T): TArrayList<T>;
     { Returns the lower bounds of the list }
     function Lo: Integer;
     { Returns the upper bounds of the list }
@@ -735,7 +738,7 @@ type
     property OnChange: INotifyDelegate read GetOnChange;
   end;
 
-{ Comapre two block of memory returning true if they are the same }
+{ Compare two block of memory returning true if they are the same }
 function MemCompare(const A, B; Size: LongWord): Boolean;
 {$endregion}
 
@@ -2560,6 +2563,14 @@ begin
   Result.Items := Value;
 end;
 
+class operator TArrayList<T>.Implicit(const Value: array of T): TArrayList<T>;
+var
+  I: T;
+begin
+  for I in Value do
+    Result.Push(I);
+end;
+
 procedure TArrayList<T>.Reverse;
 var
   Swap: T;
@@ -2799,6 +2810,11 @@ begin
   Items[Index] := Value;
 end;
 
+class function TArrayList<T>.Convert: TArrayList<T>;
+begin
+  Result.Length := 0;
+end;
+
 { TNamedValues<T> }
 
 function TNamedValues<T>.GetEnumerator: IEnumerator<string>;
@@ -3018,6 +3034,7 @@ begin
   for Event in FOnChange do
     Event(Self);
 end;
+
 {$endregion}
 
 {$region classes}

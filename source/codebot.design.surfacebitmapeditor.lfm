@@ -299,7 +299,7 @@ object SurfaceBitmapEditor: TSurfaceBitmapEditor
   TitleSub.Text = 'A surface bitmap can load and save all popular image formats'
   TitleSub.X = 0
   TitleSub.Y = 0
-  object BorderContainer: TBorderContainer
+  object BorderContainer: TSizingPanel
     Left = 8
     Height = 240
     Top = 88

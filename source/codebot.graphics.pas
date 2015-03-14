@@ -90,6 +90,8 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure Clear; override;
     {doc on}
+    { Set the underlying bitmpa referenc directly }
+    procedure CopyReference(Bitmap: IBitmap);
     { Draw the image on a canvas at x and y, optionaly picking a frame as the source }
     procedure Draw(Surface: ISurface; X, Y: Integer; FrameIndex: Integer = -1); overload;
     { Draw the image on a canvas stretching it from the source to dest rectangles }
@@ -208,11 +210,13 @@ type
 
 procedure FillRectColor(Surface: ISurface; const Rect: TRectI; Color: TColorB; Radius: Float = 0);
 procedure StrokeRectColor(Surface: ISurface; const Rect: TRectI; Color: TColorB; Radius: Float = 0);
+procedure FillRectState(Surface: ISurface; const Rect: TRectI; State: TDrawState);
 function DrawDummyBitmap(Width, Height: Integer): IBitmap;
 function DrawHueLinear(Width, Height: Integer): IBitmap;
 function DrawHueRadial(Width, Height: Integer): IBitmap;
 function DrawSaturationBox(Width, Height: Integer; Hue: Float): IBitmap;
 function DrawDesaturationBox(Width, Height: Integer; Hue: Float): IBitmap;
+procedure DrawShadow(Surface: ISurface; const Rect: TRectI; Direction: TDirection);
 
 { Brushes creates a series of bitmap batterns }
 
@@ -529,6 +533,13 @@ begin
   FOpacity := High(Byte);
 end;
 
+procedure TSurfaceBitmap.CopyReference(Bitmap: IBitmap);
+begin
+  UpdateBitmap(Bitmap);
+  FWidth := Bitmap.Width;
+  FHeight := Bitmap.Height;
+end;
+
 procedure TSurfaceBitmap.UpdateBitmap(B: IBitmap);
 var
   F: TImageFormat;
@@ -583,15 +594,15 @@ begin
   if Empty then
     Exit;
   Result := TRectI.Create(FWidth, FHeight);
-  if FWidth > FHeight then
+  if Width > Height then
   begin
-    Result.Width := FHeight;
-    Result.Offset(Index * FHeight, 0);
+    Result.Width := Height;
+    Result.Offset(Index * Height, 0);
   end
   else
   begin
-    Result.Height := FWidth;
-    Result.Offset(0, Index * FWidth);
+    Result.Height := Width;
+    Result.Offset(0, Index * Width);
   end;
 end;
 
@@ -600,10 +611,10 @@ begin
   Result := 0;
   if Empty then
     Exit;
-  if FWidth > FHeight then
-    Result := FWidth div FHeight
+  if Width > Height then
+    Result := Width div Height
   else
-    Result := FHeight div FWidth;
+    Result := Height div Width;
 end;
 
 procedure TSurfaceBitmap.SetFormat(Value: TImageFormat);
@@ -619,7 +630,7 @@ end;
 
 function TSurfaceBitmap.GetEmpty: Boolean;
 begin
-  Result := (FWidth < 1) or (FHeight < 1);
+  Result := (Width < 1) or (Height < 1);
 end;
 
 function TSurfaceBitmap.GetMimeType: string;
@@ -657,14 +668,17 @@ end;
 
 function TSurfaceBitmap.GetWidth: Integer;
 begin
-  Result := FWidth;
+  if FBitmap.Empty then
+    Result := FWidth
+  else
+    Result := Bitmap.Width;
 end;
 
 procedure TSurfaceBitmap.SetWidth(Value: Integer);
 begin
   if Value < 1 then
     Value := 0;
-  if Value <> FWidth then
+  if Value <> Width then
   begin
     FWidth := Value;
     HandleRelease;
@@ -673,14 +687,17 @@ end;
 
 function TSurfaceBitmap.GetHeight: Integer;
 begin
-  Result := FHeight;
+  if FBitmap.Empty then
+    Result := FHeight
+  else
+    Result := Bitmap.Height;
 end;
 
 procedure TSurfaceBitmap.SetHeight(Value: Integer);
 begin
   if Value < 1 then
     Value := 0;
-  if Value <> FHeight then
+  if Value <> Height then
   begin
     FHeight := Value;
     HandleRelease;
@@ -828,7 +845,12 @@ begin
     Exit;
   HandleNeeded;
   for I := Low(Shades) to High(Shades) do
-    Shades[I] := Color.Lighten(I / High(Byte));
+  begin
+    if I > $7F then
+      Shades[I] := Color.Lighten((I - $7F) / $7F)
+    else
+      Shades[I] := Color.Darken(1 - I / $7F);
+  end;
   P := FBitmap.Pixels;
   for I := 1 to FBitmap.Width * FBitmap.Height do
   begin
@@ -938,7 +960,7 @@ begin
     SetSize(Width, Height);
     Exit;
   end;
-  if (Width = FWidth) or (Height = FHeight) then
+  if (Width = Self.Width) or (Height = Self.Height) then
     Exit;
   HandleNeeded;
   UpdateBitmap(FBitmap.Resample(Width, Height, Quality));
@@ -953,7 +975,7 @@ begin
     Width := 0;
   if Height < 0 then
     Height := 0;
-  if (Width <> FWidth) or (Height <> FHeight) then
+  if (Width <> Self.Width) or (Height <> Self.Height) then
   begin
     FWidth := Width;
     FHeight := Height;
@@ -1273,8 +1295,8 @@ begin
     B := TSurfaceBitmap.Create;
     B.SetSize(Size, Size);
     FBitmap.Draw(B.Surface, 0, 0, Index);
-    B.Desaturate(0.75);
-    B.Opacity := $A0;
+    B.Desaturate(1);
+    B.Opacity := $70;
     B.Draw(Surface, X, Y);
     B.Free;
   end
@@ -1343,6 +1365,20 @@ begin
     Surface.StrokeRect(NewPen(Color), Rect)
   else
     Surface.StrokeRoundRect(NewPen(Color), Rect, Radius);
+end;
+
+procedure FillRectState(Surface: ISurface; const Rect: TRectI; State: TDrawState);
+var
+  C: TColorB;
+begin
+  if dsSelected in State then
+  begin
+    C := clHighlight;
+    Surface.FillRect(NewBrush(C.Blend(clWindow, 0.75)), Rect);
+    Surface.StrokeRect(NewPen(C.Blend(clWindow, 0.25)), Rect);
+  end
+  else
+    Surface.FillRect(NewBrush(clWindow), Rect);
 end;
 
 function DrawDummyBitmap(Width, Height: Integer): IBitmap;
@@ -1470,6 +1506,57 @@ begin
     end;
 end;
 
+procedure DrawShadow(Surface: ISurface; const Rect: TRectI; Direction: TDirection);
+const
+  Margin = 8;
+var
+  R: TRectI;
+  C: TColorB;
+  B: IBrush;
+begin
+  R := Rect;
+  C := clBlack;
+  C.Alpha := 5;
+  B := NewBrush(C);
+  case Direction of
+    drLeft:
+    begin
+      R.Right := R.Left + Margin;
+      while R.Width > 1 do
+      begin
+        Surface.FillRect(B, R);
+        Dec(R.Width);
+      end;
+    end;
+    drUp:
+    begin
+      R.Bottom := R.Top + Margin;
+      while R.Height > 1 do
+      begin
+        Surface.FillRect(B, R);
+        Dec(R.Height);
+      end;
+    end;
+    drRight:
+    begin
+      R.Left := R.Right - Margin;
+      while R.Width > 1 do
+      begin
+        Surface.FillRect(B, R);
+        R.Left := R.Left + 1;
+      end;
+    end;
+    drDown:
+    begin
+      R.Top := R.Bottom - Margin;
+      while R.Height > 1 do
+      begin
+        Surface.FillRect(B, R);
+        R.Top := R.Top + 1;
+      end;
+    end;
+  end;
+end;
 
 { Brushes }
 
@@ -1858,6 +1945,8 @@ begin
 end;
 
 class procedure TDefaultTheme.DrawButtonThin(const Rect: TRectI);
+const
+  Radius = 3;
 var
   R: TRectI;
   C: TColorB;
@@ -1873,18 +1962,19 @@ begin
       G.AddStop(C.Fade(0.6).Darken(0.5), 0);
       G.AddStop(C.Fade(0).Darken(0.5), 1);
       Surface.FillRoundRect(G, Rect, 3);
-      Surface.StrokeRoundRect(NewPen(C.Fade(0.6).Darken(0.6)), Rect, 3);
+      Surface.StrokeRoundRect(NewPen(C.Fade(0.6).Darken(0.6)), Rect, Radius);
     end
     else
     begin
-      R.Inflate(R.Width, R.Height);
-      G := NewBrush(R);
-      G.AddStop(C.Fade(0), 0);
-      G.AddStop(C.Fade(0), 0.25);
-      G.AddStop(C.Fade(0.5).Darken(0.25), 0.3);
-      G.AddStop(C.Fade(1).Darken(0.8), 1);
-      Surface.FillRoundRect(G, Rect, 3);
-      Surface.StrokeRoundRect(NewPen(C.Fade(0.5).Darken(0.5)), Rect, 3);
+      G := NewBrush(R.Left, R.Top, R.Left, R.Bottom);
+      C := Control.CurrentColor;
+      G.AddStop(C.Lighten(0.5), 0);
+      G.AddStop(C.Darken(0.2), 1);
+      R.Inflate(-1, -1);
+      Surface.FillRect(G, R);
+      Surface.StrokeRect(NewPen(clWhite), R);
+      R.Inflate(1, 1);
+      Surface.StrokeRoundRect(NewPen(clBtnShadow), Rect, Radius);
     end;
 end;
 
@@ -1915,22 +2005,42 @@ begin
 end;
 
 class procedure TDefaultTheme.DrawThumbThin(const Rect: TRectI; Orientation: TThemeOrientation);
+const
+  Radius = 3;
 var
+  G: IGradientBrush;
+  C: TColorB;
   R: TRectI;
 begin
   R := Rect;
+  if Orientation = toVertical then
+    G := NewBrush(R.Left, R.Top, R.Right, R.Top)
+  else
+    G := NewBrush(R.Left, R.Top, R.Left, R.Bottom);
+  C := Control.CurrentColor;
+  G.AddStop(C.Lighten(0.5), 0);
+  G.AddStop(C.Darken(0.2), 1);
   if [dsHot, dsPressed] * State <> [] then
   begin
-    Surface.FillRoundRect(NewBrush(clHighlight), R, 4);
+    C := clWhite;
+    C := C.Blend(clHighlight, 0.75);
+    R.Inflate(-1, -1);
+    Surface.FillRoundRect(NewBrush(C), R, Radius);
     if Orientation = toVertical then
-      R.Inflate(-4, 0)
+      R.Inflate(-3, 0)
     else
-      R.Inflate(0, -4);
-    Surface.FillRect(NewBrush(clBtnFace), R);
+      R.Inflate(0, -3);
+    Surface.FillRect(G, R);
+    Surface.StrokeRect(NewPen(clWhite), R);
   end
   else
-    Surface.FillRoundRect(NewBrush(clBtnFace), Rect, 4);
-  Surface.StrokeRoundRect(NewPen(clBtnShadow), Rect, 4);
+  begin
+    Surface.FillRoundRect(G, Rect, Radius);
+    R := Rect;
+    R.Inflate(-1, -1);
+    Surface.StrokeRoundRect(NewPen(clWhite), R, Radius);
+  end;
+  Surface.StrokeRoundRect(NewPen(clBtnShadow), Rect, Radius);
 end;
 
 class function TDefaultTheme.MeasureBorder: TPointI;

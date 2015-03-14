@@ -45,6 +45,9 @@ type
     FColorized: Boolean;
     FMode: TImageMode;
     FSaturation: Float;
+    FSharedImage: TSurfaceBitmap;
+    function GetComputeImage: TSurfaceBitmap;
+    function GetRenderArea: TRectI;
     procedure ImageChange(Sender: TObject);
     procedure SetAngle(Value: Float);
     procedure SetColorized(Value: Boolean);
@@ -53,14 +56,19 @@ type
     function GetOpacity: Byte;
     procedure SetOpacity(Value: Byte);
     procedure SetSaturation(Value: Float);
+    procedure SetSharedImage(Value: TSurfaceBitmap);
   protected
     procedure SetColor(Value: TColor); override;
     procedure GetPreferredSize(var PreferredWidth, PreferredHeight: integer;
       Raw: Boolean = False; WithThemeSpace: Boolean = True); override;
     procedure Render; override;
+    property ComputeImage: TSurfaceBitmap read GetComputeImage;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    procedure UpdateImage;
+    property RenderArea: TRectI read GetRenderArea;
+    property SharedImage: TSurfaceBitmap read FSharedImage write SetSharedImage;
   published
     property Image: TSurfaceBitmap read FImage write SetImage;
     property Angle: Float read FAngle write SetAngle;
@@ -143,12 +151,14 @@ type
 
   TIndeterminateProgress = class(TRenderGraphicControl)
   private
+    FHelp: string;
     FTimer: TTimer;
     FStatus: TProgressStatus;
     FBusyImages: TImageStrip;
     FBusyIndex: Integer;
     FStatusImages: TImageStrip;
     FIconPosition: TIconPosition;
+    procedure SetHelp(Value: string);
     procedure TimerExpired(Sender: TObject);
     procedure SetStatus(Value: TProgressStatus);
     procedure SetBusyImages(Value: TImageStrip);
@@ -170,6 +180,7 @@ type
     property StatusImages: TImageStrip read FStatusImages write SetStatusImages;
     property BusyDelay: Cardinal read GetBusyDelay write SetBusyDelay default 30;
     property IconPosition: TIconPosition read FIconPosition write SetIconPosition default icNear;
+    property Help: string read FHelp write SetHelp;
     property Align;
     property Anchors;
     property BidiMode;
@@ -230,6 +241,66 @@ begin
   FCopy.Free;
 end;
 
+procedure TRenderImage.UpdateImage;
+begin
+  FCopy.Free;
+  FCopy := nil;
+  Invalidate;
+end;
+
+function TRenderImage.GetComputeImage: TSurfaceBitmap;
+begin
+  if FSharedImage <> nil then
+    Result := FSharedImage
+  else
+    Result := FImage;
+end;
+
+function TRenderImage.GetRenderArea: TRectI;
+var
+  B: TSurfaceBitmap;
+  M: TImageMode;
+begin
+  B := ComputeImage;
+  M := FMode;
+  if M = imFit then
+    if (B.Width > Width) or (B.Height > Height) then
+      M := imFill
+    else
+      M := imCenter;
+  case M of
+    imCenter:
+    begin
+      Result := B.ClientRect;
+      Result.Offset((Width - B.Width) div 2, (Height - B.Height) div 2);
+    end;
+    imFill:
+    if B.Empty then
+    begin
+      Result := B.ClientRect;
+      Result.Offset(Width div 2, Height div 2);
+    end
+    else if Width / Height > B.Width / B.Height then
+    begin
+      Result.Top := 0;
+      Result.Left := 0;
+      Result.Height := Height;
+      Result.Width := Round(Height * (B.Width / B.Height));
+      Result.X := (Width - Result.Width) div 2;
+    end
+    else
+    begin
+      Result.Top := 0;
+      Result.Left := 0;
+      Result.Width := Width;
+      Result.Height := Round(Width * (B.Height / B.Width));
+      Result.Y := (Height - Result.Height) div 2;
+    end;
+  else
+    Result := ClientRect;
+  end;
+end;
+
 procedure TRenderImage.Render;
 var
   NeedsFit: Boolean;
@@ -246,7 +317,7 @@ begin
     Pen := NewPen(clBlack);
     Pen.LinePattern := pnDash;
   end;
-  if FImage.Empty then
+  if ComputeImage.Empty then
   begin
     if csDesigning in ComponentState then
       Surface.StrokeRect(Pen, ClientRect);
@@ -257,7 +328,7 @@ begin
     if FCopy = nil then
     begin
       FCopy := TSurfaceBitmap.Create;
-      FCopy.Assign(FImage);
+      FCopy.Assign(ComputeImage);
       if FColorized then
         FCopy.Colorize(Color)
       else
@@ -266,7 +337,7 @@ begin
     Bitmap := FCopy;
   end
   else
-    Bitmap := FImage;
+    Bitmap := ComputeImage;
   NeedsFit := FMode = imFit;
   if NeedsFit then
     if (Bitmap.Width > Width) or (Bitmap.Height > Height) then
@@ -281,7 +352,7 @@ begin
     imCenter:
     begin
       Surface.Matrix := M;
-      Bitmap.Draw(Surface, (Width - FImage.Width) div 2,
+      Bitmap.Draw(Surface, (Width - ComputeImage.Width) div 2,
         (Height - Bitmap.Height) div 2);
     end;
     imFill:
@@ -371,12 +442,12 @@ end;
 
 function TRenderImage.GetOpacity: Byte;
 begin
-  Result := FImage.Opacity;
+  Result := ComputeImage.Opacity;
 end;
 
 procedure TRenderImage.SetOpacity(Value: Byte);
 begin
-  FImage.Opacity := Value;
+  ComputeImage.Opacity := Value;
   if FCopy <> nil then
     FCopy.Opacity := Value;
   Invalidate;
@@ -390,6 +461,12 @@ begin
   FCopy.Free;
   FCopy := nil;
   Invalidate;
+end;
+
+procedure TRenderImage.SetSharedImage(Value: TSurfaceBitmap);
+begin
+  FSharedImage := Value;
+  UpdateImage;
 end;
 
 procedure TRenderImage.SetColor(Value: TColor);
@@ -406,8 +483,8 @@ procedure TRenderImage.GetPreferredSize(var PreferredWidth,
 begin
   if (not FImage.Empty) and (FMode = imCenter) then
   begin
-    PreferredWidth := FImage.Width;
-    PreferredHeight := FImage.Height;
+    PreferredWidth := ComputeImage.Width;
+    PreferredHeight := ComputeImage.Height;
   end;
 end;
 
@@ -481,6 +558,7 @@ const
    (drLeft, drCenter, drRight, drCenter);
   Margin = 4;
 var
+  ComputedStatus: TProgressStatus;
   Images: TImageStrip;
   Index: Integer;
   R: TRectI;
@@ -489,7 +567,10 @@ var
 begin
   inherited Render;
   Images := nil;
-  if Status = psBusy then
+  ComputedStatus := Status;
+  if FHelp <> '' then
+    ComputedStatus := psHelp;
+  if ComputedStatus = psBusy then
   begin
     Images := FBusyImages;
     if (Images = nil) or (Images.Count = 0) then
@@ -497,15 +578,17 @@ begin
     FBusyIndex := FBusyIndex mod Images.Count;
     Index := FBusyIndex;
   end
-  else if Status > psBusy then
+  else if ComputedStatus > psBusy then
   begin
     Images := FStatusImages;
     if (Images = nil) or (Images.Count = 0) then
       Images := GlobalStatusImages;
-    Index := Ord(Status) - Ord(psReady);
+    Index := Ord(ComputedStatus) - Ord(psReady);
   end;
   R := ClientRect;
   S := Caption;
+  if FHelp <> '' then
+    S := FHelp;
   F := NewFont(Font);
   if Images = nil then
     Surface.TextOut(F, S, R, Dir[FIconPosition])
@@ -547,6 +630,13 @@ end;
 procedure TIndeterminateProgress.TimerExpired(Sender: TObject);
 begin
   Inc(FBusyIndex);
+  Invalidate;
+end;
+
+procedure TIndeterminateProgress.SetHelp(Value: string);
+begin
+  if FHelp = Value then Exit;
+  FHelp := Value;
   Invalidate;
 end;
 
