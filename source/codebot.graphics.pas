@@ -14,7 +14,7 @@ unit Codebot.Graphics;
 interface
 
 uses
-  Classes, SysUtils, Graphics, Controls, Themes,
+  Classes, SysUtils, Graphics, Controls,
   Codebot.System,
   Codebot.Graphics.Types;
 

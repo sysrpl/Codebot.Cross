@@ -62,6 +62,12 @@ type
     Attributes: TFileSystemAttributes;
   end;
 
+{ TTextEvent where Text is a value being processed }
+
+  TTextEvent = procedure(Sender: TObject; const Text: string) of object;
+
+{ TTransferEvent where Size is the amount available and Sent is the amount send or received }
+
 { TFtpClient provides access to an ftp client
   Remarks
   This class provides strictly synchronous operations
@@ -85,7 +91,7 @@ type
     FFindIndex: Integer;
     FOnCommand: TTextEvent;
     FOnResponse: TTextEvent;
-    FOnProgress: TTransferEvent;
+    FOnProgress: TTransmitEvent;
 
     type
       TResponse = record
@@ -106,7 +112,7 @@ type
     function GetConnected: Boolean;
   protected
     { Invoke the OnProgress event }
-    procedure DoProgress(const Size, Sent: LargeWord);
+    procedure DoProgress(const Size, Transmitted: LargeWord); virtual;
   public
     { Create a new file transfer object }
     constructor Create;
@@ -163,7 +169,7 @@ type
     { An event invoked when responses are read from the remote server }
     property OnResponse: TTextEvent read FOnResponse write FOnResponse;
     { An event continuously invoked as file transfers occur }
-    property OnProgress: TTransferEvent read FOnProgress write FOnProgress;
+    property OnProgress: TTransmitEvent read FOnProgress write FOnProgress;
   end;
 
 implementation
@@ -203,8 +209,6 @@ begin
 end;
 
 procedure TFtpClient.Send(const S: string; out R: TResponse);
-var
-  Args: TTextEventArgs;
 begin
   R.Valid := False;
   R.Code := 0;
@@ -212,10 +216,9 @@ begin
   R.Raw := '';
   if not FCommand.Connected then
     Exit;
-  Args.Text := S;
   if Assigned(FOnCommand) then
-    FOnCommand(Self, Args);
-  FCommand.Write(Args.Text + #13#10);
+    FOnCommand(Self, S);
+  FCommand.Write(S + #13#10);
   Recv(R);
 end;
 
@@ -231,8 +234,7 @@ end;
 
 procedure TFtpClient.Recv(out R: TResponse);
 var
-  Args: TTextEventArgs;
-  S: string;
+  Text, S: string;
 begin
   R.Valid := False;
   R.Code := 0;
@@ -240,16 +242,16 @@ begin
   R.Raw := '';
   if not FCommand.Connected then
     Exit;
-  Args.Text := '';
+  Text := '';
   while FCommand.Read(S, 3000) > 0 do
   begin
-    Args.Text := Args.Text + S;
-    if CheckTerminated(Args.Text) then
+    Text := Text + S;
+    if CheckTerminated(Text) then
       Break;
   end;
   if Assigned(FOnResponse) then
-    FOnResponse(Self, Args);
-  R.Raw := Args.Text;
+    FOnResponse(Self, Text);
+  R.Raw := Text;
   R.Message := R.Raw.Trim.AdjustLineBreaks(tlbsCRLF);
   R.Message := R.Message.Split(#13#10).Pop;
   R.Code := StrToIntDef(R.Message.FirstOf(' '), 0);
@@ -467,16 +469,10 @@ begin
   Result := R.IsPass(200, 299);
 end;
 
-procedure TFtpClient.DoProgress(const Size, Sent: LargeWord);
-var
-  Args: TTransferArgs;
+procedure TFtpClient.DoProgress(const Size, Transmitted: LargeWord);
 begin
   if Assigned(FOnProgress) then
-  begin
-    Args.Size := Size;
-    Args.Sent := Sent;
-    FOnProgress(Self, Args);
-  end;
+    FOnProgress(Self, Size, Transmitted);
 end;
 
 function TFtpClient.FilePut(const LocalFile, RemoteFile: string; Overwrite: Boolean = True): Boolean;

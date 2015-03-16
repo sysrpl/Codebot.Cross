@@ -132,6 +132,9 @@ function SettingsLoad: IFiler;
 procedure SettingsSave(Filer: IFiler);
 {$endregion}
 
+{ Check if an xml is properly closed }
+function XmlValidate(const Xml: string): Boolean;
+
 implementation
 
 {$ifdef unix}
@@ -331,6 +334,22 @@ end;
 function FilerDecrypt(const S: string): string;
 begin
   Result := Decrypt(Base64Decode(S).AsString);
+end;
+
+function XmlValidate(const Xml: string): Boolean;
+var
+  OpenTag, CloseTag, CloseBracket: Integer;
+  Closed: Boolean;
+  I: Integer;
+begin
+  OpenTag := Xml.MatchCount('<');
+  I := Xml.MatchCount('</') * 2 + Xml.MatchCount('/>');
+  Closed := I > 0;
+  CloseTag := I;
+  I := Xml.MatchCount('?>');
+  Inc(CloseTag, I);
+  CloseBracket := Xml.MatchCount('>');
+  Result := Closed and (OpenTag = CloseTag) and (OpenTag = CloseBracket);
 end;
 
 initialization
