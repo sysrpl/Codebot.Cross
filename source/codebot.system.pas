@@ -587,6 +587,7 @@ type
     function GetEmpty: Boolean;
     function GetName(Index: Integer): string;
     function GetValue(const Name: string): T;
+    function GetValueByIndex(Index: Integer): T;
   public
     { Adds or replace a named value in the dictionary }
     procedure Add(const Name: string; const Value: T);
@@ -604,6 +605,8 @@ type
     property Names[Index: Integer]: string read GetName;
     { Values indexed by a name }
     property Values[Name: string]: T read GetValue; default;
+    { Values indexed by an integer }
+    property ValueByIndex[Index: Integer]: T read GetValueByIndex;
   end;
 
 { TNamedStrings is a dictionary of string name value pairs }
@@ -2873,6 +2876,14 @@ begin
       Result := FValues[I];
       Exit;
     end;
+end;
+
+function TNamedValues<T>.GetValueByIndex(Index: Integer): T;
+begin
+  if (Index > -1) and (Index < FValues.Length) then
+    Result := FValues[Index]
+  else
+    Result := default(T);
 end;
 
 function MemCompare(const A, B; Size: LongWord): Boolean;

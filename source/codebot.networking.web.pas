@@ -17,7 +17,6 @@ uses
   Classes,
   SysUtils,
   Codebot.System,
-  Codebot.Text,
   Codebot.Text.Xml,
   Codebot.Networking;
 
@@ -92,32 +91,40 @@ type
     function GetName(Index: Integer): string;
     function GetValue(Name: string): string;
     function GetKeyCount: Integer;
-    function Process(const Url: TUrl; const Request: string; Stream: TStream;
-      BufferSize: LongInt): Boolean;
+    function Process(const Url: TUrl; const Request: string; Stream: TStream): Boolean; overload;
+    function Process(const Url: TUrl; const Request: string; out Text: string): Boolean; overload;
   protected
     { Invoke the OnProgress event }
     procedure DoProgress(const Size, Transmitted: LargeWord); virtual;
   public
     { Cancel an ongoing response }
     procedure Cancel;
+    { Request a copy of the respose header }
+    procedure CopyHeader(out Header: THttpResponseHeader);
     { Send a request with custom verb and headers }
     function SendRequest(const Url: TUrl; Verb: string; const Headers: TNamedStrings;
-      Stream: TStream; BufferSize: LongInt = $1000): Boolean;
+      const Body: string; Stream: TStream): Boolean;
     { Get and output to a stream }
-    function Get(const Url: TUrl; Stream: TStream; BufferSize: LongInt = $1000): Boolean; overload;
+    function Get(const Url: TUrl; Stream: TStream): Boolean; overload;
     { Get and output to a string }
     function Get(const Url: TUrl; out Text: string): Boolean; overload;
     { Post name value pairs and output to a stream }
     function PostArgs(const Url: TUrl; const Args: TNamedStrings;
-      Stream: TStream; BufferSize: LongInt = $1000): Boolean; overload;
+      Stream: TStream): Boolean; overload;
     { Post name value pairs and output to a string }
     function PostArgs(const Url: TUrl; const Args: TNamedStrings;
       out Text: string): Boolean; overload;
     { Post json and output to a stream }
     function PostJson(const Url: TUrl; const Json: string;
-      Stream: TStream; BufferSize: LongInt = $1000): Boolean; overload;
+      Stream: TStream): Boolean; overload;
     { Post json and output to a string }
     function PostJson(const Url: TUrl; const Json: string;
+      out Text: string): Boolean; overload;
+    { Post json and output to a stream }
+    function PostXml(const Url: TUrl; Doc: IDocument;
+      Stream: TStream): Boolean; overload;
+    { Post json and output to a string }
+    function PostXml(const Url: TUrl; Doc: IDocument;
       out Text: string): Boolean; overload;
     { The user agent as seen by the server }
     property UserAgent: string read FUserAgent write FUserAgent;
@@ -150,6 +157,8 @@ function HttpRequestGet(const Url: TUrl; const UserAgent: string = ''): string;
 function HttpRequestPostArgs(const Url: TUrl; const Args: TNamedStrings; const UserAgent: string = ''): string;
 { HttpRequestPostJson creates an http post request given a url and json string }
 function HttpRequestPostJson(const Url: TUrl; const Json: string; const UserAgent: string = ''): string;
+{ HttpRequestPostJson creates an http post request given a url and json string }
+function HttpRequestPostXml(const Url: TUrl; Doc: IDocument; const UserAgent: string = ''): string;
 { UrlEncode escapes most char sequences suitable for posting data }
 function UrlEncode(const Value: string): string;
 
@@ -262,6 +271,11 @@ begin
   FCancelled := True;
 end;
 
+procedure THttpClient.CopyHeader(out Header: THttpResponseHeader);
+begin
+  Header := FHeader;
+end;
+
 function THttpClient.GetCode: Integer;
 begin
   Result := FHeader.Code;
@@ -293,8 +307,9 @@ begin
     FOnProgress(Self, Size, Transmitted);
 end;
 
-function THttpClient.Process(const Url: TUrl; const Request: string; Stream: TStream;
-  BufferSize: LongInt): Boolean;
+function THttpClient.Process(const Url: TUrl; const Request: string; Stream: TStream): Boolean;
+const
+  BufferSize = $10000;
 var
   Socket: TSocket;
   Temp, S: string;
@@ -303,9 +318,15 @@ var
   Buffer: Pointer;
   I: Integer;
 begin
-  if BufferSize < 1000 then
-    BufferSize := 1000;
   Result := False;
+  FHeader.Reset;
+  FCancelled := False;
+  if not Url.Valid then
+    Exit;
+  if Request.Length = 0 then
+    Exit;
+  if Stream = nil then
+    Exit;
   Socket := TSocket.Create;
   try
     Socket.Secure := Url.Secure;
@@ -367,11 +388,28 @@ begin
   end;
 end;
 
-function THttpClient.SendRequest(const Url: TUrl; Verb: string; const Headers: TNamedStrings;
-  Stream: TStream; BufferSize: LongInt = $1000): Boolean;
+function THttpClient.Process(const Url: TUrl; const Request: string; out Text: string): Boolean;
 var
-  Name: string;
+  Stream: TStringStream;
+begin
+  Stream := TStringStream.Create('');
+  try
+    Result := Process(Url, Request, Stream);
+    if Result then
+      Text := Stream.DataString
+    else
+      Text := '';
+  finally
+    Stream.Free;
+  end;
+end;
+
+function THttpClient.SendRequest(const Url: TUrl; Verb: string; const Headers: TNamedStrings;
+  const Body: string; Stream: TStream): Boolean;
+var
+  Name, Value: string;
   S: string;
+  I: Integer;
 begin
   Result := False;
   FHeader.Reset;
@@ -382,110 +420,90 @@ begin
     Exit;
   S := Verb + ' ' + Url.Resource + ' HTTP/1.0'#13#10 +
     'Host: ' + Url.Domain + #13#10;
-  for Name in Headers do
-    S := S + Name + ': ' + Headers.Values[Name] + #13#10;
+  for I := 0 to Headers.Count - 1 do
+  begin
+    Name := Headers.Names[I];
+    Value := Headers.ValueByIndex[I];
+    S := S + Name + ': ' + Value + #13#10;
+  end;
+  if Body.Length > 0 then
+    S := S + 'Content-Length: ' + IntToStr(Body.Length) + #13#10;
   if UserAgent <> '' then
   	S := S + 'User-Agent: ' + UserAgent + #13#10;
   S := S + 'Connection: Close'#13#10#13#10;
-  Result := Process(Url, S, Stream, BufferSize);
+  if Body.Length > 0 then
+    S := S + Body;
+  Result := Process(Url, S, Stream);
 end;
 
-function THttpClient.Get(const Url: TUrl; Stream: TStream;
-  BufferSize: LongInt = $1000): Boolean;
+function THttpClient.Get(const Url: TUrl; Stream: TStream): Boolean;
 var
   S: string;
 begin
-  Result := False;
-  FHeader.Reset;
-  FCancelled := False;
   S := HttpRequestGet(Url, FUserAgent);
-  if S = '' then
-    Exit;
-  if Stream = nil then
-    Exit;
-  Result := Process(Url, S, Stream, BufferSize);
+  Result := Process(Url, S, Stream);
 end;
 
 function THttpClient.Get(const Url: TUrl; out Text: string): Boolean;
 var
-  Stream: TStringStream;
+  S: string;
 begin
-  Stream := TStringStream.Create('');
-  try
-    Result := Get(Url, Stream);
-    if Result then
-      Text := Stream.DataString
-    else
-      Text := '';
-  finally
-    Stream.Free;
-  end;
+  S := HttpRequestGet(Url, FUserAgent);
+  Result := Process(Url, S, Text);
 end;
 
 function THttpClient.PostArgs(const Url: TUrl; const Args: TNamedStrings;
-  Stream: TStream; BufferSize: LongInt = $1000): Boolean;
+  Stream: TStream): Boolean;
 var
   S: string;
 begin
-  Result := False;
-  FHeader.Reset;
-  FCancelled := False;
   S := HttpRequestPostArgs(Url, Args, FUserAgent);
-  if S = '' then
-    Exit;
-  if Stream = nil then
-    Exit;
-  Result := Process(Url, S, Stream, BufferSize);
+  Result := Process(Url, S, Stream);
 end;
 
 function THttpClient.PostArgs(const Url: TUrl; const Args: TNamedStrings;
   out Text: string): Boolean;
 var
-  Stream: TStringStream;
+  S: string;
 begin
-  Stream := TStringStream.Create('');
-  try
-    Result := PostArgs(Url, Args, Stream);
-    if Result then
-      Text := Stream.DataString
-    else
-      Text := '';
-  finally
-    Stream.Free;
-  end;
+  S := HttpRequestPostArgs(Url, Args, FUserAgent);
+  Result := Process(Url, S, Text);
 end;
 
 function THttpClient.PostJson(const Url: TUrl; const Json: string;
-  Stream: TStream; BufferSize: LongInt = $1000): Boolean;
+  Stream: TStream): Boolean;
 var
   S: string;
 begin
-  Result := False;
-  FHeader.Reset;
-  FCancelled := False;
   S := HttpRequestPostJson(Url, Json, FUserAgent);
-  if S = '' then
-    Exit;
-  if Stream = nil then
-    Exit;
-  Result := Process(Url, S, Stream, BufferSize);
+  Result := Process(Url, S, Stream);
 end;
 
 function THttpClient.PostJson(const Url: TUrl; const Json: string;
   out Text: string): Boolean;
 var
-  Stream: TStringStream;
+  S: string;
 begin
-  Stream := TStringStream.Create('');
-  try
-    Result := PostJson(Url, Json, Stream);
-    if Result then
-      Text := Stream.DataString
-    else
-      Text := '';
-  finally
-    Stream.Free;
-  end;
+  S := HttpRequestPostJson(Url, Json, FUserAgent);
+  Result := Process(Url, S, Text);
+end;
+
+function THttpClient.PostXml(const Url: TUrl; Doc: IDocument;
+  Stream: TStream): Boolean;
+var
+  S: string;
+begin
+  S := HttpRequestPostXml(Url, Doc, FUserAgent);
+  Result := Process(Url, S, Stream);
+end;
+
+function THttpClient.PostXml(const Url: TUrl; Doc: IDocument;
+  out Text: string): Boolean;
+var
+  S: string;
+begin
+  S := HttpRequestPostXml(Url, Doc, FUserAgent);
+  Result := Process(Url, S, Text);
 end;
 
 function HttpResponseHeaderExtract(var Buffer: string; out Header: string; out BreakStyle: string): Boolean;
@@ -535,7 +553,7 @@ end;
 
 function HttpRequestPostArgs(const Url: TUrl; const Args: TNamedStrings; const UserAgent: string = ''): string;
 var
-  S, Name: string;
+  S, Name, Value: string;
   I: Integer;
 begin
   if not Url.Valid then
@@ -546,7 +564,8 @@ begin
     if S <> '' then
       S := S + '&';
     Name := Args.Names[I];
-    S := S + UrlEncode(Name) + '=' + UrlEncode(Args.Values[Name])
+    Value := Args.ValueByIndex[I];
+    S := S + UrlEncode(Name) + '=' + UrlEncode(Value);
   end;
   Result :=
     'POST ' + Url.Resource + ' HTTP/1.0'#13#10 +
@@ -570,6 +589,25 @@ begin
   if UserAgent <> '' then
   	Result := Result + 'User-Agent: ' + UserAgent + #13#10;
   Result := Result + 'Connection: Close'#13#10#13#10 + Json;
+end;
+
+function HttpRequestPostXml(const Url: TUrl; Doc: IDocument; const UserAgent: string = ''): string;
+var
+  S: string;
+begin
+  if not Url.Valid then
+    Exit('');
+  S := Doc.Xml;
+  if S = '' then
+    Exit('');
+  Result :=
+    'POST ' + Url.Resource + ' HTTP/1.0'#13#10 +
+    'Host: ' + Url.Domain + #13#10 +
+    'Content-Length: ' + IntToStr(S.Length) + #13#10 +
+    'Content-Type: text/xml; charset=utf-8'#13#10;
+  if UserAgent <> '' then
+  	Result := Result + 'User-Agent: ' + UserAgent + #13#10;
+  Result := Result + 'Connection: Close'#13#10#13#10 + S;
 end;
 
 function UrlEncode(const Value: string): string;
