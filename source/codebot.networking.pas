@@ -145,12 +145,11 @@ type
     property Connected: Boolean read GetConnected;
   end;
 
-{$region common network}
-{ Check for a valid http response header and if found remove it from the buffer }
-function ResponseHeaderExtract(var Buffer: string; out Header: string): Boolean;
-{ Check if an xml response is properly closed }
-function ResponseXmlValidate(const Xml: string): Boolean;
-{$endregion}
+{ TTransmitEvent can be reused to indicate progress of socket reading or writing.
+  Size is the total expected number of bytes to be transmitted, and
+  Transmitted is the actual number of bytes transmitted so far }
+
+  TTransmitEvent = procedure(Sender: TObject; const Size, Transmitted: LargeWord) of object;
 
 implementation
 
@@ -554,54 +553,6 @@ function TSocket.GetConnected: Boolean;
 begin
   Result := FHandle <> INVALID_SOCKET;
 end;
-
-{$region common network}
-function ResponseHeaderExtract(var Buffer: string; out Header: string): Boolean;
-const
-  Breaks: array[0..3] of string = (#10#10, #13#10#13#10, #13#13, #10#13#10#13);
-var
-  First, Index: Integer;
-  I, J: Integer;
-begin
-  Result := False;
-  Header := '';
-  First := -1;
-  Index := -1;
-  for I := Low(Breaks) to High(Breaks) do
-  begin
-    J := Buffer.IndexOf(Breaks[I]);
-    if J < 1 then
-      Continue;
-    if (First < 0) or (J < First) then
-    begin
-      First := J;
-      Index := I;
-    end;
-  end;
-  if Index > -1 then
-  begin
-    Header := Buffer.FirstOf(Breaks[Index]);
-    Buffer := Buffer.SecondOf(Breaks[Index]);
-    Result := True;
-  end;
-end;
-
-function ResponseXmlValidate(const Xml: string): Boolean;
-var
-  OpenTag, CloseTag, CloseBracket: Integer;
-  Closed: Boolean;
-  I: Integer;
-begin
-  OpenTag := Xml.MatchCount('<');
-  I := Xml.MatchCount('</') * 2 + Xml.MatchCount('/>');
-  Closed := I > 0;
-  CloseTag := I;
-  I := Xml.MatchCount('?>');
-  Inc(CloseTag, I);
-  CloseBracket := Xml.MatchCount('>');
-  Result := Closed and (OpenTag = CloseTag) and (OpenTag = CloseBracket);
-end;
-{$endregion}
 
 end.
 

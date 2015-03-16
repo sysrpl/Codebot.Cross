@@ -6,7 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
-{ <include docs/codebot.networking.aws.txt> }
+{ <include docs/codebot.networking.storage.txt> }
 unit Codebot.Networking.Storage;
 
 {$i codebot.inc}
@@ -42,7 +42,7 @@ type
     function ComputeSignature(const Verb, MD5, ContentType, Date, Resource: string): string;
     function GetRequestHeader(const Resource: string): string;
   public
-    Header: TResponseHeader;
+    Header: THttpResponseHeader;
     constructor Create(Vendor: TCloudVendor; const PublicKey, PrivateKey: string);
     function List(const Resource: string): IDocument;
     function ListRaw(const Resource: string): string;
@@ -110,7 +110,7 @@ begin
         if Header.Code = 0 then
           if not Header.Extract(Body) then
             Continue;
-        if ResponseXmlValidate(Body) then
+        if XmlValidate(Body) then
           Break;
       end;
     end;

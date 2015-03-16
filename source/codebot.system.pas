@@ -59,37 +59,6 @@ type
 procedure FillZero(out Buffer; Size: UIntPtr); inline;
 {$endregion}
 
-{$region events}
-type
-  { Arguments for an empty event [group event] }
-  TEmptyArgs = record end;
-  { TEventHandler\<T\> is a generic event prototype [group event] }
-  TEventHandler<T> = procedure(Sender: TObject; var Args: T) of object;
-  { TEmptyEvent is for events which take no arguments [group event] }
-  TEmptyEvent = TEventHandler<TEmptyArgs>;
-
-  { Arguments for an event which handles text [group event] }
-  TTextEventArgs = record
-    Text: string;
-  end;
-  { TTextEvent is for events which handle text [group event] }
-  TTextEvent = TEventHandler<TTextEventArgs>;
-
-  { Arguments for a transfer operations such as uploading, or downloading file [group event] }
-  TTransferArgs = record
-    { Number of bytes expected to be transfered in total }
-    Size: LargeWord;
-    { Number of bytes transfered so far }
-    Sent: LargeWord;
-  end;
-  { TTransferEvent is for transfer operations such as uploading, or downloading file [group event] }
-  TTransferEvent = TEventHandler<TTransferArgs>;
-
-var
-  { EmptyArgs provides a blank argument for <link Codebot.System.TEmptyEvent, TEmptyEvent> type events [group event] }
-  EmptyArgs: TEmptyArgs;
-{$endregion}
-
 {$region generic containers}
 { TArray<T> is a shortvut to a dtyped dynamic array }
 
