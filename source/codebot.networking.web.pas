@@ -371,7 +371,9 @@ begin
           begin
             ContentRead := ContentRead + Count;
             DoProgress(ContentLength, ContentRead);
-          end;
+          end
+          else
+            Exit;
         end;
       until (FCancelled) or (Count < 1) or (ContentRead = ContentLength);
       if FCancelled then
@@ -429,7 +431,7 @@ begin
   if Body.Length > 0 then
     S := S + 'Content-Length: ' + IntToStr(Body.Length) + #13#10;
   if UserAgent <> '' then
-  	S := S + 'User-Agent: ' + UserAgent + #13#10;
+    S := S + 'User-Agent: ' + UserAgent + #13#10;
   S := S + 'Connection: Close'#13#10#13#10;
   if Body.Length > 0 then
     S := S + Body;
@@ -547,7 +549,7 @@ begin
     'GET ' + Url.Resource + ' HTTP/1.0'#13#10 +
     'Host: ' + Url.Domain + #13#10;
   if UserAgent <> '' then
-  	Result := Result + 'User-Agent: ' + UserAgent + #13#10;
+    Result := Result + 'User-Agent: ' + UserAgent + #13#10;
   Result := Result + 'Connection: Close'#13#10#13#10;
 end;
 
@@ -573,7 +575,7 @@ begin
     'Content-Length: ' + IntToStr(S.Length) + #13#10 +
     'Content-Type: application/x-www-form-urlencoded'#13#10;
   if UserAgent <> '' then
-  	Result := Result + 'User-Agent: ' + UserAgent + #13#10;
+    Result := Result + 'User-Agent: ' + UserAgent + #13#10;
   Result := Result + 'Connection: Close'#13#10#13#10 + S;
 end;
 
@@ -587,7 +589,7 @@ begin
     'Content-Length: ' + IntToStr(Json.Length) + #13#10 +
     'Content-Type: application/json'#13#10;
   if UserAgent <> '' then
-  	Result := Result + 'User-Agent: ' + UserAgent + #13#10;
+    Result := Result + 'User-Agent: ' + UserAgent + #13#10;
   Result := Result + 'Connection: Close'#13#10#13#10 + Json;
 end;
 
@@ -606,7 +608,7 @@ begin
     'Content-Length: ' + IntToStr(S.Length) + #13#10 +
     'Content-Type: text/xml; charset=utf-8'#13#10;
   if UserAgent <> '' then
-  	Result := Result + 'User-Agent: ' + UserAgent + #13#10;
+    Result := Result + 'User-Agent: ' + UserAgent + #13#10;
   Result := Result + 'Connection: Close'#13#10#13#10 + S;
 end;
 
