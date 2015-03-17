@@ -32,8 +32,14 @@ type
   TDirection = (drLeft, drUp, drRight, drDown, drCenter, drFill, drWrap, drFlow);
   TDirections = set of TDirection;
 
+{ AlignDir converts ebtween TAlignment and TDirection }
+
+const
+  AlignDir: array[TAlignment] of TDirection = (drLeft, drRight, drCenter);
+
 { TDrawStateItem }
 
+type
   TDrawStateItem = (dsDisabled, dsPressed, dsSelected, dsHot, dsFocused, dsChecked,
     dsExpanded, dsDefaulted, dsThin, dsFlat, dsBackground, dsCustom);
   TDrawState = set of TDrawStateItem;

@@ -159,6 +159,7 @@ type
   TContentGrid = class(TScrollWindow)
   private
     FChanged: Boolean;
+    FFixedRow: Boolean;
     FManager: TGridCellManager;
     FHotTrack: TGridCoord;
     FSelection: TGridCoord;
@@ -175,6 +176,7 @@ type
     FOnDrawIndexSection: TDrawIndexSectionEvent;
     FOnMergeCell: TGridCellMergeEvent;
     procedure GridChanged;
+    procedure SetFixedRow(Value: Boolean);
     procedure StartTimer;
     procedure StopTimer;
     function GetColWidths(Col: Integer): Integer;
@@ -226,6 +228,7 @@ type
     property Selection: TGridCoord read FSelection write SetSelection;
     property OnMergeCell: TGridCellMergeEvent read FOnMergeCell write FOnMergeCell;
     property OnScrollChange;
+    property FixedRow: Boolean read FFixedRow write SetFixedRow;
   published
     property AutoScroll: Boolean read FAutoScroll write FAutoScroll default True;
     property DefColWidth: Integer read GetDefColWidth write SetDefColWidth;
@@ -443,7 +446,7 @@ begin
     Y := FScrollData.Height - ScrollHeight;
   if Y < 0 then
     Y := 0;
-  FScrolLData := A;
+  FScrollData := A;
   DX := FScrollData.Left - X;
   DY := FScrollData.Top - Y;
   if (DX <> 0) or (DY <> 0) then
@@ -915,6 +918,13 @@ begin
   UpdateChanged;
 end;
 
+procedure TContentGrid.SetFixedRow(Value: Boolean);
+begin
+  if FFixedRow = Value then Exit;
+  FFixedRow := Value;
+  Invalidate;
+end;
+
 procedure TContentGrid.StartTimer;
 begin
   if FTimerActive then
@@ -1312,6 +1322,9 @@ begin
     Value.X := -1;
     Value.Y := -1;
   end;
+  if FFixedRow and (Value.Y < 1) then
+    Exit;
+
   if (Value.X = FSelection.X) and (Value.Y = FSelection.Y) then
     Exit;
   if FSingleColumn and (Value.Y < 0) then

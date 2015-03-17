@@ -48,6 +48,7 @@ type
   private
     FCount: Integer;
     FDownIndex: Integer;
+    FHeaderSize: Integer;
     FHotTrack: Boolean;
     FHotIndex: Integer;
     FHintWindow: TControlHintWindow;
@@ -56,6 +57,9 @@ type
     FItemIndex: Integer;
     FLocked: Boolean;
     FLockedIndex: Integer;
+    FOnScrollLeft: TNotifyEvent;
+    FScrollWidth: Integer;
+    FScrollLeft: Integer;
     FTopIndex: Integer;
     FScrolling: Boolean;
     // TODO: Report or fix the MouseCapture bug
@@ -70,6 +74,7 @@ type
     FShiftIndex: Integer;
     FOnSelectItem: TNotifyEvent;
     procedure SetCount(Value: Integer);
+    procedure SetHeaderSize(Value: Integer);
     procedure SetHotTrack(Value: Boolean);
     procedure SetMouseDisabled(Value: Boolean);
     procedure SetMultiSelect(Value: Boolean);
@@ -78,6 +83,8 @@ type
     procedure SetItemIndex(Value: Integer);
     procedure SetScrolling(Value: Boolean);
     function GetSelected(Index: Integer): Boolean;
+    procedure SetScrollLeft(Value: Integer);
+    procedure SetScrollWidth(Value: Integer);
     procedure SetSelected(Index: Integer; Value: Boolean);
     procedure SetTopIndex(Value: Integer);
     procedure WMCaptureChanged(var Message: TLMNoParams); message LM_CAPTURECHANGED;
@@ -85,6 +92,7 @@ type
     procedure WMSize(var Message: TLMSize); message LM_SIZE;
     procedure WMTimer(var Message: TLMTimer); message LM_TIMER;
     procedure WMVScroll(var Message: TLMScroll); message LM_VSCROLL;
+    procedure WMHScroll(var Message: TLMScroll); message LM_HSCROLL;
     procedure WMSetFocus(var Message: TLMSetFocus); message LM_SETFOCUS;
     procedure WMKillFocus(var Message: TLMKillFocus); message LM_KILLFOCUS;
   protected
@@ -99,7 +107,9 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseLeave; override;
     function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
+    procedure DoScrollLeft; virtual;
     procedure Render; override;
+    procedure Resize; override;
     procedure DrawBackground; virtual;
     procedure DrawItem(Index: Integer; var Rect: TRectI; State: TDrawState); virtual;
     procedure InvalidateItem(Item: Integer);
@@ -123,6 +133,7 @@ type
     property SelectCount: Integer read FSelectCount;
     property TopIndex: Integer read FTopIndex write SetTopIndex;
     property OnSelectItem: TNotifyEvent read FOnSelectItem write FOnSelectItem;
+    property OnScrollLeft: TNotifyEvent read FOnScrollLeft write FOnScrollLeft;
   public
     constructor Create(AOwner: TComponent); override;
     function ItemRect(Item: Integer): TRectI;
@@ -131,6 +142,9 @@ type
     procedure InsureItemVisible;
     procedure Select;
     procedure ScrollToSelection;
+    property HeaderSize: Integer read FHeaderSize write SetHeaderSize;
+    property ScrollWidth: Integer read FScrollWidth write SetScrollWidth;
+    property ScrollLeft: Integer read FScrollLeft write SetScrollLeft;
   end;
 
 { TCustomDrawList }
@@ -162,6 +176,8 @@ type
     property MouseDisabled;
     property TopIndex;
     property ItemIndex;
+    property Surface;
+    property OnScrollLeft;
   published
     property Align;
     property Anchors;
@@ -423,6 +439,20 @@ begin
     end;
 end;
 
+procedure TScrollList.WMHScroll(var Message: TLMScroll);
+begin
+  with Message do
+    case ScrollCode of
+      SB_BOTTOM: SetScrollLeft(FScrollWidth);
+      SB_LINEDOWN: SetScrollLeft(FScrollLeft + 10);
+      SB_LINEUP: SetScrollLeft(FScrollLeft - 10);
+      SB_PAGEDOWN: SetScrollLeft(FScrollLeft + ClientWidth);
+      SB_PAGEUP: SetScrollLeft(FScrollLeft - ClientWidth);
+      SB_THUMBTRACK: SetScrollLeft(Pos);
+      SB_TOP: SetScrollLeft(0);
+    end;
+end;
+
 procedure TScrollList.WMSetFocus(var Message: TLMSetFocus);
 begin
   inherited;
@@ -607,7 +637,8 @@ begin
   if N - Last < Delay then
     Exit;
   Last := N;
-  HintWindow.Active := False;
+  if FHintWindow <> nil then
+    HintWindow.Active := False;
   I := ItemIndex;
   if I < 0 then
     Exit;
@@ -621,6 +652,12 @@ begin
   if ItemIndex = Count - 1 then
     SetScrollIndex(ItemIndex + 1);
   InsureItemVisible;
+end;
+
+procedure TScrollList.DoScrollLeft;
+begin
+  if Assigned(FOnScrollLeft) then
+    FOnScrollLeft(Self);
 end;
 
 procedure TScrollList.Render;
@@ -661,10 +698,25 @@ begin
       if FTopIndex + I = FDownIndex then
         Include(FDrawState, dsPressed);
       R := UpdateRect;
+      if FScrollWidth > 0 then
+        R.Width := FScrollWidth;
+      R.X := -FScrollLeft;
+      R.Y := R.Y + FHeaderSize;
       DrawItem(FTopIndex + I, R, FDrawState);
     end;
     Top := Bottom;
   end;
+end;
+
+procedure TScrollList.Resize;
+begin
+  inherited Resize;
+  if FScrollWidth - FScrollLeft  < ClientWidth then
+  begin
+    ScrollLeft := FScrollWidth - ClientWidth;
+    Invalidate;
+    UpdateScrollRange;
+  end
 end;
 
 procedure TScrollList.DrawBackground;
@@ -693,17 +745,21 @@ end;
 
 function TScrollList.ItemRect(Item: Integer): TRectI;
 begin
-  Result := TRectI.Create(0, (Item - FTopIndex) * FItemHeight,
+  Result := TRectI.Create(0, FHeaderSize + (Item - FTopIndex) * FItemHeight,
     ClientWidth, FItemHeight);
 end;
 
 procedure TScrollList.ScrollBy(DeltaX, DeltaY: Integer);
+var
+  R: TRect;
 begin
   if DoubleBuffered then
     Invalidate
-  else
+  else if HandleAllocated then
   begin
-    ScrollWindow(Handle, DeltaX, DeltaY, nil, nil);
+    R := ClientRect;
+    R.Top := FHeaderSize;
+    ScrollWindow(Handle, DeltaX, DeltaY, @R, @R);
     inherited ScrollBy(DeltaX, DeltaY);
   end
 end;
@@ -757,7 +813,7 @@ end;
 function TScrollList.ItemAtPos(const Pos: TPointI;
   Existing: Boolean = False): Integer;
 begin
-  Result := FTopIndex + Pos.Y div FItemHeight;
+  Result := FTopIndex + (Pos.Y - FHeaderSize) div FItemHeight;
   if Result > FCount - 1 then
     if Existing then Result := -1 else Result := FCount - 1;
   if FInsideRect and ((Pos.X < 0) or (Pos.X > ClientWidth - 1)) then
@@ -771,18 +827,30 @@ var
   ScrollInfo: TScrollInfo;
 begin
   if HandleAllocated then
+  begin
     with ScrollInfo do
     begin
       cbSize := SizeOf(TScrollInfo);
       fMask := SIF_PAGE or SIF_POS or SIF_RANGE;
       nMin := 0;
       nMax := FCount - 1;
-      nPage := ClientHeight div FItemHeight;
+      nPage := (ClientHeight - FHeaderSize) div FItemHeight;
       nPos := FTopIndex;
       SetScrollInfo(Handle, SB_VERT, ScrollInfo, True);
       if FCount - FTopIndex < Integer(nPage) then SetTopIndex(FCount -
         Integer(nPage));
     end;
+    with ScrollInfo do
+    begin
+      cbSize := SizeOf(TScrollInfo);
+      fMask := SIF_PAGE or SIF_POS or SIF_RANGE;
+      nMin := 0;
+      nMax := FScrollWidth;
+      nPage := ClientWidth;
+      nPos := FScrollLeft;
+      SetScrollInfo(Handle, SB_Horz, ScrollInfo, True);
+    end;
+  end;
 end;
 
 procedure TScrollList.SetCount(Value: Integer);
@@ -802,6 +870,16 @@ begin
     UpdateScrollRange;
     Invalidate;
   end;
+end;
+
+procedure TScrollList.SetHeaderSize(Value: Integer);
+begin
+  if Value < 0 then
+    Value := 0;
+  if FHeaderSize = Value then Exit;
+  FHeaderSize := Value;
+  UpdateScrollRange;
+  Invalidate;
 end;
 
 procedure TScrollList.SetItemHeight(Value: Integer);
@@ -1012,6 +1090,43 @@ begin
   Result := FSelectItems[Index];
 end;
 
+procedure TScrollList.SetScrollLeft(Value: Integer);
+var
+  Delta: Integer;
+begin
+  if Value < 0 then
+    Value := 0;
+  if Value > FScrollWidth then
+    Value := FScrollWidth;
+  if FScrollLeft = Value then Exit;
+  Delta := FScrollLeft - Value;
+  FScrollLeft := Value;
+  ScrollBy(Delta, 0);
+  UpdateScrollRange;
+  DoScrollLeft;
+end;
+
+procedure TScrollList.SetScrollWidth(Value: Integer);
+begin
+  if Value < 0 then
+    Value := 0;
+  if FScrollWidth = Value then Exit;
+  FScrollWidth := Value;
+  if FScrollLeft > FScrollWidth then
+    FScrollLeft := FScrollWidth
+  else if FScrollWidth - FScrollLeft  < ClientWidth then
+  begin
+    ScrollLeft := FScrollWidth - ClientWidth;
+    Invalidate;
+    UpdateScrollRange;
+  end
+  else
+  begin
+    Invalidate;
+    UpdateScrollRange;
+  end;
+end;
+
 procedure TScrollList.SetSelected(Index: Integer; Value: Boolean);
 begin
   if (not FMultiSelect) or (Index < 0) or (Index > FCount -1) then
@@ -1034,8 +1149,8 @@ var
   Delta: Integer;
   P: TPoint;
 begin
-  if Value > FCount - ClientHeight div FItemHeight then
-    Value := FCount - ClientHeight div FItemHeight;
+  if Value > FCount - (ClientHeight - FHeaderSize) div FItemHeight then
+    Value := FCount - (ClientHeight - FHeaderSize) div FItemHeight;
   if Value < 0 then
     Value := 0;
   if Value <> FTopIndex then
