@@ -257,12 +257,11 @@ type
   TTheme = class
   private
     class function GetSelected: Boolean; static;
-  protected
+  public
     class var Control: TControl;
     class var Surface: ISurface;
+    class var Font: IFont;
     class var State: TDrawState;
-    class var Font: TFont;
-  public
     class procedure Select(Control: TControl; Surface: ISurface; State: TDrawState; Font: TFont); overload;
     class procedure Select(State: TDrawState); overload;
     class procedure Select(ThemeName: string); overload;
@@ -277,6 +276,7 @@ type
     class procedure DrawBorder(const Rect: TRectI); virtual; abstract;
     class function MeasureEditBorder: TPointI; virtual; abstract;
     class procedure DrawEditBorder(const Rect: TRectI); virtual; abstract;
+    class procedure DrawHeaderBar(const Rect: TRectI); virtual; abstract;
     class procedure DrawHeader(Height: Integer = DefaulHeaderHeight); virtual; abstract;
     class procedure DrawHeaderShadow(Top: Integer = 0); virtual; abstract;
     class procedure DrawFooter(Height: Integer = DefaultFooterHeight); virtual; abstract;
@@ -305,6 +305,7 @@ type
     class procedure DrawBorder(const Rect: TRectI); override;
     class function MeasureEditBorder: TPointI; override;
     class procedure DrawEditBorder(const Rect: TRectI); override;
+    class procedure DrawHeaderBar(const Rect: TRectI); override;
     class procedure DrawHeader(Height: Integer = DefaulHeaderHeight); override;
     class procedure DrawHeaderShadow(Top: Integer = 0); override;
     class procedure DrawFooter(Height: Integer = DefaultFooterHeight); override;
@@ -323,6 +324,7 @@ type
     class procedure DrawBorder(const Rect: TRectI); override;
     class function MeasureEditBorder: TPointI; override;
     class procedure DrawEditBorder(const Rect: TRectI); override;
+    class procedure DrawHeaderBar(const Rect: TRectI); override;
     class procedure DrawHeader(Height: Integer = DefaulHeaderHeight); override;
     class procedure DrawHeaderShadow( Top: Integer = 0); override;
     class procedure DrawFooter(Height: Integer = DefaultFooterHeight); override;
@@ -1903,7 +1905,7 @@ begin
   Self.Control := Control;
   Self.Surface := Surface;
   Self.State := State;
-  Self.Font := Font;
+  Self.Font := NewFont(Font);
 end;
 
 class procedure TTheme.Select(State: TDrawState);
@@ -1927,8 +1929,8 @@ class procedure TTheme.Deselect;
 begin
   Control := nil;
   Surface := nil;
-  State := [];
   Font := nil;
+  State := [];
   InternalTheme := OriginalTheme;
 end;
 
@@ -2061,6 +2063,73 @@ end;
 class procedure TDefaultTheme.DrawEditBorder(const Rect: TRectI);
 begin
 
+end;
+
+class procedure TDefaultTheme.DrawHeaderBar(const Rect: TRectI);
+var
+  R: TRectI;
+  B: IGradientBrush;
+  C: TColorB;
+begin
+  R := Rect;
+  B := NewBrush(0, R.Height, 0, 0);
+  if dsPressed in State then
+  begin
+    C := Control.CurrentColor;
+    B.AddStop(C, 0);
+    B.AddStop(C, 0.25);
+    B.AddStop(C.Darken(0.1), 1);
+  end
+  else if dsSelected in State then
+  begin
+    C := clHighlight;
+    C := C.Lighten(0.8);
+    B.AddStop(C, 0.4);
+    C := C.Lighten(0.6);
+    B.AddStop(C, 0.5);
+  end
+  else
+  begin
+    C := Control.CurrentColor;
+    B.AddStop(C.Fade(0.8).Darken(0.1), 0);
+    B.AddStop(C, 0.5);
+    B.AddStop(C.Lighten(0.8), 0.75);
+  end;
+  Surface.FillRect(B, R);
+  if dsBackground in State then
+    Exit;
+  R.Inflate(-1, -1);
+  R.Bottom := Rect.Bottom + 1;
+  StrokeRectColor(Surface, R, clWhite);
+  R := Rect;
+  R.Inflate(0, 5);
+  R.Left := -5;
+  C := clBtnShadow;
+  StrokeRectColor(Surface, R, C.Lighten(0.5));
+  if dsPressed in State then
+  begin
+    C := Control.CurrentColor;
+    C := C.Darken(0.5);
+    R.Left := Rect.Left - 1;
+    StrokeRectColor(Surface, R, C);
+  end
+  else if dsSelected in State then
+  begin
+    C := clHighlight;
+    C := C.Lighten(0.5);
+    R := Rect;
+    R.Left := R.Left - 1;
+    StrokeRectColor(Surface, R, C);
+  end;
+  if dsHot in State then
+  begin
+    R := Rect;
+    C := clHighlight;
+    C := C.Invert;
+    R.Inflate(-2, 0);
+    R.Top := R.Bottom - 3;
+    FillRectColor(Surface, R, C.Lighten(0.4));
+  end;
 end;
 
 class procedure TDefaultTheme.DrawHeader(Height: Integer = DefaulHeaderHeight);
@@ -2240,6 +2309,11 @@ end;
 
 class procedure TRedmondTheme.DrawEditBorder(const Rect: TRectI);
 begin
+end;
+
+class procedure TRedmondTheme.DrawHeaderBar(const Rect: TRectI);
+begin
+
 end;
 
 class procedure TRedmondTheme.DrawHeader(Height: Integer = DefaulHeaderHeight);

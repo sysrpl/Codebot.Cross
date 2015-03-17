@@ -11,4 +11,5 @@ TDrawTextList.bmp ^
 THuePicker.bmp ^
 TSaturationPicker.bmp ^
 TBanner.bmp ^
+THeaderBar.bmp ^
 TSlideBar.bmp

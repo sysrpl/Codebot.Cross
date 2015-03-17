@@ -14,16 +14,52 @@ unit Codebot.Controls;
 interface
 
 uses
-  Classes, SysUtils, Graphics, Controls, Forms, LCLType,
+  Classes, SysUtils, Graphics, Controls, Forms, LCLType, LCLProc,
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types;
+
+type
+  TItemUpdateEvent = procedure(Sender: TObject; Item: TCollectionItem) of object;
+  TItemUpdateDelegate = TDelegate<TItemUpdateEvent>;
+  IItemUpdateDelegate = IDelegate<TItemUpdateEvent>;
+
+  TItemNotifyEvent = procedure(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification) of object;
+  TItemNotifyDelegate = TDelegate<TItemNotifyEvent>;
+  IItemNotifyDelegate = IDelegate<TItemNotifyEvent>;
+
+{ TNotifyCollection\<T\> simplifies creating specialized persistent collections
+  See also
+  <link Overview.Codebot.Controls.TNotifyCollection\<T\>, TNotifyCollection\<T\> members> }
+
+  TNotifyCollection<T: TCollectionItem> = class(TCollection)
+  private
+    FOwner: TPersistent;
+    FOnItemNotify: TItemNotifyDelegate;
+    FOnItemUpdate: TItemUpdateDelegate;
+    function GetItem(const Index: Integer): T;
+    procedure SetItem(const Index: Integer; const Value: T);
+    function GetOnItemNotify: IItemNotifyDelegate;
+    function GetOnItemUpdate: IItemUpdateDelegate;
+  protected
+    function GetOwner: TPersistent; override;
+    procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
+    procedure Update(Item: TCollectionItem); override;
+  public
+    constructor Create(AOwner: TPersistent); virtual;
+    destructor Destroy; override;
+    procedure Assign(Source: TPersistent); override;
+    function Add: T;
+    property Owner: TPersistent read FOwner;
+    property Items[const Index: Integer]: T read GetItem write SetItem; default;
+    property OnItemNotify: IItemNotifyDelegate read GetOnItemNotify;
+    property OnItemUpdate: IItemUpdateDelegate read GetOnItemUpdate;
+  end;
 
 { TEdgeOffset represents a padding or margin on a control
   See also
   <link Overview.Codebot.Controls.TEdgeOffset, TEdgeOffset members> }
 
-type
   TEdgeOffset = class(TChangeNotifier)
   private
     FBottom: Integer;
@@ -184,6 +220,114 @@ implementation
 
 uses
   Codebot.Constants;
+
+constructor TNotifyCollection<T>.Create(AOwner: TPersistent);
+begin
+  inherited Create(T);
+  FOwner := AOwner;
+end;
+
+
+destructor TNotifyCollection<T>.Destroy;
+var
+  EmptyNotify: TItemNotifyDelegate;
+  EmptyUpdate: TItemUpdateDelegate;
+begin
+  FOnItemNotify := EmptyNotify;
+  FOnItemUpdate := EmptyUpdate;
+  BeginUpdate;
+  Clear;
+  EndUpdate;
+  inherited Destroy;
+end;
+
+procedure TNotifyCollection<T>.Assign(Source: TPersistent);
+var
+  Collection: TCollection;
+  Item: TCollectionItem;
+  C: TComponent;
+  I: Integer;
+begin
+  if Source = Self then
+    Exit;
+  if Source is TCollection then
+  begin
+    BeginUpdate;
+    try
+      Clear;
+      Collection := Source as TCollection;
+      for I := 0 to Collection.Count - 1 do
+      begin
+        Item := Add;
+        Item.Assign(Collection.Items[I]);
+      end;
+    finally
+      EndUpdate;
+    end;
+    if Owner is TComponent then
+    begin
+      C := Owner as TComponent;
+      if csDesigning in C.ComponentState then
+        OwnerFormDesignerModified(C);
+    end;
+  end
+  else
+    inherited Assign(Source);
+end;
+
+function TNotifyCollection<T>.Add: T;
+var
+  C: TComponent;
+begin
+  Result := T(inherited Add);
+  if Owner is TComponent then
+  begin
+    C := Owner as TComponent;
+    if csDesigning in C.ComponentState then
+      OwnerFormDesignerModified(C);
+  end;
+end;
+
+function TNotifyCollection<T>.GetOwner: TPersistent;
+begin
+  Result := FOwner;
+end;
+
+procedure TNotifyCollection<T>.Notify(Item: TCollectionItem; Action: TCollectionNotification);
+var
+  Event: TItemNotifyEvent;
+begin
+  for Event in FOnItemNotify do
+    Event(Self, Item, Action);
+end;
+
+procedure TNotifyCollection<T>.Update(Item: TCollectionItem);
+var
+  Event: TItemUpdateEvent;
+begin
+  for Event in FOnItemUpdate do
+    Event(Self, Item);
+end;
+
+function TNotifyCollection<T>.GetItem(const Index: Integer): T;
+begin
+  Result := T(inherited GetItem(Index));
+end;
+
+procedure TNotifyCollection<T>.SetItem(const Index: Integer; const Value: T);
+begin
+  inherited SetItem(Index, Value);
+end;
+
+function TNotifyCollection<T>.GetOnItemNotify: IItemNotifyDelegate;
+begin
+  Result := FOnItemNotify;
+end;
+
+function TNotifyCollection<T>.GetOnItemUpdate: IItemUpdateDelegate;
+begin
+  Result := FOnItemUpdate;
+end;
 
 { TEdgeOffset }
 
