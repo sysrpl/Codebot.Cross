@@ -276,7 +276,7 @@ type
     class procedure DrawBorder(const Rect: TRectI); virtual; abstract;
     class function MeasureEditBorder: TPointI; virtual; abstract;
     class procedure DrawEditBorder(const Rect: TRectI); virtual; abstract;
-    class procedure DrawHeaderBar(const Rect: TRectI); virtual; abstract;
+    class procedure DrawHeaderColumn(const Rect: TRectI; Sort: TSortingOrder = soNone); virtual; abstract;
     class procedure DrawHeader(Height: Integer = DefaulHeaderHeight); virtual; abstract;
     class procedure DrawHeaderShadow(Top: Integer = 0); virtual; abstract;
     class procedure DrawFooter(Height: Integer = DefaultFooterHeight); virtual; abstract;
@@ -305,7 +305,7 @@ type
     class procedure DrawBorder(const Rect: TRectI); override;
     class function MeasureEditBorder: TPointI; override;
     class procedure DrawEditBorder(const Rect: TRectI); override;
-    class procedure DrawHeaderBar(const Rect: TRectI); override;
+    class procedure DrawHeaderColumn(const Rect: TRectI; Sort: TSortingOrder = soNone); override;
     class procedure DrawHeader(Height: Integer = DefaulHeaderHeight); override;
     class procedure DrawHeaderShadow(Top: Integer = 0); override;
     class procedure DrawFooter(Height: Integer = DefaultFooterHeight); override;
@@ -324,7 +324,7 @@ type
     class procedure DrawBorder(const Rect: TRectI); override;
     class function MeasureEditBorder: TPointI; override;
     class procedure DrawEditBorder(const Rect: TRectI); override;
-    class procedure DrawHeaderBar(const Rect: TRectI); override;
+    class procedure DrawHeaderColumn(const Rect: TRectI; Sort: TSortingOrder = soNone); override;
     class procedure DrawHeader(Height: Integer = DefaulHeaderHeight); override;
     class procedure DrawHeaderShadow( Top: Integer = 0); override;
     class procedure DrawFooter(Height: Integer = DefaultFooterHeight); override;
@@ -2065,12 +2065,15 @@ begin
 
 end;
 
-class procedure TDefaultTheme.DrawHeaderBar(const Rect: TRectI);
+class procedure TDefaultTheme.DrawHeaderColumn(const Rect: TRectI; Sort: TSortingOrder = soNone);
+const
+  SortSize = 3;
 var
   R: TRectI;
   B: IGradientBrush;
   H: THSL;
   C: TColorB;
+  I: Integer;
 begin
   R := Rect;
   B := NewBrush(0, R.Height, 0, 0);
@@ -2108,7 +2111,10 @@ begin
   R.Inflate(0, 5);
   R.Left := -5;
   C := clBtnShadow;
-  StrokeRectColor(Surface, R, C.Lighten(0.5));
+  C := C.Lighten(0.5);
+  StrokeRectColor(Surface, R, C);
+  C := clBtnShadow;
+  C := C.Lighten(0.4);
   if dsPressed in State then
   begin
     C := Control.CurrentColor;
@@ -2123,6 +2129,8 @@ begin
     R := Rect;
     R.Left := R.Left - 1;
     StrokeRectColor(Surface, R, C);
+    C := clHighlight;
+    C := C.Lighten(0.25);
   end;
   if dsHot in State then
   begin
@@ -2132,6 +2140,28 @@ begin
     R.Inflate(-2, 0);
     R.Top := R.Bottom - 3;
     FillRectColor(Surface, R, C.Lighten(0.4));
+  end;
+  R := Rect;
+  Inc(R.Y);
+  if Sort = soAscend then
+  begin
+    I := R.MidPoint.X;
+    Surface.MoveTo(I, R.Y);
+    Surface.LineTo(I + SortSize, R.Y + SortSize);
+    Surface.LineTo(I - SortSize, R.Y + SortSize);
+    Surface.Path.Close;
+    Surface.Fill(NewBrush(C.Lighten(0.6)), True);
+    Surface.Stroke(NewPen(C));
+  end
+  else if Sort = soDescend then
+  begin
+    I := R.MidPoint.X;
+    Surface.MoveTo(I, R.Y + SortSize);
+    Surface.LineTo(I - SortSize, R.Y);
+    Surface.LineTo(I + SortSize, R.Y);
+    Surface.Path.Close;
+    Surface.Fill(NewBrush(C.Lighten(0.6)), True);
+    Surface.Stroke(NewPen(C));
   end;
 end;
 
@@ -2314,7 +2344,7 @@ class procedure TRedmondTheme.DrawEditBorder(const Rect: TRectI);
 begin
 end;
 
-class procedure TRedmondTheme.DrawHeaderBar(const Rect: TRectI);
+class procedure TRedmondTheme.DrawHeaderColumn(const Rect: TRectI; Sort: TSortingOrder = soNone);
 begin
 
 end;

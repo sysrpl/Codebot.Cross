@@ -37,12 +37,15 @@ implementation
 procedure Register;
 begin
   { Components }
-  RegisterComponents('Codebot', [TIndeterminateProgress, TSizingPanel, TBanner,
-    TRenderBox, TRenderImage, TImageStrip, TThinButton, TContentGrid, TDrawList,
-    TDetailsList, TDrawTextList, THuePicker, TSaturationPicker, TSlideBar, THeaderBar]);
+
+  RegisterComponents('Codebot', [TImageStrip, TRenderImage, TRenderBox, TSlideBar, TThinButton,
+    TIndeterminateProgress, THuePicker, TSaturationPicker, TBanner, TContentGrid,
+    TSizingPanel, THeaderBar, TDrawList, TDrawTextList, TDetailsList]);
   { Property editors }
+  {$ifndef lclgtk2}
   RegisterPropertyEditor(TypeInfo(Integer), TThinButton, 'ImageIndex',
     TImageStripIndexPropertyEditor);
+  {$endif}
   RegisterPropertyEditor(TypeInfo(string), nil, 'ThemeName',
     TThemeNamePropertyEditor);
   RegisterPropertyEditor(TSurfaceBitmap.ClassInfo, nil, '',

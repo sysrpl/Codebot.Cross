@@ -14,7 +14,7 @@ unit Codebot.Forms.Popup;
 interface
 
 uses
-  Classes, SysUtils, Controls, Graphics, Forms, StdCtrls,
+  Classes, SysUtils, Controls, Graphics, Forms,
   LCLType, LCLIntf,
   Codebot.System,
   Codebot.Graphics,

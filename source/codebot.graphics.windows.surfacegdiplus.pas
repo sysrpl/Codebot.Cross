@@ -791,7 +791,7 @@ begin
     Exit(inherited HandleAvailable);
   if FBrush = nil then
   begin
-    FStops.Sort(GradientStopCompare);
+    FStops.Sort(soAscend, GradientStopCompare);
     Colors := StopsColors(FStops, FOpacity);
     Offsets := StopsOffsets(FStops);
     A.X := FDist;
@@ -887,7 +887,7 @@ begin
     Clamp(Rect, Scale);
     Path := NewGdiGraphicsPath;
     Path.AddEllipse(TGdiRectF(Rect));
-    FStops.Sort(GradientStopCompare);
+    FStops.Sort(soAscend, GradientStopCompare);
     Colors := StopsColors(FStops, FOpacity);
     Offsets := StopsOffsets(FStops);
     I := Offsets.Length;

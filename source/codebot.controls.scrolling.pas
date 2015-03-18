@@ -31,6 +31,7 @@ type
     FCaption: string;
     FFixed: Boolean;
     FMinWidth: Integer;
+    FSort: TSortingOrder;
     FVisible: Boolean;
     FWidth: Integer;
     FOnResize: TNotifyDelegate;
@@ -39,6 +40,7 @@ type
     procedure SetCaption(Value: string);
     procedure SetFixed(Value: Boolean);
     procedure SetMinWidth(Value: Integer);
+    procedure SetSort(Value: TSortingOrder);
     procedure SetVisible(Value: Boolean);
     procedure SetWidth(Value: Integer);
     function GetOnResize: INotifyDelegate;
@@ -53,6 +55,7 @@ type
     property Caption: string read FCaption write SetCaption;
     property Fixed: Boolean read FFixed write SetFixed default False;
     property MinWidth: Integer read FMinWidth write SetMinWidth default 10;
+    property Sort: TSortingOrder read FSort write SetSort default soNone;
     property Visible: Boolean read FVisible write SetVisible default True;
     property Width: Integer read FWidth write SetWidth default 100;
   end;
@@ -79,6 +82,7 @@ type
     FHotTrack: Boolean;
     FPriorCursor: TCursor;
     FSelected: THeaderColumn;
+    FSelecting: Boolean;
     procedure HandleColumnResize(Sender: TObject);
     procedure HandleColumnUpdate(Sender: TObject; Item: TCollectionItem);
     procedure HandleColumnNotify(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification);
@@ -500,6 +504,7 @@ begin
   FAlignment := taLeftJustify;
   FCaption := 'New Column';
   FMinWidth := 10;
+  FSort := soNone;
   FVisible := True;
   FWidth := 100;
 end;
@@ -553,10 +558,18 @@ begin
   Changed(False);
 end;
 
+procedure THeaderColumn.SetSort(Value: TSortingOrder);
+begin
+  if FSort = Value then Exit;
+  FSort := Value;
+  Changed(False);
+end;
+
 procedure THeaderColumn.SetVisible(Value: Boolean);
 begin
   if FVisible = Value then Exit;
   FVisible := Value;
+  Changed(False);
 end;
 
 procedure THeaderColumn.SetWidth(Value: Integer);
@@ -732,7 +745,7 @@ begin
   inherited Render;
   State := [dsBackground];
   Theme.Select(State);
-  Theme.DrawHeaderBar(ClientRect);
+  Theme.DrawHeaderColumn(ClientRect);
   State := [];
   Theme.Select(State);
   F := NewFont(Font);
@@ -752,8 +765,12 @@ begin
     if I = FDownIndex then
       Include(State, dsPressed);
     Theme.Select(State);
-    Theme.DrawHeaderBar(R);
+    if dsSelected in State then
+      Theme.DrawHeaderColumn(R, Column.Sort)
+    else
+      Theme.DrawHeaderColumn(R, soNone);
     R.Inflate(Margin, 0);
+    R.Offset(0, 1);
     Dec(R.Width);
     if R.Width > 10 then
       Surface.TextOut(F, Column.Caption, R, AlignDir[Column.Alignment]);
@@ -813,6 +830,7 @@ begin
       if R.Contains(X, Y) then
       begin
         FDownIndex := I;
+        FSelecting := FColumns[I] <> Selected;
         Invalidate;
         Selected := FColumns[I];
         Exit;
@@ -878,12 +896,15 @@ end;
 
 procedure THeaderBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
+  WasSelecting: Boolean;
   R: TRectI;
   I: Integer;
 begin
   inherited MouseUp(Button, Shift, X, Y);
   if Button = mbLeft then
   begin
+    WasSelecting := FSelecting;
+    FSelecting := False;
     FSizeIndex := -1;
     if FDownIndex > FColumns.Count - 1 then
     begin
@@ -896,7 +917,7 @@ begin
       FDownIndex := -1;
       Invalidate;
       R := GetColumnRect(I);
-      if R.Contains(X, Y) then
+      if R.Contains(X, Y) and (not WasSelecting) then
         ColumnClick(FColumns[I]);
     end;
   end;
@@ -965,7 +986,7 @@ begin
   inherited Create(AOwner);
   ControlStyle := [csAcceptsControls, csCaptureMouse, csClickEvents,
     csDoubleClicks, csOpaque];
-  BorderStyle := bsNone;
+  BorderStyle := bsSingle;
   FDownIndex := -1;
   FHotIndex := -1;
   FShiftIndex := -1;
@@ -1029,8 +1050,13 @@ begin
         Distance :=  (Y - ClientHeight) div FItemHeight + 1;
         ScrollDir := sdDown;
       end;
-    if ScrollDir <> sdNone then
+    if ScrollDir = sdUp then
       ScrollMove(Distance, ScrollDir)
+    else if ScrollDir = sdDown then
+    begin
+      ItemIndex := ItemIndex + Distance;
+      InsureItemVisible;
+    end
     else
     begin
       FScrolling := False;
@@ -1110,8 +1136,8 @@ begin
   case Key of
     VK_HOME: ItemIndex := 0;
     VK_END: ItemIndex := Count - 1;
-    VK_NEXT: SetScrollIndex(ItemIndex + ClientHeight div FItemHeight);
-    VK_PRIOR: SetScrollIndex(ItemIndex - ClientHeight div FItemHeight);
+    VK_NEXT: SetScrollIndex(ItemIndex + (ClientHeight - FHeaderSize) div FItemHeight);
+    VK_PRIOR: SetScrollIndex(ItemIndex - (ClientHeight - FHeaderSize) div FItemHeight);
     VK_UP: SetScrollIndex(ItemIndex - 1);
     VK_DOWN: SetScrollIndex(ItemIndex + 1);
   end;
@@ -1420,7 +1446,10 @@ begin
   if (ItemIndex < 0) or (TopIndex >= ItemIndex) then
     Exit;
   if ItemRect(ItemIndex).Bottom > ClientHeight then
-    TopIndex := TopIndex + 1;
+  begin
+    // TopIndex := TopIndex + 1;
+    TopIndex := ItemIndex - (ClientHeight - FHeaderSize) div FItemHeight + 1;
+  end;
 end;
 
 function TScrollList.ItemAtPos(const Pos: TPointI;
@@ -1895,7 +1924,7 @@ begin
       R := GetColumnRect(Column.Index);
       R.Top := Rect.Top;
       R.Bottom := Rect.Bottom;
-      C := C.Darken(0.05);
+      C := C.Darken(0.04);
       Surface.FillRect(NewBrush(C), R);
     end;
   end;

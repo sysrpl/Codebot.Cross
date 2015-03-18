@@ -724,7 +724,7 @@ begin
     if Bounds.Contains(Control.Left, Control.Top) then
     Controls.Push(Control);
   end;
-  Controls.Sort(CompareControls);
+  Controls.Sort(soAscend, CompareControls);
   X := Bounds.Left + Offset;
   Y := Bounds.Height;
   for Control in Controls do
