@@ -39,7 +39,7 @@ begin
   { Components }
   RegisterComponents('Codebot', [TIndeterminateProgress, TSizingPanel, TBanner,
     TRenderBox, TRenderImage, TImageStrip, TThinButton, TContentGrid, TDrawList,
-    TDrawTextList, THuePicker, TSaturationPicker, TSlideBar, THeaderBar]);
+    TDetailsList, TDrawTextList, THuePicker, TSaturationPicker, TSlideBar, THeaderBar]);
   { Property editors }
   RegisterPropertyEditor(TypeInfo(Integer), TThinButton, 'ImageIndex',
     TImageStripIndexPropertyEditor);

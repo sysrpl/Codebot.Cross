@@ -111,6 +111,16 @@ type
     function GetSurface: ISurface;
     procedure SetDrawState(Value: TDrawState);
     procedure SetThemeName(const Value: string);
+    {$ifdef lclgtk2}
+  private
+    FMouseDown: Boolean;
+  protected
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseLeave; override;
+    {$endif}
   protected
     { Allow controls direct access to draw state }
     FDrawState: TDrawState;
@@ -386,7 +396,8 @@ begin
   inherited Create(AOwner);
   Width := 100;
   Height := 100;
-  ControlStyle := (ControlStyle + [csParentBackground]) - [csOpaque];
+  ControlStyle := (ControlStyle +
+    [csParentBackground, csClickEvents, csCaptureMouse]) - [csOpaque];
   if ThemeAware then
     ThemeNotifyAdd(ThemeChanged);
 end;
@@ -397,6 +408,41 @@ begin
     ThemeNotifyRemove(ThemeChanged);
   inherited Destroy;
 end;
+
+{$ifdef lclgtk2}
+procedure TRenderGraphicControl.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  FMouseDown := Button = mbLeft;
+  if FMouseDown then
+    MouseCapture := True;
+  inherited MouseDown(Button, Shift, X, Y)
+end;
+
+procedure TRenderGraphicControl.MouseUp(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  if Button = mbLeft then
+  begin
+    FMouseDown := False;
+    MouseCapture := False;
+  end;
+  inherited MouseUp(Button, Shift, X, Y)
+end;
+
+procedure TRenderGraphicControl.MouseLeave;
+var
+  P: TPoint;
+  R: TRectI;
+begin
+  P := Mouse.CursorPos;
+  P := ScreenToClient(P);
+  R := ClientRect;
+  if not R.Contains(P) then
+    MouseUp(mbLeft, [], P.X, P.Y);
+  inherited MouseLeave;
+end;
+{$endif}
 
 function TRenderGraphicControl.ThemeAware: Boolean;
 begin

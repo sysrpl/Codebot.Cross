@@ -18,3 +18,5 @@ lib
 *.7z
 *.ico
 *.dbg
+tools/bugout/bugout
+tools/bugout/lib/x86_64-linux/bugout.or
