@@ -97,6 +97,10 @@ type
   end;
 {doc on}
 
+{ TSortingOrder can be used to a sort items forward, backwards, or not at all }
+
+  TSortingOrder = (soAscend, soDescend, soNone);
+
 { TArrayList\<T\> is a simple extension to dynamic arrays
   See also
   <link Overview.Codebot.System.TArrayList, TArrayList\<T\> members> }
@@ -108,7 +112,7 @@ type
     { Get the enumerator for the list }
     function GetEnumerator: IEnumerator<T>;
   private
-    procedure QuickSort(Compare: TCompare<T>; L, R: Integer);
+    procedure QuickSort(Order: TSortingOrder; Compare: TCompare<T>; L, R: Integer);
     function GetIsEmpty: Boolean;
     function GetFirst: T;
     procedure SetFirst(const Value: T);
@@ -152,7 +156,7 @@ type
     { Removes all items setting the count of the list to 0 }
     procedure Clear;
     { Sort the items using a comparer }
-    procedure Sort(Comparer: TCompare<T> = nil);
+    procedure Sort(Order: TSortingOrder = soAscend; Comparer: TCompare<T> = nil);
     { Attempt to find the item using DefaultCompare }
     function IndexOf(const Item: T): Integer;
     { Join a the array into a string using a separator }
@@ -2654,17 +2658,21 @@ begin
   Length := 0;
 end;
 
-procedure TArrayList<T>.QuickSort(Compare: TCompare<T>; L, R: Integer);
+procedure TArrayList<T>.QuickSort(Order: TSortingOrder; Compare: TCompare<T>; L, R: Integer);
 var
-  I, J, P: Integer;
+  F, I, J, P: Integer;
 begin
   repeat
+    if Order = soDescend then
+      F := -1
+    else
+      F := 1;
     I := L;
     J := R;
     P := (L + R) shr 1;
     repeat
-      while Compare(Items[I], Items[P]) < 0 do Inc(I);
-      while Compare(Items[J], Items[P]) > 0 do Dec(J);
+      while Compare(Items[I], Items[P]) * F < 0 do Inc(I);
+      while Compare(Items[J], Items[P]) * F > 0 do Dec(J);
       if I <= J then
       begin
         Exchange(I, J);
@@ -2676,22 +2684,24 @@ begin
         Dec(J);
       end;
     until I > J;
-    if L < J then QuickSort(Compare, L, J);
+    if L < J then QuickSort(Order, Compare, L, J);
     L := I;
   until I >= R;
 end;
 
-procedure TArrayList<T>.Sort(Comparer: TCompare<T> = nil);
+procedure TArrayList<T>.Sort(Order: TSortingOrder = soAscend; Comparer: TCompare<T> = nil);
 var
   I: Integer;
 begin
+  if Order = soNone then
+    Exit;
   I := Length;
   if I < 2 then
     Exit;
   if Assigned(Comparer) then
-    QuickSort(Comparer, 0, I - 1)
+    QuickSort(Order, Comparer, 0, I - 1)
   else if Assigned(DefaultCompare) then
-    QuickSort(DefaultCompare, 0, I - 1);
+    QuickSort(Order, DefaultCompare, 0, I - 1);
 end;
 
 function TArrayList<T>.IndexOf(const Item: T): Integer;

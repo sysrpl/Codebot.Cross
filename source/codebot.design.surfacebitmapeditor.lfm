@@ -306,7 +306,6 @@ object SurfaceBitmapEditor: TSurfaceBitmapEditor
     Width = 368
     Anchors = [akTop, akLeft, akRight, akBottom]
     BorderStyle = bsSingle
-    Caption = 'BorderContainer'
     ClientHeight = 236
     ClientWidth = 364
     Color = clWindow

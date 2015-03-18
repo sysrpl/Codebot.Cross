@@ -17,7 +17,6 @@ uses
   Classes, SysUtils, FileUtil, Controls, Forms, ExtCtrls, StdCtrls,
   ExtDlgs, LCLType,
   Codebot.System,
-  Codebot.Controls,
   Codebot.Graphics,
   Codebot.Graphics.Types,
   Codebot.Controls.Banner,
