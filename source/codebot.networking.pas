@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified September 2013                             *)
+(*  Modified March 2015                                 *)
 (*                                                      *)
 (********************************************************)
 
@@ -84,6 +84,7 @@ type
   TSocket = class(TObject)
   private
     FAddress: TAddressName;
+    FBlocking: Boolean;
     FPort: Word;
     FKind: TSocketKind;
     FHandle: TSocketHandle;
@@ -94,6 +95,7 @@ type
     FSSLSocket: TSSL;
     FTimeout: LongWord;
     FTimer: Double;
+    procedure SetBlocking(Value: Boolean);
     procedure TimerReset;
     function TimerExpired: Boolean;
     function DoRead(var Buffer; BufferSize: LongWord): Integer;
@@ -131,6 +133,8 @@ type
     function WriteAll(const Text: string): Boolean; overload;
     { The address of socket }
     property Address: TAddressName read GetAddress;
+    { When blocking is true, read an write operations wait }
+    property Blocking: Boolean read FBlocking write SetBlocking;
     { The kind of the socket to create }
     property Kind: TSocketKind read FKind write FKind;
     { The port of the socket }
@@ -274,6 +278,13 @@ begin
   FTimer := 0;
 end;
 
+procedure TSocket.SetBlocking(Value: Boolean);
+begin
+  if FBlocking = Value then Exit;
+  Close;
+  FBlocking := Value;
+end;
+
 function TSocket.TimerExpired: Boolean;
 begin
   if FTimeout = 0 then
@@ -319,12 +330,15 @@ begin
     Exit(False);
   end;
   FState := ssClient;
-  {$ifdef windows}
-  Mode := 1;
-  ioctlsocket(FHandle, FIONBIO, Mode);
-  {$else}
-  fcntl(FHandle, F_SETFL, O_NONBLOCK);
-  {$endif}
+  if not FBlocking then
+  begin
+    {$ifdef windows}
+    Mode := 1;
+    ioctlsocket(FHandle, FIONBIO, Mode);
+    {$else}
+    fcntl(FHandle, F_SETFL, O_NONBLOCK);
+    {$endif}
+  end;
   if FSecure then
   begin
     FSSLContext := SSL_CTX_new(SSLv23_client_method);
@@ -357,19 +371,20 @@ function TSocket.Listen(const Address: TAddressName; Port: Word): Boolean;
 var
   Addr: TSockAddrIn;
 begin
+  Result := False;
   Close;
   FAddress := Address;
   FPort := Port;
   if FPort = 0 then
-    Exit(False);
+    Exit;
   if FSecure then
-    Exit(False);
+    Exit;
   if FKind = skTcp then
     FHandle := socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
   else
     FHandle := socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if FHandle = INVALID_SOCKET then
-    Exit(False);
+    Exit;
   Addr.sin_family := AF_INET;
   if FAddress.Resolve then
     Addr.sin_addr.s_addr := FAddress.Address
@@ -379,14 +394,14 @@ begin
   if bind(FHandle, @Addr, SizeOf(Addr)) = SOCKET_ERROR then
   begin
     Close;
-    Exit(False);
+    Exit;
   end;
   if not FAddress.Resolved then
     FAddress := TAddressName.Create(Addr.sin_addr.s_addr);
   if Codebot.Interop.Sockets.listen(FHandle, SOMAXCONN) = SOCKET_ERROR then
   begin
     Close;
-    Exit(False);
+    Exit;
   end;
   FState := ssServer;
   Result := True;
@@ -406,11 +421,12 @@ var
   Mode: LongWord;
   {$endif}
 begin
+  Result := False;
   if Socket = Self then
-    Exit(False);
+    Exit;
   Socket.Close;
   if FState <> ssServer then
-    Exit(False);
+    Exit;
   I := SizeOf(Addr);
   H := Codebot.Interop.Sockets.accept(FHandle, @Addr, I);
   if H = INVALID_SOCKET then
@@ -421,12 +437,16 @@ begin
   Socket.FKind := FKind;
   Socket.FState := ssRemote;
   Socket.FServer := Self;
-  {$ifdef windows}
-  Mode := 1;
-  ioctlsocket(Socket.FHandle, FIONBIO, Mode);
-  {$else}
-  fcntl(Socket.FHandle, F_SETFL, O_NONBLOCK);
-  {$endif}
+  Socket.FBlocking := FBlocking;
+  if not FBlocking then
+  begin
+    {$ifdef windows}
+    Mode := 1;
+    ioctlsocket(Socket.FHandle, FIONBIO, Mode);
+    {$else}
+    fcntl(Socket.FHandle, F_SETFL, O_NONBLOCK);
+    {$endif}
+  end;
   Result := True;
 end;
 
@@ -455,7 +475,7 @@ begin
   TimerReset;
   repeat
     Result := DoRead(Buffer, BufferSize);
-    if Result > -1 then
+    if (Result > -1) or FBlocking then
       Break;
     Sleep(1);
   until TimerExpired;
@@ -498,7 +518,7 @@ begin
   TimerReset;
   repeat
     Result := DoWrite(Buffer, BufferSize);
-    if Result > -1 then
+    if (Result > -1) or FBlocking then
       Break;
     Sleep(1);
   until TimerExpired;

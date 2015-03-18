@@ -2069,6 +2069,7 @@ class procedure TDefaultTheme.DrawHeaderBar(const Rect: TRectI);
 var
   R: TRectI;
   B: IGradientBrush;
+  H: THSL;
   C: TColorB;
 begin
   R := Rect;
@@ -2083,7 +2084,9 @@ begin
   else if dsSelected in State then
   begin
     C := clHighlight;
-    C := C.Lighten(0.8);
+    H := THSL(C);
+    H.Lightness := 0.925;
+    C := H;
     B.AddStop(C, 0.4);
     C := C.Lighten(0.6);
     B.AddStop(C, 0.5);

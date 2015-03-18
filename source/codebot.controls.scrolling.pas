@@ -19,11 +19,138 @@ uses
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types,
-  Codebot.Controls;
+  Codebot.Controls,
+  Codebot.Debug;
+
+{ THeaderColumn }
+
+type
+  THeaderColumn = class(TCollectionItem)
+  private
+    FAlignment: TAlignment;
+    FCaption: string;
+    FFixed: Boolean;
+    FMinWidth: Integer;
+    FVisible: Boolean;
+    FWidth: Integer;
+    FOnResize: TNotifyDelegate;
+    function GetVisibleIndex: Integer;
+    procedure SetAlignment(Value: TAlignment);
+    procedure SetCaption(Value: string);
+    procedure SetFixed(Value: Boolean);
+    procedure SetMinWidth(Value: Integer);
+    procedure SetVisible(Value: Boolean);
+    procedure SetWidth(Value: Integer);
+    function GetOnResize: INotifyDelegate;
+  protected
+    procedure DoResize;
+  public
+    constructor Create(ACollection: TCollection); override;
+    property OnResize: INotifyDelegate read GetOnResize;
+    property VisibleIndex: Integer read GetVisibleIndex;
+  published
+    property Alignment: TAlignment read FAlignment write SetAlignment default taLeftJustify;
+    property Caption: string read FCaption write SetCaption;
+    property Fixed: Boolean read FFixed write SetFixed default False;
+    property MinWidth: Integer read FMinWidth write SetMinWidth default 10;
+    property Visible: Boolean read FVisible write SetVisible default True;
+    property Width: Integer read FWidth write SetWidth default 100;
+  end;
+
+  THeaderColumns = class(TNotifyCollection<THeaderColumn>)
+  end;
+
+{ THeaderColumnEvent }
+
+  THeaderColumnEvent = procedure(Sender: TObject; Column: THeaderColumn) of object;
+
+{ THeaderBar }
+
+  THeaderBar = class(TRenderGraphicControl)
+  private
+    FColumns: THeaderColumns;
+    FOnColumnClick: THeaderColumnEvent;
+    FOnColumnResize: THeaderColumnEvent;
+    FOnColumnSelect: THeaderColumnEvent;
+    FScrollLeft: Integer;
+    FSizeIndex: Integer;
+    FDownIndex: Integer;
+    FHotIndex: Integer;
+    FHotTrack: Boolean;
+    FPriorCursor: TCursor;
+    FSelected: THeaderColumn;
+    procedure HandleColumnResize(Sender: TObject);
+    procedure HandleColumnUpdate(Sender: TObject; Item: TCollectionItem);
+    procedure HandleColumnNotify(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification);
+    function GetHotIndex: Integer;
+    procedure SetColumns(Value: THeaderColumns);
+    procedure SetHotTrack(Value: Boolean);
+    procedure SetScrollLeft(Value: Integer);
+    function GetScrollWidth: Integer;
+    procedure SetSelected(Value: THeaderColumn);
+  protected
+    procedure CaptureChanged; override;
+    function ThemeAware: Boolean; override;
+    procedure Render; override;
+    procedure ColumnClick(Column: THeaderColumn); virtual;
+    procedure ColumnResize(Column: THeaderColumn); virtual;
+    procedure ColumnSelect(Column: THeaderColumn); virtual;
+    procedure MouseLeave; override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X,
+      Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+      override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    function GetColumnRect(Index: Integer): TRectI;
+    function GetSizingRect(Index: Integer): TRectI;
+    property HotIndex: Integer read GetHotIndex;
+    property ScrollLeft: Integer read FScrollLeft write SetScrollLeft;
+    property ScrollWidth: Integer read GetScrollWidth;
+    property Selected: THeaderColumn read FSelected write SetSelected;
+  published
+    property Columns: THeaderColumns read FColumns write SetColumns;
+    property HotTrack: Boolean read FHotTrack write SetHotTrack default True;
+    property Align;
+    property Anchors;
+    property AutoSize;
+    property BorderSpacing;
+    property Constraints;
+    property Color;
+    property DragCursor;
+    property DragMode;
+    property Enabled;
+    property ParentShowHint;
+    property PopupMenu;
+    property ThemeName;
+    property ShowHint;
+    property Visible;
+    property OnColumnClick: THeaderColumnEvent read FOnColumnClick write FOnColumnClick;
+    property OnColumnResize: THeaderColumnEvent read FOnColumnResize write FOnColumnResize;
+    property OnColumnSelect: THeaderColumnEvent read FOnColumnSelect write FOnColumnSelect;
+    property OnChangeBounds;
+    property OnClick;
+    property OnDblClick;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnMouseWheel;
+    property OnMouseWheelDown;
+    property OnMouseWheelUp;
+    property OnResize;
+    property OnRender;
+    property OnStartDrag;
+  end;
 
 { TControlHintWindow }
 
-type
   TControlHintWindow = class(THintWindow)
   private
     FActive: Boolean;
@@ -97,6 +224,7 @@ type
     procedure WMKillFocus(var Message: TLMKillFocus); message LM_KILLFOCUS;
   protected
     procedure CreateHandle; override;
+    procedure DoHeaderResize; virtual;
     procedure CaptureMove(X, Y: Integer); virtual;
     procedure KeyPress(var Key: Char); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
@@ -110,7 +238,7 @@ type
     procedure DoScrollLeft; virtual;
     procedure Render; override;
     procedure Resize; override;
-    procedure DrawBackground; virtual;
+    procedure DrawBackground(const Rect: TRectI); virtual;
     procedure DrawItem(Index: Integer; var Rect: TRectI; State: TDrawState); virtual;
     procedure InvalidateItem(Item: Integer);
     procedure UpdateScrollRange;
@@ -152,17 +280,16 @@ type
   TCustomDrawList = class(TScrollList)
   private
     FAutoScroll: Boolean;
-    FOnDrawBackground: TNotifyEvent;
+    FOnDrawBackground: TDrawRectEvent;
     FOnDrawItem: TDrawIndexEvent;
     procedure SetAutoScroll(Value: Boolean);
   protected
-    procedure Render; override;
-    procedure DrawBackground; override;
+    procedure DrawBackground(const Rect: TRectI); override;
     procedure DrawItem(Index: Integer; var Rect: TRectI;
       State: TDrawState); override;
     procedure Scroll(Delta: Integer); override;
     property AutoScroll: Boolean read FAutoScroll write SetAutoScroll;
-    property OnDrawBackground: TNotifyEvent read FOnDrawBackground write FOnDrawBackground;
+    property OnDrawBackground: TDrawRectEvent read FOnDrawBackground write FOnDrawBackground;
     property OnDrawItem: TDrawIndexEvent read FOnDrawItem write FOnDrawItem;
   public
     constructor Create(AOwner: TComponent); override;
@@ -199,6 +326,85 @@ type
     property PopupMenu;
     property TabOrder;
     property TabStop;
+    property Visible;
+    property OnClick;
+    property OnConstrainedResize;
+    property OnContextPopup;
+    property OnDblClick;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnDrawBackground;
+    property OnDrawItem;
+    property OnEndDock;
+    property OnEndDrag;
+    property OnMouseDown;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnSelectItem;
+    property OnResize;
+    property OnStartDock;
+    property OnStartDrag;
+  end;
+
+{ TDetailsList }
+
+  TDetailsList = class(TCustomDrawList)
+  private
+    FHeader: THeaderBar;
+    FOnColumnClick: THeaderColumnEvent;
+    FOnColumnResize: THeaderColumnEvent;
+    FOnColumnSelect: THeaderColumnEvent;
+    FColumnsChanged: Boolean;
+    function GetHeaderColumns: THeaderColumns;
+    procedure SetHeaderColumns(Value: THeaderColumns);
+    function GetSelectedColumn: THeaderColumn;
+    procedure SetSelectedColumn(Value: THeaderColumn);
+    procedure HandleColumnNotify(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification);
+    procedure HandleColumnUpdate(Sender: TObject; Item: TCollectionItem);
+  protected
+    procedure Render; override;
+    procedure DoHeaderResize; override;
+    procedure DoScrollLeft; override;
+    procedure DoColumnClick(Sender: TObject; Column: THeaderColumn); virtual;
+    procedure DoColumnResize(Sender: TObject; Column: THeaderColumn); virtual;
+    procedure DoColumnSelect(Sender: TObject; Column: THeaderColumn); virtual;
+    procedure DrawBackground(const Rect: TRectI); override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    function GetColumnRect(Index: Integer): TRectI; overload;
+    function GetColumnRect(Index: Integer; const Row: TRectI): TRectI; overload;
+    property SelectedColumn: THeaderColumn read GetSelectedColumn write SetSelectedColumn;
+    property Count;
+    property MouseDisabled;
+    property TopIndex;
+    property ItemIndex;
+    property Surface;
+  published
+    property Columns: THeaderColumns read GetHeaderColumns write SetHeaderColumns;
+    property Align;
+    property Anchors;
+    property BorderStyle;
+    property Color;
+    property DesktopFont;
+    property DragKind;
+    property DragCursor;
+    property DragMode;
+    property Enabled;
+    property Font;
+    property HotTrack;
+    property ItemHeight;
+    property MultiSelect;
+    property ParentBiDiMode;
+    property ParentColor;
+    property ParentFont;
+    property ParentShowHint;
+    property PopupMenu;
+    property TabOrder;
+    property TabStop;
+    property Visible;
+    property OnColumnClick: THeaderColumnEvent read FOnColumnClick write FOnColumnClick;
+    property OnColumnResize: THeaderColumnEvent read FOnColumnResize write FOnColumnResize;
+    property OnColumnSelect: THeaderColumnEvent read FOnColumnSelect write FOnColumnSelect;
     property OnClick;
     property OnConstrainedResize;
     property OnContextPopup;
@@ -285,6 +491,416 @@ type
   end;
 
 implementation
+
+{ THeaderColumn }
+
+constructor THeaderColumn.Create(ACollection: TCollection);
+begin
+  inherited Create(ACollection);
+  FAlignment := taLeftJustify;
+  FCaption := 'New Column';
+  FMinWidth := 10;
+  FVisible := True;
+  FWidth := 100;
+end;
+
+procedure THeaderColumn.SetAlignment(Value: TAlignment);
+begin
+  if FAlignment = Value then Exit;
+  FAlignment := Value;
+  Changed(False);
+end;
+
+function THeaderColumn.GetVisibleIndex: Integer;
+var
+  C: THeaderColumns;
+  I: Integer;
+begin
+  Result := -1;
+  if not Visible then
+    Exit;
+  C := Collection as THeaderColumns;
+  for I := 0 to C.Count - 1 do
+  begin
+    if C[I].Visible then
+      Inc(Result);
+    if C[I] = Self then
+      Break;
+  end;
+end;
+
+procedure THeaderColumn.SetCaption(Value: string);
+begin
+  if FCaption = Value then Exit;
+  FCaption := Value;
+  Changed(False);
+end;
+
+procedure THeaderColumn.SetFixed(Value: Boolean);
+begin
+  if FFixed = Value then Exit;
+  FFixed := Value;
+end;
+
+procedure THeaderColumn.SetMinWidth(Value: Integer);
+begin
+  if Value < 10 then
+    Value := 10;
+  if FMinWidth = Value then Exit;
+  FMinWidth := Value;
+  if FWidth < FMinWidth then
+    FWidth := FMinWidth;
+  Changed(False);
+end;
+
+procedure THeaderColumn.SetVisible(Value: Boolean);
+begin
+  if FVisible = Value then Exit;
+  FVisible := Value;
+end;
+
+procedure THeaderColumn.SetWidth(Value: Integer);
+var
+  Loading: Boolean;
+begin
+  if (Collection <> nil) and (Collection.Owner is TComponent) then
+    Loading := csLoading in (Collection.Owner as TComponent).ComponentState
+  else
+    Loading := False;
+  if FFixed and (not Loading) then
+    Exit;
+  if Value < FMinWidth then
+    Value := FMinWidth;
+  if FWidth = Value then Exit;
+  FWidth := Value;
+  DoResize;
+end;
+
+procedure THeaderColumn.DoResize;
+var
+  Event: TNotifyEvent;
+begin
+  for Event in FOnResize do Event(Self);
+end;
+
+function THeaderColumn.GetOnResize: INotifyDelegate;
+begin
+  Result := FOnResize;
+end;
+
+{ THeaderBar }
+
+constructor THeaderBar.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  ControlStyle := ControlStyle + [csClickEvents, csCaptureMouse];
+  Width := 160;
+  Height := 24;
+  FColumns := THeaderColumns.Create(Self);
+  FColumns.OnItemNotify.Add(HandleColumnNotify);
+  FColumns.OnItemUpdate.Add(HandleColumnUpdate);
+  FSizeIndex := -1;
+  FDownIndex := -1;
+  FHotIndex := -1;
+  FHotTrack := True;
+end;
+
+destructor THeaderBar.Destroy;
+begin
+  FColumns.Free;
+  inherited Destroy;
+end;
+
+function THeaderBar.ThemeAware: Boolean;
+begin
+  Result := True;
+end;
+
+procedure THeaderBar.HandleColumnNotify(Sender: TObject; Item: TCollectionItem;
+  Action: TCollectionNotification);
+var
+  C: THeaderColumn;
+begin
+  C := Item as THeaderColumn;
+  if Action = cnAdded then
+    C.OnResize.Add(HandleColumnResize)
+  else if C = FSelected then
+    Selected := nil;
+  Invalidate;
+end;
+
+procedure THeaderBar.HandleColumnResize(Sender: TObject);
+begin
+  Invalidate;
+  ColumnResize(Sender as THeaderColumn);
+end;
+
+procedure THeaderBar.HandleColumnUpdate(Sender: TObject; Item: TCollectionItem);
+begin
+  Invalidate;
+end;
+
+procedure THeaderBar.SetColumns(Value: THeaderColumns);
+begin
+  if FColumns = Value then Exit;
+  FColumns.Assign(Value);
+end;
+
+function THeaderBar.GetHotIndex: Integer;
+begin
+  if FHotTrack then
+    Result := FHotIndex
+  else
+    Result := -1;
+end;
+
+procedure THeaderBar.SetHotTrack(Value: Boolean);
+begin
+  if FHotTrack = Value then Exit;
+  FHotTrack := Value;
+end;
+
+procedure THeaderBar.SetScrollLeft(Value: Integer);
+begin
+  if Value < 0 then
+    Value := 0;
+  if FScrollLeft = Value then Exit;
+  FScrollLeft := Value;
+  Invalidate;
+end;
+
+function THeaderBar.GetScrollWidth: Integer;
+var
+  I: Integer;
+begin
+  Result := 0;
+  for I := 0 to FColumns.Count - 1 do
+    if FColumns[I].Visible then
+      Inc(Result, FColumns[I].Width);
+end;
+
+procedure THeaderBar.SetSelected(Value: THeaderColumn);
+begin
+  if FSelected = Value then Exit;
+  FSelected := Value;
+  Invalidate;
+  ColumnSelect(FSelected);
+end;
+
+procedure THeaderBar.CaptureChanged;
+begin
+  inherited CaptureChanged;
+end;
+
+function THeaderBar.GetColumnRect(Index: Integer): TRectI;
+var
+  I: Integer;
+begin
+  Result := ClientRect;
+  Result.Width := 0;
+  if (Index < 0) or (Index > FColumns.Count - 1) then
+    Exit;
+  for I := 0 to Index - 1 do
+    if FColumns[I].Visible then
+      Result.X := Result.X + FColumns[I].Width;
+  if FColumns[Index].Visible then
+    Result.Width := FColumns[Index].Width;
+  Dec(Result.X, FScrollLeft);
+end;
+
+function THeaderBar.GetSizingRect(Index: Integer): TRectI;
+const
+  Size = 2;
+begin
+  Result := GetColumnRect(Index);
+  if Result.Empty then
+    Exit;
+  Result.X := Result.Right - Size;
+  Result.Width := Size * 2;
+end;
+
+procedure THeaderBar.Render;
+const
+  Margin = -4;
+var
+  Column: THeaderColumn;
+  State: TDrawState;
+  R: TRectI;
+  F: IFont;
+  I: Integer;
+begin
+  inherited Render;
+  State := [dsBackground];
+  Theme.Select(State);
+  Theme.DrawHeaderBar(ClientRect);
+  State := [];
+  Theme.Select(State);
+  F := NewFont(Font);
+  F.Color := F.Color.Lighten(0.4);
+  for I := 0 to FColumns.Count - 1 do
+  begin
+    Column := FColumns[I];
+    if not Column.Visible then
+      Continue;
+    R := GetColumnRect(I);
+    if FHotTrack and (FHotIndex = I) then
+      State := [dsHot]
+    else
+      State := [];
+    if Column = Selected then
+      Include(State, dsSelected);
+    if I = FDownIndex then
+      Include(State, dsPressed);
+    Theme.Select(State);
+    Theme.DrawHeaderBar(R);
+    R.Inflate(Margin, 0);
+    Dec(R.Width);
+    if R.Width > 10 then
+      Surface.TextOut(F, Column.Caption, R, AlignDir[Column.Alignment]);
+  end;
+end;
+
+procedure THeaderBar.ColumnClick(Column: THeaderColumn);
+begin
+  if Assigned(FOnColumnClick) then
+    FOnColumnClick(Self, Column);
+end;
+
+procedure THeaderBar.ColumnResize(Column: THeaderColumn);
+begin
+  if Assigned(FOnColumnResize) then
+    FOnColumnResize(Self, Column);
+end;
+
+procedure THeaderBar.ColumnSelect(Column: THeaderColumn);
+begin
+  if Assigned(FOnColumnSelect) then
+    FOnColumnSelect(Self, Column);
+end;
+
+procedure THeaderBar.MouseLeave;
+begin
+  if FHotTrack and (FHotIndex > -1) then
+    Invalidate;
+  FHotIndex := -1;
+  inherited MouseLeave;
+end;
+
+procedure THeaderBar.MouseDown(Button: TMouseButton; Shift: TShiftState; X,
+  Y: Integer);
+var
+  R: TRectI;
+  I: Integer;
+begin
+  inherited MouseDown(Button, Shift, X, Y);
+  if Button = mbLeft then
+  begin
+    MouseCapture := True;
+    FSizeIndex := -1;
+    FDownIndex := -1;
+    for I := 0 to FColumns.Count - 1 do
+    begin
+      R := GetSizingRect(I);
+      if R.Contains(X, Y) then
+      begin
+        FSizeIndex := I;
+        Exit;
+      end;
+    end;
+    for I := 0 to FColumns.Count - 1 do
+    begin
+      R := GetColumnRect(I);
+      if R.Contains(X, Y) then
+      begin
+        FDownIndex := I;
+        Invalidate;
+        Selected := FColumns[I];
+        Exit;
+      end;
+    end;
+  end;
+end;
+
+procedure THeaderBar.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  R: TRectI;
+  I: Integer;
+begin
+  inherited MouseMove(Shift, X, Y);
+  if FSizeIndex > -1 then
+  begin
+    R := GetColumnRect(FSizeIndex);
+    FColumns[FSizeIndex].Width := X - R.X;
+    Exit;
+  end;
+  if FDownIndex > -1 then
+  begin
+    Exit;
+  end;
+  for I := 0 to FColumns.Count - 1 do
+  begin
+    R := GetSizingRect(I);
+    if R.Contains(X, Y) then
+    begin
+      if FHotIndex > -1 then
+      begin
+        FHotIndex := -1;
+        Invalidate;
+      end;
+      if Cursor <> crHSplit then
+      begin
+        FPriorCursor := Cursor;
+        Cursor := crHSplit;
+      end;
+      Exit;
+    end;
+  end;
+  if Cursor = crHSplit then
+    Cursor := FPriorCursor;
+  if FHotTrack then
+  begin
+    for I := 0 to FColumns.Count - 1 do
+    begin
+      R := GetColumnRect(I);
+      if R.Contains(X, Y) then
+      begin
+        if FHotIndex <> I then
+          Invalidate;
+        FHotIndex := I;
+        Exit;
+      end;
+    end;
+    if FHotIndex > -1 then
+      Invalidate;
+    FHotIndex := -1;
+  end;
+end;
+
+procedure THeaderBar.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  R: TRectI;
+  I: Integer;
+begin
+  inherited MouseUp(Button, Shift, X, Y);
+  if Button = mbLeft then
+  begin
+    FSizeIndex := -1;
+    if FDownIndex > FColumns.Count - 1 then
+    begin
+      FDownIndex := -1;
+      Invalidate;
+    end;
+    if FDownIndex > -1 then
+    begin
+      I := FDownIndex;
+      FDownIndex := -1;
+      Invalidate;
+      R := GetColumnRect(I);
+      if R.Contains(X, Y) then
+        ColumnClick(FColumns[I]);
+    end;
+  end;
+end;
 
 { TControlHintWindow }
 
@@ -410,7 +1026,7 @@ begin
       end
       else if Y > ClientHeight then
       begin
-        Distance := (Y - ClientHeight) div FItemHeight + 1;
+        Distance :=  (Y - ClientHeight) div FItemHeight + 1;
         ScrollDir := sdDown;
       end;
     if ScrollDir <> sdNone then
@@ -662,49 +1278,46 @@ end;
 
 procedure TScrollList.Render;
 var
-  UpdateRect, R: TRectI;
+  Clip, Row, R: TRectI;
   I: Integer;
 begin
-  DrawBackground;
-  UpdateRect := Canvas.ClipRect;
-  with UpdateRect do
+  DrawBackground(ClientRect);
+  Clip := Canvas.ClipRect;
+  Row := ClientRect;
+  Row.Top := FHeaderSize;
+  Row.X := -FScrollLeft;
+  Row.Height := ItemHeight;
+  if FScrollWidth > 0 then
+    Row.Width := FScrollWidth;
+  for I := 0 to (ClientHeight - FHeaderSize) div FItemHeight + 1 do
   begin
-    Left := 0;
-    Right := ClientWidth;
-    Top := (Top div FItemHeight) * FItemHeight;
-    if Bottom mod FItemHeight > 0 then
-      Bottom := Bottom + FItemHeight;
-    Bottom := (Bottom div FItemHeight) * FItemHeight;
-    for I := Top div FItemHeight to Bottom div FItemHeight do
+    if I + FTopIndex > FCount - 1 then
+      Break;
+    R := Row;
+    R.Y := R.Y + I * FItemHeight;
+    if R.Bottom < Clip.Top then
+      Continue;
+    if R.Top > Clip.Bottom then
+      Continue;
+    FDrawState := [];
+    if Focused then
+      Include(FDrawState, dsFocused);
+    if FTopIndex + I = ItemIndex then
     begin
-      if I + FTopIndex > FCount - 1 then
-        Break;
-      Top := I * FItemHeight;
-      Bottom := Top + FItemHeight;
-      FDrawState := [];
-      if Focused then
-        Include(FDrawState, dsFocused);
-      if FTopIndex + I = ItemIndex then
-      begin
-        if FMultiSelect then
-          Include(FDrawState, dsDefaulted)
-        else
-          Include(FDrawState, dsSelected);
-      end;
-      if FMultiSelect and FSelectItems[FTopIndex + I] then
+      if FMultiSelect then
+        Include(FDrawState, dsDefaulted)
+      else
         Include(FDrawState, dsSelected);
-      if FTopIndex + I = FHotIndex then
-        Include(FDrawState, dsHot);
-      if FTopIndex + I = FDownIndex then
-        Include(FDrawState, dsPressed);
-      R := UpdateRect;
-      if FScrollWidth > 0 then
-        R.Width := FScrollWidth;
-      R.X := -FScrollLeft;
-      R.Y := R.Y + FHeaderSize;
-      DrawItem(FTopIndex + I, R, FDrawState);
     end;
-    Top := Bottom;
+    if FMultiSelect and FSelectItems[FTopIndex + I] then
+      Include(FDrawState, dsSelected);
+    if FMultiSelect and FSelectItems[FTopIndex + I] then
+      Include(FDrawState, dsSelected);
+    if FTopIndex + I = FHotIndex then
+      Include(FDrawState, dsHot);
+    if FTopIndex + I = FDownIndex then
+      Include(FDrawState, dsPressed);
+    DrawItem(FTopIndex + I, R, FDrawState);
   end;
 end;
 
@@ -719,7 +1332,7 @@ begin
   end
 end;
 
-procedure TScrollList.DrawBackground;
+procedure TScrollList.DrawBackground(const Rect: TRectI);
 begin
 end;
 
@@ -872,12 +1485,17 @@ begin
   end;
 end;
 
+procedure TScrollList.DoHeaderResize;
+begin
+end;
+
 procedure TScrollList.SetHeaderSize(Value: Integer);
 begin
   if Value < 0 then
     Value := 0;
   if FHeaderSize = Value then Exit;
   FHeaderSize := Value;
+  DoHeaderResize;
   UpdateScrollRange;
   Invalidate;
 end;
@@ -1188,18 +1806,12 @@ begin
   FAutoScroll := True;
 end;
 
-procedure TCustomDrawList.Render;
-begin
-  DrawBackground;
-  inherited Render;
-end;
-
-procedure TCustomDrawList.DrawBackground;
+procedure TCustomDrawList.DrawBackground(const Rect: TRectI);
 begin
   if Assigned(FOnDrawBackground) then
-    FOnDrawBackground(Self)
+    FOnDrawBackground(Self, Surface, Rect)
   else
-    FillRectColor(Surface, ClientRect, CurrentColor);
+    FillRectColor(Surface, Rect, CurrentColor);
 end;
 
 procedure TCustomDrawList.DrawItem(Index: Integer; var Rect: TRectI;
@@ -1222,6 +1834,143 @@ begin
   if Value <> FAutoScroll then
     FAutoScroll := Value;
 end;
+
+{ TDetailsList }
+
+constructor TDetailsList.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FHeader := THeaderBar.Create(Self);
+  FHeader.Parent := Self;
+  FHeader.Align := alTop;
+  FHeader.OnColumnClick := DoColumnClick;
+  FHeader.OnColumnResize := DoColumnResize;
+  FHeader.OnColumnSelect := DoColumnSelect;
+  FHeader.Columns.OnItemNotify.Add(HandleColumnNotify);
+  FHeader.Columns.OnItemUpdate.Add(HandleColumnUpdate);
+  HeaderSize := FHeader.Height + 1;
+  ItemHeight := FHeader.Height;
+  Width := 320;
+  Height := 160;
+end;
+
+procedure TDetailsList.HandleColumnNotify(Sender: TObject; Item: TCollectionItem;
+  Action: TCollectionNotification);
+begin
+  FColumnsChanged := True;
+  Invalidate;
+end;
+
+procedure TDetailsList.HandleColumnUpdate(Sender: TObject; Item: TCollectionItem);
+begin
+  FColumnsChanged := True;
+  Invalidate;
+end;
+
+procedure TDetailsList.Render;
+begin
+  if FColumnsChanged then
+  begin
+    FColumnsChanged := False;
+    ScrollWidth := FHeader.ScrollWidth;
+  end;
+  inherited Render;
+end;
+
+procedure TDetailsList.DrawBackground(const Rect: TRectI);
+var
+  Column: THeaderColumn;
+  R: TRectI;
+  C: TColorB;
+begin
+  if Assigned(FOnDrawBackground) then
+    FOnDrawBackground(Self, Surface, Rect)
+  else
+  begin
+    Column := FHeader.Selected;
+    C := CurrentColor;
+    Surface.FillRect(NewBrush(C), Rect);
+    if (Column <> nil) and (Column.Visible) then
+    begin
+      R := GetColumnRect(Column.Index);
+      R.Top := Rect.Top;
+      R.Bottom := Rect.Bottom;
+      C := C.Darken(0.05);
+      Surface.FillRect(NewBrush(C), R);
+    end;
+  end;
+end;
+
+function TDetailsList.GetColumnRect(Index: Integer): TRectI;
+begin
+  Result := FHeader.GetColumnRect(Index);
+end;
+
+function TDetailsList.GetColumnRect(Index: Integer; const Row: TRectI): TRectI;
+begin
+  Result := FHeader.GetColumnRect(Index);
+  Result.Top := Row.Top;
+  Result.Bottom := Row.Bottom;
+end;
+
+procedure TDetailsList.DoHeaderResize;
+var
+  I: Integer;
+begin
+  FHeader.Visible := HeaderSize > 1;
+  I := HeaderSize - 1;
+  if I < 0 then
+    I := 0;
+  FHeader.Height := I;
+  inherited DoHeaderResize;
+end;
+
+procedure TDetailsList.DoScrollLeft;
+begin
+  FHeader.ScrollLeft := ScrollLeft;
+  inherited DoScrollLeft;
+end;
+
+function TDetailsList.GetHeaderColumns: THeaderColumns;
+begin
+  Result := FHeader.Columns;
+end;
+
+function TDetailsList.GetSelectedColumn: THeaderColumn;
+begin
+  Result := FHeader.Selected;
+end;
+
+procedure TDetailsList.SetSelectedColumn(Value: THeaderColumn);
+begin
+  FHeader.Selected := Value;
+end;
+
+procedure TDetailsList.SetHeaderColumns(Value: THeaderColumns);
+begin
+  FHeader.Columns.Assign(Value);
+end;
+
+procedure TDetailsList.DoColumnClick(Sender: TObject; Column: THeaderColumn);
+begin
+  if Assigned(FOnColumnClick) then
+    FOnColumnClick(Self, Column);
+end;
+
+procedure TDetailsList.DoColumnResize(Sender: TObject; Column: THeaderColumn);
+begin
+  ScrollWidth := FHeader.ScrollWidth;
+  if Assigned(FOnColumnResize) then
+    FOnColumnResize(Self, Column);
+end;
+
+procedure TDetailsList.DoColumnSelect(Sender: TObject; Column: THeaderColumn);
+begin
+  Invalidate;
+  if Assigned(FOnColumnSelect) then
+    FOnColumnSelect(Self, Column);
+end;
+
 
 { TDrawTextList }
 

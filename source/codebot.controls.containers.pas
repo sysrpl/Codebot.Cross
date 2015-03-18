@@ -126,7 +126,6 @@ type
     property BidiMode;
     property BorderWidth;
     property BorderStyle;
-    property Caption;
     property ChildSizing;
     property ClientHeight;
     property ClientWidth;
@@ -434,7 +433,7 @@ begin
       R.Right := R.Right - Pad;
     if edBottom in FBorders then
       R.Bottom := R.Bottom - Pad;
-    Surface.StrokeRect(NewPen(clBtnShadow), R);
+    Surface.StrokeRect(NewPen(CurrentColor.Darken(0.2)), R);
   end;
   R.Inflate(-Pad, -Pad);
   if edLeft in FShadows then

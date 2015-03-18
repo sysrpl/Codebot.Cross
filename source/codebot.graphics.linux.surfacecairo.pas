@@ -1637,7 +1637,7 @@ begin
   pango_layout_set_width(FLayout, R.Width * PANGO_SCALE);
   pango_layout_set_height(FLayout, R.Height * PANGO_SCALE);
   { Help to pixel align text }
-  if (Direction = drRight) and Odd(R.Width) then
+  {if (Direction = drRight) and Odd(R.Width) then
   begin
     Dec(R.X);
     Inc(R.Width)
@@ -1645,7 +1645,7 @@ begin
   if (Direction in [drCenter, drFill]) and Odd(R.Width) then
     Inc(R.Width);
   if (Direction in [drLeft, drCenter, drRight, drFill]) and Odd(R.Width) then
-    Inc(R.Height);
+    Inc(R.Height);}
   { Horizontal alignment }
   case Direction of
     drLeft, drWrap, drFlow:
