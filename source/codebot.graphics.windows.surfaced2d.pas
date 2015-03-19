@@ -308,7 +308,7 @@ type
     function AcquireBrush(Brush: IBrush; out B: ID2D1Brush): Boolean;
     function AcquirePen(Pen: IPen; out B: ID2D1Brush; out S: ID2D1StrokeStyle): Boolean;
     function HandleAvailable: Boolean; virtual;
-    procedure HandleRelease;
+    procedure HandleRelease; virtual;
   public
     constructor Create(T: ID2D1RenderTarget);
     destructor Destroy; override;
@@ -344,7 +344,8 @@ type
 
   ISharedBitmapTarget = interface
     ['{0959D148-21A8-4A20-9EAB-2503BB6C3A9F}']
-    function Share(Target: ID2D1RenderTarget): ID2D1Bitmap;
+    function ShareCreate(Target: ID2D1RenderTarget): ID2D1Bitmap;
+    procedure ShareRelease;
   end;
 
 { TBitmapSurfaceD2D }
@@ -352,13 +353,16 @@ type
   TBitmapSurfaceD2D = class(TSurfaceD2D, ISharedBitmapTarget)
   private
     FBitmap: TBitmapD2D;
+    FSurfaceBitmap: ID2D1Bitmap;
     FSharedTarget: ID2D1RenderTarget;
     FSharedBitmap: ID2D1Bitmap;
   protected
     function HandleAvailable: Boolean; override;
+    procedure HandleRelease; override;
   public
     constructor Create(B: TBitmapD2D);
-    function Share(Target: ID2D1RenderTarget): ID2D1Bitmap;
+    function ShareCreate(Target: ID2D1RenderTarget): ID2D1Bitmap;
+    procedure ShareRelease;
   end;
 
 { TWndSurfaceD2D }
@@ -383,6 +387,7 @@ type
   public
     destructor Destroy; override;
     function GetSurface: ISurface; override;
+    function GetPixels: PPixel; override;
   end;
 
 { Convert routines }
@@ -1820,7 +1825,7 @@ begin
   if SharedBitmap then
   begin
     Shared := Self as ISharedBitmapTarget;
-    DstBitmap := Shared.Share(DstSurface.FTarget);
+    DstBitmap := Shared.ShareCreate(DstSurface.FTarget);
   end
   else
   begin
@@ -2349,6 +2354,12 @@ begin
   FBitmap := B;
 end;
 
+procedure TBitmapSurfaceD2D.HandleRelease;
+begin
+  ShareRelease;
+  inherited HandleRelease;
+end;
+
 function TBitmapSurfaceD2D.HandleAvailable: Boolean;
 var
   T: ID2D1DCRenderTarget;
@@ -2361,23 +2372,39 @@ begin
       T.BindDC(FBitmap.FBitmap.DC, FBitmap.ClientRect);
       AcquireTarget(T);
       FSharedTarget := nil;
-      FSharedBitmap := nil;
+      FSurfaceBitmap := nil;
       Result := True;
     end;
 end;
 
-function TBitmapSurfaceD2D.Share(Target: ID2D1RenderTarget): ID2D1Bitmap;
+function TBitmapSurfaceD2D.ShareCreate(Target: ID2D1RenderTarget): ID2D1Bitmap;
+var
+  B: ID2D1Bitmap;
 begin
   Result := nil;
   if not HandleAvailable then
     Exit;
-  if Target <> FSharedTarget then
+  if FSurfaceBitmap = nil then
+  begin
+    FSurfaceBitmap := CreateBitmap(FTarget, FBitmap.Width, FBitmap.Height, FBitmap.Pixels);
+    FSharedTarget := Target;
+    FSharedBitmap := CreateSharedBitmap(FSharedTarget, FSurfaceBitmap);
+  end
+  else if FSharedTarget <> Target then
   begin
     FSharedTarget := Target;
-    FSharedBitmap := CreateBitmap(FSharedTarget, FBitmap.Width, FBitmap.Height, FBitmap.Pixels);
+    FSharedBitmap := CreateSharedBitmap(FSharedTarget, FSurfaceBitmap);
   end;
   Result := FSharedBitmap;
 end;
+
+procedure TBitmapSurfaceD2D.ShareRelease;
+begin
+  FSurfaceBitmap := nil;
+  FSharedTarget := nil;
+  FSharedBitmap := nil;
+end;
+
 
 { TWndSurfaceD2D }
 
@@ -2429,14 +2456,14 @@ end;
 destructor TBitmapD2D.Destroy;
 begin
   HandleRelease;
-  if FSurface <> nil then
+  if FSurface is TBitmapSurfaceD2D then
     (FSurface as TBitmapSurfaceD2D).FBitmap := nil;
   inherited Destroy;
 end;
 
 procedure TBitmapD2D.HandleRelease;
 begin
-  if FSurface <> nil then
+  if FSurface is TBitmapSurfaceD2D then
     (FSurface as TBitmapSurfaceD2D).HandleRelease;
   inherited HandleRelease;
 end;
@@ -2446,6 +2473,13 @@ begin
   if FSurface = nil then
     FSurface := TBitmapSurfaceD2D.Create(Self);
   Result := FSurface;
+end;
+
+function TBitmapD2D.GetPixels: PPixel;
+begin
+  if FSurface is ISharedBitmapTarget then
+    (FSurface as ISharedBitmapTarget).ShareRelease;
+  Result := inherited GetPixels;
 end;
 
 { New object routines }

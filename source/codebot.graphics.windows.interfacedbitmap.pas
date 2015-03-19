@@ -44,7 +44,7 @@ type
     procedure SetFormat(Value: TImageFormat);
     function GetHeight: Integer;
     function GetWidth: Integer;
-    function GetPixels: PPixel;
+    function GetPixels: PPixel; virtual;
     procedure Clear;
     function Resample(Width, Height: Integer; Quality: TResampleQuality = rqNormal): IBitmap;
     procedure LoadFromFile(const FileName: string);
