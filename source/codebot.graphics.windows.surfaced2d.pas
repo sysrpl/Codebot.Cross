@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified September 2013                             *)
+(*  Modied September 2013                               *)
 (*                                                      *)
 (********************************************************)
 
@@ -340,15 +340,25 @@ type
     procedure FillRoundRect(Brush: IBrush; const Rect: TRectF; Radius: Float);
   end;
 
+{ ISharedBitmapSurface }
+
+  ISharedBitmapTarget = interface
+    ['{0959D148-21A8-4A20-9EAB-2503BB6C3A9F}']
+    function Share(Target: ID2D1RenderTarget): ID2D1Bitmap;
+  end;
+
 { TBitmapSurfaceD2D }
 
-  TBitmapSurfaceD2D = class(TSurfaceD2D)
+  TBitmapSurfaceD2D = class(TSurfaceD2D, ISharedBitmapTarget)
   private
     FBitmap: TBitmapD2D;
+    FSharedTarget: ID2D1RenderTarget;
+    FSharedBitmap: ID2D1Bitmap;
   protected
     function HandleAvailable: Boolean; override;
   public
     constructor Create(B: TBitmapD2D);
+    function Share(Target: ID2D1RenderTarget): ID2D1Bitmap;
   end;
 
 { TWndSurfaceD2D }
@@ -1789,8 +1799,10 @@ var
   DstSurface: TSurfaceD2D;
   SrcRect: TRectI;
   DstRect: TRectF;
+  SharedBitmap: Boolean;
+  Shared: ISharedBitmapTarget;
   SrcBitmap, DstBitmap: ID2D1Bitmap;
-  FinalRect: TD2D1RectF;
+  FinalRect, SourceRect: TD2D1RectF;
   M: TD2D1Matrix3x2F;
 begin
   if not HandleAvailable then
@@ -1803,18 +1815,38 @@ begin
   { Adjust the source to fall within the Surface bounds }
   if not AdjustSource(SrcRect, DstRect) then
     Exit;
-  SrcBitmap := CreateBitmap(FTarget, SrcRect.Width, SrcRect.Height);
-  if not CopyFromTarget(Self, SrcBitmap, SrcRect) then
-    Exit;
-  if FTarget = DstSurface.FTarget then
-    DstBitmap := SrcBitmap
+  DstBitmap := nil;
+  SharedBitmap := Self is ISharedBitmapTarget;
+  if SharedBitmap then
+  begin
+    Shared := Self as ISharedBitmapTarget;
+    DstBitmap := Shared.Share(DstSurface.FTarget);
+  end
   else
-    DstBitmap := CreateSharedBitmap(DstSurface.FTarget, SrcBitmap);
+  begin
+    SrcBitmap := CreateBitmap(FTarget, SrcRect.Width, SrcRect.Height);
+    if not CopyFromTarget(Self, SrcBitmap, SrcRect) then
+      Exit;
+    if FTarget = DstSurface.FTarget then
+      DstBitmap := SrcBitmap
+    else
+      DstBitmap := CreateSharedBitmap(DstSurface.FTarget, SrcBitmap);
+  end;
   DstSurface.Draw;
   FinalRect := Convert(DstRect);
   DstSurface.FTarget.GetTransform(M);
   DstSurface.FTarget.SetTransform(DstSurface.Matrix.FMatrix);
-  DstSurface.FTarget.DrawBitmap(DstBitmap, @FinalRect, Alpha / $FF);
+  if SharedBitmap then
+  begin
+    SourceRect.left := Source.Left;
+    SourceRect.top := Source.Top;
+    SourceRect.right := Source.Right;
+    SourceRect.bottom := Source.Bottom;
+    DstSurface.FTarget.DrawBitmap(DstBitmap, @FinalRect, Alpha / $FF,
+      D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, @SourceRect);
+  end
+  else
+    DstSurface.FTarget.DrawBitmap(DstBitmap, @FinalRect, Alpha / $FF);
   DstSurface.FTarget.SetTransform(M);
 end;
 
@@ -2197,10 +2229,10 @@ begin
   WriteFactory.CreateRenderingParams(Params1);
   WriteFactory.CreateCustomRenderingParams(Params1.GetGamma,
     Params1.GetEnhancedContrast, 1, Params1.GetPixelGeometry,
-    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+    DWRITE_RENDERING_MODE_DEFAULT, //DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
     Params2);
   FTarget.SetTextRenderingParams(Params2);
-  FTarget.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
+  FTarget.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_DEFAULT); //D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
   { ErrorCorrection looks better at untransformed small sizes, but doesn't
     actually build a geometric path. It's probably useful when you just want
     "standard" Windows clear type text. Right now it looks pretty awful when
@@ -2314,7 +2346,7 @@ end;
 constructor TBitmapSurfaceD2D.Create(B: TBitmapD2D);
 begin
   inherited Create(nil);
-  FBitmap := B
+  FBitmap := B;
 end;
 
 function TBitmapSurfaceD2D.HandleAvailable: Boolean;
@@ -2328,8 +2360,23 @@ begin
       T := CreateDCTarget;
       T.BindDC(FBitmap.FBitmap.DC, FBitmap.ClientRect);
       AcquireTarget(T);
+      FSharedTarget := nil;
+      FSharedBitmap := nil;
       Result := True;
     end;
+end;
+
+function TBitmapSurfaceD2D.Share(Target: ID2D1RenderTarget): ID2D1Bitmap;
+begin
+  Result := nil;
+  if not HandleAvailable then
+    Exit;
+  if Target <> FSharedTarget then
+  begin
+    FSharedTarget := Target;
+    FSharedBitmap := CreateBitmap(FSharedTarget, FBitmap.Width, FBitmap.Height, FBitmap.Pixels);
+  end;
+  Result := FSharedBitmap;
 end;
 
 { TWndSurfaceD2D }

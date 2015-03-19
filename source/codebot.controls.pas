@@ -467,6 +467,7 @@ begin
     Render;
   finally
     Theme.Deselect;
+    FSurface.Flush;
     FSurface := nil;
   end;
 end;
@@ -559,6 +560,7 @@ begin
     Render;
   finally
     Theme.Deselect;
+    FSurface.Flush;
     FSurface := nil;
   end;
 end;
@@ -638,6 +640,7 @@ begin
     Render;
   finally
     Theme.Deselect;
+    FSurface.Flush;
     FSurface := nil;
   end;
 end;
