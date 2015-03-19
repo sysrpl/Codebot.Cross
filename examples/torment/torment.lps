@@ -1,0 +1,434 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Win32 Debug"/>
+    <Units Count="41">
+      <Unit0>
+        <Filename Value="torment.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="torment"/>
+        <EditorIndex Value="1"/>
+        <CursorPos Y="6"/>
+        <UsageCount Value="126"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="DetailsForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Main"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="107"/>
+        <CursorPos X="40" Y="138"/>
+        <UsageCount Value="126"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="downloads.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Downloads"/>
+        <EditorIndex Value="2"/>
+        <CursorPos X="58"/>
+        <UsageCount Value="37"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.graphics.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="133"/>
+        <CursorPos X="3" Y="147"/>
+        <UsageCount Value="31"/>
+        <Bookmarks Count="1">
+          <Item0 X="21" Y="280" ID="2"/>
+        </Bookmarks>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.networking.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="79"/>
+        <CursorPos X="14" Y="129"/>
+        <UsageCount Value="9"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.text.xml.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="28" Y="22"/>
+        <UsageCount Value="9"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.networking.storage.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="32"/>
+        <CursorPos X="44" Y="49"/>
+        <UsageCount Value="9"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.networking.web.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="34"/>
+        <CursorPos X="3" Y="207"/>
+        <UsageCount Value="9"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.system.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="55"/>
+        <CursorPos X="3" Y="69"/>
+        <UsageCount Value="31"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.networking.ftp.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="106"/>
+        <CursorPos X="14" Y="147"/>
+        <UsageCount Value="9"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.graphics.types.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="726"/>
+        <CursorPos X="29" Y="751"/>
+        <UsageCount Value="61"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.extras.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="27"/>
+        <CursorPos X="13" Y="67"/>
+        <UsageCount Value="40"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="..\..\FreePascal\fpc\rtl\win32\classes.pp"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="9"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="..\..\FreePascal\fpc\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="80"/>
+        <CursorPos X="3" Y="94"/>
+        <UsageCount Value="19"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.collections.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="115"/>
+        <CursorPos X="3" Y="132"/>
+        <UsageCount Value="9"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="..\..\FreePascal\fpc\rtl\objpas\classes\collect.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="41"/>
+        <CursorPos X="2" Y="44"/>
+        <UsageCount Value="10"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="..\..\FreePascal\lazarus\components\PascalScript\Source\uPSC_classes.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="305"/>
+        <CursorPos X="13" Y="331"/>
+        <UsageCount Value="9"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="..\..\FreePascal\lazarus\lcl\comboex.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="91"/>
+        <CursorPos X="28" Y="55"/>
+        <UsageCount Value="9"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="..\..\FreePascal\lazarus\components\ideintf\collectionpropeditform.pas"/>
+        <ComponentName Value="CollectionPropertyEditorForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="117"/>
+        <CursorPos X="3" Y="331"/>
+        <UsageCount Value="9"/>
+      </Unit18>
+      <Unit19>
+        <Filename Value="..\..\FreePascal\lazarus\components\ideintf\propeditutils.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="25"/>
+        <CursorPos X="3" Y="22"/>
+        <UsageCount Value="9"/>
+      </Unit19>
+      <Unit20>
+        <Filename Value="..\..\FreePascal\lazarus\components\rtticontrols\examples\examplegrid1.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="29" Y="15"/>
+        <UsageCount Value="9"/>
+      </Unit20>
+      <Unit21>
+        <Filename Value="..\..\FreePascal\lazarus\components\synedit\syneditkeycmds.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="364"/>
+        <CursorPos X="30" Y="340"/>
+        <UsageCount Value="9"/>
+      </Unit21>
+      <Unit22>
+        <Filename Value="..\..\FreePascal\lazarus\components\tachart\tachartaxisutils.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="226"/>
+        <CursorPos X="27" Y="148"/>
+        <UsageCount Value="9"/>
+      </Unit22>
+      <Unit23>
+        <Filename Value="..\..\FreePascal\lazarus\components\tachart\tachartextentlink.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="14"/>
+        <CursorPos X="25" Y="26"/>
+        <UsageCount Value="9"/>
+      </Unit23>
+      <Unit24>
+        <Filename Value="..\..\FreePascal\lazarus\components\turbopower_ipro\ipmsg.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="184"/>
+        <CursorPos X="16" Y="145"/>
+        <UsageCount Value="9"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="..\..\FreePascal\lazarus\lcl\comctrls.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1219"/>
+        <CursorPos X="32" Y="1224"/>
+        <UsageCount Value="9"/>
+      </Unit25>
+      <Unit26>
+        <Filename Value="..\..\FreePascal\lazarus\lcl\include\listcolumns.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="75"/>
+        <CursorPos Y="92"/>
+        <UsageCount Value="9"/>
+      </Unit26>
+      <Unit27>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="728"/>
+        <CursorPos Y="755"/>
+        <UsageCount Value="31"/>
+      </Unit27>
+      <Unit28>
+        <Filename Value="..\..\FreePascal\lazarus\lcl\lclproc.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="6" Y="19"/>
+        <UsageCount Value="9"/>
+      </Unit28>
+      <Unit29>
+        <Filename Value="..\..\FreePascal\lazarus\lcl\graphics.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="562"/>
+        <CursorPos X="14" Y="574"/>
+        <UsageCount Value="10"/>
+      </Unit29>
+      <Unit30>
+        <Filename Value="..\..\FreePascal\lazarus\lcl\stdctrls.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1336"/>
+        <CursorPos X="14" Y="1474"/>
+        <UsageCount Value="9"/>
+      </Unit30>
+      <Unit31>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.scrolling.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="226"/>
+        <CursorPos X="15" Y="245"/>
+        <UsageCount Value="62"/>
+      </Unit31>
+      <Unit32>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.containers.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="508"/>
+        <CursorPos Y="535"/>
+        <UsageCount Value="7"/>
+      </Unit32>
+      <Unit33>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.grids.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1303"/>
+        <CursorPos X="32" Y="1325"/>
+        <UsageCount Value="4"/>
+      </Unit33>
+      <Unit34>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.design.registration.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="34"/>
+        <CursorPos X="3" Y="48"/>
+        <UsageCount Value="21"/>
+      </Unit34>
+      <Unit35>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.design.editors.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="3"/>
+        <UsageCount Value="1"/>
+      </Unit35>
+      <Unit36>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.forms.popup.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="7"/>
+        <CursorPos X="49" Y="17"/>
+        <UsageCount Value="6"/>
+      </Unit36>
+      <Unit37>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.design.surfacebitmapeditor.pas"/>
+        <ComponentName Value="SurfaceBitmapEditor"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="5"/>
+        <CursorPos Y="20"/>
+        <UsageCount Value="6"/>
+      </Unit37>
+      <Unit38>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.design.surfacebitmapeditor.lfm"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="322"/>
+        <CursorPos X="12" Y="346"/>
+        <UsageCount Value="6"/>
+        <DefaultSyntaxHighlighter Value="LFM"/>
+      </Unit38>
+      <Unit39>
+        <Filename Value="..\Components\Cross.Codebot\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="876"/>
+        <CursorPos X="27" Y="890"/>
+        <UsageCount Value="23"/>
+      </Unit39>
+      <Unit40>
+        <Filename Value="..\..\FreePascal\fpc\rtl\objpas\objpas.pp"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="32"/>
+        <CursorPos X="8" Y="46"/>
+        <UsageCount Value="8"/>
+      </Unit40>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="main.pas"/>
+        <Caret Line="179" Column="45" TopLine="128"/>
+      </Position1>
+      <Position2>
+        <Filename Value="main.pas"/>
+        <Caret Line="186" Column="45" TopLine="149"/>
+      </Position2>
+      <Position3>
+        <Filename Value="downloads.pas"/>
+        <Caret Line="264" Column="35" TopLine="236"/>
+      </Position3>
+      <Position4>
+        <Filename Value="downloads.pas"/>
+        <Caret Line="311" Column="17" TopLine="309"/>
+      </Position4>
+      <Position5>
+        <Filename Value="downloads.pas"/>
+        <Caret Line="272" Column="21" TopLine="253"/>
+      </Position5>
+      <Position6>
+        <Filename Value="downloads.pas"/>
+        <Caret Line="274" Column="21" TopLine="255"/>
+      </Position6>
+      <Position7>
+        <Filename Value="downloads.pas"/>
+        <Caret Line="281" Column="19" TopLine="260"/>
+      </Position7>
+      <Position8>
+        <Filename Value="main.pas"/>
+        <Caret Line="119" Column="18" TopLine="98"/>
+      </Position8>
+      <Position9>
+        <Filename Value="main.pas"/>
+        <Caret Line="214" Column="34" TopLine="184"/>
+      </Position9>
+      <Position10>
+        <Filename Value="main.pas"/>
+        <Caret Line="123" Column="36" TopLine="98"/>
+      </Position10>
+      <Position11>
+        <Filename Value="main.pas"/>
+        <Caret Line="118" Column="41" TopLine="99"/>
+      </Position11>
+      <Position12>
+        <Filename Value="main.pas"/>
+        <Caret Line="212" Column="15" TopLine="195"/>
+      </Position12>
+      <Position13>
+        <Filename Value="main.pas"/>
+        <Caret Line="210" Column="77" TopLine="196"/>
+      </Position13>
+      <Position14>
+        <Filename Value="downloads.pas"/>
+        <Caret Line="275" Column="32" TopLine="261"/>
+      </Position14>
+      <Position15>
+        <Filename Value="downloads.pas"/>
+        <Caret Line="460" Column="18" TopLine="435"/>
+      </Position15>
+      <Position16>
+        <Filename Value="downloads.pas"/>
+        <Caret Line="466" TopLine="442"/>
+      </Position16>
+      <Position17>
+        <Filename Value="main.pas"/>
+        <Caret Line="211" Column="28" TopLine="193"/>
+      </Position17>
+      <Position18>
+        <Filename Value="main.pas"/>
+        <Caret Line="8" Column="22"/>
+      </Position18>
+      <Position19>
+        <Filename Value="main.pas"/>
+        <Caret Line="44" Column="16" TopLine="31"/>
+      </Position19>
+      <Position20>
+        <Filename Value="main.pas"/>
+        <Caret Column="17"/>
+      </Position20>
+      <Position21>
+        <Filename Value="main.pas"/>
+        <Caret Line="10" Column="33"/>
+      </Position21>
+      <Position22>
+        <Filename Value="main.pas"/>
+        <Caret Line="205" TopLine="190"/>
+      </Position22>
+      <Position23>
+        <Filename Value="main.pas"/>
+      </Position23>
+      <Position24>
+        <Filename Value="main.pas"/>
+        <Caret Line="22" Column="69"/>
+      </Position24>
+      <Position25>
+        <Filename Value="main.pas"/>
+      </Position25>
+      <Position26>
+        <Filename Value="main.pas"/>
+        <Caret Line="10"/>
+      </Position26>
+      <Position27>
+        <Filename Value="torment.pas"/>
+        <Caret Line="6"/>
+      </Position27>
+      <Position28>
+        <Filename Value="downloads.pas"/>
+        <Caret Line="452" Column="73" TopLine="442"/>
+      </Position28>
+      <Position29>
+        <Filename Value="downloads.pas"/>
+      </Position29>
+      <Position30>
+        <Filename Value="main.pas"/>
+        <Caret Line="5" Column="10"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>

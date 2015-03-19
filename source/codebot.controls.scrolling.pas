@@ -32,6 +32,7 @@ type
     FFixed: Boolean;
     FMinWidth: Integer;
     FSort: TSortingOrder;
+    FTag: Integer;
     FVisible: Boolean;
     FWidth: Integer;
     FOnResize: TNotifyDelegate;
@@ -56,6 +57,7 @@ type
     property Fixed: Boolean read FFixed write SetFixed default False;
     property MinWidth: Integer read FMinWidth write SetMinWidth default 10;
     property Sort: TSortingOrder read FSort write SetSort default soNone;
+    property Tag: Integer read FTag write FTag;
     property Visible: Boolean read FVisible write SetVisible default True;
     property Width: Integer read FWidth write SetWidth default 100;
   end;
@@ -507,6 +509,7 @@ begin
   FSort := soNone;
   FVisible := True;
   FWidth := 100;
+  FTag := Collection.Count - 1;
 end;
 
 procedure THeaderColumn.SetAlignment(Value: TAlignment);
@@ -1321,9 +1324,9 @@ begin
       Break;
     R := Row;
     R.Y := R.Y + I * FItemHeight;
-    if R.Bottom < Clip.Top then
+    if R.Bottom <= Clip.Top then
       Continue;
-    if R.Top > Clip.Bottom then
+    if R.Top >= Clip.Bottom then
       Continue;
     FDrawState := [];
     if Focused then
@@ -1399,7 +1402,6 @@ begin
     R := ClientRect;
     R.Top := FHeaderSize;
     ScrollWindow(Handle, DeltaX, DeltaY, @R, @R);
-    inherited ScrollBy(DeltaX, DeltaY);
   end
 end;
 
@@ -1437,8 +1439,8 @@ procedure TScrollList.ScrollToSelection;
 begin
   if FItemIndex < FTopIndex then
     SetTopIndex(FItemIndex)
-  else if FItemIndex >= FTopIndex + (ClientHeight + 1) div FItemHeight  then
-    SetTopIndex(FItemIndex - (ClientHeight - 1) div FItemHeight);
+  else if FItemIndex >= FTopIndex + (ClientHeight + 1 - FHeaderSize) div FItemHeight  then
+    SetTopIndex(FItemIndex - (ClientHeight - 1 - FHeaderSize) div FItemHeight);
 end;
 
 procedure TScrollList.InsureItemVisible;
@@ -1638,7 +1640,7 @@ begin
       if PriorIndex <> FItemIndex then
       begin
         InvalidateItem(FItemIndex);
-        if FMultiSelect and (FItemIndex > -1) then
+        {if FMultiSelect and (FItemIndex > -1) then
           if ssShift in FShift then
           begin
             if FShiftIndex > -1 then
@@ -1698,7 +1700,7 @@ begin
             FSelectCount := 1;
             FSelectItems[FItemIndex] := True;
             Invalidate;
-          end;
+          end;}
       end;
       if not (ssShift in FShift) then
         FShiftIndex := FItemIndex;
