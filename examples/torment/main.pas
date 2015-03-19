@@ -62,7 +62,7 @@ var
   I: Integer;
 begin
   { Codebot.System defines TArrayList }
-  FDownloads.Length := 1000;
+  FDownloads.Length := 3000;
   { FDownloads is a TArrayList<IFileDownload> }
   for I := FDownloads.Lo to FDownloads.Hi do
     FDownloads.Items[I] := NewDownload;
@@ -124,9 +124,9 @@ procedure TDetailsForm.DetailsListDrawItem(Sender: TObject; Surface: ISurface;
     R: TRectI;
   begin
     R := Rect;
-    { TRectI is like a has many time saving methods }
+    { TRectI has many time saving methods }
     R.Inflate(0, -3);
-    { TColorB can be converted from a color }
+    { TColorB can be converted from a TColor }
     C := clSilver;
     { TColorB has many methods to adjust the color }
     C := C.Lighten(0.5);
