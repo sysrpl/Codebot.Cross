@@ -748,7 +748,7 @@ type
 
 var
   SurfaceOptions: TSurfaceOptions = (
-    HardwareRendering: True;
+    HardwareRendering: False;
     SoftwareBuffering: False;
     ErrorCorrection: False;
     GammaCorrection: False;

@@ -8,7 +8,6 @@ uses
   Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, StdCtrls,
   Codebot.System,
   Codebot.Debug,
-  Codebot.Controls.Scrolling,
   Codebot.Controls.Containers,
   Codebot.Controls.Buttons, Codebot.Graphics;
 
