@@ -1804,8 +1804,7 @@ var
   DstSurface: TSurfaceD2D;
   SrcRect: TRectI;
   DstRect: TRectF;
-  SharedBitmap: Boolean;
-  Shared: ISharedBitmapTarget;
+  Shared: Boolean;
   SrcBitmap, DstBitmap: ID2D1Bitmap;
   FinalRect, SourceRect: TD2D1RectF;
   M: TD2D1Matrix3x2F;
@@ -1821,12 +1820,9 @@ begin
   if not AdjustSource(SrcRect, DstRect) then
     Exit;
   DstBitmap := nil;
-  SharedBitmap := Self is ISharedBitmapTarget;
-  if SharedBitmap then
-  begin
-    Shared := Self as ISharedBitmapTarget;
-    DstBitmap := Shared.ShareCreate(DstSurface.FTarget);
-  end
+  Shared := Self is ISharedBitmapTarget;
+  if Shared then
+    DstBitmap := (Self as ISharedBitmapTarget).ShareCreate(DstSurface.FTarget)
   else
   begin
     SrcBitmap := CreateBitmap(FTarget, SrcRect.Width, SrcRect.Height);
@@ -1841,7 +1837,7 @@ begin
   FinalRect := Convert(DstRect);
   DstSurface.FTarget.GetTransform(M);
   DstSurface.FTarget.SetTransform(DstSurface.Matrix.FMatrix);
-  if SharedBitmap then
+  if Shared then
   begin
     SourceRect.left := Source.Left;
     SourceRect.top := Source.Top;
@@ -2404,7 +2400,6 @@ begin
   FSharedTarget := nil;
   FSharedBitmap := nil;
 end;
-
 
 { TWndSurfaceD2D }
 

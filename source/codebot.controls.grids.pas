@@ -56,6 +56,8 @@ type
     FUpdating: Boolean;
     FRectSelection: TRectSelection;
     FOnScrollChange: TScrollChangeEvent;
+    function GetScrollLeft: Integer;
+    function GetScrollTop: Integer;
     procedure UpdateScrollBars;
     function GetScrollWidth: Integer;
     function GetScrollHeight: Integer;
@@ -87,6 +89,8 @@ type
     property Color;
     property ScrollWidth: Integer read GetScrollWidth;
     property ScrollHeight: Integer read GetScrollHeight;
+    property ScrollLeft: Integer read GetScrollLeft;
+    property ScrollTop: Integer read GetScrollTop;
     property OnResize;
   end;
 
@@ -437,7 +441,7 @@ begin
   B := A;
   B.Left := X;
   B.Top := Y;
-  FScrolLData := B;
+  FScrollData := B;
   if X > FScrollData.Width - ScrollWidth then
     X := FScrollData.Width - ScrollWidth;
   if X < 0 then
@@ -466,7 +470,8 @@ end;
 
 procedure TScrollWindow.SelectionScroll(DX, DY: Integer);
 begin
-  FRectSelection.Scroll(DX, DY);
+  FRectSelection.Update(Self);
+  FRectSelection.Scroll(-DX, DY);
   FRectSelection.Update(Self);
 end;
 
@@ -590,6 +595,16 @@ begin
     SetScrollInfo(Handle, SB_HORZ, Info, True);
     DoScroll(FScrollData.Left, FScrollData.Top);
   end;
+end;
+
+function TScrollWindow.GetScrollLeft: Integer;
+begin
+  Result := FScrollData.Left;
+end;
+
+function TScrollWindow.GetScrollTop: Integer;
+begin
+  Result := FScrollData.Top;
 end;
 
 procedure TScrollWindow.WMVScroll(var Msg: TLMScroll);
@@ -1080,8 +1095,8 @@ begin
     until (Selection.Y = A.Y) or (A.Y > I);
     if (A.Y > I) and (Selection.Y < I) then
       ScrollTo(GetScrollData.Left, GetScrollData.Height - ScrollHeight);
-  end
-  else if FSingleColumn then
+  end;
+  if FSingleColumn then
   begin
   end
   else if P.X < 0 then
