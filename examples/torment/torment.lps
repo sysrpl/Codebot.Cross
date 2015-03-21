@@ -4,13 +4,13 @@
     <PathDelim Value="\"/>
     <Version Value="9"/>
     <BuildModes Active="Win32 Debug"/>
-    <Units Count="46">
+    <Units Count="51">
       <Unit0>
         <Filename Value="torment.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="torment"/>
         <CursorPos X="44" Y="19"/>
-        <UsageCount Value="150"/>
+        <UsageCount Value="190"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit0>
@@ -21,10 +21,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="60"/>
-        <CursorPos X="35" Y="70"/>
-        <UsageCount Value="150"/>
+        <TopLine Value="43"/>
+        <UsageCount Value="190"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -33,9 +33,9 @@
         <Filename Value="downloads.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="Downloads"/>
-        <EditorIndex Value="7"/>
+        <EditorIndex Value="12"/>
         <CursorPos X="58"/>
-        <UsageCount Value="61"/>
+        <UsageCount Value="101"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit2>
@@ -44,7 +44,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="133"/>
         <CursorPos X="3" Y="147"/>
-        <UsageCount Value="29"/>
+        <UsageCount Value="25"/>
         <Bookmarks Count="1">
           <Item0 X="21" Y="280" ID="2"/>
         </Bookmarks>
@@ -54,95 +54,95 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="79"/>
         <CursorPos X="14" Y="129"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit4>
       <Unit5>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.text.xml.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="28" Y="22"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit5>
       <Unit6>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.networking.storage.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="32"/>
         <CursorPos X="44" Y="49"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit6>
       <Unit7>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.networking.web.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="34"/>
         <CursorPos X="3" Y="207"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit7>
       <Unit8>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.system.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="55"/>
         <CursorPos X="3" Y="69"/>
-        <UsageCount Value="29"/>
+        <UsageCount Value="25"/>
       </Unit8>
       <Unit9>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.networking.ftp.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="106"/>
         <CursorPos X="14" Y="147"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit9>
       <Unit10>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.graphics.types.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="726"/>
         <CursorPos X="29" Y="751"/>
-        <UsageCount Value="59"/>
+        <UsageCount Value="55"/>
       </Unit10>
       <Unit11>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.extras.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="27"/>
         <CursorPos X="13" Y="67"/>
-        <UsageCount Value="38"/>
+        <UsageCount Value="34"/>
       </Unit11>
       <Unit12>
         <Filename Value="..\..\FreePascal\fpc\rtl\win32\classes.pp"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit12>
       <Unit13>
         <Filename Value="..\..\FreePascal\fpc\rtl\objpas\classes\classesh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="80"/>
         <CursorPos X="3" Y="94"/>
-        <UsageCount Value="17"/>
+        <UsageCount Value="13"/>
       </Unit13>
       <Unit14>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.collections.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="115"/>
         <CursorPos X="3" Y="132"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit14>
       <Unit15>
         <Filename Value="..\..\FreePascal\fpc\rtl\objpas\classes\collect.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="41"/>
         <CursorPos X="2" Y="44"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="4"/>
       </Unit15>
       <Unit16>
         <Filename Value="..\..\FreePascal\lazarus\components\PascalScript\Source\uPSC_classes.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="305"/>
         <CursorPos X="13" Y="331"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit16>
       <Unit17>
         <Filename Value="..\..\FreePascal\lazarus\lcl\comboex.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="91"/>
         <CursorPos X="28" Y="55"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit17>
       <Unit18>
         <Filename Value="..\..\FreePascal\lazarus\components\ideintf\collectionpropeditform.pas"/>
@@ -152,126 +152,119 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="117"/>
         <CursorPos X="3" Y="331"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit18>
       <Unit19>
         <Filename Value="..\..\FreePascal\lazarus\components\ideintf\propeditutils.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="25"/>
         <CursorPos X="3" Y="22"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit19>
       <Unit20>
         <Filename Value="..\..\FreePascal\lazarus\components\rtticontrols\examples\examplegrid1.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="29" Y="15"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit20>
       <Unit21>
         <Filename Value="..\..\FreePascal\lazarus\components\synedit\syneditkeycmds.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="364"/>
         <CursorPos X="30" Y="340"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit21>
       <Unit22>
         <Filename Value="..\..\FreePascal\lazarus\components\tachart\tachartaxisutils.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="226"/>
         <CursorPos X="27" Y="148"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit22>
       <Unit23>
         <Filename Value="..\..\FreePascal\lazarus\components\tachart\tachartextentlink.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="14"/>
         <CursorPos X="25" Y="26"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit23>
       <Unit24>
         <Filename Value="..\..\FreePascal\lazarus\components\turbopower_ipro\ipmsg.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="184"/>
         <CursorPos X="16" Y="145"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit24>
       <Unit25>
         <Filename Value="..\..\FreePascal\lazarus\lcl\comctrls.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1219"/>
         <CursorPos X="32" Y="1224"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit25>
       <Unit26>
         <Filename Value="..\..\FreePascal\lazarus\lcl\include\listcolumns.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="75"/>
         <CursorPos Y="92"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit26>
       <Unit27>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="728"/>
         <CursorPos Y="755"/>
-        <UsageCount Value="29"/>
+        <UsageCount Value="25"/>
       </Unit27>
       <Unit28>
         <Filename Value="..\..\FreePascal\lazarus\lcl\lclproc.pas"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="6" Y="19"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit28>
       <Unit29>
         <Filename Value="..\..\FreePascal\lazarus\lcl\graphics.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="562"/>
         <CursorPos X="14" Y="574"/>
-        <UsageCount Value="8"/>
+        <UsageCount Value="4"/>
       </Unit29>
       <Unit30>
         <Filename Value="..\..\FreePascal\lazarus\lcl\stdctrls.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1336"/>
         <CursorPos X="14" Y="1474"/>
-        <UsageCount Value="7"/>
+        <UsageCount Value="3"/>
       </Unit30>
       <Unit31>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.scrolling.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="226"/>
         <CursorPos X="15" Y="245"/>
-        <UsageCount Value="60"/>
+        <UsageCount Value="56"/>
       </Unit31>
       <Unit32>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.containers.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="508"/>
         <CursorPos Y="535"/>
-        <UsageCount Value="5"/>
+        <UsageCount Value="1"/>
       </Unit32>
       <Unit33>
-        <Filename Value="..\Components\Cross.Codebot\source\codebot.controls.grids.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="1303"/>
-        <CursorPos X="32" Y="1325"/>
-        <UsageCount Value="2"/>
-      </Unit33>
-      <Unit34>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.design.registration.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="34"/>
         <CursorPos X="3" Y="48"/>
-        <UsageCount Value="19"/>
-      </Unit34>
-      <Unit35>
+        <UsageCount Value="15"/>
+      </Unit33>
+      <Unit34>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.forms.popup.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="7"/>
         <CursorPos X="49" Y="17"/>
-        <UsageCount Value="4"/>
-      </Unit35>
-      <Unit36>
+        <UsageCount Value="0"/>
+      </Unit34>
+      <Unit35>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.design.surfacebitmapeditor.pas"/>
         <ComponentName Value="SurfaceBitmapEditor"/>
         <HasResources Value="True"/>
@@ -279,212 +272,258 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="5"/>
         <CursorPos Y="20"/>
-        <UsageCount Value="4"/>
-      </Unit36>
-      <Unit37>
+        <UsageCount Value="0"/>
+      </Unit35>
+      <Unit36>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.design.surfacebitmapeditor.lfm"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="322"/>
         <CursorPos X="12" Y="346"/>
-        <UsageCount Value="4"/>
+        <UsageCount Value="0"/>
         <DefaultSyntaxHighlighter Value="LFM"/>
-      </Unit37>
-      <Unit38>
+      </Unit36>
+      <Unit37>
         <Filename Value="..\Components\Cross.Codebot\source\codebot.graphics.windows.surfacegdiplus.pas"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="876"/>
         <CursorPos X="27" Y="890"/>
-        <UsageCount Value="21"/>
-      </Unit38>
-      <Unit39>
+        <UsageCount Value="17"/>
+      </Unit37>
+      <Unit38>
         <Filename Value="..\..\FreePascal\fpc\rtl\objpas\objpas.pp"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="32"/>
         <CursorPos X="8" Y="46"/>
-        <UsageCount Value="6"/>
-      </Unit39>
-      <Unit40>
+        <UsageCount Value="2"/>
+      </Unit38>
+      <Unit39>
         <Filename Value="..\..\source\codebot.graphics.types.pas"/>
         <UnitName Value="Codebot.Graphics.Types"/>
-        <EditorIndex Value="8"/>
+        <EditorIndex Value="13"/>
         <TopLine Value="263"/>
         <CursorPos X="3" Y="281"/>
-        <UsageCount Value="15"/>
+        <UsageCount Value="35"/>
+        <Loaded Value="True"/>
+      </Unit39>
+      <Unit40>
+        <Filename Value="..\..\source\codebot.system.pas"/>
+        <UnitName Value="Codebot.System"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="589"/>
+        <CursorPos X="3" Y="618"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit40>
       <Unit41>
-        <Filename Value="..\..\source\codebot.system.pas"/>
-        <UnitName Value="Codebot.System"/>
-        <EditorIndex Value="4"/>
-        <TopLine Value="31"/>
-        <CursorPos X="19" Y="59"/>
-        <UsageCount Value="10"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="2381"/>
+        <CursorPos X="13" Y="2398"/>
+        <UsageCount Value="32"/>
+        <Bookmarks Count="1">
+          <Item0 Y="2399" ID="3"/>
+        </Bookmarks>
         <Loaded Value="True"/>
       </Unit41>
       <Unit42>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="2380"/>
-        <CursorPos X="26" Y="2400"/>
-        <UsageCount Value="12"/>
-        <Bookmarks Count="3">
-          <Item0 Y="2399" ID="3"/>
-          <Item1 X="5" Y="2389" ID="2"/>
-          <Item2 X="13" Y="2398" ID="1"/>
-        </Bookmarks>
-        <Loaded Value="True"/>
-      </Unit42>
-      <Unit43>
         <Filename Value="..\..\source\codebot.interop.windows.direct2d.pas"/>
         <UnitName Value="Codebot.Interop.Windows.Direct2D"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="11"/>
         <TopLine Value="1752"/>
         <CursorPos X="94" Y="1772"/>
-        <UsageCount Value="12"/>
+        <UsageCount Value="32"/>
         <Bookmarks Count="1">
           <Item0 X="32" Y="53" ID="4"/>
         </Bookmarks>
         <Loaded Value="True"/>
-      </Unit43>
-      <Unit44>
+      </Unit42>
+      <Unit43>
         <Filename Value="..\..\source\codebot.controls.pas"/>
         <UnitName Value="Codebot.Controls"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="10"/>
         <TopLine Value="615"/>
         <CursorPos X="20" Y="644"/>
-        <UsageCount Value="12"/>
+        <UsageCount Value="32"/>
+        <Loaded Value="True"/>
+      </Unit43>
+      <Unit44>
+        <Filename Value="..\..\source\codebot.graphics.windows.interfacedbitmap.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.InterfacedBitmap"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="19"/>
+        <CursorPos Y="42"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit44>
       <Unit45>
-        <Filename Value="..\..\source\codebot.graphics.windows.interfacedbitmap.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.InterfacedBitmap"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="19"/>
-        <CursorPos Y="42"/>
-        <UsageCount Value="10"/>
+        <Filename Value="..\..\source\codebot.networking.pas"/>
+        <UnitName Value="Codebot.Networking"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="25"/>
+        <CursorPos X="31" Y="47"/>
+        <UsageCount Value="30"/>
         <Loaded Value="True"/>
       </Unit45>
+      <Unit46>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <UnitName Value="Codebot.Networking.Web"/>
+        <EditorIndex Value="3"/>
+        <CursorPos X="42" Y="26"/>
+        <UsageCount Value="30"/>
+        <Bookmarks Count="2">
+          <Item0 Y="748" ID="2"/>
+          <Item1 Y="83" ID="1"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit46>
+      <Unit47>
+        <Filename Value="..\..\source\codebot.text.xml.windows.inc"/>
+        <EditorIndex Value="6"/>
+        <CursorPos X="9" Y="7"/>
+        <UsageCount Value="30"/>
+        <Loaded Value="True"/>
+      </Unit47>
+      <Unit48>
+        <Filename Value="..\..\..\..\..\FreePascal\fpc\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="984"/>
+        <CursorPos X="23" Y="993"/>
+        <UsageCount Value="23"/>
+        <Loaded Value="True"/>
+      </Unit48>
+      <Unit49>
+        <Filename Value="..\..\..\..\..\FreePascal\fpc\rtl\objpas\classes\streams.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="813"/>
+        <CursorPos X="2" Y="816"/>
+        <UsageCount Value="7"/>
+      </Unit49>
+      <Unit50>
+        <Filename Value="..\..\source\codebot.networking.storage.pas"/>
+        <UnitName Value="Codebot.Networking.Storage"/>
+        <EditorIndex Value="4"/>
+        <UsageCount Value="23"/>
+        <Loaded Value="True"/>
+      </Unit50>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2371" TopLine="2353"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
       </Position1>
       <Position2>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="1846" Column="57" TopLine="1815"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="39" Column="28" TopLine="11"/>
       </Position2>
       <Position3>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="358" Column="14" TopLine="341"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="41" Column="28" TopLine="13"/>
       </Position3>
       <Position4>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="58" Column="18" TopLine="44"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="210" Column="29" TopLine="182"/>
       </Position4>
       <Position5>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="61" Column="13" TopLine="44"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="219" Column="29" TopLine="191"/>
       </Position5>
       <Position6>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="354" Column="24" TopLine="326"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="288" TopLine="262"/>
       </Position6>
       <Position7>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="360" Column="37" TopLine="332"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="742" TopLine="735"/>
       </Position7>
       <Position8>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="382" Column="15" TopLine="365"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
       </Position8>
       <Position9>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2456" Column="5" TopLine="2444"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="159" TopLine="160"/>
       </Position9>
       <Position10>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="362" Column="25" TopLine="334"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="476" Column="25" TopLine="459"/>
       </Position10>
       <Position11>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="312" TopLine="288"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="114" Column="95" TopLine="99"/>
       </Position11>
       <Position12>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2359" Column="27" TopLine="2352"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="525" Column="25" TopLine="508"/>
       </Position12>
       <Position13>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="642" Column="31" TopLine="625"/>
       </Position13>
       <Position14>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="389" Column="14" TopLine="372"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="719" Column="24" TopLine="702"/>
       </Position14>
       <Position15>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2384" Column="22" TopLine="2369"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="721" Column="9" TopLine="705"/>
       </Position15>
       <Position16>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="602" Column="28" TopLine="578"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="730" Column="14" TopLine="715"/>
       </Position16>
       <Position17>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2388" Column="32" TopLine="2370"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="751" Column="17" TopLine="734"/>
       </Position17>
       <Position18>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="297" Column="31" TopLine="280"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="756" Column="31" TopLine="736"/>
       </Position18>
       <Position19>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2389" TopLine="2371"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="754" Column="18" TopLine="736"/>
       </Position19>
       <Position20>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="297" Column="31" TopLine="280"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="753" TopLine="737"/>
       </Position20>
       <Position21>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2386" Column="80" TopLine="2371"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="164" Column="14" TopLine="137"/>
       </Position21>
       <Position22>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="349" Column="66" TopLine="349"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
       </Position22>
       <Position23>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="345" Column="22" TopLine="328"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="354" TopLine="328"/>
       </Position23>
       <Position24>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="468" TopLine="446"/>
       </Position24>
       <Position25>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="345" Column="22" TopLine="317"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="410" Column="25" TopLine="401"/>
       </Position25>
       <Position26>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="353" Column="61" TopLine="325"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="418" TopLine="400"/>
       </Position26>
       <Position27>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="1807" Column="30" TopLine="1779"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="343" Column="17" TopLine="335"/>
       </Position27>
       <Position28>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="1827" Column="36" TopLine="1813"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="517" Column="15" TopLine="490"/>
       </Position28>
       <Position29>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2391" Column="3" TopLine="2379"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="177" Column="54" TopLine="155"/>
       </Position29>
       <Position30>
-        <Filename Value="main.pas"/>
-        <Caret Line="70" Column="35" TopLine="60"/>
+        <Filename Value="..\..\source\codebot.networking.web.pas"/>
+        <Caret Line="26" Column="42"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>

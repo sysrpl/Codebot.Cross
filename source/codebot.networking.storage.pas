@@ -96,7 +96,7 @@ var
   Socket: TSocket;
   Body, Buffer: string;
 begin
-  Header.Reset;
+  Header.Clear;
   Body := '';
   Socket := TSocket.Create;
   try
