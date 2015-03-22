@@ -1958,6 +1958,7 @@ end;
 function TColorB.Fade(Percent: Float): TColorB;
 begin
   Result := Self;
+  Percent := Clamp(Percent);
   if Percent = 1 then
     Exit(Self);
   Result.Alpha := Round(Result.Alpha * Percent);
@@ -1972,6 +1973,7 @@ end;
 
 function TColorHelper.Blend(Value: TColorB; Percent: Float): TColorB;
 begin
+  Percent := Clamp(Percent);
   Result := TColorB(Self).Blend(Value, Percent);
 end;
 

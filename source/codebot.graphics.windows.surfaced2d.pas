@@ -386,6 +386,7 @@ type
     procedure HandleRelease; override;
   public
     destructor Destroy; override;
+    procedure Clear; override;
     function GetSurface: ISurface; override;
     function GetPixels: PPixel; override;
   end;
@@ -2461,6 +2462,13 @@ begin
   if FSurface is TBitmapSurfaceD2D then
     (FSurface as TBitmapSurfaceD2D).HandleRelease;
   inherited HandleRelease;
+end;
+
+procedure TBitmapD2D.Clear;
+begin
+  if FSurface is ISharedBitmapTarget then
+    (FSurface as ISharedBitmapTarget).ShareRelease;
+  inherited Clear;
 end;
 
 function TBitmapD2D.GetSurface: ISurface;

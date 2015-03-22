@@ -173,9 +173,9 @@ const
   ContentJson  = 'application/json';
   ContentXml  = 'text/xml; charset=utf-8';
 
-{ Simplified http get output response to a stream }
+{ Simplified HTTP GET with response output to a stream }
 function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = ''): Boolean; overload;
-{ Simplified http get output response to a string }
+{ Simplified HTTP GET with response output to a string }
 function WebGet(const Url: TUrl; out Response: string; const UserAgent: string = ''): Boolean; overload;
 
 { HttpResponseHeaderExtract attempts to parse buffer and find a
@@ -301,7 +301,6 @@ begin
   Result := Valid;
 end;
 
-
 { THttpClient }
 
 constructor THttpClient.Create;
@@ -426,6 +425,7 @@ begin
   Result := False;
   Clear;
   try
+    FCancelled := False;
     if not Url.Valid then
       Exit;
     if Request.Length = 0 then
@@ -755,7 +755,6 @@ begin
       Result.Add(N, V);
   end;
 end;
-
 
 function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = ''): Boolean;
 var
