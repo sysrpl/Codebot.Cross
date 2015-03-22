@@ -41,7 +41,7 @@ function NewSurface(Canvas: TCanvas): ISurface; overload;
 { Create a new canvas using a window }
 function NewSurface(Control: TWinControl): ISurface; overload;
 { Create a new bitmap of width and height size }
-function NewBitmap(Width, Height: Integer): IBitmap;
+function NewBitmap(Width: Integer = 0; Height: Integer = 0): IBitmap;
 { Create a new splash screen }
 function NewSplash: ISplash;
 
@@ -401,7 +401,7 @@ begin
   Result := NewSurfaceCairo(Control);
 end;
 
-function NewBitmap(Width, Height: Integer): IBitmap;
+function NewBitmap(Width: Integer = 0; Height: Integer = 0): IBitmap;
 begin
   Result := NewBitmapCairo(Width, Height);
 end;
@@ -505,7 +505,7 @@ begin
     Result := NewSurfaceGdi(Control);
 end;
 
-function NewBitmap(Width, Height: Integer): IBitmap;
+function NewBitmap(Width: Integer = 0; Height: Integer = 0): IBitmap;
 begin
   if LoadD2D then
     Result := NewBitmapD2D(Width, Height)

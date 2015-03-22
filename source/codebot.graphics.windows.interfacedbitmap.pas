@@ -45,7 +45,7 @@ type
     function GetHeight: Integer;
     function GetWidth: Integer;
     function GetPixels: PPixel; virtual;
-    procedure Clear;
+    procedure Clear; virtual;
     function Resample(Width, Height: Integer; Quality: TResampleQuality = rqNormal): IBitmap;
     procedure LoadFromFile(const FileName: string);
     procedure LoadFromStream(Stream: TStream);
