@@ -27,6 +27,12 @@ type
   PLargeInt = ^LargeInt;
   LargeWord = QWord;
   PLargeWord = ^LargeWord;
+{$ifdef cpu64}
+  SysInt = Int64;
+{$else}
+  SysInt = LongInt;
+{$endif}
+  PSysInt = ^SysInt;
   HFile = Pointer;
 {$endregion}
 
@@ -931,10 +937,11 @@ end;
 
 {$region time routines}
 {$ifdef unix}
+
 type
-  TTimeVal = record
-    Sec: LongWord;  { Seconds }
-    MSec: LongWord; { Microseconds }
+  TTimeVal = packed record
+    Sec: SysInt;  { Seconds }
+    MSec: SysInt; { Microseconds }
   end;
   PTimeVal = ^TTimeVal;
 
@@ -945,17 +952,20 @@ const
 {$ifdef darwin}
   libc = 'libSystem.dylib';
 {$endif}
-
 function gettimeofday(out TimeVal: TTimeVal; TimeZone: PTimeVal): Integer; apicall; external libc;
+
+var
+  TimeSec: SysInt;
 
 function TimeQuery: Double;
 var
   TimeVal: TTimeVal;
 begin
-  if gettimeofday(TimeVal, nil) = 0 then
-    Result := TimeVal.Sec + TimeVal.MSec / 1000000
-  else
-    Result := 0;
+  gettimeofday(TimeVal, nil);
+  if TimeSec = 0 then
+    TimeSec := TimeVal.Sec;
+  TimeVal.Sec := TimeVal.Sec - TimeSec;
+  Result := TimeVal.Sec + TimeVal.MSec / 1000000;
 end;
 {$endif}
 
