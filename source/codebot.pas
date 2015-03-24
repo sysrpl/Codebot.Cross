@@ -23,7 +23,8 @@ uses
   Codebot.Controls.Banner, Codebot.Controls.Grids, 
   Codebot.Design.ImageListEditor, Codebot.Design.SurfaceBitmapEditor, 
   Codebot.Controls.Buttons, Codebot.Graphics.Markup, 
-  Codebot.Controls.Containers, Codebot.Debug, LazarusPackageIntf;
+  Codebot.Controls.Containers, Codebot.Debug, Codebot.Animation, 
+  LazarusPackageIntf;
 
 implementation
 

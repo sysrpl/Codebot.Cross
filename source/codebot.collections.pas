@@ -148,6 +148,74 @@ type
     property Duplicates;
   end;
 
+{ TDictionary\<K, V\> holds key value pairs allowing items to be indexed by a key
+  See also
+  <link Overview.Bare.Types.TDictionary, TDictionary\<K, V\> members> }
+
+  TDictionary<K, V> = class(TObject)
+  public
+    { TDictionary\<K, V\>.TKeyValue holds a key value pairs
+      See also
+      <link Overview.Bare.Types.TDictionary.TKeyValue, TDictionary\<K, V\>.TKeyValue members> }
+
+    type
+      TKeyValue = class
+      private
+        FKey: K;
+        FValue: V;
+      public
+        constructor Create(const Key: K);
+        { The key }
+        property Key: K read FKey;
+        { The value }
+        property Value: V read FValue write FValue;
+      end;
+
+  public
+    { Get the enumerator for the dictionary }
+    function GetEnumerator: IEnumerator<TKeyValue>;
+  private
+    FAutoKey: Boolean;
+    FList: TList<TKeyValue>;
+    FComparer: TCompare<K>;
+    function KeyEquals(const A, B: K): Boolean;
+    function GetCount: Integer;
+    function GetItem(Index: Integer): TKeyValue;
+    function GetKey(Index: Integer): K;
+    function GetValue(const Key: K): V;
+    procedure SetValue(const Key: K; const Value: V);
+  protected
+    procedure AddKeyValue(KeyValue: TKeyValue); virtual;
+    function CreateKeyValue(const Key: K): TKeyValue; virtual;
+    procedure DestroyKeyValue(KeyValue: TKeyValue); virtual;
+    procedure ChangeKeyValue(KeyValue: TKeyValue; Value: V); virtual;
+    { Return a default value if no key exists }
+    function DefaultValue: V; virtual;
+    { When true key values will automatically be created when a value is requested
+      if it doesn't exist }
+    property AutoKey: Boolean read FAutoKey write FAutoKey;
+  public
+    { Create the dictionary }
+    constructor Create;
+    destructor Destroy; override;
+    { Remove an item by key index }
+    procedure Remove(const Key: K);
+    { Remove all items from the dictionary }
+    procedure Clear;
+    { Returns true if the key is in the dictionary }
+    function KeyExists(const Key: K): Boolean;
+    { Used to compare keys }
+    property Comparer: TCompare<K> read FComparer write FComparer;
+    { Items indexed by integer }
+    property Items[Index: Integer]: TKeyValue read GetItem;
+    { Keys indexed by integer }
+    property Keys[Index: Integer]: K read GetKey;
+    { Values indexed by key }
+    property Values[const Key: K]: V read GetValue write SetValue; default;
+    { Number of key value pairs }
+    property Count: Integer read GetCount;
+  end;
+
 { IList<T> }
 
   IList<T> = interface(IEnumerable<T>)
@@ -575,6 +643,176 @@ end;
 function TObjectList<TItem>.IndexOf(const Item: ItemType): Integer;
 begin
   Result := Find(TCompare<Titem>(@FindObject), Item);
+end;
+
+{ TDictionary<K, V>.TKeyValue }
+
+constructor TDictionary<K, V>.TKeyValue.Create(const Key: K);
+begin
+  inherited Create;
+  FKey := Key;
+end;
+
+{ TDictionary<K, V> }
+
+function TDictionary<K, V>.GetEnumerator: IEnumerator<TKeyValue>;
+begin
+  Result := FList.GetEnumerator;
+end;
+
+constructor TDictionary<K, V>.Create;
+begin
+  inherited Create;
+  FList := TList<TKeyValue>.Create;
+end;
+
+destructor TDictionary<K, V>.Destroy;
+begin
+  Clear;
+  inherited Destroy;
+end;
+
+procedure TDictionary<K, V>.AddKeyValue(KeyValue: TKeyValue);
+begin
+  FList.Add(KeyValue);
+end;
+
+function TDictionary<K, V>.CreateKeyValue(const Key: K): TKeyValue;
+begin
+  Result := TKeyValue.Create(Key);
+end;
+
+procedure TDictionary<K, V>.DestroyKeyValue(KeyValue: TKeyValue);
+begin
+  KeyValue.Free;
+end;
+
+procedure TDictionary<K, V>.ChangeKeyValue(KeyValue: TKeyValue; Value: V);
+begin
+  KeyValue.Value := Value;
+end;
+
+function TDictionary<K, V>.DefaultValue: V;
+begin
+  Result := default(V);
+end;
+
+function TDictionary<K, V>.KeyEquals(const A, B: K): Boolean;
+begin
+  if Assigned(FComparer) then
+    Result := FComparer(A, B) = 0
+  else
+    Result := A = B;
+end;
+
+procedure TDictionary<K, V>.Remove(const Key: K);
+var
+  KeyValue: TKeyValue;
+  I: Integer;
+begin
+  I := 0;
+  repeat
+    if I = FList.Count then
+      Exit;
+    KeyValue := TKeyValue(FList[I]);
+    if KeyEquals(KeyValue.Key, Key) then
+    begin
+      DestroyKeyValue(KeyValue);
+      FList.Delete(I);
+      Exit;
+    end;
+    Inc(I);
+  until False;
+end;
+
+procedure TDictionary<K, V>.Clear;
+var
+  I: Integer;
+begin
+  for I := 0 to FList.Count - 1 do
+    DestroyKeyValue(FList[I]);
+  FList.Clear;
+end;
+
+function TDictionary<K, V>.KeyExists(const Key: K): Boolean;
+var
+  KeyValue: TKeyValue;
+  I: Integer;
+begin
+  Result := True;
+  for I := 0 to FList.Count - 1 do
+  begin
+    KeyValue := TKeyValue(FList[I]);
+    if KeyEquals(KeyValue.Key, Key) then
+      Exit;
+  end;
+  Result := False;
+end;
+
+function TDictionary<K, V>.GetCount: Integer;
+begin
+  Result := FList.Count;
+end;
+
+function TDictionary<K, V>.GetItem(Index: Integer): TKeyValue;
+begin
+  Result := FList[Index];
+end;
+
+function TDictionary<K, V>.GetKey(Index: Integer): K;
+begin
+  Result := FList[Index].Key;
+end;
+
+function TDictionary<K, V>.GetValue(const Key: K): V;
+var
+  KeyValue: TKeyValue;
+  I: Integer;
+begin
+  I := 0;
+  repeat
+    if I = FList.Count then
+    begin
+      if AutoKey then
+      begin
+        KeyValue := CreateKeyValue(Key);
+        if KeyValue <> nil then
+        begin
+          AddKeyValue(KeyValue);
+          Result := KeyValue.Value;
+        end;
+      end
+      else
+        Result := DefaultValue;
+      Exit;
+    end;
+    KeyValue := FList[I];
+    if KeyEquals(KeyValue.Key, Key) then
+      Exit(KeyValue.Value);
+    Inc(I);
+  until False;
+end;
+
+procedure TDictionary<K, V>.SetValue(const Key: K; const Value: V);
+var
+  KeyValue: TKeyValue;
+  I: Integer;
+begin
+  for I := 0 to FList.Count - 1 do
+  begin
+    KeyValue := TKeyValue(FList[I]);
+    if KeyEquals(KeyValue.Key, Key) then
+    begin
+      ChangeKeyValue(KeyValue, Value);
+      Exit;
+    end;
+  end;
+  KeyValue := CreateKeyValue(Key);
+  if KeyValue <> nil then
+  begin
+    KeyValue.FValue := Value;
+    AddKeyValue(KeyValue);
+  end;
 end;
 
 { TReferences<T> }

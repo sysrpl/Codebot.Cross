@@ -211,6 +211,7 @@ type
 procedure FillRectColor(Surface: ISurface; const Rect: TRectI; Color: TColorB; Radius: Float = 0);
 procedure StrokeRectColor(Surface: ISurface; const Rect: TRectI; Color: TColorB; Radius: Float = 0);
 procedure FillRectState(Surface: ISurface; const Rect: TRectI; State: TDrawState);
+procedure FillRectSelected(Surface: ISurface; const Rect: TRectI; Radius: Float = 0);
 function DrawDummyBitmap(Width, Height: Integer): IBitmap;
 function DrawHueLinear(Width, Height: Integer): IBitmap;
 function DrawHueRadial(Width, Height: Integer): IBitmap;
@@ -1381,6 +1382,19 @@ begin
   end
   else
     Surface.FillRect(NewBrush(clWindow), Rect);
+end;
+
+procedure FillRectSelected(Surface: ISurface; const Rect: TRectI; Radius: Float = 0);
+var
+  C: TColorB;
+  G: IGradientBrush;
+begin
+  C := clHighlight;
+  G := NewBrush(0, Rect.Top, 0, Rect.Bottom);
+  G.AddStop(C.Fade(0.4), 0);
+  G.AddStop(C.Fade(0.0), 1);
+  Surface.FillRoundRect(G, Rect, Radius);
+  Surface.StrokeRoundRect(NewPen(C.Fade(0.75)), Rect, Radius);
 end;
 
 function DrawDummyBitmap(Width, Height: Integer): IBitmap;
