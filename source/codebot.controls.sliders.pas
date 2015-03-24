@@ -350,8 +350,8 @@ begin
   if Value < FMin then
     Value := FMin
   else if Value > FMax then
-    Value := FMax;
-  if FStep > 0 then
+    Value := FMax
+  else if FStep > 0 then
     Value := Divide(Value, FStep);
   if Value <> FPosition then
   begin
