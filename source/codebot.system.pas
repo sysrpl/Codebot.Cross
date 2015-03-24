@@ -903,7 +903,7 @@ begin
   if Divisor = 0 then
     Result := 0
   else
-    Result := Round(Quotient / Divisor) * Divisor;
+    Result := Trunc(Quotient / Divisor) * Divisor;
 end;
 
 function Remainder(const Quotient, Divisor: Float): Float;

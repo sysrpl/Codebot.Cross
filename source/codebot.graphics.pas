@@ -16,7 +16,8 @@ interface
 uses
   Classes, SysUtils, Graphics, Controls,
   Codebot.System,
-  Codebot.Graphics.Types;
+  Codebot.Graphics.Types,
+  Codebot.Animation;
 
 { Create a new matrix }
 function NewMatrix: IMatrix;
@@ -36,9 +37,9 @@ function NewBrush(const A, B: TPointF): ILinearGradientBrush; overload;
 function NewBrush(const Rect: TRectF): IRadialGradientBrush; overload;
 { Create a new font by copying a regular font object }
 function NewFont(Font: TFont): IFont;
-{ Create a new canvas using a regular canvas object }
+{ Create a new surface using a regular canvas object }
 function NewSurface(Canvas: TCanvas): ISurface; overload;
-{ Create a new canvas using a window }
+{ Create a new surface using a window }
 function NewSurface(Control: TWinControl): ISurface; overload;
 { Create a new bitmap of width and height size }
 function NewBitmap(Width: Integer = 0; Height: Integer = 0): IBitmap;
@@ -218,6 +219,11 @@ function DrawHueRadial(Width, Height: Integer): IBitmap;
 function DrawSaturationBox(Width, Height: Integer; Hue: Float): IBitmap;
 function DrawDesaturationBox(Width, Height: Integer; Hue: Float): IBitmap;
 procedure DrawShadow(Surface: ISurface; const Rect: TRectI; Direction: TDirection);
+
+{ Draw an easing function as a graph }
+
+procedure DrawEasing(Surface: ISurface; Font: IFont; Rect: TRectF;
+  Easing: TEasing; Reverse: Boolean; Time: Float);
 
 { Brushes creates a series of bitmap batterns }
 
@@ -1572,6 +1578,69 @@ begin
       end;
     end;
   end;
+end;
+
+procedure DrawEasing(Surface: ISurface; Font: IFont; Rect: TRectF;
+  Easing: TEasing; Reverse: Boolean; Time: Float);
+var
+  P: IPen;
+  R: TRectF;
+  C: TColorB;
+  X, Y: Float;
+  I, J: Integer;
+begin
+  { Add the axis to the path }
+  R := Rect;
+  Surface.MoveTo(R.Left, R.Top);
+  Surface.LineTo(R.Left, R.Bottom);
+  Surface.LineTo(R.Right, R.Bottom);
+  { And stroke with a gray pen }
+  P := NewPen(clGray);
+  Surface.Stroke(P);
+  { Find the current point in the easing }
+  X := Interpolate(@TEasingDefaults.Linear, Time, R.Left, R.Right);
+  Y := Interpolate(Easing, Time, R.Bottom, R.Top, Reverse);
+  { And add a dashed red line from one acis to the easing delta }
+  Surface.MoveTo(X, R.Bottom);
+  Surface.LineTo(X, Y);
+  P.Color := clRed;
+  P.LinePattern := pnDash;
+  { Stroke the line }
+  Surface.Stroke(P);
+  { Add an 8x8 circle dot to the easing point }
+  R := TRectF.Create(8, 8);
+  R.Center(X - 0.5, Y - 0.5);
+  Surface.Ellipse(R);
+  { Add fill the dot with a red brush }
+  Surface.Fill(NewBrush(clRed));
+  { Draw the easing line }
+  R := Rect;
+  Surface.MoveTo(R.Left, R.Bottom);
+  J := Round(R.Width);
+  for I := 1 to J do
+  begin
+    X := R.Left + I;
+    Y := Interpolate(Easing, I / J, R.Bottom, R.Top, Reverse);
+    Surface.LineTo(X, Y);
+  end;
+  Surface.LineTo(R.Right, R.Top);
+  { And stroke it with a 2 pixel thick black pen }
+  P := NewPen(clBlack, 2);
+  P.LineJoin := jnRound;
+  Surface.Stroke(P);
+  { label the axis }
+  Y := Surface.TextSize(Font, 'Wg').Y;
+  R.Top := R.Top - Y;
+  C := Theme.Font.Color;
+  Font.Color := clGray;
+  { The left axis is the delta, or change over time }
+  Surface.TextOut(Font, 'delta', R, drWrap);
+  R := Rect;
+  R.Top := R.Bottom;
+  R.Height := Y;
+  { The bottom axis is time }
+  Surface.TextOut(Font, 'time', R, drRight);
+  Theme.Font.Color := C;
 end;
 
 { Brushes }
