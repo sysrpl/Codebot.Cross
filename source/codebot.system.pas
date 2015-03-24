@@ -202,9 +202,13 @@ function DefaultFloatConvertString(constref Item: Float): string;
 
 {$region math routines}
 { Return the even division of a quotient }
-function Divide(const Quotient, Divisor: Float): Float;
+function Divide(const Quotient, Divisor: Extended): Extended;
 { Return the remainder of an even division }
-function Remainder(const Quotient, Divisor: Float): Float;
+function Remainder(const Quotient, Divisor: Extended): Extended;
+{ Return the upper most value }
+function Ceil(const Value: Extended): Extended;
+{ Return the lower most value }
+function Floor(const Value: Extended): Extended;
 { Bind a value between 0 and 1 }
 function Clamp(Percent: Float): Float;
 { Convert degrees to radians }
@@ -898,7 +902,7 @@ end;
 {$endregion}
 
 {$region math routines}
-function Divide(const Quotient, Divisor: Float): Float;
+function Divide(const Quotient, Divisor: Extended): Extended;
 begin
   if Divisor = 0 then
     Result := 0
@@ -906,12 +910,26 @@ begin
     Result := Trunc(Quotient / Divisor) * Divisor;
 end;
 
-function Remainder(const Quotient, Divisor: Float): Float;
+function Remainder(const Quotient, Divisor: Extended): Extended;
 begin
   if Divisor = 0 then
     Result := 0
   else
-    Result := Quotient - (Trunc(Quotient) div Trunc(Divisor)) * Divisor;
+    Result := Quotient - Divisor * Trunc(Quotient / Divisor);
+end;
+
+function Ceil(const Value: Extended): Extended;
+begin
+  Result := Trunc(Value);
+  if Result >= 0 then
+    Result := Result + 1;
+end;
+
+function Floor(const Value: Extended): Extended;
+begin
+  Result := Trunc(Value);
+  if Result < 0 then
+    Result := Result - 1;
 end;
 
 function Clamp(Percent: Float): Float;

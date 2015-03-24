@@ -14,6 +14,7 @@ unit Codebot.Animation;
 interface
 
 uses
+  SysUtils, Classes,
   Codebot.System,
   Codebot.Collections;
 
@@ -85,6 +86,28 @@ function Interpolate(Easing: TEasing; Percent: Float; Start, Finish: Float; Reve
 { Provides access to <link Codebot.Animation.TEasings, TEasings class> [group animation] }
 function Easings: TEasings;
 
+{ TAnimationTimer is a high performance timer fixed at 60 frames per second [group animation]
+  See also
+  <link Overview.Codebot.Animation.TAnimationTimer, TAnimationTimer members> }
+
+type
+  TAnimationTimer = class(TComponent)
+  private
+    FEnabled: Boolean;
+    FOnTimer: TNotifyEvent;
+    procedure Timer(Sender: TObject);
+    procedure SetEnabled(Value: Boolean);
+  public
+    { Create a new aniamtion timer }
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  published
+    { Start or stop the timer using enabled }
+    property Enabled: Boolean read FEnabled write SetEnabled default False;
+    { OnTimer is fired every 1/60 of a second when enabled }
+    property OnTimer: TNotifyEvent read FOnTimer write FOnTimer;
+  end;
+
 implementation
 
 const
@@ -129,7 +152,7 @@ end;
 
 class function TEasingDefaults.DropSlow(Percent: Float): Float;
 begin
-  Result := Percent * Percent * Percent;
+  Result := Percent * Percent * Percent * Percent * Percent;
 end;
 
 class function TEasingDefaults.Snap(Percent: Float): Float;
@@ -291,6 +314,146 @@ begin
   end;
 end;
 
+{ TAnimationThread }
+
+type
+  TAnimationThread = class(TThread)
+  private
+    procedure Animate;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create;
+  end;
+
+{ TThreadedTimer }
+
+  TThreadedTimer = class(TObject)
+  private
+    FTimerCount: Integer;
+    FOnTimer: TNotifyDelegate;
+    function GetOnTimer: INotifyDelegate;
+  public
+    destructor Destroy; override;
+    property OnTimer: INotifyDelegate read GetOnTimer;
+    procedure Enable;
+    procedure Disable;
+  end;
+
+var
+  InternalThread: TObject;
+
+destructor TThreadedTimer.Destroy;
+begin
+  InternalThread := nil;
+  inherited Destroy;
+end;
+
+function TThreadedTimer.GetOnTimer: INotifyDelegate;
+begin
+  Result := FOnTimer;
+end;
+
+procedure TThreadedTimer.Enable;
+begin
+  if InterLockedIncrement(FTimerCount) = 1 then
+    TAnimationThread.Create;
+end;
+
+procedure TThreadedTimer.Disable;
+begin
+  if InterLockedDecrement(FTimerCount) = 0 then
+    InternalThread := nil;
+end;
+
+var
+  InternalThreadedTimer: TThreadedTimer;
+
+function ThreadedTimer: TThreadedTimer;
+begin
+  if InternalThreadedTimer = nil then
+    InternalThreadedTimer := TThreadedTimer.Create;
+  Result := InternalThreadedTimer;
+end;
+
+{ TAnimationThread }
+
+constructor TAnimationThread.Create;
+begin
+  InternalThread := Self;
+  inherited Create(False);
+end;
+
+procedure TAnimationThread.Animate;
+var
+  Event: TNotifyEvent;
+begin
+  if InternalThread <> Self then
+    Exit;
+  if InternalThreadedTimer = nil then
+    Exit;
+  for Event in InternalThreadedTimer.FOnTimer do
+    Event(InternalThreadedTimer);
+end;
+
+procedure TAnimationThread.Execute;
+const
+  Delay = 1 / 60;
+var
+  A, B: Double;
+begin
+  A := TimeQuery;
+  FreeOnTerminate := True;
+  while InternalThread = Self do
+  begin
+    Synchronize(Animate);
+    if InternalThread <> Self then
+      Exit;
+    B := TimeQuery - A;
+    while B < Delay do
+    begin
+      B := (Delay - B)  * 1000;
+      Sleep(Round(B));
+      B := TimeQuery - A;
+    end;
+    A := TimeQuery - (B - Delay);
+  end;
+end;
+
+{ TAnimationTimer }
+
+constructor TAnimationTimer.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  ThreadedTimer.OnTimer.Add(Timer);
+end;
+
+destructor TAnimationTimer.Destroy;
+begin
+  Enabled := False;
+  ThreadedTimer.OnTimer.Remove(Timer);
+  inherited Destroy;
+end;
+
+procedure TAnimationTimer.Timer(Sender: TObject);
+begin
+  if FEnabled and Assigned(FOnTimer) then
+    FOnTimer(Self);
+end;
+
+procedure TAnimationTimer.SetEnabled(Value: Boolean);
+begin
+  if FEnabled = Value then Exit;
+  FEnabled := Value;
+  if csDesigning in ComponentState then Exit;
+  if FEnabled then
+    ThreadedTimer.Enable
+  else
+    ThreadedTimer.Disable;
+end;
+
+{ Easings }
+
 var
   InternalEasings: TEasings;
 
@@ -305,7 +468,8 @@ begin
 end;
 
 finalization
-  InternalEasings.Free;
+  FreeAndNil(InternalThreadedTimer);
+  FreeAndNil(InternalEasings);
 end.
 
 
