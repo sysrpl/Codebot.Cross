@@ -448,8 +448,8 @@ function Lighten(Color: TColorB; Percent: Float): TColorB;
 
 { Miscellaneous routines }
 
-function Divide(const Quotient, Divisor: Float): Float;
-function Remainder(const Quotient, Divisor: Float): Float;
+function Divide(const Quotient, Divisor: Extended): Extended;
+function Remainder(const Quotient, Divisor: Extended): Extended;
 function Clamp(Percent: Float): Float;
 function DegToRad(D: Float): Float;
 function RadToDeg(R: Float): Float;
@@ -2362,20 +2362,20 @@ end;
 
 { Miscellaneous routines }
 
-function Divide(const Quotient, Divisor: Float): Float;
+function Divide(const Quotient, Divisor: Extended): Extended;
 begin
   if Divisor = 0 then
     Result := 0
   else
-    Result := Round(Quotient / Divisor) * Divisor;
+    Result := Trunc(Quotient / Divisor);
 end;
 
-function Remainder(const Quotient, Divisor: Float): Float;
+function Remainder(const Quotient, Divisor: Extended): Extended;
 begin
   if Divisor = 0 then
     Result := 0
   else
-    Result := Quotient - (Trunc(Quotient) div Trunc(Divisor)) * Divisor;
+    Result := Quotient - Divisor * Trunc(Quotient / Divisor);
 end;
 
 function Clamp(Percent: Float): Float;
