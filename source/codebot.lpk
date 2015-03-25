@@ -34,7 +34,7 @@
     <Description Value="Codebot.Cross a set of tools"/>
     <License Value="LGPL"/>
     <Version Major="1"/>
-    <Files Count="45">
+    <Files Count="46">
       <Item1>
         <Filename Value="codebot.inc"/>
         <Type Value="Binary"/>
@@ -213,8 +213,12 @@
       </Item44>
       <Item45>
         <Filename Value="codebot.animation.pas"/>
-        <UnitName Value="codebot.animation"/>
+        <UnitName Value="Codebot.Animation"/>
       </Item45>
+      <Item46>
+        <Filename Value="codebot.geometry.pas"/>
+        <UnitName Value="codebot.geometry"/>
+      </Item46>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

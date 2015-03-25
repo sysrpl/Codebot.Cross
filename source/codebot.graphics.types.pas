@@ -307,7 +307,7 @@ type
 const
   PixelSize = SizeOf(TPixel);
 
-  clTransparent:  TColorB = (Blue: 0; Green: 0; Red: 0; Alpha: 0);
+  clTransparent: TColorB = (Blue: 0; Green: 0; Red: 0; Alpha: 0);
   clAliceBlue = TColor($FFF8F0);
   clAntiqueWhite = TColor($D7EBFA);
   clAquamarine = TColor($D4FF7F);
