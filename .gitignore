@@ -20,3 +20,8 @@ lib
 *.dbg
 tools/bugout/bugout
 tools/bugout/lib/x86_64-linux/bugout.or
+examples/torment/torment
+examples/torment/torment.dbg
+examples/torment/lib/x86_64-linux/torment.or
+examples/clock/clock
+examples/clock/lib/x86_64-linux/clock.or

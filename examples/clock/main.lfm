@@ -1,0 +1,24 @@
+object Form1: TForm1
+  Left = 204
+  Height = 45
+  Top = 256
+  Width = 216
+  Caption = 'Form1'
+  ClientHeight = 45
+  ClientWidth = 216
+  OnCloseQuery = FormCloseQuery
+  OnCreate = FormCreate
+  LCLVersion = '1.5'
+  object ScaleBar: TSlideBar
+    Left = 8
+    Height = 26
+    Top = 8
+    Width = 200
+    Kind = sbHorizontal
+    Max = 2
+    Min = 0.5
+    Position = 1
+    Step = 0.25
+    OnChange = ScaleBarChange
+  end
+end

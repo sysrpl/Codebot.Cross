@@ -398,7 +398,7 @@ end;
 
 procedure TAnimationThread.Execute;
 const
-  Delay = 1 / 60;
+  Delay = 1 / 30;
 var
   A, B: Double;
 begin
