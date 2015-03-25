@@ -86,10 +86,10 @@ function TCustomFormDescriptor.GetInterfaceUsesSection: string;
 begin
   Result := inherited GetInterfaceUsesSection;
   Result := Result + ', Forms,'#13#10 +
-    ' Codebot.System,'#13#10 +
-    ' Codebot.Graphics,'#13#10 +
-    ' Codebot.Graphics.Types,'#13#10 +
-    ' ' + FUnitName;
+    '  Codebot.System,'#13#10 +
+    '  Codebot.Graphics,'#13#10 +
+    '  Codebot.Graphics.Types,'#13#10 +
+    '  ' + FUnitName;
 end;
 
 end.
