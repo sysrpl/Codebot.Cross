@@ -18,6 +18,7 @@ uses
   Codebot.Design.Editors,
   Codebot.Design.Forms,
   Codebot.Graphics,
+  Codebot.Animation,
   Codebot.Controls,
   Codebot.Controls.Grids,
   Codebot.Controls.Banner,
@@ -37,10 +38,9 @@ implementation
 procedure Register;
 begin
   { Components }
-
   RegisterComponents('Codebot', [TImageStrip, TRenderImage, TRenderBox, TSlideBar, TThinButton,
     TIndeterminateProgress, THuePicker, TSaturationPicker, TBanner, TContentGrid,
-    TSizingPanel, THeaderBar, TDrawList, TDrawTextList, TDetailsList]);
+    TSizingPanel, THeaderBar, TDrawList, TDrawTextList, TDetailsList, TAnimationTimer]);
   { Property editors }
   {$ifndef lclgtk2}
   RegisterPropertyEditor(TypeInfo(Integer), TThinButton, 'ImageIndex',
