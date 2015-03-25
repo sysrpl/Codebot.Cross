@@ -209,12 +209,21 @@ function Remainder(const Quotient, Divisor: Extended): Extended;
 function Ceil(const Value: Extended): Extended;
 { Return the lower most value }
 function Floor(const Value: Extended): Extended;
+{ Tanget trigometric function }
+function Tan(const X: Extended): Extended;
+{ Combined sine and cosine single trigometric function }
+procedure SinCos(const X: Single; out S, C: Single); overload;
+{ Combined sine and cosine dobule trigometric function }
+procedure SinCos(constref X: Double; out S, C: Double); overload;
 { Bind a value between 0 and 1 }
 function Clamp(Percent: Float): Float;
 { Convert degrees to radians }
 function DegToRad(D: Float): Float;
 { Convert radians to degrees }
 function RadToDeg(R: Float): Float;
+{ Raise a float to an integer power }
+function IntPower(Base: Float; Exponent: Integer): Float;
+
 {$endregion}
 
 {$region time routines}
@@ -932,6 +941,23 @@ begin
     Result := Result - 1;
 end;
 
+function Tan(const X: Extended): Extended;
+begin
+  Result := Sin(X) / Cos(X);
+end;
+
+procedure SinCos(const X: Single; out S, C: Single);
+begin
+  S := Sin(X);
+  C := Cos(X);
+end;
+
+procedure SinCos(constref X: Double; out S, C: Double);
+begin
+  S := Sin(X);
+  C := Cos(X);
+end;
+
 function Clamp(Percent: Float): Float;
 begin
   if Percent < 0 then
@@ -950,6 +976,28 @@ end;
 function RadToDeg(R: Float): Float;
 begin
   Result := R * 180 / Pi;
+end;
+
+function IntPower(Base: Float; Exponent: Integer): Float;
+var
+  I: LongInt;
+begin
+ if (Base = 0.0) and (Exponent = 0) then
+   Exit(1);
+  I := Abs(Exponent);
+  Result := 1.0;
+  while I > 0 do
+  begin
+    while (I and 1)=0 do
+    begin
+      I := I shr 1;
+      Base := Sqr(Base);
+    end;
+    I := I - 1;
+    Result := Result * Base;
+  end;
+  if Exponent < 0 then
+    Result := 1 / Result;
 end;
 {$endregion}
 

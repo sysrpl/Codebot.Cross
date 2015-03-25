@@ -1709,6 +1709,8 @@ procedure TSurfaceD2D.Clear(Color: TColorB);
 begin
   if not HandleAvailable then
     Exit;
+  if Self is ISharedBitmapTarget then
+    (Self as ISharedBitmapTarget).ShareRelease;
   Draw;
   FTarget.Clear(Convert(Color));
 end;

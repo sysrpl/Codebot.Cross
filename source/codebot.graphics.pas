@@ -520,15 +520,23 @@ begin
     Result := NewBitmapGdi(Width, Height);
 end;
 
-function NewBitmapWin: IBitmap;
+function NewBitmapD2DStub: IBitmap;
 begin
   Result := NewBitmapD2D(0, 0);
 end;
 
+function NewBitmapGdiStub: IBitmap;
+begin
+  Result := NewBitmapGdi(0, 0);
+end;
+
 function NewSplash: ISplash;
 begin
-  if not Assigned(NewBitmapProc) then
-    NewBitmapProc := NewBitmapWin;
+  if LoadD2D then
+    if not Assigned(NewBitmapProc) then
+      NewBitmapProc := NewBitmapD2DStub
+    else
+      NewBitmapProc := NewBitmapGdiStub;
   Result := NewSplashWin;
 end;
 {$endif}
