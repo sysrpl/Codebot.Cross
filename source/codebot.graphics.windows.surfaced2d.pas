@@ -312,6 +312,7 @@ type
   public
     constructor Create(T: ID2D1RenderTarget);
     destructor Destroy; override;
+    procedure ShareRelease; virtual;
     function GetMatrix: IMatrix;
     procedure SetMatrix(Value: IMatrix);
     function GetPath: IPath;
@@ -362,7 +363,7 @@ type
   public
     constructor Create(B: TBitmapD2D);
     function ShareCreate(Target: ID2D1RenderTarget): ID2D1Bitmap;
-    procedure ShareRelease;
+    procedure ShareRelease; override;
   end;
 
 { TWndSurfaceD2D }
@@ -1599,6 +1600,10 @@ begin
   inherited Destroy;
 end;
 
+procedure TSurfaceD2D.ShareRelease;
+begin
+end;
+
 function TSurfaceD2D.Path: TSurfacePathD2D;
 begin
   Result := FPath as TSurfacePathD2D;
@@ -1707,10 +1712,9 @@ end;
 
 procedure TSurfaceD2D.Clear(Color: TColorB);
 begin
+  ShareRelease;
   if not HandleAvailable then
     Exit;
-  if Self is ISharedBitmapTarget then
-    (Self as ISharedBitmapTarget).ShareRelease;
   Draw;
   FTarget.Clear(Convert(Color));
 end;
@@ -1889,6 +1893,7 @@ procedure TSurfaceD2D.LineTo(X, Y: Float);
 var
   L: TD2D1Point2F;
 begin
+  ShareRelease;
   if not HandleAvailable then
     Exit;
   L.x := X;
@@ -1909,6 +1914,7 @@ var
   L: TD2D1Point2F;
   W, H: Float;
 begin
+  ShareRelease;
   if not HandleAvailable then
     Exit;
   P := Path;
@@ -1945,6 +1951,7 @@ procedure TSurfaceD2D.CurveTo(X, Y: Float; const C1, C2: TPointF);
 var
   B: TD2D1BezierSegment;
 begin
+  ShareRelease;
   if not HandleAvailable then
     Exit;
   B.point1 := Convert(C1);
@@ -1957,6 +1964,7 @@ end;
 
 procedure TSurfaceD2D.Ellipse(const Rect: TRectF);
 begin
+  ShareRelease;
   if not HandleAvailable then
     Exit;
   Path.Add(CreateEllispe(Rect));
@@ -1964,6 +1972,7 @@ end;
 
 procedure TSurfaceD2D.Rectangle(const Rect: TRectF);
 begin
+  ShareRelease;
   if not HandleAvailable then
     Exit;
   Path.Add(CreateRectangle(Rect));
@@ -1971,6 +1980,7 @@ end;
 
 procedure TSurfaceD2D.RoundRectangle(const Rect: TRectF; Radius: Float);
 begin
+  ShareRelease;
   if not HandleAvailable then
     Exit;
   Path.Add(CreateRoundRectangle(Rect, Radius));
@@ -2184,6 +2194,7 @@ var
   Renderer: IDWriteTextRenderer;
   M: TD2D1Matrix3x2F;
 begin
+  ShareRelease;
   if not HandleAvailable then
     Exit;
   if SurfaceOptions.ErrorCorrection or Immediate then
@@ -2267,6 +2278,7 @@ var
   G: ID2D1Geometry;
   I: Integer;
 begin
+  ShareRelease;
   B := nil;
   S := nil;
   if Brush <> nil then

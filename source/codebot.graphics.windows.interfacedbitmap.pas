@@ -164,7 +164,7 @@ end;
 
 procedure TInterfacedBitmap.Clear;
 begin
-  Surface.Clear(clTransparent);
+  SetSize(0, 0);
 end;
 
 function TInterfacedBitmap.Resample(Width, Height: Integer; Quality: TResampleQuality = rqNormal): IBitmap;
