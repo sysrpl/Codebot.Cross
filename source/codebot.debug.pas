@@ -46,6 +46,7 @@ type
 procedure Bugout(const S: string); overload;
 procedure Bugout(const S: string; Args: array of const); overload;
 procedure Bugout(I: Integer); overload;
+procedure Bugout(F: Float); overload;
 
 implementation
 
@@ -172,6 +173,11 @@ end;
 procedure Bugout(I: Integer);
 begin
   Bugout(IntToStr(I));
+end;
+
+procedure Bugout(F: Float);
+begin
+  Bugout(FloatToStr(F));
 end;
 
 initialization

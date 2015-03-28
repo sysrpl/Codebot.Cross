@@ -167,6 +167,8 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure BeginUpdate;
     procedure EndUpdate;
+    { Use a quaility resampling }
+    procedure Resample(Size: Integer);
     { Load a series of images }
     procedure LoadRange(const Files: TStrings);
     { Load an image list from a file }
@@ -182,7 +184,7 @@ type
     procedure Draw(Surface: ISurface; Index: Integer;
       X, Y: Integer; State: TDrawState); overload;
     procedure Draw(Surface: ISurface; Index: Integer;
-      const Rect: TRectI; Opacity: Byte; Saturation: Float); overload;
+      const Rect: TRectI; Opacity: Byte = $FF; Saturation: Float = 1.0); overload;
     procedure Add(Image: TSurfaceBitmap);
     procedure Insert(Image: TSurfaceBitmap; Index: Integer);
     procedure Remove(Index: Integer);
@@ -1100,6 +1102,11 @@ begin
   Result := FBitmap.Frames[0].Height;
 end;
 
+procedure TImageStrip.Resample(Size: Integer);
+begin
+  FBitmap.Resample(Size * Count, Size, rqBest);
+end;
+
 procedure TImageStrip.LoadRange(const Files: TStrings);
 var
   B, T: TSurfaceBitmap;
@@ -1331,7 +1338,7 @@ begin
 end;
 
 procedure TImageStrip.Draw(Surface: ISurface; Index: Integer;
-  const Rect: TRectI; Opacity: Byte; Saturation: Float);
+  const Rect: TRectI; Opacity: Byte = $FF; Saturation: Float = 1.0);
 var
   B: TSurfaceBitmap;
 begin
