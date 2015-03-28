@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Debug"/>
+    <Units Count="10">
+      <Unit0>
+        <Filename Value="docker.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="docker"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="20"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="main"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="40"/>
+        <CursorPos X="20" Y="93"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="docker.spacing.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="Docker.Spacing"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="16"/>
+        <CursorPos X="17" Y="8"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\..\..\FreePascal\lazarus\components\codetools\directorycacher.pas"/>
+        <UnitName Value="DirectoryCacher"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="339"/>
+        <CursorPos X="42" Y="422"/>
+        <UsageCount Value="10"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.debug.pas"/>
+        <UnitName Value="Codebot.Debug"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="146"/>
+        <CursorPos X="22" Y="180"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.graphics.pas"/>
+        <UnitName Value="Codebot.Graphics"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="1340"/>
+        <CursorPos X="67" Y="1341"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.interop.windows.direct2d.pas"/>
+        <UnitName Value="Codebot.Interop.Windows.Direct2D"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="424"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.graphics.windows.surfaced2d.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="1832"/>
+        <CursorPos X="28" Y="1854"/>
+        <UsageCount Value="10"/>
+        <Bookmarks Count="1">
+          <Item0 X="28" Y="1854" ID="1"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.graphics.types.pas"/>
+        <UnitName Value="Codebot.Graphics.Types"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="657"/>
+        <CursorPos X="49" Y="676"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\..\..\FreePascal\lazarus\lcl\graphics.pp"/>
+        <UnitName Value="Graphics"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="50"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit9>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="135" Column="69" TopLine="129"/>
+      </Position1>
+      <Position2>
+        <Filename Value="docker.spacing.pas"/>
+      </Position2>
+      <Position3>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="59" Column="13" TopLine="28"/>
+      </Position3>
+      <Position4>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="68" Column="31" TopLine="37"/>
+      </Position4>
+      <Position5>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="87" Column="29" TopLine="57"/>
+      </Position5>
+      <Position6>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="89" Column="29" TopLine="58"/>
+      </Position6>
+      <Position7>
+        <Filename Value="main.pas"/>
+        <Caret Line="111" Column="27"/>
+      </Position7>
+      <Position8>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="81" Column="59" TopLine="81"/>
+      </Position8>
+      <Position9>
+        <Filename Value="docker.spacing.pas"/>
+      </Position9>
+      <Position10>
+        <Filename Value="main.pas"/>
+        <Caret Line="111" Column="27"/>
+      </Position10>
+      <Position11>
+        <Filename Value="main.pas"/>
+        <Caret Line="71" Column="12" TopLine="62"/>
+      </Position11>
+      <Position12>
+        <Filename Value="main.pas"/>
+        <Caret Line="81" Column="16" TopLine="62"/>
+      </Position12>
+      <Position13>
+        <Filename Value="main.pas"/>
+        <Caret Line="85" Column="42" TopLine="66"/>
+      </Position13>
+      <Position14>
+        <Filename Value="main.pas"/>
+        <Caret Line="56" Column="72" TopLine="70"/>
+      </Position14>
+      <Position15>
+        <Filename Value="main.pas"/>
+        <Caret Line="44" Column="23" TopLine="22"/>
+      </Position15>
+      <Position16>
+        <Filename Value="main.pas"/>
+        <Caret Line="63" Column="34" TopLine="36"/>
+      </Position16>
+      <Position17>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="32" Column="30" TopLine="14"/>
+      </Position17>
+      <Position18>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="155" Column="5" TopLine="135"/>
+      </Position18>
+      <Position19>
+        <Filename Value="main.pas"/>
+        <Caret Line="72" Column="45" TopLine="51"/>
+      </Position19>
+      <Position20>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="34" Column="29" TopLine="15"/>
+      </Position20>
+      <Position21>
+        <Filename Value="docker.spacing.pas"/>
+      </Position21>
+      <Position22>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="145" Column="18" TopLine="116"/>
+      </Position22>
+      <Position23>
+        <Filename Value="docker.spacing.pas"/>
+      </Position23>
+      <Position24>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="145" Column="18" TopLine="114"/>
+      </Position24>
+      <Position25>
+        <Filename Value="docker.spacing.pas"/>
+      </Position25>
+      <Position26>
+        <Filename Value="main.pas"/>
+        <Caret Line="120" Column="83" TopLine="87"/>
+      </Position26>
+      <Position27>
+        <Filename Value="main.pas"/>
+        <Caret Line="68" Column="17" TopLine="48"/>
+      </Position27>
+      <Position28>
+        <Filename Value="main.pas"/>
+        <Caret Line="70" Column="28" TopLine="58"/>
+      </Position28>
+      <Position29>
+        <Filename Value="main.pas"/>
+        <Caret Line="83" Column="12" TopLine="60"/>
+      </Position29>
+      <Position30>
+        <Filename Value="main.pas"/>
+        <Caret Line="93" Column="20" TopLine="10"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>
