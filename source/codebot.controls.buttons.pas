@@ -14,7 +14,7 @@ unit Codebot.Controls.Buttons;
 interface
 
 uses
-  Classes, SysUtils, Graphics, Controls,
+  Classes, SysUtils, Types, Graphics, Controls,
   Codebot.System,
   Codebot.Controls,
   Codebot.Graphics,
@@ -33,12 +33,18 @@ type
     FImageIndex: Integer;
     FDown: Boolean;
     FOnDrawButton: TDrawStateEvent;
+    FShowCaption: Boolean;
     procedure SetKind(Value: TButtonKind);
     procedure SetDown(Value: Boolean);
     procedure SetImages(Value: TImageStrip);
     procedure SetImageIndex(Value: Integer);
     procedure ImagesChanged(Sender: TObject);
+    procedure SetShowCaption(Value: Boolean);
   protected
+    class function GetControlClassDefaultSize: TSize; override;
+    procedure CalculatePreferredSize(var PreferredWidth, PreferredHeight: Integer;
+      WithThemeSpace: Boolean); override;
+    procedure TextChanged; override;
     function ThemeAware: Boolean; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     property Images: TImageStrip read FImages write SetImages;
@@ -53,10 +59,10 @@ type
     property Down: Boolean read FDown write SetDown;
     property Kind: TButtonKind read FKind write SetKind default bkButton;
     property OnDrawButton: TDrawStateEvent read FOnDrawButton write FOnDrawButton;
+    property ShowCaption: Boolean read FShowCaption write SetShowCaption default False;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure Click;
   end;
 
 { TThinButton }
@@ -74,9 +80,11 @@ type
     property Color;
     property Down;
     property Enabled;
+    property Font;
     property Images;
     property ImageIndex;
     property Kind;
+    property ShowCaption;
     property Visible;
     property OnClick;
     property OnDblClick;
@@ -102,12 +110,13 @@ implementation
 
 { TCustomThinButton }
 
+const
+  DefThinSize = 24;
+
 constructor TCustomThinButton.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  ControlStyle := ControlStyle + [csClickEvents];
-  Width := 32;
-  Height := 32;
+  ControlStyle := ControlStyle + [csClickEvents, csSetCaption];
   FImageIndex := -1;
 end;
 
@@ -117,14 +126,68 @@ begin
   inherited Destroy;
 end;
 
-procedure TCustomThinButton.Click;
+class function TCustomThinButton.GetControlClassDefaultSize: TSize;
 begin
-  if Assigned(OnClick) then
-    OnClick(Self);
+  Result.cx := DefThinSize;
+  Result.cy := DefThinSize;
+end;
+
+procedure TCustomThinButton.CalculatePreferredSize(var PreferredWidth, PreferredHeight: Integer;
+  WithThemeSpace: Boolean);
+var
+  Size: TPointI;
+  S: string;
+  W: Integer;
+begin
+  if not AutoSize then
+    Exit;
+  PreferredWidth := DefThinSize;
+  PreferredHeight := DefThinSize;
+  W := 0;
+  if FImages <> nil then
+    W := FImages.Size;
+  if W > PreferredWidth then
+  begin
+    PreferredWidth := FImages.Size + 8;
+    PreferredHeight := PreferredWidth;
+  end;
+  S := Caption;
+  if FShowCaption and (S <> '') then
+  begin
+    Size := TextSize(S);
+    PreferredWidth := Size.X + W + 16;
+    PreferredHeight := W + 8;
+  end;
+  if PreferredWidth < DefThinSize then
+    PreferredWidth := DefThinSize;
+  if PreferredHeight < DefThinSize then
+    PreferredHeight := DefThinSize;
 end;
 
 procedure TCustomThinButton.ImagesChanged(Sender: TObject);
 begin
+  if AutoSize then
+  begin
+    InvalidatePreferredSize;
+    AdjustSize;
+  end;
+  Invalidate;
+end;
+
+procedure TCustomThinButton.TextChanged;
+begin
+  if AutoSize and FShowCaption then
+  begin
+    InvalidatePreferredSize;
+    AdjustSize;
+  end;
+  Invalidate;
+end;
+
+procedure TCustomThinButton.SetShowCaption(Value: Boolean);
+begin
+  if FShowCaption = Value then Exit;
+  FShowCaption := Value;
   Invalidate;
 end;
 
@@ -250,10 +313,15 @@ end;
 
 procedure TCustomThinButton.Render;
 var
+  Size: TPointF;
   D: TDrawState;
   R: TRectI;
+  S: string;
+  I: Integer;
 begin
   inherited Render;
+  R := ClientRect;
+  Surface.FillRect(NewBrush(clTransparent), R);
   if csDesigning in ComponentState then
   begin
     if FDown then
@@ -262,23 +330,44 @@ begin
       D := [dsHot];
     Theme.Select(D);
   end;
-  R := ClientRect;
   if FKind = bkSplitter then
   begin
     if csDesigning in ComponentState then
       Surface.StrokeRoundRect(NewPen(CurrentColor.Darken(0.05)), R, 3);
     R.Inflate(0, -2);
     Theme.DrawSplit(R, toVertical);
+    Exit;
   end
   else if Assigned(FOnDrawButton) then
     FOnDrawButton(Self, Surface, R, DrawState)
   else
     Theme.DrawButtonThin(R);
+  S := Caption;
+  if not FShowCaption then
+    S := '';
   if FImages <> nil then
   begin
-    FImages.Draw(Surface, FImageIndex,
-      Width div 2 - FImages.Size div 2, Height div 2 - FImages.Size div 2,
-      DrawState);
+    Size := Surface.TextSize(Theme.Font, S);
+    if Size.X = 0 then
+    begin
+      FImages.Draw(Surface, FImageIndex,
+        Width div 2 - FImages.Size div 2, Height div 2 - FImages.Size div 2,
+        DrawState);
+    end
+    else
+    begin
+      I :=  Round(Width / 2 - (FImages.Size + Size.X + 8) / 2) + 2;
+      FImages.Draw(Surface, FImageIndex, I, Height div 2 - FImages.Size div 2,
+        DrawState);
+      R.Left := I + FImages.Size;
+      R.Inflate(-4, 0);
+      Surface.TextOut(Theme.Font, S, R, drLeft);
+    end;
+  end
+  else if (S <> '') and (Width > 13) then
+  begin
+    R.Inflate(-4, 0);
+    Surface.TextOut(Theme.Font, S, R, drCenter);
   end;
 end;
 

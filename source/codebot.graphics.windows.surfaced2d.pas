@@ -1996,6 +1996,8 @@ var
   Layout: IDWriteTextLayout;
   M: TDWriteTextMetrics;
 begin
+  if Text = '' then
+    Exit(EmptyPoint);
   Layout := CreateTextLayout((Font as TFontD2D).Format, Text, MaxTextSize, MaxTextSize);
   if Layout = nil then
     Exit(EmptyPoint);

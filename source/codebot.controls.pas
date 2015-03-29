@@ -14,7 +14,7 @@ unit Codebot.Controls;
 interface
 
 uses
-  Classes, SysUtils, Graphics, Controls, Forms, LCLType, LCLProc,
+  Classes, SysUtils, Types, Graphics, Controls, Forms, LCLType, LCLProc,
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types;
@@ -124,6 +124,8 @@ type
   protected
     { Allow controls direct access to draw state }
     FDrawState: TDrawState;
+    { Create a default size }
+    class function GetControlClassDefaultSize: TSize; override;
     { Update draw state when enabled is changed }
     procedure EnabledChanged; override;
     { Override ThemeAware and return true to subscribe to glabal theme changes }
@@ -394,8 +396,11 @@ end;
 constructor TRenderGraphicControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  Width := 100;
-  Height := 100;
+  with GetControlClassDefaultSize do
+  begin
+    Width := cx;
+    Height := cy;
+  end;
   ControlStyle := (ControlStyle +
     [csParentBackground, csClickEvents, csCaptureMouse]) - [csOpaque];
   if ThemeAware then
@@ -407,6 +412,12 @@ begin
   if ThemeAware then
     ThemeNotifyRemove(ThemeChanged);
   inherited Destroy;
+end;
+
+class function TRenderGraphicControl.GetControlClassDefaultSize: TSize;
+begin
+  Result.cx := 80;
+  Result.cy := 80;
 end;
 
 {$ifdef lclgtk2}
