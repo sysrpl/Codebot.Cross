@@ -241,6 +241,29 @@ type
   end;
   PMatrix2x3 = ^TMatrix2x3;
 
+{ TColorAlpha }
+
+  TColorAlpha = type LongWord;
+
+{ TColorAlphaHelper }
+
+  TColorAlphaHelper = record helper for TColorAlpha
+  private
+    function GetAlpha: Byte;
+    function GetBlue: Byte;
+    function GetGreen: Byte;
+    function GetRed: Byte;
+    procedure SetAlpha(Value: Byte);
+    procedure SetBlue(Value: Byte);
+    procedure SetGreen(Value: Byte);
+    procedure SetRed(Value: Byte);
+  public
+    property Blue: Byte read GetBlue write SetBlue;
+    property Green: Byte read GetGreen write SetGreen;
+    property Red: Byte read GetRed write SetRed;
+    property Alpha: Byte read GetAlpha write SetAlpha;
+  end;
+
 { THSL }
 
   THSL = record
@@ -257,6 +280,8 @@ type
   TColorB = packed record
     public
     Blue, Green, Red, Alpha: Byte;
+    class operator Implicit(Value: TColorB): TColorAlpha;
+    class operator Implicit(Value: TColorAlpha): TColorB;
     class operator Implicit(const Value: THSL): TColorB;
     class operator Explicit(Value: TColorB): THSL;
     class operator Implicit(Value: TColor): TColorB;
@@ -1672,6 +1697,48 @@ begin
   Result := Self * P;
 end;
 
+{ TColorAlphaHelper }
+
+function TColorAlphaHelper.GetAlpha: Byte;
+begin
+  Result := PColorB(@Self).Alpha;
+end;
+
+function TColorAlphaHelper.GetBlue: Byte;
+begin
+  Result := PColorB(@Self).Blue;
+end;
+
+function TColorAlphaHelper.GetGreen: Byte;
+begin
+  Result := PColorB(@Self).Green;
+end;
+
+function TColorAlphaHelper.GetRed: Byte;
+begin
+  Result := PColorB(@Self).Red;
+end;
+
+procedure TColorAlphaHelper.SetAlpha(Value: Byte);
+begin
+  PColorB(@Self).Alpha := Value;
+end;
+
+procedure TColorAlphaHelper.SetBlue(Value: Byte);
+begin
+  PColorB(@Self).Blue := Value;
+end;
+
+procedure TColorAlphaHelper.SetGreen(Value: Byte);
+begin
+  PColorB(@Self).Green := Value;
+end;
+
+procedure TColorAlphaHelper.SetRed(Value: Byte);
+begin
+  PColorB(@Self).Red := Value;
+end;
+
 { THSL }
 
 class function THSL.Create(H, S, L: Float): THSL;
@@ -1701,6 +1768,26 @@ type
   TRGBAShort = packed record
     R, G, B, A: Byte;
   end;
+
+class operator TColorB.Implicit(Value: TColorB): TColorAlpha;
+var
+  B: TColorB absolute Result;
+begin
+  B.Blue := Value.Blue;
+  B.Green := Value.Green;
+  B.Red := Value.Red;
+  B.Alpha := Value.Alpha;
+end;
+
+class operator TColorB.Implicit(Value: TColorAlpha): TColorB;
+var
+  B: TColorB absolute Value;
+begin
+  Result.Blue := Value.Blue;
+  Result.Green := Value.Green;
+  Result.Red := Value.Red;
+  Result.Alpha := Value.Alpha;
+end;
 
 class operator TColorB.Implicit(const Value: THSL): TColorB;
 const

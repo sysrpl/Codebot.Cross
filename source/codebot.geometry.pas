@@ -237,6 +237,7 @@ type
 
   TLine2 = record
   public
+    class operator Multiply(const A: TLine2; B: Float): TLine2; overload;
     { Slope of the line }
     function Slope: TSlope2;
     { Normal heading of the line }
@@ -293,6 +294,7 @@ type
   private
     function InternalFlatten(Count: Integer): TCurve2;
   public
+    class function Create(const P0, P1, P2, P3: TVec2): TBezier2; overload; static;
     { Flatten into a 2d approximation of the curve with count points
       Remarks
       If count < 2 flatten will pick an optimal count based on the curve distance }
@@ -510,11 +512,8 @@ begin
 end;
 
 function TVec2.Binormal: TVec2;
-var
-  F: Float;
 begin
   Result := Normal;
-  F := Result.X;
   Result.X := Result.Y;
   Result.Y := -X;
 end;
@@ -1204,6 +1203,12 @@ end;
 
 { TLine2 }
 
+class operator TLine2.Multiply(const A: TLine2; B: Float): TLine2;
+begin
+  Result.P0 := A.P0;
+  Result.P1 := (A.P1 - A.P0) * B + A.P0;
+end;
+
 function TLine2.Slope: TSlope2;
 begin
   Result.Undefined := False;
@@ -1316,6 +1321,14 @@ begin
 end;
 
 { TBezier2 }
+
+class function TBezier2.Create(const P0, P1, P2, P3: TVec2): TBezier2;
+begin
+  Result.P0 := P0;
+  Result.P1 := P1;
+  Result.P2 := P2;
+  Result.P3 := P3;
+end;
 
 function TBezier2.InternalFlatten(Count: Integer): TCurve2;
 var

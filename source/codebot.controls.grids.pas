@@ -1655,7 +1655,7 @@ end;
 constructor TImageListGridProvider.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FChecker := Brushes.Checker;
+  FChecker := Brushes.Transparent;
   FBrush := NewBrush(clHighlight);
   FPen := NewPen(clHighlight);
 end;

@@ -229,11 +229,34 @@ procedure DrawEasing(Surface: ISurface; Font: IFont; Rect: TRectF;
 
 { Brushes creates a series of bitmap batterns }
 
+const
+  DefPenWidth = 1;
+  DefBrushSize = 9;
+
 type
   Brushes = record
-    class function Checker(Size: Integer = 10): IBrush; overload; static;
-    class function Checker(Foreground, Background: TColorB; Size: Integer = 10): IBrush; overload; static;
+    class function Transparent: IBrush; overload; static;
+    class function Dither(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function Checker(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function Beam(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function Cross(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function ZigZag(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function Brick(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function Circles(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function Squares(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function Clovers(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function Tooth(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function FloorTile(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function SnakeSkin(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    class function Pipes(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
+    //class function Pipes(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush; overload; static;
   end;
+
+  TBrushStyle = function(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+
+function StrToBrush(Name: string; Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+procedure RegisterBrushStyle(Name: string; BrushStyle: TBrushStyle);
+function EnumBrushStyles: TNamedEnumerable;
 
 const
   DefaulHeaderHeight = 96;
@@ -1658,32 +1681,430 @@ begin
   Theme.Font.Color := C;
 end;
 
-{ Brushes }
+type
+  TBrushNames = TNamedValues<TBrushStyle>;
 
-class function Brushes.Checker(Size: Integer = 10): IBrush;
+var
+  BrushNames: TBrushNames;
+
+procedure BrushesRegisterDefaults;
 begin
-  Result := Brushes.Checker(clSilver, clWhite, Size);
+  if BrushNames.Count > 0 then
+    Exit;
+  BrushNames.Add('Dither', @Brushes.Dither);
+  BrushNames.Add('Checker', @Brushes.Checker);
+  BrushNames.Add('Beam', @Brushes.Beam);
+  BrushNames.Add('Cross', @Brushes.Cross);
+  BrushNames.Add('Zig Zag', @Brushes.ZigZag);
+  BrushNames.Add('Brick', @Brushes.Brick);
+  BrushNames.Add('Circles', @Brushes.Circles);
+  BrushNames.Add('Squares', @Brushes.Squares);
+  BrushNames.Add('Clovers', @Brushes.Clovers);
+  BrushNames.Add('Tooth', @Brushes.Tooth);
+  BrushNames.Add('Floor Tile', @Brushes.FloorTile);
+  BrushNames.Add('Snake Skin', @Brushes.SnakeSkin);
+  BrushNames.Add('Pipes', @Brushes.Pipes);
+
+
+
 end;
 
-class function Brushes.Checker(Foreground, Background: TColorB; Size: Integer = 10): IBrush;
+function StrToBrush(Name: string; Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  B: TBrushStyle;
+begin
+  BrushesRegisterDefaults;
+  B := BrushNames[Name];
+  if @B <> nil then
+    Result := B(Foreground, Background, PenWidth, BrushSize)
+  else
+    Result := newBrush(clTransparent);
+end;
+
+procedure RegisterBrushStyle(Name: string; BrushStyle: TBrushStyle);
+begin
+  BrushNames.Add(Name, BrushStyle);
+end;
+
+function EnumBrushStyles: TNamedEnumerable;
+begin
+  BrushesRegisterDefaults;
+  Result.Enumerator := BrushNames.GetEnumerator;
+end;
+
+{ Brushes }
+
+class function Brushes.Transparent: IBrush;
+begin
+  Result := Brushes.Checker(clSilver, clWhite, 10);
+end;
+
+class function Brushes.Checker(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
 var
   Bitmap: IBitmap;
   Brush: IBrush;
   R: TRectI;
 begin
-  if Size < 1 then
-    Size := 1;
-  Bitmap := NewBitmap(Size * 2, Size * 2);
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
   Brush := NewBrush(Foreground);
-  R := TRectI.Create(Size, Size);
+  R := TRectI.Create(BrushSize, BrushSize);
   Bitmap.Surface.FillRect(Brush, R);
-  R.Offset(Size, Size);
+  R.Offset(BrushSize, BrushSize);
   Bitmap.Surface.FillRect(Brush, R);
   Brush := NewBrush(Background);
-  R.Offset(0, -Size);
+  R.Offset(0, -BrushSize);
   Bitmap.Surface.FillRect(Brush, R);
-  R.Offset(-Size, Size);
+  R.Offset(-BrushSize, BrushSize);
   Bitmap.Surface.FillRect(Brush, R);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.Dither(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  R: TRectF;
+  S: ISurface;
+  F: Float;
+begin
+  if BrushSize < 2 then
+    BrushSize := 2;
+  Bitmap := NewBitmap(BrushSize div 2, BrushSize div 2);
+  Brush := NewBrush(Background);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  Brush := NewBrush(Foreground);
+  R.Width := 1;
+  R.Height := 1;
+  F := BrushSize / 8;
+  R.Center(F + 0.5, F + 0.5);
+  S.FillRect(Brush, R);
+  R.Center(F * 3 + 0.5, F + 0.5);
+  S.FillRect(Brush, R);
+  R.Center(0.5, F * 3 + 0.5);
+  S.FillRect(Brush, R);
+  R.Center(F * 2 + 0.5, F * 3 + 0.5);
+  S.FillRect(Brush, R);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.Beam(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectI;
+  S: ISurface;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize, BrushSize);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := TRectI.Create(BrushSize, BrushSize);
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  S.MoveTo(R.Left - 1, (R.Top + R.Bottom) / 2);
+  S.LineTo(R.Right + 1, (R.Top + R.Bottom) / 2);
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.Cross(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectI;
+  S: ISurface;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize, BrushSize);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := TRectI.Create(BrushSize, BrushSize);
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  S.MoveTo(R.Left - 1, (R.Top + R.Bottom) / 2);
+  S.LineTo(R.Right + 1, (R.Top + R.Bottom) / 2);
+  S.MoveTo((R.Left + R.Right) / 2, R.Top - 1);
+  S.LineTo((R.Left + R.Right) / 2, R.Bottom + 1);
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.ZigZag(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectF;
+  S: ISurface;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  S.MoveTo(R.Left - PenWidth, R.Bottom + PenWidth);
+  with R.MidPoint do
+    S.LineTo(X, Y);
+  S.LineTo(R.Right + PenWidth, R.Bottom + PenWidth);
+  S.MoveTo(R.Left - PenWidth, R.Top + PenWidth);
+  S.LineTo(R.Left + PenWidth, R.Top - PenWidth);
+  S.MoveTo(R.Right - PenWidth, R.Top - PenWidth);
+  S.LineTo(R.Right + PenWidth, R.Top + PenWidth);
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.Brick(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectF;
+  S: ISurface;
+  F: Float;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  F := BrushSize / 2;
+  S.MoveTo(R.Left - 1, R.Top + F);
+  S.LineTo(R.Right + 1, R.Top + F);
+  S.MoveTo(R.Left - 1, R.Bottom - F);
+  S.LineTo(R.Right + 1, R.Bottom - F);
+  S.MoveTo(R.Left + F, R.Top + F);
+  S.LineTo(R.Left + F, R.Bottom - F);
+  S.MoveTo(R.Right - F, R.Top - 1);
+  S.LineTo(R.Right - F, R.Top + F);
+  S.MoveTo(R.Right - F, R.Bottom + 1);
+  S.LineTo(R.Right - F, R.Bottom - F);
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.Circles(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectF;
+  S: ISurface;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  R.Width := R.Width / 2;
+  R.Height := R.Height / 2;
+  R.Center(R.BottomRight);
+  S.Ellipse(R);
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.Squares(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectF;
+  S: ISurface;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  R.Width := R.Width / 2;
+  R.Height := R.Height / 2;
+  R.Center(R.BottomRight);
+  S.Rectangle(R);
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.Tooth(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectF;
+  S: ISurface;
+  F: Float;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  F := R.Width / 4;
+  S.MoveTo(R.Left - 1, R.Top + F);
+  S.LineTo(R.Left + F, R.Top + F);
+  S.LineTo(R.Left + F, R.Bottom - F);
+  S.LineTo(R.Right - F, R.Bottom - F);
+  S.LineTo(R.Right - F, R.Top + F);
+  S.LineTo(R.Right + 1, R.Top + F);
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.FloorTile(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectF;
+  S: ISurface;
+  F: Float;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  F := R.Width / 3;
+  S.MoveTo(R.Left - 1, R.Top - 1);
+  S.LineTo(R.Left + F, R.Top + F);
+  S.LineTo(R.Left + F, R.Bottom - F);
+  S.LineTo(R.Left - 1, R.Bottom + 1);
+  S.MoveTo(R.Right + 1, R.Top - 1);
+  S.LineTo(R.Right - F, R.Top + F);
+  S.LineTo(R.Right - F, R.Bottom - F);
+  S.LineTo(R.Right + 1, R.Bottom + 1);
+
+  S.MoveTo(R.Left + F, R.Top + F);
+  S.LineTo(R.Right - F, R.Top + F);
+  S.MoveTo(R.Left + F, R.Bottom - F);
+  S.LineTo(R.Right - F, R.Bottom - F);
+
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.SnakeSkin(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectF;
+  S: ISurface;
+  FX, FY: Float;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  FX := R.Width / 3;
+  FY := R.Height / 2;
+  S.MoveTo(R.Left - 1, R.Top - 1);
+  S.LineTo(R.Left + FX, R.Top + FY);
+  S.LineTo(R.Left - 1, R.Bottom + 1);
+  S.MoveTo(R.Right + 1, R.Top - 1);
+  S.LineTo(R.Right - FX, R.Top + FX);
+  S.LineTo(R.Right + 1, R.Bottom + 1);
+  S.MoveTo(R.Left + FX, R.Top + FY);
+  S.LineTo(R.Right - FX, R.Top + FX);
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.Pipes(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectF;
+  S: ISurface;
+  F: Float;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  F := R.Width / 4;
+  S.MoveTo(R.Left + F, R.Top - 1);
+  S.LineTo(R.Left + F, R.Bottom + 1);
+  S.MoveTo(R.Right - F, R.Top - 1);
+  S.LineTo(R.Right - F, R.Bottom + 1);
+  R.Center(R.MidPoint);
+  R.Inflate(-F, -F);
+  with R.MidRight do S.MoveTo(X, Y);
+  S.ArcTo(R, Pi * 0.5, Pi * 1.5);
+  R.Center(0, 0);
+  with R.MidRight do S.MoveTo(X, Y);
+  S.ArcTo(R, Pi * 0.5, Pi * 1.5);
+  R.Center(BrushSize * 2, 0);
+  with R.MidRight do S.MoveTo(X, Y);
+  S.ArcTo(R, Pi * 0.5, Pi * 1.5);
+  S.Stroke(Pen);
+  Result := NewBrush(Bitmap);
+end;
+
+class function Brushes.Clovers(Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
+var
+  Bitmap: IBitmap;
+  Brush: IBrush;
+  Pen: IPen;
+  R: TRectF;
+  S: ISurface;
+  F: Float;
+begin
+  if BrushSize < 1 then
+    BrushSize := 1;
+  Bitmap := NewBitmap(BrushSize * 2, BrushSize * 2);
+  Brush := NewBrush(Background);
+  Pen := NewPen(Foreground, PenWidth);
+  R := Bitmap.ClientRect;
+  S := Bitmap.Surface;
+  S.FillRect(Brush, R);
+  F := R.Width / 3;
+  R.Inflate(-F, -F);
+  R.Center(R.MidTop);
+  with R.MidLeft do S.MoveTo(X, Y);
+  S.ArcTo(R, Pi * 1.5, Pi * 2.5);
+  R.Center(R.BottomRight);
+  S.ArcTo(R, 0, Pi);
+  R.Center(R.BottomLeft);
+  S.ArcTo(R, Pi * 0.5, Pi * 1.5);
+  R.Center(R.TopLeft);
+  S.ArcTo(R, Pi, Pi * 2);
+  S.Stroke(Pen);
   Result := NewBrush(Bitmap);
 end;
 

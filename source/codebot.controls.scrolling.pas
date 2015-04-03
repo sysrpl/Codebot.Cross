@@ -419,6 +419,8 @@ type
     property OnDragOver;
     property OnDrawBackground;
     property OnDrawItem;
+    property OnEnter;
+    property OnExit;
     property OnEndDock;
     property OnEndDrag;
     property OnMouseDown;
@@ -436,6 +438,7 @@ type
   private
     FItems: TStrings;
     FAutoHeight: Boolean;
+    function GetSelectedText: string;
     procedure SetAutoHeight(Value: Boolean);
     procedure SetItems(Value: TStrings);
     procedure ItemsChange(Sender: TObject);
@@ -446,6 +449,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    property SelectedText: string read GetSelectedText;
     property Surface;
     property Canvas;
     property MouseDisabled;
@@ -2036,6 +2040,14 @@ begin
     if FAutoHeight then
       ItemHeight := TextHeight + 2;
   end;
+end;
+
+function TDrawTextList.GetSelectedText: string;
+begin
+  if ItemIndex < 0 then
+    Result := ''
+  else
+    Result := FItems[ItemIndex];
 end;
 
 procedure TDrawTextList.DrawItem(Index: Integer; var Rect: TRectI;

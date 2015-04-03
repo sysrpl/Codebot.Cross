@@ -295,8 +295,7 @@ function AlphaSplashProc(hwnd: HWND; uMsg: UINT; wParam: WPARAM; lParam: LPARAM)
 begin
   if uMsg = WM_NCHITTEST then
     Result := HTTRANSPARENT
-  else
-  if uMsg = WM_TIMER then
+  else if uMsg = WM_TIMER then
   begin
     { A big FU to Microsoft for changing how HWND_TOPMOST works on Windows 7 and above }
     SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0,
@@ -316,7 +315,7 @@ const
   var
     WndClass: TWndClass;
   begin
-        Registered := True;
+    Registered := True;
     FillChar(WndClass, SizeOf(WndClass), #0);
     WndClass.lpfnWndProc := AlphaSplashProc;
     WndClass.hInstance := hInstance;
@@ -326,7 +325,6 @@ const
 
 const
   ExStyle = WS_EX_LAYERED or WS_EX_TRANSPARENT or WS_EX_TOPMOST or WS_EX_NOACTIVATE;
-  USER_TIMER_MINIMUM = $A;
 begin
   inherited Create;
   FBitmap := NewBitmapProc;
@@ -335,6 +333,7 @@ begin
     RegisterWindow;
   FWindow := CreateWindowEx(ExStyle, WindowClass, nil, WS_POPUP,
     0, 0, 100, 100, 0, 0, hInstance, nil);
+  SetWindowLong(FWindow, GWL_USERDATA, PtrInt(Self));
   SetTimer(FWindow, 1, 1000, nil);
 end;
 

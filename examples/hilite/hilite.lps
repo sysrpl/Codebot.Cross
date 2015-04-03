@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Debug"/>
+    <Units Count="11">
+      <Unit0>
+        <Filename Value="hilite.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="5"/>
+        <CursorPos Y="18"/>
+        <UsageCount Value="24"/>
+        <Loaded Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="HighlightForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Main"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="57"/>
+        <CursorPos X="57" Y="77"/>
+        <UsageCount Value="24"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="unit1.pas"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="20"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.banner.pas"/>
+        <UnitName Value="Codebot.Controls.Banner"/>
+        <EditorIndex Value="6"/>
+        <CursorPos Y="22"/>
+        <UsageCount Value="13"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <UnitName Value="Codebot.Controls.Highlighter"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="167"/>
+        <CursorPos Y="185"/>
+        <UsageCount Value="13"/>
+        <Loaded Value="True"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.extras.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="682"/>
+        <CursorPos Y="697"/>
+        <UsageCount Value="10"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.graphics.types.pas"/>
+        <UnitName Value="Codebot.Graphics.Types"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="28"/>
+        <CursorPos X="54" Y="43"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.animation.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="60"/>
+        <CursorPos X="18" Y="89"/>
+        <UsageCount Value="10"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\..\..\FreePascal\fpc\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1656"/>
+        <CursorPos X="38" Y="1685"/>
+        <UsageCount Value="10"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.scrolling.pas"/>
+        <UnitName Value="Codebot.Controls.Scrolling"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="393"/>
+        <CursorPos X="20" Y="422"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.pas"/>
+        <UnitName Value="Codebot.Controls"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="201"/>
+        <CursorPos X="14" Y="218"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit10>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="115" TopLine="97"/>
+      </Position1>
+      <Position2>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="117" TopLine="97"/>
+      </Position2>
+      <Position3>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="119" TopLine="97"/>
+      </Position3>
+      <Position4>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="121" TopLine="97"/>
+      </Position4>
+      <Position5>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="122" TopLine="97"/>
+      </Position5>
+      <Position6>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="123" TopLine="97"/>
+      </Position6>
+      <Position7>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="125" TopLine="97"/>
+      </Position7>
+      <Position8>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="127" TopLine="99"/>
+      </Position8>
+      <Position9>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="132" TopLine="104"/>
+      </Position9>
+      <Position10>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="123" TopLine="104"/>
+      </Position10>
+      <Position11>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="125" TopLine="104"/>
+      </Position11>
+      <Position12>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="127" TopLine="104"/>
+      </Position12>
+      <Position13>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="129" TopLine="104"/>
+      </Position13>
+      <Position14>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="130" TopLine="104"/>
+      </Position14>
+      <Position15>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="134" TopLine="106"/>
+      </Position15>
+      <Position16>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="136" TopLine="108"/>
+      </Position16>
+      <Position17>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="140" TopLine="112"/>
+      </Position17>
+      <Position18>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="138" Column="24" TopLine="124"/>
+      </Position18>
+      <Position19>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.highlighter.pas"/>
+        <Caret Line="114" TopLine="97"/>
+      </Position19>
+      <Position20>
+        <Filename Value="main.pas"/>
+        <Caret Line="63" Column="55" TopLine="35"/>
+      </Position20>
+      <Position21>
+        <Filename Value="main.pas"/>
+        <Caret Line="68" Column="10" TopLine="35"/>
+      </Position21>
+      <Position22>
+        <Filename Value="main.pas"/>
+        <Caret Line="3"/>
+      </Position22>
+      <Position23>
+        <Filename Value="main.pas"/>
+        <Caret Line="68" Column="32" TopLine="48"/>
+      </Position23>
+      <Position24>
+        <Filename Value="main.pas"/>
+        <Caret Line="67" Column="32" TopLine="49"/>
+      </Position24>
+      <Position25>
+        <Filename Value="main.pas"/>
+        <Caret Line="68" Column="16" TopLine="43"/>
+      </Position25>
+      <Position26>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.controls.pas"/>
+        <Caret Line="218" Column="14" TopLine="201"/>
+      </Position26>
+      <Position27>
+        <Filename Value="main.pas"/>
+        <Caret Line="68" Column="27" TopLine="49"/>
+      </Position27>
+      <Position28>
+        <Filename Value="main.pas"/>
+        <Caret Line="79" Column="21" TopLine="49"/>
+      </Position28>
+      <Position29>
+        <Filename Value="main.pas"/>
+        <Caret Line="59" TopLine="43"/>
+      </Position29>
+      <Position30>
+        <Filename Value="main.pas"/>
+        <Caret Line="77" Column="5" TopLine="53"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>
