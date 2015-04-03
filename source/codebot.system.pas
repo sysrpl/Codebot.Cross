@@ -632,6 +632,16 @@ type
     property ValueByIndex[Index: Integer]: T read GetValueByIndex;
   end;
 
+{ TNamedEnumerable is a shortcut to expose an enumerable }
+
+  TNamedEnumerable = record
+  public
+    { The enumerator }
+    Enumerator: IEnumerator<string>;
+    { Get the enumerator }
+    function GetEnumerator: IEnumerator<string>;
+  end;
+
 { TNamedStrings is a dictionary of string name value pairs }
 
   TNamedStrings = TNamedValues<string>;
@@ -875,6 +885,13 @@ end;
 function LibraryGetProc(Module: HModule; const ProcName: string): Pointer;
 begin
   Result := Codebot.Core.LibraryGetProc(Module, ProcName);
+end;
+
+{ TNamedEnumerable }
+
+function TNamedEnumerable.GetEnumerator: IEnumerator<string>;
+begin
+  Result := Enumerator;
 end;
 
 { ELibraryException }

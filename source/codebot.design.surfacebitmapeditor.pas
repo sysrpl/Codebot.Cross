@@ -91,7 +91,7 @@ end;
 procedure TSurfaceBitmapEditor.BorderContainerRender(Sender: TObject;
   Surface: ISurface);
 begin
-  Surface.FillRect(Brushes.Checker, BorderContainer.ClientRect);
+  Surface.FillRect(Brushes.Transparent, BorderContainer.ClientRect);
 end;
 
 procedure TSurfaceBitmapEditor.LoadButtonClick(Sender: TObject);

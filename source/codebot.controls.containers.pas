@@ -418,7 +418,7 @@ begin
     Theme.DrawHeader(Height);
   end
   else if FBackground = pbPattern then
-    Surface.FillRect(Brushes.Checker, R)
+    Surface.FillRect(Brushes.Transparent, R)
   else
     Surface.FillRect(NewBrush(CurrentColor), R);
   inherited Render;

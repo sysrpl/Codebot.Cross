@@ -2003,7 +2003,7 @@ begin
     Exit(EmptyPoint);
   if Layout.GetMetrics(M) <> S_OK then
     Exit(EmptyPoint);
-  Result.X := M.width;
+  Result.X := M.widthIncludingTrailingWhitespace;
   Result.Y := M.height;
 end;
 
