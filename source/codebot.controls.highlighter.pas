@@ -20,10 +20,9 @@ uses
   Codebot.Graphics.Types,
   Codebot.Animation;
 
+{ TControlHighlighter }
+
 type
-
-  { TControlHighlighter }
-
   TControlHighlighter = class(TComponent)
   private
     FSplash: ISplash;
@@ -179,9 +178,8 @@ begin
   FControl := Value;
   if FControl <> nil then
     FControl.FreeNotification(Self);
+  FSplash.Visible := False;
   FTimer.Enabled := (FControl <> nil) and FVisible;
-  if not (FTimer.Enabled) then
-    FSplash.Visible := False;
 end;
 
 procedure TControlHighlighter.SetOffset(Value: Float);
