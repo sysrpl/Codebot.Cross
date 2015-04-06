@@ -580,7 +580,7 @@ begin
   Result := '';
   if Passive(Socket) then
   try
-    if not Path.IsWhitespace then
+    if Path.IsWhitespace then
       Send('LIST', R)
     else
       Send('LIST ' + Path.Quote, R);
@@ -601,8 +601,7 @@ function TFtpClient.FindFirst(const Path: string; out FindData: TRemoteFindData;
 var
   S: string;
 begin
-  {TODO: Add path support}
-  S := FileList.Trim;
+  S := FileList(Path).Trim;
   if S.IsEmpty then
   begin
     FindData.Name := '';
@@ -622,6 +621,18 @@ begin
 end;
 
 function TFtpClient.FindNext(out FindData: TRemoteFindData): Boolean;
+
+	function SafeRead(var Columns: StringArray; Index: Integer): string;
+  var
+    I: Integer;
+  begin
+    I := Columns.Length;
+    if Index < I then
+	    Result := Columns[Index]
+		else
+	  	Result := '';
+	end;
+
 const
   AttributeColumn = 0;
   SizeColumn = 4;
@@ -637,6 +648,7 @@ var
   T: Double;
   I: Integer;
 begin
+  Result := True;
   FindData.Name := '';
   FindData.Date := 0;
   FindData.Size := 0;
@@ -645,33 +657,36 @@ begin
   if FFindIndex < FFindList.Length then
   begin
     Columns := FFindList[FFindIndex].Words(FileColumn);
-    S := Columns[AttributeColumn];
-    if S[1] = 'd' then
-      Include(FindData.Attributes, fsaDirectory);
-    if S[1] = 'l' then
-      Include(FindData.Attributes, fsaLink);
-    if S[8] = 'r' then
-      Include(FindData.Attributes, fsaRead);
-    if S[9] = 'w' then
-      Include(FindData.Attributes, fsaWrite);
-    if S[10] = 'x' then
-      Include(FindData.Attributes, fsaExecute);
+		S := SafeRead(Columns, AttributeColumn);
+    if S.Length >= 10 then
+    begin
+  		if S[1] = 'd' then
+        Include(FindData.Attributes, fsaDirectory);
+      if S[1] = 'l' then
+        Include(FindData.Attributes, fsaLink);
+      if S[8] = 'r' then
+        Include(FindData.Attributes, fsaRead);
+      if S[9] = 'w' then
+        Include(FindData.Attributes, fsaWrite);
+      if S[10] = 'x' then
+        Include(FindData.Attributes, fsaExecute);
+		end;
     if FindData.Attributes * FFindMask = [] then
     begin
       Result := FindNext(FindData);
       Exit;
     end;
-    FindData.Name := Columns[FileColumn];
-    FindData.Size := StrToQWordDef(Columns[SizeColumn], 0);
+    FindData.Name := SafeRead(Columns, FileColumn);
+    FindData.Size := StrToQWordDef(SafeRead(Columns, SizeColumn), 0);
     M := 1;
     for I := Low(FormatSettings.ShortMonthNames) to High(FormatSettings.ShortMonthNames) do
-      if Columns[MonthColumn].Equals(FormatSettings.ShortMonthNames[I], True) then
+      if SafeRead(Columns, MonthColumn).Equals(FormatSettings.ShortMonthNames[I], True) then
       begin
         M := I;
         Break;
       end;
-    D := StrToIntDef(Columns[DayColumn], 1);
-    S := Columns[YearColumn];
+    D := StrToIntDef(SafeRead(Columns, DayColumn), 1);
+    S := SafeRead(Columns, YearColumn);
     Coded := S.Contains(':');
     if Coded then
     begin
@@ -689,7 +704,7 @@ begin
     Result := True;
   end
   else
-    Result := False;
+	  Result := False;
 end;
 
 procedure TFtpClient.SetConnected(Value: Boolean);

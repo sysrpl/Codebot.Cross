@@ -201,6 +201,9 @@ function DefaultFloatConvertString(constref Item: Float): string;
 {$endregion}
 
 {$region math routines}
+const
+  Infinity = High(Integer);
+
 { Return the even division of a quotient }
 function Divide(const Quotient, Divisor: Extended): Extended;
 { Return the remainder of an even division }
@@ -1820,7 +1823,7 @@ end;
 function StrAdjustLineBreaks(const S: string; Style: TTextLineBreakStyle): string;
 var
   Line: string;
-  I, J: Integer;
+  I, J, K: Integer;
 begin
   if Length(S) < 1 then
     Exit('');
@@ -1829,7 +1832,8 @@ begin
   Line := LineBreakStyles[Style];
   I := 1;
   J := 1;
-  while S[I] > #0  do
+  K := Length(S) + 1;
+  while (I < K) and (S[I] > #0) do
   begin
     if ((S[I] = #10) and (S[I + 1] = #13)) or ((S[I] = #13) and (S[I + 1] = #10)) then
     begin
