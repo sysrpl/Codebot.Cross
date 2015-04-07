@@ -124,7 +124,7 @@ begin
   	P := NewPen(C, FThickness);
     P.LinePattern := pnDash;
     P.LineCap := cpRound;
-    P.LinePatternOffset := TimeQuery * 4;
+    P.LinePatternOffset := TimeQuery * 12;
     Surface.Stroke(P);
 	end;
 end;
