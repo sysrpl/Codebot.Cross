@@ -20,12 +20,12 @@ uses
   Codebot.Graphics.Types,
   Codebot.Animation;
 
+{ TControlHighlighter }
+
 type
-
-  { TControlHighlighter }
-
   TControlHighlighter = class(TComponent)
   private
+		FOnRender: TDrawRectEvent;
     FSplash: ISplash;
     FTimer: TAnimationTimer;
     FControl: TControl;
@@ -46,6 +46,7 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure Animate(Sender: TObject);
     procedure Loaded; override;
+    procedure Render(Surface: ISurface; Rect: TRectI); virtual;
     procedure Update;
   public
     constructor Create(AOwner: TComponent); override;
@@ -58,6 +59,7 @@ type
     property Radius: Float read FRadius write SetRadius default 8;
     property Thickness: Float read FThickness write SetThickness default 4;
     property Visible: Boolean read FVisible write SetVisible;
+    property OnRender: TDrawRectEvent read FOnRender write FOnRender;
   end;
 
 implementation
@@ -104,6 +106,29 @@ begin
   Update;
 end;
 
+procedure TControlHighlighter.Render(Surface: ISurface; Rect: TRectI);
+var
+  R: TRectF;
+  C: TColorB;
+  P: IPen;
+begin
+  if Assigned(FOnRender) then
+  	FOnRender(Self, Surface, Rect)
+	else
+  begin
+    R := Rect;
+    R.Inflate(FThickness / -2  - 1, FThickness / -2  - 1);
+    Surface.RoundRectangle(R, FRadius);
+    C := Color;
+    C.Alpha := FOpacity;
+  	P := NewPen(C, FThickness);
+    P.LinePattern := pnDash;
+    P.LineCap := cpRound;
+    P.LinePatternOffset := TimeQuery * 4;
+    Surface.Stroke(P);
+	end;
+end;
+
 procedure TControlHighlighter.Update;
 
   function IsVisible: Boolean;
@@ -119,6 +144,8 @@ procedure TControlHighlighter.Update;
     if not FVisible then
       Exit;
     C := FControl;
+    if C.Parent = nil then
+    	Exit;
     F := nil;
     while C <> nil do
     begin
@@ -139,9 +166,7 @@ procedure TControlHighlighter.Update;
   end;
 
 var
-  R: TRectF;
   S: ISurface;
-  C: TColorB;
   P: TPointI;
   I: Integer;
 begin
@@ -154,16 +179,11 @@ begin
   end;
   FSplash.Bitmap.SetSize(Round(Control.Width + FThickness * 2 + FOffset * 2) + 2,
     Round(Control.Height + FThickness * 2 + FOffset * 2) + 2);
-  R := FSplash.Bitmap.ClientRect;
-  R.Inflate(FThickness / -2  - 1, FThickness / -2  - 1);
   S := FSplash.Bitmap.Surface;
   S.Clear(clTransparent);
-  S.RoundRectangle(R, FRadius);
-  C := Color;
-  C.Alpha := FOpacity;
-  S.Stroke(NewPen(C, FThickness));
-  P := TPointI.Create;
-  P := Control.ClientToScreen(P);
+  Render(S, FSplash.Bitmap.ClientRect);
+  P := TPointI.Create(Control.Left, Control.Top);
+  P := Control.Parent.ClientToScreen(P);
   I := Round(FThickness + FOffset + 1);
   P.Offset(-I, -I);
   FSplash.Move(P.X, P.Y);

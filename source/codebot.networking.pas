@@ -309,7 +309,7 @@ begin
   if FSecure then
     if not OpenSSLInit then
       Exit(False);
-  FAddress := Address;
+	FAddress := Address;
   FPort := Port;
   if not FAddress.Resolve then
     Exit(False);
@@ -330,15 +330,6 @@ begin
     Exit(False);
   end;
   FState := ssClient;
-  if not FBlocking then
-  begin
-    {$ifdef windows}
-    Mode := 1;
-    ioctlsocket(FHandle, FIONBIO, Mode);
-    {$else}
-    fcntl(FHandle, F_SETFL, O_NONBLOCK);
-    {$endif}
-  end;
   if FSecure then
   begin
     FSSLContext := SSL_CTX_new(SSLv23_client_method);
@@ -363,6 +354,15 @@ begin
       Close;
       Exit(False);
     end;
+  end;
+  if not FBlocking then
+  begin
+    {$ifdef windows}
+    Mode := 1;
+    ioctlsocket(FHandle, FIONBIO, Mode);
+    {$else}
+    fcntl(FHandle, F_SETFL, O_NONBLOCK);
+    {$endif}
   end;
   Result := True;
 end;
