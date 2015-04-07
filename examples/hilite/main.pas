@@ -63,7 +63,7 @@ var
 begin
   FillRectColor(Surface, Rect, clWindow);
   if Index = BrushList.ItemIndex then
-    FillRectSelected(Surface, Rect);
+    FillRectSelected(Surface, Rect, 4);
   R := Rect;
   R.Right := BrushList.GetColumnRect(0).Right;
   R.Inflate(-8, -8);
