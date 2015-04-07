@@ -86,7 +86,7 @@ function Interpolate(Easing: TEasing; Percent: Float; Start, Finish: Float; Reve
 { Provides access to <link Codebot.Animation.TEasings, TEasings class> [group animation] }
 function Easings: TEasings;
 
-{ TAnimationTimer is a high performance timer fixed at 60 frames per second [group animation]
+{ TAnimationTimer is a high performance timer fixed at 30 frames per second [group animation]
   See also
   <link Overview.Codebot.Animation.TAnimationTimer, TAnimationTimer members> }
 
@@ -104,7 +104,7 @@ type
   published
     { Start or stop the timer using enabled }
     property Enabled: Boolean read FEnabled write SetEnabled default False;
-    { OnTimer is fired every 1/60 of a second when enabled }
+    { OnTimer is fired every 1/30 of a second when enabled }
     property OnTimer: TNotifyEvent read FOnTimer write FOnTimer;
   end;
 
