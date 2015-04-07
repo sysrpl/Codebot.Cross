@@ -14,7 +14,7 @@ unit Codebot.Controls.Buttons;
 interface
 
 uses
-  Classes, SysUtils, Types, Graphics, Controls,
+  Classes, SysUtils, Types, Graphics, Controls, LCLIntf,
   Codebot.System,
   Codebot.Controls,
   Codebot.Graphics,
@@ -34,6 +34,7 @@ type
     FDown: Boolean;
     FOnDrawButton: TDrawStateEvent;
     FShowCaption: Boolean;
+    FMouseInControl: Boolean;
     procedure SetKind(Value: TButtonKind);
     procedure SetDown(Value: Boolean);
     procedure SetImages(Value: TImageStrip);
@@ -276,10 +277,6 @@ begin
   if FKind = bkSplitter then
     Exit;
   R := ClientRect;
-  if R.Contains(X, Y) then
-    DrawState := DrawState + [dsHot]
-  else
-    DrawState := DrawState - [dsHot];
 end;
 
 procedure TCustomThinButton.MouseUp(Button: TMouseButton; Shift: TShiftState;
@@ -299,7 +296,10 @@ begin
   if FKind = bkSplitter then
     Exit;
   if not FDown then
+  begin
     DrawState := DrawState + [dsHot];
+    Invalidate;
+  end;
 end;
 
 procedure TCustomThinButton.MouseLeave;
@@ -308,7 +308,10 @@ begin
   if FKind = bkSplitter then
     Exit;
   if not FDown then
+  begin
     DrawState := DrawState - [dsHot];
+    Invalidate;
+  end;
 end;
 
 procedure TCustomThinButton.Render;
@@ -321,7 +324,6 @@ var
 begin
   inherited Render;
   R := ClientRect;
-  Surface.FillRect(NewBrush(clTransparent), R);
   if csDesigning in ComponentState then
   begin
     if FDown then
