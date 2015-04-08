@@ -507,6 +507,7 @@ type
     procedure Translate(X, Y: Float);
     procedure Scale(X, Y: Float);
     procedure Rotate(Radians: Float);
+    function Transform(Point: TPointF): TPointF;
   end;
 
 { IPen }
