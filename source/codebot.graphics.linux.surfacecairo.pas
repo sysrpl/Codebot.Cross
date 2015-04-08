@@ -184,6 +184,7 @@ type
     procedure Translate(X, Y: Float);
     procedure Scale(X, Y: Float);
     procedure Rotate(Radians: Float);
+    function Transform(Point: TPointF): TPointF;
     function GetMatrix: TCairoMatrix;
     procedure SetMatrix(const Value: TCairoMatrix);
     function GetInverse: TCairoMatrix;
@@ -607,6 +608,12 @@ begin
   FMatrix.Translate(X, Y);
   FInverse.Translate(-X, -Y);
   FChanged := True;
+end;
+
+function TMatrixCairo.Transform(Point: TPointF): TPointF;
+begin
+  Result.X := FMatrix.xx * Point.X + FMatrix.xy * Point.Y + FMatrix.x0;
+  Result.Y := FMatrix.yx * Point.X + FMatrix.yy * Point.Y + FMatrix.y0
 end;
 
 function TMatrixCairo.GetMatrix: TCairoMatrix;
