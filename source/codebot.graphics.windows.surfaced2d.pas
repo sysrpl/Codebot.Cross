@@ -73,6 +73,7 @@ type
     procedure Translate(X, Y: Float);
     procedure Scale(X, Y: Float);
     procedure Rotate(Angle: Float);
+    function Transform(Point: TPointF): TPointF;
   end;
 
 { TPenD2D }
@@ -909,6 +910,12 @@ begin
   MatrixTranslate(FMatrix, X, Y);
   FChanged := True;
   FIsIdentity := False;
+end;
+
+function TMatrixD2D.Transform(Point: TPointF): TPointF;
+begin
+  Result.X := FMatrix.m11 * Point.X + FMatrix.m12 * Point.Y + FMatrix.m31;
+  Result.Y := FMatrix.m21 * Point.X + FMatrix.m22 * Point.Y + FMatrix.m32;
 end;
 
 { TPenD2D }

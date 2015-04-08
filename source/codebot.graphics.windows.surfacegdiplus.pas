@@ -73,6 +73,7 @@ type
     procedure Translate(X, Y: Float);
     procedure Scale(X, Y: Float);
     procedure Rotate(Angle: Float);
+    function Transform(Point: TPointF): TPointF;
   end;
 
 { TPenGdi }
@@ -434,6 +435,14 @@ begin
   FMatrix.Rotate(Angle / Pi * 180, MatrixOrderAppend);
   FChanged  := True;
   FIsIdentity := False;
+end;
+
+function TMatrixGdi.Transform(Point: TPointF): TPointF;
+var
+  P: PGdiPointF;
+begin
+  P := @Result;
+  FMatrix.TransformPoints(P, 1);
 end;
 
 { TPenGdi }
