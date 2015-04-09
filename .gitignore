@@ -31,3 +31,6 @@ examples/hilite/hilite.dbg
 examples/easer/easer.dbg
 examples/easer/lib/x86_64-linux/easer.or
 examples/easer/easer
+examples/docker/docker
+examples/docker/lib/x86_64-linux/docker.or
+examples/docker/docker.dbg
