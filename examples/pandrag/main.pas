@@ -5,7 +5,7 @@ unit Main;
 interface
 
 uses
-	Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Types
+	Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Types,
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types;
@@ -38,7 +38,7 @@ implementation
 var
   Pan: TPointF;
   Zoom: Float = 1;
-
+  ZoomPoint: TPointF;
   Drag: Boolean;
   DragPoint: TPointF;
 
@@ -87,13 +87,18 @@ begin
   if Z <> Zoom then
   begin
     Zoom := Z;
+    ZoomPoint.X := (Pan.X + MousePos.X) / Zoom;
+    ZoomPoint.Y := (Pan.Y + MousePos.Y) / Zoom;
     Invalidate;
   end;
 end;
 
 procedure TForm1.FormPaint(Sender: TObject);
 const
+  Margin = -8;
   Help = 'Pan using the left mouse button, zoom using the mouse wheel';
+  PenWidth = 4;
+  ShapeSpacing = 25;
 var
   S: ISurface;
   R: TRectF;
@@ -102,15 +107,18 @@ begin
   { Create a surface }
   S := NewSurface(Canvas);
   { Zoom our surface }
+  S.Matrix.Translate(-ZoomPoint.X, -ZoomPoint.Y);
   S.Matrix.Scale(Zoom, Zoom);
+  S.Matrix.Translate(ZoomPoint.X, ZoomPoint.Y);
   { Pan our surface }
   S.Matrix.Translate(Pan.X, Pan.Y);
   { Fill it with white }
   S.Clear(clWhite);
-  { Write out some instructions }
+  { The text area to wrap text within }
   R := ClientRect;
-  { Give the text a margin of 8 }
-  R.Inflate(-8, -8);
+  { Give the text area a margin of 8 }
+  R.Inflate(Margin, Margin);
+  { Write out some instructions }
   S.TextOut(NewFont(Font), Help, R, drWrap);
   { Draw some shapes }
   R := TRectF.Create(50, 50, 100, 100);
@@ -120,16 +128,34 @@ begin
   S.Stroke(NewPen(clRed, 4), True);
   { Normal brush pattern scalling can cause fuzzy patterns }
   B := Brushes.Brick(clRed, clTransparent);
+  { Fill the shape }
   S.Fill(B);
+  { Next shape is to the right }
+  R.Offset(R.Width + ShapeSpacing, 0);
   { A circle }
-  R := TRectF.Create(175, 50, 100, 100);
   S.Ellipse(R);
   { Stroke in green and preserve the path for a fill pattern }
-  S.Stroke(NewPen(clGreen, 4), True);
+  S.Stroke(NewPen(clGreen, PenWidth), True);
   { We can correct fuzzy pattern by growing the pattern size with the zoom }
   B := Brushes.ZigZag(clGreen, clTransparent, Zoom, Round(DefBrushSize * Zoom));
   { And rescaling the brush }
   B.Matrix.Scale(1 / Zoom, 1 / Zoom);
+  { Fill the shape }
+  S.Fill(B);
+  { Next shape is to the right }
+  R.Offset(R.Width + ShapeSpacing, 0);
+  { A triangle }
+  with R.BottomRight do S.MoveTo(X, Y);
+  with R.BottomLeft do S.LineTo(X, Y);
+  with R.MidTop do S.LineTo(X, Y);
+  S.Path.Close;
+  { Stroke in green and preserve the path for a fill pattern }
+  S.Stroke(NewPen(clBlue, PenWidth), True);
+  { Draw using the snake skin brush }
+  B := Brushes.SnakeSkin(clBlue, clTransparent, Zoom, Round(DefBrushSize * Zoom));
+  { And rescaling the brush }
+  B.Matrix.Scale(1 / Zoom, 1 / Zoom);
+  { Fill the shape }
   S.Fill(B);
 end;
 

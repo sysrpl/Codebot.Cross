@@ -34,3 +34,6 @@ examples/easer/easer
 examples/docker/docker
 examples/docker/lib/x86_64-linux/docker.or
 examples/docker/docker.dbg
+examples/pandrag/pandrag.dbg
+examples/pandrag/lib/x86_64-linux/pandrag.or
+examples/pandrag/pandrag
