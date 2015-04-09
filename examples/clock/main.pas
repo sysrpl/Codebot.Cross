@@ -377,7 +377,7 @@ begin
   Hour := Remainder(Time * 24, 12);
   Minute := Remainder(Time * 24 * 60, 60);
   Second := Remainder(Time * 24 * 60 * 60, 60);
-  Micro := Remainder(Time * 24 * 60 * 60 * 60, 12);
+  Micro := (Second - Trunc(Second)) * 12;
   { In order, micros, hours, minutes, then seconds }
   DrawMicros(Surface, Micro);
   DrawHours(Surface, Hour);

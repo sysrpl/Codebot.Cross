@@ -2278,9 +2278,39 @@ begin
   end;
 end;
 
+procedure ApplyMatrix(Brush: ID2D1Brush; Matrix: IMatrix; out State: TD2D1Matrix3x2F);
+var
+  M: TD2D1Matrix3x2F;
+begin
+  State := MatrixIdentity;
+  if Brush = nil then
+  	Exit;
+  M := (Matrix as TMatrixD2D).FMatrix;
+	Brush.GetTransform(State);
+  M := MatrixMultiply(State, M);
+  Brush.SetTransform(M);
+end;
+
+procedure RestoreMatrix(Brush: ID2D1Brush; State: TD2D1Matrix3x2F);
+begin
+  if Brush = nil then
+  	Exit;
+  Brush.SetTransform(State);
+end;
+
+function PenWidth(Matrix: IMatrix; Width: Float): Float;
+const
+	A: TPointF = (X: 1; Y : 0);
+	B: TPointF = (X: 0; Y : 0);
+begin
+  Result := Matrix.Transform(A).Dist(Matrix.Transform(B));
+  Result := Abs(Result * Width);
+end;
+
 procedure TSurfaceD2D.StrokeOrFill(Brush: IBrush; Pen: IPen; Preserve: Boolean);
 var
   Acquired: Boolean;
+  State: TD2D1Matrix3x2F;
   P: TSurfacePathD2D;
   B: ID2D1Brush;
   S: ID2D1StrokeStyle;
@@ -2291,10 +2321,18 @@ begin
   B := nil;
   S := nil;
   if Brush <> nil then
-    Acquired := AcquireBrush(Brush, B)
-  else
+  begin
+    Acquired := AcquireBrush(Brush, B);
+    if Acquired then
+    	ApplyMatrix(B, GetMatrix, State);
+	end
+	else
+  begin
     Acquired := AcquirePen(Pen, B, S);
-  if not Acquired then
+    if Acquired then
+    	ApplyMatrix(B, GetMatrix, State);
+	end;
+	if not Acquired then
     Exit;
   Draw;
   P := Path;
@@ -2309,9 +2347,11 @@ begin
   if Brush <> nil then
     FTarget.FillGeometry(G, B)
   else
-    FTarget.DrawGeometry(G, B, Pen.Width, S);
-  if not Preserve then
+    FTarget.DrawGeometry(G, B, PenWidth(GetMatrix, Pen.Width), S);
+	if not Preserve then
     P.Remove;
+  if B <> nil then
+  	RestoreMatrix(B, State);
 end;
 
 procedure TSurfaceD2D.Stroke(Pen: IPen; Preserve: Boolean = False);
