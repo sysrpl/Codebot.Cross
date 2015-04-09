@@ -9,7 +9,6 @@
       <Title Value="pandrag"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
-      <Icon Value="0"/>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
@@ -18,8 +17,8 @@
       <StringTable ProductVersion=""/>
     </VersionInfo>
     <BuildModes Count="6">
-      <Item1 Name="Win32 Debug" Default="True"/>
-      <Item2 Name="Win32 Release">
+      <Item1 Name="Debug" Default="True"/>
+      <Item2 Name="Win32">
         <CompilerOptions>
           <Version Value="11"/>
           <PathDelim Value="\"/>
@@ -233,8 +232,6 @@
         <OverflowChecks Value="True"/>
         <StackChecks Value="True"/>
       </Checks>
-      <TargetCPU Value="i386"/>
-      <TargetOS Value="win32"/>
     </CodeGeneration>
     <Linking>
       <Debugging>
