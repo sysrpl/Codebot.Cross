@@ -136,7 +136,7 @@ begin
       R.Top := 0;
       { Prepare the font in white }
       F := NewFont(Font);
-      F.Size := 24;
+      F.Size := 14;
       F.Style := [fsBold];
       F.Color := clWhite;
       { But first create a path }
