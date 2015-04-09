@@ -8,7 +8,6 @@
       <Title Value="clock"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
-      <Icon Value="0"/>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
@@ -39,12 +38,12 @@
       <Unit0>
         <Filename Value="clock.lpr"/>
         <IsPartOfProject Value="True"/>
-        <UnitName Value="clock"/>
       </Unit0>
       <Unit1>
         <Filename Value="main.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
       </Unit1>
