@@ -3,7 +3,7 @@
   <ProjectSession>
     <Version Value="9"/>
     <BuildModes Active="Default"/>
-    <Units Count="4">
+    <Units Count="6">
       <Unit0>
         <Filename Value="clock.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -20,6 +20,7 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
+        <CursorPos X="21" Y="9"/>
         <UsageCount Value="21"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -34,15 +35,36 @@
       <Unit3>
         <Filename Value="../../source/codebot.graphics.types.pas"/>
         <UnitName Value="Codebot.Graphics.Types"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="757"/>
-        <CursorPos X="28" Y="777"/>
+        <TopLine Value="706"/>
+        <CursorPos X="29" Y="777"/>
         <UsageCount Value="10"/>
         <Loaded Value="True"/>
       </Unit3>
+      <Unit4>
+        <Filename Value="../../source/codebot.graphics.windows.surfacegdiplus.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="1190"/>
+        <CursorPos X="67" Y="1216"/>
+        <UsageCount Value="10"/>
+        <Bookmarks Count="1">
+          <Item0 X="32" Y="1216" ID="1"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="../../source/codebot.interop.windows.gdiplus.pas"/>
+        <UnitName Value="Codebot.Interop.Windows.GdiPlus"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="372"/>
+        <CursorPos X="31" Y="386"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit5>
     </Units>
-    <JumpHistory Count="11" HistoryIndex="10">
+    <JumpHistory Count="17" HistoryIndex="16">
       <Position1>
         <Filename Value="main.pas"/>
         <Caret Line="9" Column="3"/>
@@ -84,6 +106,29 @@
       <Position11>
         <Filename Value="../../source/codebot.graphics.types.pas"/>
       </Position11>
+      <Position12>
+        <Filename Value="main.pas"/>
+        <Caret Line="25" Column="66"/>
+      </Position12>
+      <Position13>
+        <Filename Value="../../source/codebot.graphics.types.pas"/>
+      </Position13>
+      <Position14>
+        <Filename Value="../../source/codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="23" Column="85"/>
+      </Position14>
+      <Position15>
+        <Filename Value="../../source/codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="316" Column="20" TopLine="290"/>
+      </Position15>
+      <Position16>
+        <Filename Value="../../source/codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="1216" Column="32" TopLine="1190"/>
+      </Position16>
+      <Position17>
+        <Filename Value="../../source/codebot.interop.windows.gdiplus.pas"/>
+        <Caret Line="2146" Column="14" TopLine="2130"/>
+      </Position17>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>

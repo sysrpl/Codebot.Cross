@@ -222,6 +222,7 @@ type
     FFormat: IDWriteTextFormat;
     FName: string;
     FColor: TColorB;
+    FQuality: TFontQuality;
     FStyle: TFontStyles;
     FSize: Float;
     function Format: IDWriteTextFormat;
@@ -230,12 +231,15 @@ type
     function GetName: string;
     function GetColor: TColorB;
     procedure SetColor(Value: TColorB);
+    function GetQuality: TFontQuality;
+    procedure SetQuality(Value: TFontQuality);
     function GetStyle: TFontStyles;
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
     property Name: string read GetName;
     property Color: TColorB read GetColor write SetColor;
+    property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
     property Size: Float read GetSize write SetSize;
   end;
@@ -1287,6 +1291,7 @@ begin
   inherited Create;
   FName := F.Name;
   FColor := F.Color;
+  FQuality := F.Quality;
   FStyle := F.Style;
   GetObject(F.Handle, SizeOf(LogFont), @LogFont);
   if LogFont.lfHeight < 0 then
@@ -1318,6 +1323,16 @@ end;
 procedure TFontD2D.SetColor(Value: TColorB);
 begin
   FColor := Value;
+end;
+
+function TFontD2D.GetQuality: TFontQuality;
+begin
+	Result := FQuality;
+end;
+
+procedure TFontD2D.SetQuality(Value: TFontQuality);
+begin
+	FQuality := Value;
 end;
 
 function TFontD2D.GetStyle: TFontStyles;
@@ -2192,6 +2207,14 @@ procedure TSurfaceD2D.TextOut(Font: IFont; const Text: string; const Rect: TRect
   Direction: TDirection; Immediate: Boolean = True);
 const
   TrimChar: TDWriteTrimming = (granularity: DWRITE_TRIMMING_GRANULARITY_CHARACTER);
+  RenderingModes: array[TFontQuality] of DWORD = (DWRITE_RENDERING_MODE_DEFAULT,
+	  DWRITE_RENDERING_MODE_ALIASED, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC, DWRITE_RENDERING_MODE_ALIASED,
+	  DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+	  DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL);
+  AntialiasModes: array[TFontQuality] of DWORD = (D2D1_TEXT_ANTIALIAS_MODE_DEFAULT,
+  	D2D1_TEXT_ANTIALIAS_MODE_ALIASED, D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE,
+    D2D1_TEXT_ANTIALIAS_MODE_ALIASED, D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE,
+    D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE, D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
 var
   FontObj: TFontD2D;
   Layout: IDWriteTextLayout;
@@ -2254,10 +2277,10 @@ begin
   WriteFactory.CreateRenderingParams(Params1);
   WriteFactory.CreateCustomRenderingParams(Params1.GetGamma,
     Params1.GetEnhancedContrast, 1, Params1.GetPixelGeometry,
-    DWRITE_RENDERING_MODE_DEFAULT, //DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+    RenderingModes[Font.Quality],
     Params2);
   FTarget.SetTextRenderingParams(Params2);
-  FTarget.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE); //D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
+  FTarget.SetTextAntialiasMode(AntialiasModes[Font.Quality]);
   { ErrorCorrection looks better at untransformed small sizes, but doesn't
     actually build a geometric path. It's probably useful when you just want
     "standard" Windows clear type text. Right now it looks pretty awful when
