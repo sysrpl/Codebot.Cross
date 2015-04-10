@@ -2210,6 +2210,7 @@ begin
     Path.Remove;
   if Rect.Empty or (Text = '') then
     Exit;
+	Draw;
   Path.Add;
   FontObj := Font as TFontD2D;
   { It's hard to tell if CreateGdiTextLayout makes any difference }
@@ -2256,7 +2257,7 @@ begin
     DWRITE_RENDERING_MODE_DEFAULT, //DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
     Params2);
   FTarget.SetTextRenderingParams(Params2);
-  FTarget.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_DEFAULT); //D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
+  FTarget.SetTextAntialiasMode(D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE); //D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
   { ErrorCorrection looks better at untransformed small sizes, but doesn't
     actually build a geometric path. It's probably useful when you just want
     "standard" Windows clear type text. Right now it looks pretty awful when
