@@ -58,6 +58,9 @@ type
   TCairoLineJoin = cairo_line_join_t;
   TCairoMatrix = cairo_matrix_t;
   PCairoMatrix = Pcairo_matrix_t;
+  TCairoFontOptions = cairo_font_options_t;
+  PCairoFontOptions = Pcairo_font_options_t;
+  TCairoAntiAlias = cairo_antialias_t;
 
 { Extra gdk types and routines }
 
@@ -346,6 +349,7 @@ type
     FDesc: PPangoFontDescription;
     FName: string;
     FColor: TBGRA;
+    FQuality: TFontQuality;
     FStyle: TFontStyles;
     FSize: Float;
   public
@@ -354,12 +358,15 @@ type
     function GetName: string;
     function GetColor: TBGRA;
     procedure SetColor(Value: TBGRA);
+    function GetQuality: TFontQuality;
+    procedure SetQuality(Value: TFontQuality);
     function GetStyle: TFontStyles;
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
     property Name: string read GetName;
     property Color: TBGRA read GetColor write SetColor;
+    property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
     property Size: Float read GetSize write SetSize;
   end;
@@ -1089,6 +1096,16 @@ begin
   FColor := Value;
 end;
 
+function TFontCairo.GetQuality: TFontQuality;
+begin
+  Result := FQuality;
+end;
+
+procedure TFontCairo.SetQuality(Value: TFontQuality);
+begin
+  FQuality := Value;
+end;
+
 function TFontCairo.GetStyle: TFontStyles;
 begin
   Result := FStyle;
@@ -1624,10 +1641,16 @@ end;
 
 procedure TSurfaceCairo.TextOut(Font: IFont; const Text: string; const Rect: TRectF;
   Direction: TDirection; Immediate: Boolean = True);
+const
+  FontOptions: array[TFontQuality] of TCairoAntiAlias = (
+    CAIRO_ANTIALIAS_DEFAULT, CAIRO_ANTIALIAS_FAST, CAIRO_ANTIALIAS_GOOD,
+    CAIRO_ANTIALIAS_NONE, CAIRO_ANTIALIAS_GRAY, CAIRO_ANTIALIAS_SUBPIXEL,
+    CAIRO_ANTIALIAS_SUBPIXEL);
 var
   R: TRectI;
   W, H: LongInt;
   M: TCairoMatrix;
+  Options: PCairoFontOptions;
 begin
   if SurfaceOptions.ErrorCorrection or Immediate then
     Path.Remove;
@@ -1643,16 +1666,6 @@ begin
   pango_layout_set_text(FLayout, PAnsiChar(Text), -1);
   pango_layout_set_width(FLayout, R.Width * PANGO_SCALE);
   pango_layout_set_height(FLayout, R.Height * PANGO_SCALE);
-  { Help to pixel align text }
-  {if (Direction = drRight) and Odd(R.Width) then
-  begin
-    Dec(R.X);
-    Inc(R.Width)
-  end;
-  if (Direction in [drCenter, drFill]) and Odd(R.Width) then
-    Inc(R.Width);
-  if (Direction in [drLeft, drCenter, drRight, drFill]) and Odd(R.Width) then
-    Inc(R.Height);}
   { Horizontal alignment }
   case Direction of
     drLeft, drWrap, drFlow:
@@ -1682,11 +1695,18 @@ begin
     cairo_translate(FCairo, R.X + Delta, Rect.Y + R.Height - H + Delta);
   end;
   pango_cairo_update_layout(FCairo, FLayout);
+  Options := cairo_font_options_create;
+  cairo_font_options_set_antialias(Options, FontOptions[Font.Quality]);
+  cairo_set_font_options(FCairo, Options);
+  pango_cairo_context_set_font_options(pango_layout_get_context(FLayout),
+    Options);
   cairo_move_to(FCairo, 0, 0);
-  pango_cairo_layout_path(FCairo, FLayout);
-  cairo_set_matrix(FCairo, @M);
   if SurfaceOptions.ErrorCorrection or Immediate then
-    Fill(NewSolidBrushCairo(Font.Color));
+    pango_cairo_show_layout(FCairo, FLayout)
+  else
+    pango_cairo_layout_path(FCairo, FLayout);
+  cairo_set_matrix(FCairo, @M);
+  cairo_font_options_destroy(Options);
 end;
 
 procedure TSurfaceCairo.Stroke(Pen: IPen; Preserve: Boolean = False);
