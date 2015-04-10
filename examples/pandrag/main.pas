@@ -38,7 +38,6 @@ implementation
 var
   Pan: TPointF;
   Zoom: Float = 1;
-  ZoomPoint: TPointF;
   Drag: Boolean;
   DragPoint: TPointF;
 
@@ -87,8 +86,6 @@ begin
   if Z <> Zoom then
   begin
     Zoom := Z;
-    ZoomPoint.X := (Pan.X + MousePos.X) / Zoom;
-    ZoomPoint.Y := (Pan.Y + MousePos.Y) / Zoom;
     Invalidate;
   end;
 end;
@@ -107,9 +104,7 @@ begin
   { Create a surface }
   S := NewSurface(Canvas);
   { Zoom our surface }
-  S.Matrix.Translate(-ZoomPoint.X, -ZoomPoint.Y);
   S.Matrix.Scale(Zoom, Zoom);
-  S.Matrix.Translate(ZoomPoint.X, ZoomPoint.Y);
   { Pan our surface }
   S.Matrix.Translate(Pan.X, Pan.Y);
   { Fill it with white }
@@ -121,7 +116,7 @@ begin
   { Write out some instructions }
   S.TextOut(NewFont(Font), Help, R, drWrap);
   { Draw some shapes }
-  R := TRectF.Create(50, 50, 100, 100);
+  R := TRectF.Create(8, 50, 100, 100);
   { A rectangle }
   S.Rectangle(R);
   { Stroke in red and preserve the path for a fill pattern }
@@ -152,7 +147,7 @@ begin
   { Stroke in green and preserve the path for a fill pattern }
   S.Stroke(NewPen(clBlue, PenWidth), True);
   { Draw using the snake skin brush }
-  B := Brushes.SnakeSkin(clBlue, clTransparent, Zoom, Round(DefBrushSize * Zoom));
+  B := Brushes.Pipes(clBlue, clTransparent, Zoom, Round(DefBrushSize * Zoom));
   { And rescaling the brush }
   B.Matrix.Scale(1 / Zoom, 1 / Zoom);
   { Fill the shape }
