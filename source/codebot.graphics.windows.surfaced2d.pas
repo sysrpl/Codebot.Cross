@@ -333,7 +333,7 @@ type
     function TextHeight(Font: IFont; const Text: string; Width: Float): Float;
     procedure TextOut(Font: IFont; const Text: string; const Rect: TRectF;
       Direction: TDirection; Immediate: Boolean = True);
-    procedure StrokeOrFill(Brush: IBrush; Pen: IPen; Preserve: Boolean);
+    procedure FillOrStroke(Brush: IBrush; Pen: IPen; Preserve: Boolean);
     procedure Stroke(Pen: IPen; Preserve: Boolean = False);
     procedure Fill(Brush: IBrush; Preserve: Boolean = False);
     procedure StrokeRect(Pen: IPen; const Rect: TRectF);
@@ -2308,7 +2308,7 @@ begin
   Result := Abs(Result * Width);
 end;
 
-procedure TSurfaceD2D.StrokeOrFill(Brush: IBrush; Pen: IPen; Preserve: Boolean);
+procedure TSurfaceD2D.FillOrStroke(Brush: IBrush; Pen: IPen; Preserve: Boolean);
 var
   Acquired: Boolean;
   State: TD2D1Matrix3x2F;
@@ -2357,12 +2357,12 @@ end;
 
 procedure TSurfaceD2D.Stroke(Pen: IPen; Preserve: Boolean = False);
 begin
-  StrokeOrFill(nil, Pen, Preserve)
+  FillOrStroke(nil, Pen, Preserve);
 end;
 
 procedure TSurfaceD2D.Fill(Brush: IBrush; Preserve: Boolean = False);
 begin
-  StrokeOrFill(Brush, nil, Preserve)
+  FillOrStroke(Brush, nil, Preserve);
 end;
 
 function AlignRect(Pen: IPen; const Rect: TRectF): TRectF;

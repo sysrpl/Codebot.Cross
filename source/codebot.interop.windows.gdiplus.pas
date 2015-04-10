@@ -1608,6 +1608,14 @@ type
     function Clone: IGdiBrush;
     function GetType: TBrushType;
     property NativeBrush: GpBrush read GetNativeBrush write SetNativeBrush;
+    function GetTransform: IGdiMatrix;
+    procedure SetTransform(Value: IGdiMatrix);
+    function ResetTransform: TStatus;
+    function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+    function TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+    function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+    function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+    property Transform: IGdiMatrix read GetTransform write SetTransform;
   end;
 
 { IGdiSolidBrush }
@@ -1623,13 +1631,6 @@ type
 
   IGdiTextureBrush = interface(IGdiBrush)
     ['{6DC90CEF-D71F-4CC3-81A9-16D01A63A49C}']
-    function SetTransform(Matrix: IGdiMatrix): TStatus;
-    function GetTransform(Matrix: IGdiMatrix): TStatus;
-    function ResetTransform: TStatus;
-    function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function TranslateTransform(DX, DY: Single; Order: MatrixOrder = MatrixOrderPrepend): TStatus;
-    function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
     function GetImage: IGdiImage;
     function GetWrapMode: TGdiWrapMode;
     procedure SetWrapMode(WrapMode: TGdiWrapMode);
@@ -1654,16 +1655,8 @@ type
     function GetInterpolationColors(PresetColors: PArgb; BlendPositions: PSingle; Count: Integer): TStatus;
     function SetBlendBellShape(Focus: Single; Scale: Single = 1): TStatus;
     function SetBlendTriangularShape(Focus: Single; Scale: Single = 1): TStatus;
-    function GetTransform: IGdiMatrix;
-    procedure SetTransform(Matrix: IGdiMatrix);
-    function ResetTransform: TStatus;
-    function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
     function GetWrapMode: TGdiWrapMode;
     procedure SetWrapMode(WrapMode: TGdiWrapMode);
-    property Transform: IGdiMatrix read GetTransform write SetTransform;
   end;
 
 { IGdiPathGradientBrush }
@@ -1686,21 +1679,10 @@ type
     function GetInterpolationColorCount: Integer;
     function SetInterpolationColors(PresetColors: PArgb; BlendPositions: PSingle; Count: Integer): TStatus;
     function GetInterpolationColors(PresetColors: PArgb; BlendPositions: PSingle; Count: Integer): TStatus;
-    function GetTransform: IGdiMatrix;
-    procedure SetTransform(Value: IGdiMatrix);
     function GetWrapMode: TGdiWrapMode;
     procedure SetWrapMode(Value: TGdiWrapMode);
     procedure SetBlendBellShape(Focus: Single; Scale: Single = 1);
     procedure SetBlendTriangularShape(Focus: Single; Scale: Single = 1);
-    procedure ResetTransform;
-    procedure MultiplyTransform(Matrix: IGdiMatrix;
-      Order: TGdiMatrixOrder = MatrixOrderPrepend);
-    procedure TranslateTransform(DX, DY: Single;
-      Order: TGdiMatrixOrder = MatrixOrderPrepend);
-    procedure ScaleTransform(SX, SY: Single;
-      Order: TGdiMatrixOrder = MatrixOrderPrepend);
-    procedure RotateTransform(Angle: Single;
-      Order: TGdiMatrixOrder = MatrixOrderPrepend);
     procedure GetFocusScales(out XScale, YScale: Single);
     procedure SetFocusScales(XScale, YScale: Single);
     property CenterColor: TGdiArgb read GetCenterColor write SetCenterColor;
@@ -1711,7 +1693,6 @@ type
     property Rectangle: TGdiRectF read GetRectangle;
     property RectangleI: TGdiRectI read GetRectangleI;
     property GammaCorrection: Boolean read GetGammaCorrection write SetGammaCorrection;
-    property Transform: IGdiMatrix read GetTransform write SetTransform;
     property WrapMode: TGdiWrapMode read GetWrapMode write SetWrapMode;
   end;
 
@@ -1926,7 +1907,7 @@ type
     procedure SetSmoothingMode(smoothingMode: TSmoothingMode);
     function GetPixelOffsetMode: TPixelOffsetMode;
     procedure SetPixelOffsetMode(pixelOffsetMode: TPixelOffsetMode);
-    procedure SetTransform(Matrix: IGdiMatrix);
+    procedure SetTransform(Value: IGdiMatrix);
     function  GetTransform: IGdiMatrix;
     function ResetTransform: TStatus;
     function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
@@ -4533,6 +4514,13 @@ type
     destructor Destroy; override;
     function Clone: IGdiBrush; virtual;
     function GetType: TBrushType;
+    function GetTransform: IGdiMatrix; virtual;
+    procedure SetTransform(Value: IGdiMatrix); virtual;
+    function ResetTransform: TStatus; virtual;
+    function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; virtual;
+    function TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; virtual;
+    function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; virtual;
+    function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; virtual;
   end;
 
 { TGdiSolidBrush }
@@ -4559,13 +4547,13 @@ type
     constructor Create(Image: IGdiImage; WrapMode: TGdiWrapMode; DstX, DstY, DstWidth,
       DstHeight: Integer); overload;
     constructor Create; overload;
-    function SetTransform(Matrix: IGdiMatrix): TStatus;
-    function GetTransform(Matrix: IGdiMatrix): TStatus;
-    function ResetTransform: TStatus;
-    function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function TranslateTransform(DX, DY: Single; Order: MatrixOrder = MatrixOrderPrepend): TStatus;
-    function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+    function GetTransform: IGdiMatrix; override;
+    procedure SetTransform(Value: IGdiMatrix); override;
+    function ResetTransform: TStatus; override;
+    function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
+    function TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
+    function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
+    function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
     function GetWrapMode: TGdiWrapMode;
     procedure SetWrapMode(WrapMode: TGdiWrapMode);
     function GetImage: IGdiImage;
@@ -4587,6 +4575,13 @@ type
       isAngleScalable: Boolean = False); overload;
     constructor Create(Rect: TGdiRectI; Color1, Color2: TGdiArgb; Angle: Single;
       isAngleScalable: Boolean = False); overload;
+    function GetTransform: IGdiMatrix; override;
+    procedure SetTransform(Value: IGdiMatrix); override;
+    function ResetTransform: TStatus; override;
+    function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
+    function TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
+    function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
+    function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
     function SetLinearColors(Color1, Color2: TGdiArgb): TStatus;
     function GetLinearColors(out Color1, Color2: TGdiArgb): TStatus;
     function GetRectangle(out Rect: TGdiRectF): TStatus; overload;
@@ -4601,13 +4596,6 @@ type
     function GetInterpolationColors(PresetColors: PArgb; BlendPositions: PSingle; Count: Integer): TStatus;
     function SetBlendBellShape(Focus: Single; Scale: Single = 1): TStatus;
     function SetBlendTriangularShape(Focus: Single; Scale: Single = 1): TStatus;
-    function GetTransform: IGdiMatrix;
-    procedure SetTransform(Matrix: IGdiMatrix);
-    function ResetTransform: TStatus;
-    function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
     function GetWrapMode: TGdiWrapMode;
     procedure SetWrapMode(WrapMode: TGdiWrapMode);
   end;
@@ -4621,6 +4609,13 @@ type
       WrapMode: TGdiWrapMode = WrapModeClamp); overload;
     constructor Create(const Points: array of TGdiPointI;
       WrapMode: TGdiWrapMode = WrapModeClamp); overload;
+    function GetTransform: IGdiMatrix; override;
+    procedure SetTransform(Value: IGdiMatrix); override;
+    function ResetTransform: TStatus; override;
+    function MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
+    function TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
+    function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
+    function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus; override;
     function GetCenterColor: TGdiArgb;
     procedure SetCenterColor(Value: TGdiArgb);
     function GetPointCount: Integer;
@@ -4637,21 +4632,10 @@ type
     function GetInterpolationColorCount: Integer;
     function SetInterpolationColors(PresetColors: PArgb; BlendPositions: PSingle; Count: Integer): TStatus;
     function GetInterpolationColors(PresetColors: PArgb; BlendPositions: PSingle; Count: Integer): TStatus;
-    function GetTransform: IGdiMatrix;
-    procedure SetTransform(Value: IGdiMatrix);
     function GetWrapMode: TGdiWrapMode;
     procedure SetWrapMode(Value: TGdiWrapMode);
     procedure SetBlendBellShape(Focus: Single; Scale: Single = 1);
     procedure SetBlendTriangularShape(Focus: Single; Scale: Single = 1);
-    procedure ResetTransform;
-    procedure MultiplyTransform(Matrix: IGdiMatrix;
-      Order: TGdiMatrixOrder = MatrixOrderPrepend);
-    procedure TranslateTransform(DX, DY: Single;
-      Order: TGdiMatrixOrder = MatrixOrderPrepend);
-    procedure ScaleTransform(SX, SY: Single;
-      Order: TGdiMatrixOrder = MatrixOrderPrepend);
-    procedure RotateTransform(Angle: Single;
-      Order: TGdiMatrixOrder = MatrixOrderPrepend);
     procedure GetFocusScales(out XScale, YScale: Single);
     procedure SetFocusScales(XScale, YScale: Single);
   end;
@@ -4913,7 +4897,7 @@ type
       BlendPositions: PSingle; Count: Integer): TStatus;
     function SetBlendBellShape(Focus: Single; Scale: Single = 1): TStatus;
     function SetBlendTriangularShape(Focus: Single; Scale: Single = 1): TStatus;
-    procedure SetTransform(Matrix: IGdiMatrix);
+    procedure SetTransform(Value: IGdiMatrix);
     function  GetTransform: IGdiMatrix;
     function ResetTransform: TStatus;
     function MultiplyTransform(Matrix: IGdiMatrix;
@@ -4984,7 +4968,7 @@ type
     function TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
     function ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
     function RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-    procedure SetTransform(Matrix: IGdiMatrix);
+    procedure SetTransform(Value: IGdiMatrix);
     function GetTransform: IGdiMatrix;
     function SetPageUnit(Unit_: TUnit): TStatus;
     function SetPageScale(Scale: Single): TStatus;
@@ -7062,6 +7046,41 @@ begin
   SetStatus(GdipGetBrushType(FNativeBrush, Result));
 end;
 
+function TGdiBrush.GetTransform: IGdiMatrix;
+begin
+	Result := TGdiMatrix.Create;
+end;
+
+procedure TGdiBrush.SetTransform(Value: IGdiMatrix);
+begin
+
+end;
+
+function TGdiBrush.ResetTransform: TStatus;
+begin
+	Result := Ok;
+end;
+
+function TGdiBrush.MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+	Result := Ok;
+end;
+
+function TGdiBrush.TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+	Result := Ok;
+end;
+
+function TGdiBrush.ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+	Result := Ok;
+end;
+
+function TGdiBrush.RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+	Result := Ok;
+end;
+
 { TGdiSolidBrush }
 
 constructor TGdiSolidBrush.Create;
@@ -7176,16 +7195,17 @@ begin
   SetNativeBrush(Texture);
 end;
 
-function TGdiTextureBrush.SetTransform(Matrix: IGdiMatrix): TStatus;
+procedure TGdiTextureBrush.SetTransform(Value: IGdiMatrix);
 begin
-  Result := SetStatus(GdipSetTextureTransform(GpTexture(FNativeBrush),
-    Matrix.NativeMatrix));
+  SetStatus(GdipSetTextureTransform(GpTexture(FNativeBrush),
+    Value.NativeMatrix));
 end;
 
-function TGdiTextureBrush.GetTransform(Matrix: IGdiMatrix): TStatus;
+function TGdiTextureBrush.GetTransform: IGdiMatrix;
 begin
-  Result := SetStatus(GdipGetTextureTransform(GpTexture(FNativeBrush),
-    Matrix.NativeMatrix));
+  Result := TGdiMatrix.Create;
+  SetStatus(GdipGetTextureTransform(GpTexture(FNativeBrush),
+    Result.NativeMatrix));
 end;
 
 function TGdiTextureBrush.ResetTransform: TStatus;
@@ -7309,6 +7329,44 @@ begin
   SetNativeBrush(Brush);
 end;
 
+function TGdiLinearGradientBrush.GetTransform: IGdiMatrix;
+begin
+  Result := TGdiMatrix.Create;
+  SetStatus(GdipGetLineTransform(FNativeBrush, Result.NativeMatrix));
+end;
+
+procedure TGdiLinearGradientBrush.SetTransform(Value: IGdiMatrix);
+begin
+  SetStatus(GdipSetLineTransform(FNativeBrush, Value.NativeMatrix));
+end;
+
+function TGdiLinearGradientBrush.ResetTransform: TStatus;
+begin
+  Result := SetStatus(GdiPresetLineTransform(FNativeBrush));
+end;
+
+function TGdiLinearGradientBrush.MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+  Result := SetStatus(GdipMultiplyLineTransform(FNativeBrush,
+    Matrix.NativeMatrix, Order));
+end;
+
+function TGdiLinearGradientBrush.TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+  Result := SetStatus(GdipTranslateLineTransform(FNativeBrush, DX, DY, Order));
+end;
+
+function TGdiLinearGradientBrush.ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+  Result := SetStatus(GdipScaleLineTransform(FNativeBrush, SX, SY, Order));
+end;
+
+function TGdiLinearGradientBrush.RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+  Result := SetStatus(GdipRotateLineTransform(FNativeBrush,
+    Angle, Order));
+end;
+
 function TGdiLinearGradientBrush.SetLinearColors(Color1, Color2: TGdiArgb): TStatus;
 begin
   Result := SetStatus(GdipSetLineColors(FNativeBrush, Color1, Color2));
@@ -7414,44 +7472,6 @@ begin
   Result := SetStatus(GdipSetLineLinearBlend(FNativeBrush, Focus, Scale));
 end;
 
-function TGdiLinearGradientBrush.GetTransform: IGdiMatrix;
-begin
-  Result := TGdiMatrix.Create;
-  SetStatus(GdipGetLineTransform(FNativeBrush, Result.NativeMatrix));
-end;
-
-procedure TGdiLinearGradientBrush.SetTransform(Matrix: IGdiMatrix);
-begin
-  SetStatus(GdipSetLineTransform(FNativeBrush, Matrix.NativeMatrix));
-end;
-
-function TGdiLinearGradientBrush.ResetTransform: TStatus;
-begin
-  Result := SetStatus(GdiPresetLineTransform(FNativeBrush));
-end;
-
-function TGdiLinearGradientBrush.MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-begin
-  Result := SetStatus(GdipMultiplyLineTransform(FNativeBrush,
-    Matrix.NativeMatrix, Order));
-end;
-
-function TGdiLinearGradientBrush.TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-begin
-  Result := SetStatus(GdipTranslateLineTransform(FNativeBrush, DX, DY, Order));
-end;
-
-function TGdiLinearGradientBrush.ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-begin
-  Result := SetStatus(GdipScaleLineTransform(FNativeBrush, SX, SY, Order));
-end;
-
-function TGdiLinearGradientBrush.RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
-begin
-  Result := SetStatus(GdipRotateLineTransform(FNativeBrush,
-    Angle, Order));
-end;
-
 function TGdiLinearGradientBrush.GetWrapMode: TGdiWrapMode;
 begin
   SetStatus(GdipGetLineWrapMode(FNativeBrush, Result));
@@ -7482,6 +7502,47 @@ constructor TGdiPathGradientBrush.Create(const Points: array of TGdiPointI;
 begin
   inherited Create;
   SetStatus(GdipCreatePathGradientI(@Points[0], Length(Points), WrapMode, FNativeBrush));
+end;
+
+function TGdiPathGradientBrush.GetTransform: IGdiMatrix;
+begin
+  Result := TGdiMatrix.Create;
+  SetStatus(GdipGetPathGradientTransform(FNativeBrush, Result.NativeMatrix));
+end;
+
+function TGdiPathGradientBrush.GetWrapMode: TGdiWrapMode;
+begin
+  SetStatus(GdipGetPathGradientWrapMode(FNativeBrush, Result));
+end;
+
+function TGdiPathGradientBrush.MultiplyTransform(Matrix: IGdiMatrix;
+  Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+  Result := SetStatus(GdipMultiplyPathGradientTransform(FNativeBrush,
+    Matrix.NativeMatrix, Order));
+end;
+
+function TGdiPathGradientBrush.ResetTransform: TStatus;
+begin
+  Result := SetStatus(GdipResetPathGradientTransform(FNativeBrush));
+end;
+
+function TGdiPathGradientBrush.RotateTransform(Angle: Single;
+  Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+  Result := SetStatus(GdipRotatePathGradientTransform(FNativeBrush, Angle, Order));
+end;
+
+function TGdiPathGradientBrush.ScaleTransform(SX, SY: Single;
+  Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+  Result := SetStatus(GdipScalePathGradientTransform(FNativeBrush, SX, SY, Order));
+end;
+
+function TGdiPathGradientBrush.TranslateTransform(DX, DY: Single;
+  Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
+begin
+  Result := SetStatus(GdipTranslatePathGradientTransform(FNativeBrush, DX, DY, Order));
 end;
 
 function TGdiPathGradientBrush.GetCenterColor: TGdiArgb;
@@ -7564,41 +7625,6 @@ begin
   SetStatus(GdipGetPathGradientRectI(FNativeBrush, @Result));
 end;
 
-function TGdiPathGradientBrush.GetTransform: IGdiMatrix;
-begin
-  Result := TGdiMatrix.Create;
-  SetStatus(GdipGetPathGradientTransform(FNativeBrush, Result.NativeMatrix));
-end;
-
-function TGdiPathGradientBrush.GetWrapMode: TGdiWrapMode;
-begin
-  SetStatus(GdipGetPathGradientWrapMode(FNativeBrush, Result));
-end;
-
-procedure TGdiPathGradientBrush.MultiplyTransform(Matrix: IGdiMatrix;
-  Order: TGdiMatrixOrder);
-begin
-  SetStatus(GdipMultiplyPathGradientTransform(FNativeBrush,
-    Matrix.NativeMatrix, Order));
-end;
-
-procedure TGdiPathGradientBrush.ResetTransform;
-begin
-  SetStatus(GdipResetPathGradientTransform(FNativeBrush));
-end;
-
-procedure TGdiPathGradientBrush.RotateTransform(Angle: Single;
-  Order: TGdiMatrixOrder);
-begin
-  SetStatus(GdipRotatePathGradientTransform(FNativeBrush, Angle, Order));
-end;
-
-procedure TGdiPathGradientBrush.ScaleTransform(SX, SY: Single;
-  Order: TGdiMatrixOrder);
-begin
-  SetStatus(GdipScalePathGradientTransform(FNativeBrush, SX, SY, Order));
-end;
-
 procedure TGdiPathGradientBrush.SetBlendBellShape(Focus, Scale: Single);
 begin
   SetStatus(GdipSetPathGradientSigmaBlend(FNativeBrush, Focus, Scale));
@@ -7653,13 +7679,12 @@ begin
   SetStatus(GdipSetPathGradientWrapMode(FNativeBrush, Value));
 end;
 
-procedure TGdiPathGradientBrush.TranslateTransform(DX, DY: Single;
-  Order: TGdiMatrixOrder);
-begin
-  SetStatus(GdipTranslatePathGradientTransform(FNativeBrush, DX, DY, Order));
-end;
-
 { TGdiHatchBrush }
+
+constructor TGdiHatchBrush.Create;
+begin
+  inherited Create;
+end;
 
 constructor TGdiHatchBrush.Create(HatchStyle: THatchStyle; ForeColor: TGdiArgb; BackColor: TGdiArgb = argbClear);
 var
@@ -7686,10 +7711,7 @@ begin
   SetStatus(GdipGetHatchBackgroundColor(GpHatch(FNativeBrush), Result));
 end;
 
-constructor TGdiHatchBrush.Create;
-begin
-  inherited Create;
-end;
+{ TGdiImage }
 
 constructor TGdiImage.Create(Filename: WideString;
   UseEmbeddedColorManagement: Boolean = False);
@@ -8492,10 +8514,10 @@ begin
   FLastStatus := GdipSetPixelOffsetMode(FNativeGraphics, pixelOffsetMode);
 end;
 
-procedure  TGdiGraphics.SetTransform(Matrix: IGdiMatrix);
+procedure  TGdiGraphics.SetTransform(Value: IGdiMatrix);
 begin
-  if Matrix <> nil then
-    SetStatus(GdipSetWorldTransform(FNativeGraphics, Matrix.NativeMatrix))
+  if Value <> nil then
+    SetStatus(GdipSetWorldTransform(FNativeGraphics, Value.NativeMatrix))
   else
     SetStatus(GdipSetWorldTransform(FNativeGraphics, nil));
 end;
@@ -11636,9 +11658,9 @@ begin
   SetStatus(GdipGetPathGradientTransform(FNativeBrush, Result.NativeMatrix));
 end;
 
-procedure TGdiGradientBrush.SetTransform(Matrix: IGdiMatrix);
+procedure TGdiGradientBrush.SetTransform(Value: IGdiMatrix);
 begin
-  SetStatus(GdipSetPathGradientTransform(FNativeBrush, Matrix.NativeMatrix));
+  SetStatus(GdipSetPathGradientTransform(FNativeBrush, Value.NativeMatrix));
 end;
 
 function TGdiGradientBrush.ResetTransform: TStatus;

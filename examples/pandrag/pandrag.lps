@@ -4,7 +4,7 @@
     <PathDelim Value="\"/>
     <Version Value="9"/>
     <BuildModes Active="Debug"/>
-    <Units Count="9">
+    <Units Count="11">
       <Unit0>
         <Filename Value="pandrag.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -12,7 +12,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="60"/>
       </Unit0>
       <Unit1>
         <Filename Value="main.pas"/>
@@ -21,10 +21,8 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
-        <IsVisibleTab Value="True"/>
-        <TopLine Value="109"/>
-        <CursorPos X="23" Y="119"/>
-        <UsageCount Value="55"/>
+        <CursorPos X="49" Y="156"/>
+        <UsageCount Value="60"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
@@ -33,7 +31,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="2295"/>
         <CursorPos X="32" Y="2307"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="13"/>
         <Bookmarks Count="1">
           <Item0 X="19" Y="2288" ID="1"/>
         </Bookmarks>
@@ -43,130 +41,188 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="116"/>
         <CursorPos X="3" Y="124"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="13"/>
       </Unit3>
       <Unit4>
         <Filename Value="..\..\Components\Cross.Codebot\source\codebot.interop.windows.direct2d.pas"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="13"/>
       </Unit4>
       <Unit5>
         <Filename Value="..\..\source\codebot.graphics.types.pas"/>
         <UnitName Value="Codebot.Graphics.Types"/>
-        <EditorIndex Value="4"/>
-        <CursorPos X="22" Y="17"/>
-        <UsageCount Value="21"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="485"/>
+        <CursorPos X="70" Y="485"/>
+        <UsageCount Value="24"/>
         <Loaded Value="True"/>
       </Unit5>
       <Unit6>
         <Filename Value="..\..\source\codebot.graphics.pas"/>
         <UnitName Value="Codebot.Graphics"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="524"/>
+        <TopLine Value="521"/>
         <CursorPos X="3" Y="526"/>
-        <UsageCount Value="19"/>
+        <UsageCount Value="22"/>
         <Loaded Value="True"/>
       </Unit6>
       <Unit7>
         <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
         <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
-        <EditorIndex Value="2"/>
-        <TopLine Value="2248"/>
-        <CursorPos X="42" Y="2265"/>
-        <UsageCount Value="19"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="2327"/>
+        <CursorPos X="32" Y="2351"/>
+        <UsageCount Value="22"/>
         <Loaded Value="True"/>
       </Unit7>
       <Unit8>
         <Filename Value="..\..\source\codebot.interop.windows.direct2d.pas"/>
         <UnitName Value="Codebot.Interop.Windows.Direct2D"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="374"/>
         <CursorPos X="37" Y="386"/>
-        <UsageCount Value="10"/>
-        <Loaded Value="True"/>
+        <UsageCount Value="11"/>
       </Unit8>
+      <Unit9>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="1625"/>
+        <CursorPos X="19" Y="1660"/>
+        <UsageCount Value="12"/>
+        <Bookmarks Count="1">
+          <Item0 X="22" Y="1609" ID="1"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\..\source\codebot.interop.windows.gdiplus.pas"/>
+        <UnitName Value="Codebot.Interop.Windows.GdiPlus"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="1593"/>
+        <CursorPos X="14" Y="1611"/>
+        <UsageCount Value="12"/>
+        <Bookmarks Count="1">
+          <Item0 X="46" Y="7200" ID="2"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit10>
     </Units>
-    <JumpHistory Count="21" HistoryIndex="20">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="main.pas"/>
-        <Caret Line="38" TopLine="19"/>
+        <Filename Value="..\..\source\codebot.interop.windows.gdiplus.pas"/>
+        <Caret Line="4613" Column="15" TopLine="4610"/>
       </Position1>
       <Position2>
-        <Filename Value="main.pas"/>
-        <Caret Line="141" TopLine="110"/>
+        <Filename Value="..\..\source\codebot.interop.windows.gdiplus.pas"/>
       </Position2>
       <Position3>
-        <Filename Value="main.pas"/>
-        <Caret Line="48" Column="3" TopLine="46"/>
+        <Filename Value="..\..\source\codebot.interop.windows.gdiplus.pas"/>
+        <Caret Line="11663" Column="61" TopLine="11631"/>
       </Position3>
       <Position4>
-        <Filename Value="main.pas"/>
-        <Caret Line="140" Column="36" TopLine="107"/>
+        <Filename Value="..\..\source\codebot.interop.windows.gdiplus.pas"/>
+        <Caret Line="7201" Column="10" TopLine="7183"/>
       </Position4>
       <Position5>
-        <Filename Value="main.pas"/>
-        <Caret Line="114" TopLine="99"/>
+        <Filename Value="..\..\source\codebot.interop.windows.gdiplus.pas"/>
+        <Caret Line="7340" Column="53" TopLine="7322"/>
       </Position5>
       <Position6>
-        <Filename Value="main.pas"/>
-        <Caret Line="147" Column="10" TopLine="126"/>
+        <Filename Value="..\..\source\codebot.interop.windows.gdiplus.pas"/>
+        <Caret Line="7547" TopLine="7532"/>
       </Position6>
       <Position7>
-        <Filename Value="main.pas"/>
-        <Caret Line="65" TopLine="53"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="1609" Column="67" TopLine="1592"/>
       </Position7>
       <Position8>
-        <Filename Value="main.pas"/>
-        <Caret Line="90" Column="45" TopLine="74"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="445" Column="5" TopLine="440"/>
       </Position8>
       <Position9>
-        <Filename Value="main.pas"/>
-        <Caret Line="115" Column="49" TopLine="96"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
+        <Caret Line="2265" Column="42" TopLine="2248"/>
       </Position9>
       <Position10>
-        <Filename Value="..\..\source\codebot.graphics.types.pas"/>
-        <Caret Line="624" Column="32" TopLine="608"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
       </Position10>
       <Position11>
-        <Filename Value="..\..\source\codebot.graphics.types.pas"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
+        <Caret Line="336" Column="24" TopLine="318"/>
       </Position11>
       <Position12>
-        <Filename Value="main.pas"/>
-        <Caret Line="88" Column="45" TopLine="63"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
       </Position12>
       <Position13>
-        <Filename Value="main.pas"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
+        <Caret Line="336" Column="24" TopLine="306"/>
       </Position13>
       <Position14>
-        <Filename Value="..\..\source\codebot.graphics.pas"/>
-        <Caret Line="526" Column="3" TopLine="524"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="467" Column="53" TopLine="440"/>
       </Position14>
       <Position15>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="37" Column="10" TopLine="21"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
       </Position15>
       <Position16>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="332" Column="21" TopLine="314"/>
       </Position16>
       <Position17>
-        <Filename Value="main.pas"/>
-        <Caret Line="117" Column="43" TopLine="91"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
       </Position17>
       <Position18>
-        <Filename Value="..\..\source\codebot.graphics.pas"/>
-        <Caret Line="526" Column="3" TopLine="524"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="332" Column="21" TopLine="302"/>
       </Position18>
       <Position19>
-        <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2604" Column="3" TopLine="2600"/>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="1621" Column="35" TopLine="1590"/>
       </Position19>
       <Position20>
         <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
+        <Caret Line="2311" Column="35" TopLine="2284"/>
       </Position20>
       <Position21>
         <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <Caret Line="2206" Column="3" TopLine="2242"/>
       </Position21>
+      <Position22>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+      </Position22>
+      <Position23>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="332" Column="21" TopLine="302"/>
+      </Position23>
+      <Position24>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="1605" Column="24" TopLine="1591"/>
+      </Position24>
+      <Position25>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="1817" Column="3" TopLine="1815"/>
+      </Position25>
+      <Position26>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="383" Column="16" TopLine="377"/>
+      </Position26>
+      <Position27>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="1608" Column="29" TopLine="1587"/>
+      </Position27>
+      <Position28>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="1609" Column="21" TopLine="1587"/>
+      </Position28>
+      <Position29>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="1618" Column="52" TopLine="1593"/>
+      </Position29>
+      <Position30>
+        <Filename Value="..\..\source\codebot.graphics.windows.surfacegdiplus.pas"/>
+        <Caret Line="1616" Column="39" TopLine="1596"/>
+      </Position30>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>

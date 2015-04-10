@@ -558,10 +558,9 @@ end;
 function NewSplash: ISplash;
 begin
   if LoadD2D then
-    if not Assigned(NewBitmapProc) then
-      NewBitmapProc := NewBitmapD2DStub
-    else
-      NewBitmapProc := NewBitmapGdiStub;
+		NewBitmapProc := NewBitmapD2DStub
+	else
+		NewBitmapProc := NewBitmapGdiStub;
   Result := NewSplashWin;
 end;
 {$endif}
