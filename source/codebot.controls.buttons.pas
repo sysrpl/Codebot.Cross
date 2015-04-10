@@ -156,7 +156,7 @@ begin
   if FShowCaption and (S <> '') then
   begin
     Size := TextSize(S);
-    PreferredWidth := Size.X + W + 16;
+    PreferredWidth := Size.X + W + 32;
     PreferredHeight := W + 8;
   end;
   if PreferredWidth < DefThinSize then

@@ -197,6 +197,19 @@ type
     constructor Create(const Rect: TRectF);
   end;
 
+{ TBitmapBrushGdi }
+
+  TBitmapBrushGdi = class(TBrushGdi, IBitmapBrush)
+  private
+    FBitmap: IBitmap;
+    FTextureBrush: IGdiTextureBrush;
+  protected
+    function HandleAvailable: Boolean; override;
+  public
+    constructor Create(Bitmap: IBitmap);
+    procedure SetOpacity(Value: Byte); override;
+ end;
+
 { TFontGdi }
 
   TFontGdi = class(TInterfacedObject, IFont)
@@ -220,19 +233,6 @@ type
     property Style: TFontStyles read GetStyle write SetStyle;
     property Size: Float read GetSize write SetSize;
   end;
-
-{ TBitmapBrushGdi }
-
-  TBitmapBrushGdi = class(TBrushGdi, IBitmapBrush)
-  private
-    FBitmap: IBitmap;
-    FTextureBrush: IGdiTextureBrush;
-  protected
-    function HandleAvailable: Boolean; override;
-  public
-    constructor Create(Bitmap: IBitmap);
-    procedure SetOpacity(Value: Byte); override;
- end;
 
 { TPathGdi }
 
@@ -442,6 +442,8 @@ var
   P: PGdiPointF;
 begin
   P := @Result;
+  P.X := Point.X;
+  P.Y := Point.Y;
   FMatrix.TransformPoints(P, 1);
 end;
 
@@ -1590,15 +1592,46 @@ begin
       S := S or FontStyleUnderline;
     if fsStrikeOut in F.FFontObject.Style then
       S := S or FontStyleStrikeout;
-    E := F.FFontObject.Height / PointsPerInch * DeviceIndependentPixels;
+    E := F.FFontObject.Height / DeviceIndependentPixels * PointsPerInch;
     G.AddString(Text, Length(Text), A, S, E, TGdiRectF(Rect), StringFormat);
     Path.Add(G);
   end;
 end;
 
+procedure ApplyMatrix(Brush: IGdiBrush; Matrix: IMatrix; out State: IGdiMatrix);
+var
+  M: IGdiMatrix;
+begin
+  State := NewGdiMatrix;
+  if Brush = nil then
+  	Exit;
+  M := (Matrix as TMatrixGdi).FMatrix.Clone;
+	State := Brush.GetTransform;
+  M.Multiply(State);
+  Brush.SetTransform(M);
+end;
+
+procedure RestoreMatrix(Brush: IGdiBrush; State: IGdiMatrix);
+begin
+  if Brush = nil then
+  	Exit;
+  Brush.SetTransform(State);
+end;
+
+function PenWidth(Matrix: IMatrix; Width: Float): Float;
+const
+	A: TPointF = (X: 1; Y : 0);
+	B: TPointF = (X: 0; Y : 0);
+begin
+  Result := Matrix.Transform(A).Dist(Matrix.Transform(B));
+  Result := Abs(Result * Width);
+end;
+
 procedure TSurfaceGdi.FillOrStroke(Brush: IBrush; Pen: IPen; Preserve: Boolean);
 var
+  State: IGdiMatrix;
   P: TSurfacePathGdi;
+  W: Float;
 begin
   if not HandleAvailable then
     Exit;
@@ -1607,10 +1640,26 @@ begin
   if P.FData = nil then
     Exit;
   if (Brush is TBrushGdi) and (Brush as TBrushGdi).HandleAvailable then
-    FGraphics.FillPath((Brush as TBrushGdi).FBrush, P.FData)
-  else if (Pen is TPenGdi) and (Pen as TPenGdi).HandleAvailable then
-    FGraphics.DrawPath((Pen as TPenGdi).FPen, P.FData);
-  if not Preserve then
+  begin
+    ApplyMatrix((Brush as TBrushGdi).FBrush, GetMatrix, State);
+    FGraphics.FillPath((Brush as TBrushGdi).FBrush, P.FData);
+    RestoreMatrix((Brush as TBrushGdi).FBrush, State);
+	end
+	else if (Pen is TPenGdi) and (Pen as TPenGdi).HandleAvailable then
+  begin
+    W := Pen.Width;
+    Pen.Width := PenWidth(GetMatrix, W);
+    if Pen.Brush <> nil then
+    begin
+  		ApplyMatrix((Pen.Brush as TBrushGdi).FBrush, GetMatrix, State);
+	    FGraphics.DrawPath((Pen as TPenGdi).FPen, P.FData);
+      RestoreMatrix((Pen.Brush as TBrushGdi).FBrush, State);
+		end
+    else
+	    FGraphics.DrawPath((Pen as TPenGdi).FPen, P.FData);
+    Pen.Width := W;
+	end;
+	if not Preserve then
     P.Remove;
 end;
 
