@@ -217,6 +217,7 @@ type
     FFont: IGdiFont;
     FFontObject: TFont;
     FColor: TColorB;
+    FQuality: TFontQuality;
     function Font: IGdiFont;
   public
     constructor Create(F: TFont);
@@ -224,12 +225,15 @@ type
     function GetName: string;
     function GetColor: TColorB;
     procedure SetColor(Value: TColorB);
+    function GetQuality: TFontQuality;
+    procedure SetQuality(Value: TFontQuality);
     function GetStyle: TFontStyles;
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
     property Name: string read GetName;
     property Color: TColorB read GetColor write SetColor;
+    property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
     property Size: Float read GetSize write SetSize;
   end;
@@ -974,7 +978,8 @@ begin
   inherited Create;
   FFontObject := TFont.Create;
   FFontObject.Assign(F);
-  FColor := FFontObject.Color;
+  FColor := F.Color;
+  FQuality := F.Quality;
 end;
 
 destructor TFontGdi.Destroy;
@@ -1011,6 +1016,16 @@ end;
 procedure TFontGdi.SetColor(Value: TColorB);
 begin
   FColor := Value;
+end;
+
+function TFontGdi.GetQuality: TFontQuality;
+begin
+  Result := FQuality;
+end;
+
+procedure TFontGdi.SetQuality(Value: TFontQuality);
+begin
+	FQuality := Value;
 end;
 
 function TFontGdi.GetStyle: TFontStyles;
@@ -1213,7 +1228,6 @@ begin
     FGraphics.Transform := M;
     FGraphics.SmoothingMode := SmoothingModeHighQuality;
     FGraphics.InterpolationMode := InterpolationModeHighQuality;
-    FGraphics.TextRenderingHint := TextRenderingHintClearTypeGridFit;
   end;
 end;
 
@@ -1533,6 +1547,12 @@ end;
 
 procedure TSurfaceGdi.TextOut(Font: IFont; const Text: string; const Rect: TRectF;
   Direction: TDirection; Immediate: Boolean = True);
+const
+  TextHints: array[TFontQuality] of TTextRenderingHint = (
+	  TextRenderingHintSystemDefault, TextRenderingHintSingleBitPerPixelGridFit,
+    	TextRenderingHintAntiAliasGridFit, TextRenderingHintSingleBitPerPixelGridFit,
+      TextRenderingHintAntiAliasGridFit, TextRenderingHintClearTypeGridFit,
+      TextRenderingHintClearTypeGridFit);
 var
   F: TFontGdi;
   StringFormat: IGdiStringFormat;
@@ -1571,6 +1591,7 @@ begin
   end;
   Wrap := not (Direction in [drLeft..drCenter]);
   StringFormat := NewGdiStringFormat(HAlign, VAlign, Wrap);
+  FGraphics.TextRenderingHint := TextHints[Font.Quality];
   if SurfaceOptions.ErrorCorrection or Immediate then
   begin
     M := FGraphics.GetTransform;

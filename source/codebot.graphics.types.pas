@@ -602,12 +602,15 @@ type
     function GetName: string;
     function GetColor: TColorB;
     procedure SetColor(Value: TColorB);
+    function GetQuality: TFontQuality;
+    procedure SetQuality(Value: TFontQuality);
     function GetStyle: TFontStyles;
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
     property Name: string read GetName;
     property Color: TColorB read GetColor write SetColor;
+    property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
     property Size: Float read GetSize write SetSize;
   end;
@@ -774,7 +777,7 @@ type
 
 var
   SurfaceOptions: TSurfaceOptions = (
-    HardwareRendering: True;
+    HardwareRendering: False;
     SoftwareBuffering: False;
     ErrorCorrection: False;
     GammaCorrection: False;
