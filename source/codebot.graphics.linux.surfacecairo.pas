@@ -2367,8 +2367,8 @@ begin
     g_object_unref(Bitmap);
 end;
 
-function SplashExpose(widget: PGtkWidget; event: PGdkEventExpose;
-    userdata: GPointer): GBoolean; cdecl;
+procedure SplashExpose(widget: PGtkWidget; event: PGdkEventExpose;
+    userdata: GPointer); cdecl;
 var
   Splash: TSplashCairo absolute userdata;
   BitmapSurface: TBitmapSurfaceCairo;

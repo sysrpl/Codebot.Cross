@@ -2471,7 +2471,6 @@ var
   R: TRectI;
   C: TColorB;
   G: IGradientBrush;
-  P: IPen;
 begin
   R := Rect;
   C := Control.CurrentColor;

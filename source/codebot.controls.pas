@@ -239,7 +239,6 @@ begin
   FOwner := AOwner;
 end;
 
-
 destructor TNotifyCollection<T>.Destroy;
 var
   EmptyNotify: TItemNotifyDelegate;
