@@ -74,7 +74,7 @@ type
 { TCompare\<T\> is used to compare two items }
   TCompare<T> = function(constref A, B: T): Integer;
 { TConvert\<Source, Target\> is used to convert from one type to another }
-  TConvert<TItem, T> = function(constref Item: TItem): T;
+  // TConvert<TItem, T> = function(constref Item: TItem): T; see issue #28766
 { TConvertString\<T\> is used to convert a type to a string }
   TConvertString<TItem> = function(constref Item: TItem): string;
 
