@@ -34,7 +34,6 @@ type
     FDown: Boolean;
     FOnDrawButton: TDrawStateEvent;
     FShowCaption: Boolean;
-    FMouseInControl: Boolean;
     procedure SetKind(Value: TButtonKind);
     procedure SetDown(Value: Boolean);
     procedure SetImages(Value: TImageStrip);
@@ -268,15 +267,12 @@ begin
 end;
 
 procedure TCustomThinButton.MouseMove(Shift: TShiftState; X, Y: Integer);
-var
-  R: TRectI;
 begin
   inherited MouseMove(Shift, X, Y);
   if FDown then
     Exit;
   if FKind = bkSplitter then
     Exit;
-  R := ClientRect;
 end;
 
 procedure TCustomThinButton.MouseUp(Button: TMouseButton; Shift: TShiftState;

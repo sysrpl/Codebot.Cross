@@ -1615,7 +1615,6 @@ var
   PriorIndex: Integer;
   CanSelect: Boolean;
   WasSelected: Boolean;
-  I: Integer;
 begin
   if FLocked then
     if Value > -1 then

@@ -84,9 +84,6 @@ type
     FPassword: string;
     FTransfering: Boolean;
     FFindMask: TFileSystemAttributes;
-    FFindPath: string;
-    FFindName: string;
-    FFindEnds: string;
     FFindList: StringArray;
     FFindIndex: Integer;
     FOnCommand: TTextEvent;
