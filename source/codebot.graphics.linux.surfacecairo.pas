@@ -1650,6 +1650,7 @@ var
   R: TRectI;
   W, H: LongInt;
   M: TCairoMatrix;
+  C: TColorF;
   Options: PCairoFontOptions;
 begin
   if SurfaceOptions.ErrorCorrection or Immediate then
@@ -1702,7 +1703,11 @@ begin
     Options);
   cairo_move_to(FCairo, 0, 0);
   if SurfaceOptions.ErrorCorrection or Immediate then
-    pango_cairo_show_layout(FCairo, FLayout)
+  begin
+    C := TColorF(Font.Color);
+    cairo_set_source_rgba(FCairo, C.Red, C.Green, C.Blue, C.Alpha);
+    pango_cairo_show_layout(FCairo, FLayout);
+  end
   else
     pango_cairo_layout_path(FCairo, FLayout);
   cairo_set_matrix(FCairo, @M);
