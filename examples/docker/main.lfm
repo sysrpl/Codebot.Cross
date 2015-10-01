@@ -17,7 +17,7 @@ object Form1: TForm1
     Left = 8
     Height = 30
     Top = 8
-    Width = 166
+    Width = 182
     AutoSize = True
     Caption = 'Display on desktop'
     Down = False
