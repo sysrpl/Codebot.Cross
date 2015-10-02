@@ -60,6 +60,8 @@ type
     procedure SetHue(Value: Float);
     procedure SetStyle(Value: THueStyle);
   protected
+    function GetColorValue: TColorB; override;
+    procedure SetColorValue(Value: TColorB); override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure Change; override;
     procedure ChangeMouse(X, Y: Integer); override;
@@ -112,13 +114,13 @@ type
     FSaturation: Single;
     FLightness: Single;
     FStyle: TSaturationStyle;
-    function GetColorValue: TColorB;
-    procedure SetColorValue(Value: TColorB);
     procedure SetHue(Value: Single);
     procedure SetSaturation(Value: Single);
     procedure SetLightness(Value: Single);
     procedure SetStyle(Value: TSaturationStyle);
   protected
+    function GetColorValue: TColorB; override;
+    procedure SetColorValue(Value: TColorB); override;
     procedure ChangeMouse(X, Y: Integer); override;
     procedure Render; override;
   public
@@ -246,6 +248,16 @@ begin
     else
       Hue := (W + W + H + H - Y) / D;
   end;
+end;
+
+function THuePicker.GetColorValue: TColorB;
+begin
+  Result := HueToColor(FHue);
+end;
+
+procedure THuePicker.SetColorValue(Value: TColorB);
+begin
+  Hue := ColorToHue(Value);
 end;
 
 procedure THuePicker.SetSaturationPicker(Value: TSaturationPicker);

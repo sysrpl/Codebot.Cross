@@ -1397,7 +1397,7 @@ end;
 
 procedure TSurfaceCairo.SetMatrix(Value: IMatrix);
 var
-  M, B: IMatrixCairo;
+  M: IMatrixCairo;
 begin
   FMatrix.Identity;
   if Value is TMatrixCairo then
@@ -1812,8 +1812,6 @@ end;
 { TClipSurfaceCairo }
 
 constructor TClipSurfaceCairo.Create(Drawable: PGdkDrawable; const Clip: TRectI);
-var
-  M, I: TCairoMatrix;
 begin
   inherited Create;
   FCairo := gdk_cairo_create(Drawable);
