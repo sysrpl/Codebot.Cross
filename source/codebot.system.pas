@@ -220,6 +220,8 @@ procedure SinCos(const X: Single; out S, C: Single); overload;
 procedure SinCos(constref X: Double; out S, C: Double); overload;
 { Bind a value between 0 and 1 }
 function Clamp(Percent: Float): Float;
+{ Convert a float to a byte }
+function FloatToByte(F: Float): Byte;
 { Convert degrees to radians }
 function DegToRad(D: Float): Float;
 { Convert radians to degrees }
@@ -986,6 +988,16 @@ begin
     Result := 1
   else
     Result := Percent;
+end;
+
+function FloatToByte(F: Float): Byte;
+begin
+  if F < 0 then
+    F := 0;
+  if F > 1 then
+    Result := 1
+  else
+    Result := Round(F * $FF);
 end;
 
 function DegToRad(D: Float): Float;

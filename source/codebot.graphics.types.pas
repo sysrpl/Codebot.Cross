@@ -464,6 +464,9 @@ function StrToColor(S: string): TColorB;
 function ColorToStr(C: TColorB): string;
 procedure RegisterColorName(Color: TColorB; Name: string);
 
+function HueToColor(H: Float): TColorB;
+function ColorToHue(C: TColorB): Float;
+
 function Hue(H: Float): TColorB;
 function HueInvert(H: Float): TColorB;
 function Blend(A, B: TColorB; Percent: Float): TColorB;
@@ -1798,6 +1801,61 @@ const
   OneOverThree = 1 / 3;
 var
   M1, M2: Float;
+
+  function HueToValue(Hue: Float) : Float;
+  var
+    V:  Double;
+  begin
+    if Hue < 0 then
+      Hue := Hue + 1
+    else if Hue > 1 then
+      Hue := Hue - 1;
+    if 6 * Hue < 1 then
+      Result := M1 + (M2 - M1) * Hue * 6
+    else if 2 * Hue < 1 then
+      Result := M2
+    else if 3 * Hue < 2 then
+      Result := M1 + (M2 - M1) * (2 / 3 - Hue) * 6
+    else
+    Result := M1;
+  end;
+
+var
+  H, S, L, R, G, B: Float;
+begin
+  H := Value.Hue;
+  if H < 0 then
+    H := H + Ceil(H)
+  else if H > 1 then
+    H := H - Floor(H);
+  S := Clamp(Value.Saturation);
+  L := Clamp(Value.Lightness);
+  if S = 0 then
+  begin
+    R := L;
+    G := L;
+    B := L
+  end
+  else
+  begin
+    if L <= 0.5 then
+      M2 := L * (1 + S)
+    else
+      M2 := L + S - L * S;
+    M1 := 2 * L - M2;
+    R := HueToValue(H + OneOverThree);
+    G := HueToValue(H);
+    B := HueToValue(H - OneOverThree)
+  end;
+  Result.Red := FloatToByte(R);
+  Result.Green := FloatToByte(G);
+  Result.Blue := FloatToByte(B);
+  Result.Alpha := HiByte;
+end;
+
+
+{var
+  M1, M2: Float;
   H, S, L, R, G, B: Float;
 
   function HueToColor(Hue: Float): Float;
@@ -1839,11 +1897,11 @@ begin
     G := HueToColor(H);
     B := HueToColor(H - OneOverThree)
   end;
-  Result.Red := Round(R * HiByte);
-  Result.Green := Round(G * HiByte);
-  Result.Blue := Round(B * HiByte);
+  Result.Red := FloatToByte(R);
+  Result.Green := FloatToByte(G);
+  Result.Blue := FloatToByte(B);
   Result.Alpha := HiByte;
-end;
+end;}
 
 class operator TColorB.Explicit(Value: TColorB): THSL;
 var
@@ -2416,6 +2474,16 @@ begin
     if ColorNames[I].Name.ToUpper = S then
       Exit;
   end;
+end;
+
+function HueToColor(H: Float): TColorB;
+begin
+  Result := THSL(H);
+end;
+
+function ColorToHue(C: TColorB): Float;
+begin
+  Result := THSL(C).Hue;
 end;
 
 function Hue(H: Float): TColorB;

@@ -8,11 +8,9 @@
       <Unit0>
         <Filename Value="hilite.lpr"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="6"/>
+        <EditorIndex Value="-1"/>
         <CursorPos Y="16"/>
         <UsageCount Value="25"/>
-        <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
       </Unit0>
       <Unit1>
@@ -22,6 +20,8 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="8"/>
         <CursorPos X="14" Y="56"/>
         <UsageCount Value="25"/>
         <Loaded Value="True"/>
@@ -95,50 +95,45 @@
       <Unit11>
         <Filename Value="..\..\source\codebot.controls.highlighter.pas"/>
         <UnitName Value="Codebot.Controls.Highlighter"/>
-        <EditorIndex Value="5"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="109"/>
         <CursorPos X="27" Y="124"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit11>
       <Unit12>
         <Filename Value="..\..\source\codebot.graphics.pas"/>
         <UnitName Value="Codebot.Graphics"/>
-        <EditorIndex Value="4"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="1431"/>
         <CursorPos Y="1442"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit12>
       <Unit13>
         <Filename Value="..\..\source\codebot.controls.buttons.pas"/>
         <UnitName Value="Codebot.Controls.Buttons"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="291"/>
         <CursorPos X="26" Y="322"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit13>
       <Unit14>
         <Filename Value="..\..\source\codebot.controls.pas"/>
         <UnitName Value="Codebot.Controls"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="111"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="106"/>
         <CursorPos X="3" Y="106"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit14>
       <Unit15>
         <Filename Value="..\..\..\..\lazarus\lcl\controls.pp"/>
         <UnitName Value="Controls"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="1372"/>
         <CursorPos X="14" Y="1388"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit15>
     </Units>
-    <JumpHistory Count="24" HistoryIndex="23">
+    <JumpHistory Count="17" HistoryIndex="16">
       <Position1>
         <Filename Value="main.pas"/>
         <Caret Line="63" Column="55" TopLine="35"/>
@@ -184,57 +179,29 @@
         <Caret Line="16" Column="24"/>
       </Position11>
       <Position12>
-        <Filename Value="..\..\source\codebot.controls.highlighter.pas"/>
-        <Caret Line="43" TopLine="9"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="65" Column="5" TopLine="43"/>
       </Position12>
       <Position13>
-        <Filename Value="..\..\source\codebot.controls.highlighter.pas"/>
-        <Caret Line="53" Column="62" TopLine="25"/>
+        <Filename Value="main.pas"/>
+        <Caret Line="66" Column="7" TopLine="43"/>
       </Position13>
       <Position14>
         <Filename Value="main.pas"/>
-        <Caret Line="65" Column="5" TopLine="43"/>
+        <Caret Line="67" Column="40" TopLine="43"/>
       </Position14>
       <Position15>
         <Filename Value="main.pas"/>
-        <Caret Line="66" Column="7" TopLine="43"/>
+        <Caret Line="66" Column="38" TopLine="43"/>
       </Position15>
       <Position16>
         <Filename Value="main.pas"/>
-        <Caret Line="67" Column="40" TopLine="43"/>
+        <Caret Line="56" Column="14" TopLine="7"/>
       </Position16>
       <Position17>
         <Filename Value="main.pas"/>
-        <Caret Line="66" Column="38" TopLine="43"/>
-      </Position17>
-      <Position18>
-        <Filename Value="main.pas"/>
-        <Caret Line="56" Column="14" TopLine="7"/>
-      </Position18>
-      <Position19>
-        <Filename Value="..\..\source\codebot.controls.buttons.pas"/>
-        <Caret Line="70" Column="3" TopLine="54"/>
-      </Position19>
-      <Position20>
-        <Filename Value="main.pas"/>
         <Caret Line="56" Column="14"/>
-      </Position20>
-      <Position21>
-        <Filename Value="..\..\source\codebot.controls.buttons.pas"/>
-        <Caret Line="71" Column="3" TopLine="49"/>
-      </Position21>
-      <Position22>
-        <Filename Value="..\..\source\codebot.controls.buttons.pas"/>
-        <Caret Line="29" Column="3" TopLine="13"/>
-      </Position22>
-      <Position23>
-        <Filename Value="..\..\source\codebot.controls.buttons.pas"/>
-        <Caret Line="303" Column="23" TopLine="286"/>
-      </Position23>
-      <Position24>
-        <Filename Value="..\..\source\codebot.controls.buttons.pas"/>
-        <Caret Line="322" Column="26" TopLine="291"/>
-      </Position24>
+      </Position17>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>

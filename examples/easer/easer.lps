@@ -8,10 +8,9 @@
       <Unit0>
         <Filename Value="easer.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <CursorPos X="52" Y="21"/>
         <UsageCount Value="31"/>
-        <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="main.pas"/>
@@ -20,6 +19,9 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="286"/>
+        <CursorPos X="15" Y="10"/>
         <UsageCount Value="31"/>
         <Bookmarks Count="1">
           <Item0 Y="53" ID="1"/>
@@ -77,15 +79,13 @@
       <Unit9>
         <Filename Value="..\..\source\codebot.animation.pas"/>
         <UnitName Value="Codebot.Animation"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="1"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="374"/>
         <CursorPos X="17" Y="401"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit9>
     </Units>
-    <JumpHistory Count="10" HistoryIndex="9">
+    <JumpHistory Count="7" HistoryIndex="6">
       <Position1>
         <Filename Value="main.pas"/>
         <Caret Line="306" TopLine="275"/>
@@ -113,17 +113,6 @@
       <Position7>
         <Filename Value="main.pas"/>
       </Position7>
-      <Position8>
-        <Filename Value="..\..\source\codebot.animation.pas"/>
-      </Position8>
-      <Position9>
-        <Filename Value="..\..\source\codebot.animation.pas"/>
-        <Caret Line="89" Column="58" TopLine="62"/>
-      </Position9>
-      <Position10>
-        <Filename Value="..\..\source\codebot.animation.pas"/>
-        <Caret Line="107" Column="34" TopLine="80"/>
-      </Position10>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>
