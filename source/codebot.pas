@@ -24,7 +24,8 @@ uses
   Codebot.Design.ImageListEditor, Codebot.Design.SurfaceBitmapEditor, 
   Codebot.Controls.Buttons, Codebot.Graphics.Markup, 
   Codebot.Controls.Containers, Codebot.Debug, Codebot.Animation, 
-  Codebot.Geometry, Codebot.Controls.Highlighter, LazarusPackageIntf;
+  Codebot.Geometry, Codebot.Controls.Highlighter, Codebot.Input.KeyCommands, 
+  LazarusPackageIntf;
 
 implementation
 

@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified October 2015                               *)
 (*                                                      *)
 (********************************************************)
 
@@ -26,7 +26,7 @@ type
 
   TMouseDelegate = TDelegate<TMouseNotifyEvent>;
 
-  { TMouseMonitor }
+{ TMouseMonitor }
 
   TMouseMonitor = class
   private
@@ -54,7 +54,7 @@ type
 
   TMouseStateArray = TArrayList<TMouseState>;
 
-  { TMouseThread }
+{ TMouseThread }
 
   TMouseThread = class(TThread)
   private

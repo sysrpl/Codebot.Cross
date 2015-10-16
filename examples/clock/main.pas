@@ -20,7 +20,7 @@ type
   TForm1 = class(TForm)
     ScaleBar: TSlideBar;
     procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
-    procedure FormCreate(Sender: TObject);
+    procedure FormShow(Sender: TObject);
     procedure ScaleBarChange(Sender: TObject);
   private
     FSplash: ISplash;
@@ -401,8 +401,10 @@ begin
   DrawLens(Surface);
 end;
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TForm1.FormShow(Sender: TObject);
 begin
+  Sleep(100);
+  OnShow := nil;
   { Default the factor to 1 }
   Factor := 1;
   { And Size to 256 * Factor }

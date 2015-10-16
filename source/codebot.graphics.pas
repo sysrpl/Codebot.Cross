@@ -747,14 +747,14 @@ end;
 
 procedure TSurfaceBitmap.Draw(Canvas: TCanvas; const Rect: TRect);
 var
-  S: ISurface;
+  Surface: ISurface;
 begin
   if Empty then
     Exit;
   HandleNeeded;
-  S := NewSurface(Canvas);
-  if S <> nil then
-    FBitmap.Surface.CopyTo(FBitmap.ClientRect, FBitmap.Surface, Rect, FOpacity);
+  Surface := NewSurface(Canvas);
+  if Surface <> nil then
+    FBitmap.Surface.CopyTo(FBitmap.ClientRect, Surface, Rect, Opacity);
 end;
 
 procedure TSurfaceBitmap.Draw(Surface: ISurface; X, Y: Integer; FrameIndex: Integer = -1);

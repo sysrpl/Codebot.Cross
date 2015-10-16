@@ -707,8 +707,9 @@ type
   TImageFormat = (fmPng, fmJpeg, fmGif, fmBmp, fmIco, fmTiff);
   TResampleQuality = (rqLowest, rqNormal, rqBest);
 
-  IBitmap = interface(ICloneable<IBitmap>)
+  IBitmap = interface // (ICloneable<IBitmap>)
   ['{DB935633-A218-4181-96A2-B0808697150F}']
+    function Clone: IBitmap;
     function GetEmpty: Boolean;
     function GetSurface: ISurface;
     function GetClientRect: TRectI;
@@ -760,7 +761,7 @@ type
 const
   PenMiterLimitDefault = 10;
 
-function StrToImageFormat(const S: string): TImageFormat;
+function StrToImageFormat(S: string): TImageFormat;
 function ImageFormatToStr(F: TImageFormat): string;
 function ImageFormatToMimeType(F: TImageFormat): string;
 
@@ -2557,29 +2558,26 @@ begin
   Result := R * 180 / Pi;
 end;
 
-function StrToImageFormat(const S: string): TImageFormat;
-var
-  Name: string;
+function StrToImageFormat(S: string): TImageFormat;
 begin
-  Name := S.ToLower.Trim.Replace('.', '');
-  if Name = '' then
+  S := S.ToLower;
+  Result := fmPng;
+  if S.EndsWith('png') then
     Result := fmPng
-  else if Name = 'jpeg' then
+  else if S.EndsWith('jpg') then
     Result := fmJpeg
-  else if Name = 'jpg' then
+  else if S.EndsWith('jpeg') then
     Result := fmJpeg
-  else if Name = 'gif' then
+  else if S.EndsWith('gif') then
     Result := fmGif
-  else if Name = 'bmp' then
+  else if S.EndsWith('bmp') then
     Result := fmBmp
-  else if Name = 'ico' then
+  else if S.EndsWith('ico') then
     Result := fmIco
-  else if Name = 'tif' then
+  else if S.EndsWith('tif') then
     Result := fmTiff
-  else if Name = 'tiff' then
-    Result := fmTiff
-  else
-    Result := fmPng;
+  else if S.EndsWith('tiff') then
+    Result := fmTiff;
 end;
 
 function ImageFormatToStr(F: TImageFormat): string;

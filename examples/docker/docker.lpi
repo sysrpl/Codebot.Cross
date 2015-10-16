@@ -245,7 +245,6 @@
         <ComponentName Value="Form1"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
-        <UnitName Value="main"/>
       </Unit1>
       <Unit2>
         <Filename Value="docker.spacing.pas"/>

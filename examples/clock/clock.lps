@@ -11,7 +11,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="21"/>
+        <UsageCount Value="27"/>
       </Unit0>
       <Unit1>
         <Filename Value="main.pas"/>
@@ -21,8 +21,9 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
         <IsVisibleTab Value="True"/>
-        <CursorPos X="29" Y="10"/>
-        <UsageCount Value="21"/>
+        <TopLine Value="398"/>
+        <CursorPos X="12" Y="406"/>
+        <UsageCount Value="27"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
@@ -31,36 +32,33 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="378"/>
         <CursorPos X="17" Y="401"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
       </Unit2>
       <Unit3>
         <Filename Value="../../source/codebot.graphics.types.pas"/>
-        <UnitName Value="Codebot.Graphics.Types"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="742"/>
         <CursorPos X="29" Y="777"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
       </Unit3>
       <Unit4>
         <Filename Value="../../source/codebot.graphics.windows.surfacegdiplus.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="67"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
         <Bookmarks Count="1">
           <Item0 X="32" Y="1216" ID="1"/>
         </Bookmarks>
       </Unit4>
       <Unit5>
         <Filename Value="../../source/codebot.interop.windows.gdiplus.pas"/>
-        <UnitName Value="Codebot.Interop.Windows.GdiPlus"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="372"/>
         <CursorPos X="31" Y="386"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="9"/>
       </Unit5>
     </Units>
-    <JumpHistory Count="11" HistoryIndex="10">
+    <JumpHistory Count="17" HistoryIndex="16">
       <Position1>
         <Filename Value="main.pas"/>
         <Caret Line="9" Column="3"/>
@@ -103,6 +101,30 @@
         <Filename Value="main.pas"/>
         <Caret Line="25" Column="66"/>
       </Position11>
+      <Position12>
+        <Filename Value="main.pas"/>
+        <Caret Line="82" Column="41" TopLine="64"/>
+      </Position12>
+      <Position13>
+        <Filename Value="main.pas"/>
+        <Caret Line="407" TopLine="397"/>
+      </Position13>
+      <Position14>
+        <Filename Value="main.pas"/>
+        <Caret Line="411" Column="19" TopLine="402"/>
+      </Position14>
+      <Position15>
+        <Filename Value="main.pas"/>
+        <Caret Line="405" TopLine="384"/>
+      </Position15>
+      <Position16>
+        <Filename Value="main.pas"/>
+        <Caret Line="451" Column="3" TopLine="416"/>
+      </Position16>
+      <Position17>
+        <Filename Value="main.pas"/>
+        <Caret TopLine="352"/>
+      </Position17>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>
