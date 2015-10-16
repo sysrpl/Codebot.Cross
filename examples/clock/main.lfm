@@ -1,13 +1,13 @@
 object Form1: TForm1
-  Left = 204
+  Left = 489
   Height = 45
-  Top = 256
+  Top = 402
   Width = 216
   Caption = 'Form1'
   ClientHeight = 45
   ClientWidth = 216
   OnCloseQuery = FormCloseQuery
-  OnCreate = FormCreate
+  OnShow = FormShow
   LCLVersion = '1.5'
   object ScaleBar: TSlideBar
     Left = 8

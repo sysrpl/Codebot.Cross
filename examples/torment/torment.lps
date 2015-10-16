@@ -20,9 +20,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
+        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="25"/>
-        <CursorPos X="16" Y="10"/>
+        <TopLine Value="34"/>
+        <CursorPos X="23" Y="18"/>
         <UsageCount Value="190"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -332,15 +333,13 @@
       <Unit39>
         <Filename Value="..\..\source\codebot.graphics.types.pas"/>
         <UnitName Value="Codebot.Graphics.Types"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="297"/>
         <CursorPos X="10" Y="315"/>
         <UsageCount Value="35"/>
-        <Loaded Value="True"/>
       </Unit39>
       <Unit40>
         <Filename Value="..\..\source\codebot.system.pas"/>
-        <UnitName Value="Codebot.System"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="589"/>
         <CursorPos X="3" Y="618"/>
@@ -348,7 +347,6 @@
       </Unit40>
       <Unit41>
         <Filename Value="..\..\source\codebot.graphics.windows.surfaced2d.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="2381"/>
         <CursorPos X="13" Y="2398"/>
@@ -359,7 +357,6 @@
       </Unit41>
       <Unit42>
         <Filename Value="..\..\source\codebot.interop.windows.direct2d.pas"/>
-        <UnitName Value="Codebot.Interop.Windows.Direct2D"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1752"/>
         <CursorPos X="94" Y="1772"/>
@@ -370,7 +367,6 @@
       </Unit42>
       <Unit43>
         <Filename Value="..\..\source\codebot.controls.pas"/>
-        <UnitName Value="Codebot.Controls"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="615"/>
         <CursorPos X="20" Y="644"/>
@@ -378,7 +374,6 @@
       </Unit43>
       <Unit44>
         <Filename Value="..\..\source\codebot.graphics.windows.interfacedbitmap.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.InterfacedBitmap"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="19"/>
         <CursorPos Y="42"/>
@@ -386,7 +381,6 @@
       </Unit44>
       <Unit45>
         <Filename Value="..\..\source\codebot.networking.pas"/>
-        <UnitName Value="Codebot.Networking"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="25"/>
         <CursorPos X="31" Y="47"/>
@@ -394,7 +388,6 @@
       </Unit45>
       <Unit46>
         <Filename Value="..\..\source\codebot.networking.web.pas"/>
-        <UnitName Value="Codebot.Networking.Web"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="42" Y="26"/>
         <UsageCount Value="30"/>
@@ -425,44 +418,21 @@
       </Unit49>
       <Unit50>
         <Filename Value="..\..\source\codebot.networking.storage.pas"/>
-        <UnitName Value="Codebot.Networking.Storage"/>
         <EditorIndex Value="-1"/>
         <UsageCount Value="23"/>
       </Unit50>
       <Unit51>
         <Filename Value="..\..\source\codebot.graphics.linux.surfacecairo.pas"/>
         <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
-        <IsVisibleTab Value="True"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="1689"/>
-        <CursorPos X="49" Y="1708"/>
+        <CursorPos X="59" Y="1713"/>
         <UsageCount Value="10"/>
         <Bookmarks Count="1">
           <Item0 X="48" Y="1709" ID="1"/>
         </Bookmarks>
-        <Loaded Value="True"/>
       </Unit51>
     </Units>
-    <JumpHistory Count="5" HistoryIndex="4">
-      <Position1>
-        <Filename Value="..\..\source\codebot.graphics.linux.surfacecairo.pas"/>
-      </Position1>
-      <Position2>
-        <Filename Value="..\..\source\codebot.graphics.linux.surfacecairo.pas"/>
-        <Caret Line="1706" Column="46" TopLine="1746"/>
-      </Position2>
-      <Position3>
-        <Filename Value="..\..\source\codebot.graphics.linux.surfacecairo.pas"/>
-        <Caret Line="1726" Column="3" TopLine="1724"/>
-      </Position3>
-      <Position4>
-        <Filename Value="..\..\source\codebot.graphics.linux.surfacecairo.pas"/>
-        <Caret Line="1706" Column="36" TopLine="1713"/>
-      </Position4>
-      <Position5>
-        <Filename Value="..\..\source\codebot.graphics.linux.surfacecairo.pas"/>
-        <Caret Line="1653" Column="6" TopLine="1644"/>
-      </Position5>
-    </JumpHistory>
+    <JumpHistory HistoryIndex="-1"/>
   </ProjectSession>
 </CONFIG>

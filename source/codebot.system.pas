@@ -862,6 +862,35 @@ type
 function MutexCreate: IMutex;
 { Create a new event object }
 function EventCreate: IEvent;
+
+type
+  {doc off}
+  TSimpleThread = class;
+  {doc on}
+
+{ TThreadExecuteMethod is the method invoked when a TSimpleThread is created }
+
+  TThreadExecuteMethod = procedure(Thread: TSimpleThread) of object;
+
+{ TSimpleThread allows objects to create a threading method without defining a new thread class
+  See also
+  <link Overview.Codebot.System.TSimpleThread, TSimpleThread members> }
+
+  TSimpleThread = class(TThread)
+  private
+    FExecuteMethod: TThreadExecuteMethod;
+  protected
+    { Sets FreeOnTermiante to True and executes the method }
+    procedure Execute; override;
+  public
+    { Starts an executing method on a new thread }
+    constructor Create(ExecuteMethod: TThreadExecuteMethod);
+    { Synch can be used by the executing method to move execution to the main thread }
+    procedure Synch(Method: TThreadMethod);
+    { Terminated is set to True when Terminated is called }
+    property Terminated;
+  end;
+
 {$endregion}
 
 {$region waiting routines}
@@ -2433,17 +2462,32 @@ begin
 end;
 
 function FileReadStr(const FileName: string): string;
+Const
+  BufferSize = 1024;
+  MaxGrow = 1 shl 29;
 var
   F: TFileStream;
+  BytesRead: Integer;
+  BufferLength, BufferDelta: Integer;
+  I: Integer;
 begin
   Result := '';
-  if FileUtil.FileExistsUTF8(FileName) then
+  if FileExistsUTF8(FileName) then
   begin
-    F := TFileStream.Create(FileName, fmOpenRead);
+    F := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
     try
-      SetLength(Result, F.Size);
-      if Length(Result) > 0 then
-        F.Read(Result[1], Length(Result));
+      Result := '';
+      BufferLength:=0;
+      I:=1;
+      repeat
+        BufferDelta := BufferSize * I;
+        SetLength(Result, BufferLength + BufferDelta);
+        BytesRead := F.Read(Result[BufferLength + 1], BufferDelta);
+        Inc(BufferLength, BufferDelta);
+        if I < MaxGrow then
+          I := I shl 1;
+      until BytesRead <> BufferDelta;
+      SetLength(Result, BufferLength - BufferDelta + BytesRead);
     finally
       F.Free;
     end;
@@ -3380,6 +3424,25 @@ end;
 function EventCreate: IEvent;
 begin
   Result := TEventObject.Create;
+end;
+
+{ TSimpleThread }
+
+constructor TSimpleThread.Create(ExecuteMethod: TThreadExecuteMethod);
+begin
+  FExecuteMethod := ExecuteMethod;
+  inherited Create(False);
+end;
+
+procedure TSimpleThread.Execute;
+begin
+  FreeOnTerminate := True;
+  FExecuteMethod(Self);
+end;
+
+procedure TSimpleThread.Synch(Method: TThreadMethod);
+begin
+  Synchronize(Method);
 end;
 {$endregion}
 

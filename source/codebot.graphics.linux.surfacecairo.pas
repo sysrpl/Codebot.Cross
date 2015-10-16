@@ -2199,7 +2199,7 @@ begin
     FFormat := StrToImageFormat(S);
     S := ImageFormatToStr(FFormat);
     FlipPixels;
-    gdk_pixbuf_save(FBuffer, PAnsiChar(FileName), PAnsiChar(S), nil);
+    gdk_pixbuf_save(FBuffer, PChar(FileName), PChar(S), nil);
     FlipPixels;
   end;
 end;

@@ -34,7 +34,7 @@
     <Description Value="Codebot.Cross a set of tools"/>
     <License Value="LGPL"/>
     <Version Major="1"/>
-    <Files Count="47">
+    <Files Count="48">
       <Item1>
         <Filename Value="codebot.inc"/>
         <Type Value="Binary"/>
@@ -221,8 +221,12 @@
       </Item46>
       <Item47>
         <Filename Value="codebot.controls.highlighter.pas"/>
-        <UnitName Value="codebot.controls.highlighter"/>
+        <UnitName Value="Codebot.Controls.Highlighter"/>
       </Item47>
+      <Item48>
+        <Filename Value="codebot.input.keycommands.pas"/>
+        <UnitName Value="codebot.input.keycommands"/>
+      </Item48>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

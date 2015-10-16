@@ -58,7 +58,7 @@ const
   CloudHosts: array[TCloudVendor] of string = (
     's3.amazonaws.com',
     'storage.googleapis.com',
-    'codebot.blob.core.windows.net'
+    'blob.core.windows.net'
   );
 
 constructor TCloudStorage.Create(Vendor: TCloudVendor; const PublicKey, PrivateKey: string);
