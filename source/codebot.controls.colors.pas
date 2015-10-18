@@ -86,6 +86,7 @@ type
     property OnChangeBounds;
     property OnDragDrop;
     property OnDragOver;
+    property OnDblClick;
     property OnEndDock;
     property OnEndDrag;
     property OnMouseDown;
@@ -142,6 +143,7 @@ type
     property ParentShowHint;
     property OnChange;
     property OnChangeBounds;
+    property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
     property OnEndDock;

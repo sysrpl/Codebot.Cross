@@ -363,8 +363,8 @@ const
   clDarkOrchid = TColor($CC3299);
   clDarkRed = TColor($00008B);
   clDarkSalmon = TColor($7A96E9);
-  clDarkseaGreen = TColor($8BBC8F);
-  clDarkslateBlue = TColor($8B3D48);
+  clDarkSeaGreen = TColor($8BBC8F);
+  clDarkSlateBlue = TColor($8B3D48);
   clDarkSlateGray = TColor($4F4F2F);
   clDarkTurquoise = TColor($D1CE00);
   clDarkViolet = TColor($D30094);
@@ -428,7 +428,7 @@ const
   clPaleGoldenrod = TColor($AAE8EE);
   clPaleGreen = TColor($98FB98);
   clPaleTurquoise = TColor($EEEEAF);
-  clPalevioletRed = TColor($9370DB);
+  clPaleVioletRed = TColor($9370DB);
   clPapayaWhip = TColor($D5EFFF);
   clPeachPuff = TColor($B9DAFF);
   clPeru = TColor($3F85CD);

@@ -15,16 +15,17 @@ uses
   Codebot.Networking.Storage, Codebot.Networking.Ftp, Codebot.Networking.Web, 
   Codebot.Graphics.Windows.ImageBitmap, 
   Codebot.Graphics.Windows.InterfacedBitmap, Codebot.Graphics, 
-  Codebot.Graphics.Types, Codebot.Graphics.Windows.SurfaceGdiPlus, 
+  Codebot.Graphics.Extras, Codebot.Graphics.Types, 
+  Codebot.Graphics.Windows.SurfaceGdiPlus, 
   Codebot.Graphics.Windows.SurfaceD2D, Codebot.Graphics.Linux.SurfaceCairo, 
   Codebot.Controls.Extras, Codebot.Controls.Scrolling, 
-  Codebot.Controls.Sliders, Codebot.Forms.Popup, Codebot.Input.MouseMonitor, 
-  Codebot.Controls, Codebot.Controls.Colors, Codebot.Controls.Edits, 
-  Codebot.Controls.Banner, Codebot.Controls.Grids, 
+  Codebot.Controls.Sliders, Codebot.Forms.Popup, Codebot.Input.Hotkeys, 
+  Codebot.Input.MouseMonitor, Codebot.Controls, Codebot.Controls.Colors, 
+  Codebot.Controls.Edits, Codebot.Controls.Banner, Codebot.Controls.Grids, 
   Codebot.Design.ImageListEditor, Codebot.Design.SurfaceBitmapEditor, 
   Codebot.Controls.Buttons, Codebot.Graphics.Markup, 
-  Codebot.Controls.Containers, Codebot.Debug, Codebot.Animation, 
-  Codebot.Geometry, Codebot.Controls.Highlighter, Codebot.Input.KeyCommands, 
+  Codebot.Controls.Containers, Codebot.Controls.Highlighter, 
+  Codebot.Animation, Codebot.Geometry, Codebot.Debug, Codebot.Unique, 
   LazarusPackageIntf;
 
 implementation
