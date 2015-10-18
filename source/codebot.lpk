@@ -34,7 +34,7 @@
     <Description Value="Codebot.Cross a set of tools"/>
     <License Value="LGPL"/>
     <Version Major="1"/>
-    <Files Count="48">
+    <Files Count="50">
       <Item1>
         <Filename Value="codebot.inc"/>
         <Type Value="Binary"/>
@@ -132,101 +132,109 @@
         <UnitName Value="Codebot.Graphics"/>
       </Item24>
       <Item25>
-        <Filename Value="codebot.graphics.types.pas"/>
-        <UnitName Value="Codebot.Graphics.Types"/>
+        <Filename Value="codebot.graphics.extras.pas"/>
+        <UnitName Value="Codebot.Graphics.Extras"/>
       </Item25>
       <Item26>
-        <Filename Value="codebot.graphics.windows.surfacegdiplus.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
+        <Filename Value="codebot.graphics.types.pas"/>
+        <UnitName Value="Codebot.Graphics.Types"/>
       </Item26>
       <Item27>
-        <Filename Value="codebot.graphics.windows.surfaced2d.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
+        <Filename Value="codebot.graphics.windows.surfacegdiplus.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
       </Item27>
       <Item28>
-        <Filename Value="codebot.graphics.linux.surfacecairo.pas"/>
-        <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
+        <Filename Value="codebot.graphics.windows.surfaced2d.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
       </Item28>
       <Item29>
-        <Filename Value="codebot.controls.extras.pas"/>
-        <UnitName Value="Codebot.Controls.Extras"/>
+        <Filename Value="codebot.graphics.linux.surfacecairo.pas"/>
+        <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
       </Item29>
       <Item30>
-        <Filename Value="codebot.controls.scrolling.pas"/>
-        <UnitName Value="Codebot.Controls.Scrolling"/>
+        <Filename Value="codebot.controls.extras.pas"/>
+        <UnitName Value="Codebot.Controls.Extras"/>
       </Item30>
       <Item31>
-        <Filename Value="codebot.controls.sliders.pas"/>
-        <UnitName Value="Codebot.Controls.Sliders"/>
+        <Filename Value="codebot.controls.scrolling.pas"/>
+        <UnitName Value="Codebot.Controls.Scrolling"/>
       </Item31>
       <Item32>
-        <Filename Value="codebot.forms.popup.pas"/>
-        <UnitName Value="Codebot.Forms.Popup"/>
+        <Filename Value="codebot.controls.sliders.pas"/>
+        <UnitName Value="Codebot.Controls.Sliders"/>
       </Item32>
       <Item33>
-        <Filename Value="codebot.input.mousemonitor.pas"/>
-        <UnitName Value="Codebot.Input.MouseMonitor"/>
+        <Filename Value="codebot.forms.popup.pas"/>
+        <UnitName Value="Codebot.Forms.Popup"/>
       </Item33>
       <Item34>
-        <Filename Value="codebot.controls.pas"/>
-        <UnitName Value="Codebot.Controls"/>
+        <Filename Value="codebot.input.hotkeys.pas"/>
+        <UnitName Value="codebot.input.hotkeys"/>
       </Item34>
       <Item35>
-        <Filename Value="codebot.controls.colors.pas"/>
-        <UnitName Value="Codebot.Controls.Colors"/>
+        <Filename Value="codebot.input.mousemonitor.pas"/>
+        <UnitName Value="Codebot.Input.MouseMonitor"/>
       </Item35>
       <Item36>
-        <Filename Value="codebot.controls.edits.pas"/>
-        <UnitName Value="Codebot.Controls.Edits"/>
+        <Filename Value="codebot.controls.pas"/>
+        <UnitName Value="Codebot.Controls"/>
       </Item36>
       <Item37>
-        <Filename Value="codebot.controls.banner.pas"/>
-        <UnitName Value="Codebot.Controls.Banner"/>
+        <Filename Value="codebot.controls.colors.pas"/>
+        <UnitName Value="Codebot.Controls.Colors"/>
       </Item37>
       <Item38>
-        <Filename Value="codebot.controls.grids.pas"/>
-        <UnitName Value="Codebot.Controls.Grids"/>
+        <Filename Value="codebot.controls.edits.pas"/>
+        <UnitName Value="Codebot.Controls.Edits"/>
       </Item38>
       <Item39>
-        <Filename Value="codebot.design.imagelisteditor.pas"/>
-        <UnitName Value="Codebot.Design.ImageListEditor"/>
+        <Filename Value="codebot.controls.banner.pas"/>
+        <UnitName Value="Codebot.Controls.Banner"/>
       </Item39>
       <Item40>
-        <Filename Value="codebot.design.surfacebitmapeditor.pas"/>
-        <UnitName Value="Codebot.Design.SurfaceBitmapEditor"/>
+        <Filename Value="codebot.controls.grids.pas"/>
+        <UnitName Value="Codebot.Controls.Grids"/>
       </Item40>
       <Item41>
-        <Filename Value="codebot.controls.buttons.pas"/>
-        <UnitName Value="Codebot.Controls.Buttons"/>
+        <Filename Value="codebot.design.imagelisteditor.pas"/>
+        <UnitName Value="Codebot.Design.ImageListEditor"/>
       </Item41>
       <Item42>
-        <Filename Value="codebot.graphics.markup.pas"/>
-        <UnitName Value="Codebot.Graphics.Markup"/>
+        <Filename Value="codebot.design.surfacebitmapeditor.pas"/>
+        <UnitName Value="Codebot.Design.SurfaceBitmapEditor"/>
       </Item42>
       <Item43>
-        <Filename Value="codebot.controls.containers.pas"/>
-        <UnitName Value="Codebot.Controls.Containers"/>
+        <Filename Value="codebot.controls.buttons.pas"/>
+        <UnitName Value="Codebot.Controls.Buttons"/>
       </Item43>
       <Item44>
-        <Filename Value="codebot.debug.pas"/>
-        <UnitName Value="Codebot.Debug"/>
+        <Filename Value="codebot.graphics.markup.pas"/>
+        <UnitName Value="Codebot.Graphics.Markup"/>
       </Item44>
       <Item45>
-        <Filename Value="codebot.animation.pas"/>
-        <UnitName Value="Codebot.Animation"/>
+        <Filename Value="codebot.controls.containers.pas"/>
+        <UnitName Value="Codebot.Controls.Containers"/>
       </Item45>
       <Item46>
-        <Filename Value="codebot.geometry.pas"/>
-        <UnitName Value="Codebot.Geometry"/>
-      </Item46>
-      <Item47>
         <Filename Value="codebot.controls.highlighter.pas"/>
         <UnitName Value="Codebot.Controls.Highlighter"/>
+      </Item46>
+      <Item47>
+        <Filename Value="codebot.animation.pas"/>
+        <UnitName Value="Codebot.Animation"/>
       </Item47>
       <Item48>
-        <Filename Value="codebot.input.keycommands.pas"/>
-        <UnitName Value="codebot.input.keycommands"/>
+        <Filename Value="codebot.geometry.pas"/>
+        <UnitName Value="Codebot.Geometry"/>
       </Item48>
+      <Item49>
+        <Filename Value="codebot.debug.pas"/>
+        <UnitName Value="Codebot.Debug"/>
+      </Item49>
+      <Item50>
+        <Filename Value="codebot.unique.pas"/>
+        <UnitName Value="Codebot.Unique"/>
+      </Item50>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

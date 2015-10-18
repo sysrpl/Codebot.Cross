@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified October 2015                               *)
 (*                                                      *)
 (********************************************************)
 
@@ -2861,17 +2861,12 @@ function TArrayList<T>.IndexOf(const Item: T): Integer;
 var
   I: Integer;
 begin
+  Result := -1;
   I := Length;
-  if I < 1 then
-    Result := -1
-  else if Assigned(DefaultCompare) then
-  begin
+  if (I > 0) and Assigned(DefaultCompare) then
     for I := Lo to Hi do
       if DefaultCompare(Item, Items[I]) = 0 then
         Exit(I);
-  end
-  else
-    Result := -1;
 end;
 
 function TArrayList<T>.Join(const Separator: string; Convert: TConvertString<T> = nil): string;

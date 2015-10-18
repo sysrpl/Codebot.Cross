@@ -143,6 +143,8 @@ type
     property Server: TSocket read FServer;
     { When secure is true socket communication will be routed through an SSL library }
     property Secure: Boolean read FSecure write SetSecure;
+    { The underlying socket state }
+    property State: TSocketState read FState;
     { Optional timeout period }
     property Timeout: LongWord read FTimeout write FTimeout;
     { Connected is true when a socket is valid and active }
