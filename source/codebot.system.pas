@@ -469,9 +469,13 @@ type
     { Search a string for a substring optionally ignoring case }
     function Contains(const SubStr: string; IgnoreCase: Boolean = False): Boolean;
     { Returns true if a string begins with a substring while optionally ignoring case }
-    function BeginsWith(const SubStr: string; IgnoreCase: Boolean = False): Boolean;
+    function BeginsWith(const SubStr: string; IgnoreCase: Boolean = False): Boolean; overload;
+    { Returns true if a string begins with any substring while optionally ignoring case }
+    function BeginsWith(const SubStrs: StringArray; IgnoreCase: Boolean = False): Boolean; overload;
     { Returns true if a string end with a substring while optionally ignoring case }
-    function EndsWith(const SubStr: string; IgnoreCase: Boolean = False): Boolean;
+    function EndsWith(const SubStr: string; IgnoreCase: Boolean = False): Boolean; overload;
+    { Returns true if a string end with any substring while optionally ignoring case }
+    function EndsWith(const SubStrs: StringArray; IgnoreCase: Boolean = False): Boolean; overload;
     { Returns a string made to fit a given length padded on the left with a character }
     function PadLeft(C: Char; Len: Integer): string;
     { Returns a string made to fit a given length padded on the right with a character }
@@ -2235,9 +2239,35 @@ begin
   Result := StrBeginsWith(Self, SubStr, IgnoreCase);
 end;
 
+function StringHelper.BeginsWith(const SubStrs: StringArray; IgnoreCase: Boolean = False): Boolean;
+var
+  S: string;
+begin
+  Result := False;
+  for S in SubStrs do
+  begin
+    Result := StrBeginsWith(Self, S, IgnoreCase);
+    if Result then
+      Exit;
+  end;
+end;
+
 function StringHelper.EndsWith(const SubStr: string; IgnoreCase: Boolean = False): Boolean;
 begin
   Result := StrEndsWith(Self, SubStr, IgnoreCase);
+end;
+
+function StringHelper.EndsWith(const SubStrs: StringArray; IgnoreCase: Boolean = False): Boolean;
+var
+  S: string;
+begin
+  Result := False;
+  for S in SubStrs do
+  begin
+    Result := StrEndsWith(Self, S, IgnoreCase);
+    if Result then
+      Exit;
+  end;
 end;
 
 function StringHelper.PadLeft(C: Char; Len: Integer): string;
