@@ -1056,16 +1056,18 @@ constructor TFontCairo.Create(Font: TFont);
 var
   Obj: PGDIObject;
   Layout: PPangoLayout;
+  Context: PPangoContext;
   Description: PPangoFontDescription;
   N: PAnsiChar;
 begin
   inherited Create;
   Obj := PGDIObject(Font.Handle);
   Layout := PPangoLayout(Obj.GDIFontObject);
+  Context := pango_layout_get_context(Layout);
+  pango_cairo_context_set_resolution(Context, 96);
   Description := pango_layout_get_font_description(Layout);
   if Description = nil then
-    Description := pango_context_get_font_description(
-      pango_layout_get_context(Layout));
+    Description := pango_context_get_font_description(Context);
   FDesc := pango_font_description_copy(Description);
   N := pango_font_description_to_string(FDesc);
   FName := N;
@@ -1593,10 +1595,13 @@ begin
 end;
 
 procedure TSurfaceCairo.SetFont(F: IFont);
+var
+  D: PPangoFontDescription;
 begin
   if F <> FFont then
   begin
-    pango_layout_set_font_description(FLayout, (F as TFontCairo).FDesc);
+    D := (F as TFontCairo).FDesc;
+    pango_layout_set_font_description(FLayout, D);
     FFont := F;
   end;
 end;
@@ -1698,6 +1703,7 @@ begin
   pango_cairo_update_layout(FCairo, FLayout);
   Options := cairo_font_options_create;
   cairo_font_options_set_antialias(Options, FontOptions[Font.Quality]);
+  cairo_font_options_set_hint_style(Options, CAIRO_HINT_STYLE_SLIGHT);
   cairo_set_font_options(FCairo, Options);
   pango_cairo_context_set_font_options(pango_layout_get_context(FLayout),
     Options);
