@@ -1614,7 +1614,6 @@ procedure TScrollList.SetItemIndex(Value: Integer);
 var
   PriorIndex: Integer;
   CanSelect: Boolean;
-  WasSelected: Boolean;
 begin
   if FLocked then
     if Value > -1 then

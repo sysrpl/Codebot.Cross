@@ -645,6 +645,8 @@ type
 
 { ISurface is the main interface used to draw high quality fast vector graphics }
 
+  TResampleQuality = (rqLowest, rqNormal, rqBest);
+
   ISurface = interface
   ['{6C23D3BC-6D74-4EDD-B0B9-EB55BF655E80}']
     function GetMatrix: IMatrix;
@@ -656,7 +658,8 @@ type
     procedure Clear(Color: TColorB);
     { Copy an area from one surface to another optionally alpha blending
       the result }
-    procedure CopyTo(const Source: TRectF; Surface: ISurface; const Dest: TRectF; Alpha: Byte = $FF);
+    procedure CopyTo(const Source: TRectF; Surface: ISurface; const Dest: TRectF;
+      Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
     { Push the current path, matrix, and clipping area onto a stack }
     procedure Save;
     { Pop the path, matrix, and clipping area from a stack }
@@ -705,7 +708,6 @@ type
 { IBitmap can load and save images as well as allow ISurface drawing in memory }
 
   TImageFormat = (fmPng, fmJpeg, fmGif, fmBmp, fmIco, fmTiff);
-  TResampleQuality = (rqLowest, rqNormal, rqBest);
 
   IBitmap = interface // (ICloneable<IBitmap>)
   ['{DB935633-A218-4181-96A2-B0808697150F}']
@@ -1804,8 +1806,6 @@ var
   M1, M2: Float;
 
   function HueToValue(Hue: Float) : Float;
-  var
-    V:  Double;
   begin
     if Hue < 0 then
       Hue := Hue + 1
