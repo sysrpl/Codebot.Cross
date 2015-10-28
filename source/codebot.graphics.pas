@@ -91,7 +91,7 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure Clear; override;
     {doc on}
-    { Set the underlying bitmpa referenc directly }
+    { Set the underlying bitmap referenc directly }
     procedure CopyReference(Bitmap: IBitmap);
     { Draw the image on a canvas at x and y, optionaly picking a frame as the source }
     procedure Draw(Surface: ISurface; X, Y: Integer; FrameIndex: Integer = -1); overload;

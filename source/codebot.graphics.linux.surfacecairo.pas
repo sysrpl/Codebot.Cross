@@ -61,6 +61,7 @@ type
   TCairoFontOptions = cairo_font_options_t;
   PCairoFontOptions = Pcairo_font_options_t;
   TCairoAntiAlias = cairo_antialias_t;
+  TCairoFilter = cairo_filter_t;
 
 { Extra gdk types and routines }
 
@@ -437,8 +438,8 @@ type
     procedure Flush; virtual;
     procedure Clear; overload;
     procedure Clear(Color: TBGRA); overload;
-    procedure CopyTo(const Source: TRectF; Surface: ISurface;
-      const Dest: TRectF; Alpha: Byte = $FF);
+    procedure CopyTo(const Source: TRectF; Surface: ISurface; const Dest: TRectF;
+      Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
     procedure Save;
     procedure Restore;
     procedure MoveTo(X, Y: Float);
@@ -1454,7 +1455,10 @@ begin
 end;
 
 procedure TSurfaceCairo.CopyTo(const Source: TRectF; Surface: ISurface;
-  const Dest: TRectF; Alpha: Byte = $FF);
+  const Dest: TRectF; Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
+const
+  Resamples: array[TResampleQuality] of TCairoFilter =
+    (CAIRO_FILTER_FAST, CAIRO_FILTER_GOOD, CAIRO_FILTER_BEST);
 var
   DestSurface: TSurfaceCairo;
   CairoSurface: PCairoSurface;
@@ -1487,6 +1491,7 @@ begin
   cairo_pattern_set_matrix(Pattern, @Matrix);
   cairo_rectangle(DestSurface.FCairo, Dest.X, Dest.Y, Dest.Width, Dest.Height);
   cairo_set_source(DestSurface.FCairo, Pattern);
+  cairo_pattern_set_filter(Pattern, Resamples[Quality]);
   if Alpha < $FF then
   begin
     cairo_clip(DestSurface.FCairo);
@@ -2286,17 +2291,36 @@ end;
 
 function CanvasToDrawable(Canvas: TCanvas; out Rect: TRectI): Pointer;
 var
+  Root: PGdkWindow;
   C: TControl;
+  R: TGdkRectangle;
 begin
+  Result := nil;
   Rect := TRectI.Create;
-  if not (Canvas is TControlCanvas) then
-    Exit(nil);
-  C := TControlCanvas(Canvas).Control;
-  if C is TGraphicControl then
-    Rect := C.BoundsRect
-  else
-    Rect := C.ClientRect;
-  Result := gtk2def.TGtkDeviceContext(Canvas.Handle).Drawable;
+  if Canvas = nil then
+  begin
+    Root := gdk_get_default_root_window;
+    gdk_drawable_get_size(PGdkDrawable(Root), @Rect.Width, @Rect.Height);
+    Result := Root;
+  end
+  else if TObject(Canvas.Handle) is TGtkDeviceContext then
+  begin
+    if Canvas is TControlCanvas then
+    begin
+      C := TControlCanvas(Canvas).Control;
+      if C is TGraphicControl then
+        Rect := C.BoundsRect
+      else
+        Rect := C.ClientRect;
+    end
+    else
+    begin
+      R := TGtkDeviceContext(Canvas.Handle).ClipRect;
+      Rect.Width := R.width;
+      Rect.Height := R.height;
+    end;
+    Result := TGtkDeviceContext(Canvas.Handle).Drawable;
+  end;
 end;
 
 function NewSurfaceCairo(Canvas: TCanvas): ISurface;
