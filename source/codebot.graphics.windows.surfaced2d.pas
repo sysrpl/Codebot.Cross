@@ -323,7 +323,8 @@ type
     function GetPath: IPath;
     procedure Flush; virtual;
     procedure Clear(Color: TColorB);
-    procedure CopyTo(const Source: TRectF; Surface: ISurface; const Dest: TRectF; Alpha: Byte = $FF);
+    procedure CopyTo(const Source: TRectF; Surface: ISurface; const Dest: TRectF;
+      Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
     procedure Save;
     procedure Restore;
     procedure MoveTo(X, Y: Float);
@@ -1744,7 +1745,7 @@ end;
 { Some work is required to get CopyTo to work with Direc2D. Use sparingly }
 
 procedure TSurfaceD2D.CopyTo(const Source: TRectF; Surface: ISurface;
-  const Dest: TRectF; Alpha: Byte = $FF);
+  const Dest: TRectF; Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
 
   function AdjustSource(var SrcRect: TRectI; var DstRect: TRectF): Boolean;
   var
@@ -1829,6 +1830,11 @@ procedure TSurfaceD2D.CopyTo(const Source: TRectF; Surface: ISurface;
     C.Path.RestoreClipStack;
   end;
 
+const
+  Resamples: array[TResampleQuality] of LongInt =
+    (D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR,
+    D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
+    D2D1_BITMAP_INTERPOLATION_MODE_LINEAR);
 var
   DstSurface: TSurfaceD2D;
   SrcRect: TRectI;
@@ -1873,7 +1879,7 @@ begin
     SourceRect.right := Source.Right;
     SourceRect.bottom := Source.Bottom;
     DstSurface.FTarget.DrawBitmap(DstBitmap, @FinalRect, Alpha / $FF,
-      D2D1_BITMAP_INTERPOLATION_MODE_LINEAR, @SourceRect);
+      Resamples[Quality], @SourceRect);
   end
   else
     DstSurface.FTarget.DrawBitmap(DstBitmap, @FinalRect, Alpha / $FF);
@@ -2620,12 +2626,24 @@ begin
   Result := TFontD2D.Create(Font);
 end;
 
+var
+  ScreenDC: HDC;
+
 function NewSurfaceD2D(Canvas: TCanvas): ISurface;
 var
   T: ID2D1DCRenderTarget;
+  R: TRect;
 begin
   T := CreateDCTarget;
-  T.BindDC(Canvas.Handle, TRectI.Create(Canvas.Width, Canvas.Height));
+  if Canvas = nil then
+  begin
+    if ScreenDC = 0 then
+			ScreenDC := GetDC(0);
+    GetWindowRect(GetDesktopWindow, R);
+    T.BindDC(ScreenDC, TRectI.Create(R.Right - R.Left, R.Bottom - R.Top));
+  end
+  else
+    T.BindDC(Canvas.Handle, TRectI.Create(Canvas.Width, Canvas.Height));
   Result := TSurfaceD2D.Create(T);
 end;
 

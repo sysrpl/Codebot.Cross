@@ -617,7 +617,7 @@ var
 function HotkeyCapture: THotkeyCapture;
 begin
   if InternalCapture = nil then
-    InternalCapture := THotkeyCaptureImpl.Create;
+    InternalCapture := nil; //THotkeyCaptureImpl.Create;
   Result := THotkeyCapture(InternalCapture);
 end;
 

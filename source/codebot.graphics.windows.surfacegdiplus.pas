@@ -318,8 +318,8 @@ type
     function GetPath: IPath;
     procedure Flush; virtual;
     procedure Clear(Color: TColorB);
-    procedure CopyTo(const Source: TRectF; Surface: ISurface;
-      const Dest: TRectF; Alpha: Byte = $FF);
+    procedure CopyTo(const Source: TRectF; Surface: ISurface; const Dest: TRectF;
+      Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
     procedure Save;
     procedure Restore;
     procedure MoveTo(X, Y: Float);
@@ -1318,7 +1318,7 @@ begin
 end;
 
 procedure TSurfaceGdi.CopyTo(const Source: TRectF; Surface: ISurface;
-  const Dest: TRectF; Alpha: Byte = $FF);
+  const Dest: TRectF; Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
 
   function OpacityTransform: IGdiImageAttributes;
   var
@@ -1331,6 +1331,11 @@ procedure TSurfaceGdi.CopyTo(const Source: TRectF; Surface: ISurface;
     Result := NewGdiImageAttributes(T);
   end;
 
+const
+  Resamples: array[TResampleQuality] of TInterpolationMode =
+    (InterpolationModeNearestNeighbor,
+    InterpolationModeHighQualityBilinear,
+    InterpolationModeHighQualityBicubic);
 var
   DstSurface: TSurfaceGdi;
   Bitmap: IGdiBitmap;
@@ -1358,6 +1363,7 @@ begin
   B := DstSurface.Matrix.FMatrix.Clone;
   G := DstSurface.FGraphics;
   G.Transform := B;
+  G.InterpolationMode := Resamples[Quality];
   G.DrawImage(Bitmap, TGdiRectI(D),
     S.X, S.Y, S.Width, S.Height, UnitPixel, OpacityTransform);
   G.Transform := A;
@@ -1911,7 +1917,10 @@ function NewSurfaceGdi(Canvas: TCanvas): ISurface;
 var
   G: IGdiGraphics;
 begin
-  G := NewGdiGraphics(Canvas.Handle);
+  if Canvas = nil then
+    G := NewGdiGraphics(GetDesktopWindow)
+  else
+    G := NewGdiGraphics(Canvas.Handle);
   Result := TSurfaceGdi.Create(G);
 end;
 
