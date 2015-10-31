@@ -534,6 +534,7 @@ begin
     else
       F := NewFont(Title.Font);
     F.Color := Title.Font.Color;
+    R.Offset(Title.X, Title.Y);
     Surface.TextOut(F, S, R, drWrap);
     R.Top := R.Top + Round(Surface.TextHeight(F, S, R.Width));
   end;
@@ -545,6 +546,7 @@ begin
     else
       F := NewFont(TitleSub.Font);
     F.Color := TitleSub.Font.Color;
+    R.Offset(TitleSub.X, TitleSub.Y);
     Surface.TextOut(F, S, R, drWrap);
   end;
   if csDesigning in ComponentState then
@@ -705,6 +707,8 @@ begin
     else
       F := NewFont(Title.Font);
     F.Color := Title.Font.Color;
+    R.Left := R.Left + Title.X;
+    R.Top := R.Top + Title.Y;
     Surface.TextOut(F, S, R, drWrap);
     R.Top := R.Top + Round(Surface.TextHeight(F, S, R.Width));
   end;
@@ -716,6 +720,8 @@ begin
     else
       F := NewFont(TitleSub.Font);
     F.Color := TitleSub.Font.Color;
+    R.Left := R.Left + TitleSub.X;
+    R.Top := R.Top + TitleSub.Y;
     Surface.TextOut(F, S, R, drWrap);
   end;
   if boFooterShadow in Options then

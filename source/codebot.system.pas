@@ -273,6 +273,8 @@ const
   { The character used to begin command line switches [group string] }
   SwitchChar = '-';
 
+{ Returns the line break sequence for the current operating system [group string] }
+function LineBreak: string; inline;
 { Convert a string to uppercase [group string] }
 function StrUpper(const S: string): string;
 { Convert a string to lowercase [group string] }
@@ -450,6 +452,10 @@ type
     function Trim: string;
     { Returns the index of a string in a string array or -1 if there is no match }
     function ArrayIndex(const Values: array of string): Integer;
+    { Break a string into lines separated by the break style  }
+    function Lines: StringArray;
+    { Retruns the first entire line containing SubStr }
+    function LineWith(const SubStr: string; IgnoreCase: Boolean = False): string;
     { Splits a string into a string array using a separator }
     function Split(Separator: string): StringArray;
     { Splits a string into a int array using a separator }
@@ -883,14 +889,21 @@ type
   TSimpleThread = class(TThread)
   private
     FExecuteMethod: TThreadExecuteMethod;
+    FStatus: string;
+    FOnStatus: TNotifyEvent;
+    procedure DoStatus;
+    procedure SetStatus(const Value: string);
   protected
     { Sets FreeOnTermiante to True and executes the method }
     procedure Execute; override;
   public
     { Starts an executing method on a new thread }
-    constructor Create(ExecuteMethod: TThreadExecuteMethod);
+    constructor Create(ExecuteMethod: TThreadExecuteMethod;
+      OnStatus: TNotifyEvent = nil; OnTerminate: TNotifyEvent = nil);
     { Synch can be used by the executing method to move execution to the main thread }
     procedure Synch(Method: TThreadMethod);
+    { You should only set status inside ExecuteMethod }
+    property Status: string read FStatus write SetStatus;
     { Terminated is set to True when Terminated is called }
     property Terminated;
   end;
@@ -1867,12 +1880,81 @@ end;
 
 function StrAdjustLineBreaks(const S: string; Style: TTextLineBreakStyle): string;
 var
+  Source,Dest: PChar;
+  DestLen: Integer;
+  I,J,L: Longint;
+
+begin
+  Source:=Pointer(S);
+  L:=Length(S);
+  DestLen:=L;
+  I:=1;
+  while (I<=L) do
+    begin
+    case S[i] of
+      #10: if (Style=tlbsCRLF) then
+               Inc(DestLen);
+      #13: if (Style=tlbsCRLF) then
+             if (I<L) and (S[i+1]=#10) then
+               Inc(I)
+             else
+               Inc(DestLen)
+             else if (I<L) and (S[I+1]=#10) then
+               Dec(DestLen);
+    end;
+    Inc(I);
+    end;
+  if (DestLen=L) then
+    Result:=S
+  else
+    begin
+    SetLength(Result, DestLen);
+    FillChar(Result[1],DestLen,0);
+    Dest := Pointer(Result);
+    J:=0;
+    I:=0;
+    While I<L do
+      case Source[I] of
+        #10: begin
+             if Style=tlbsCRLF then
+               begin
+               Dest[j]:=#13;
+               Inc(J);
+              end;
+             Dest[J] := #10;
+             Inc(J);
+             Inc(I);
+             end;
+        #13: begin
+             if Style=tlbsCRLF then
+               begin
+               Dest[j] := #13;
+               Inc(J);
+               end;
+             Dest[j]:=#10;
+             Inc(J);
+             Inc(I);
+             if Source[I]=#10 then
+               Inc(I);
+             end;
+      else
+        Dest[j]:=Source[i];
+        Inc(J);
+        Inc(I);
+      end;
+    end;
+end;
+
+
+{var
   Line: string;
   I, J, K: Integer;
 begin
   if Length(S) < 1 then
     Exit('');
+  WriteLn(S);
   I := StrFindCount(S, #10) + StrFindCount(S, #13);
+  WriteLn(I);
   SetLength(Result, Length(S) + I * 2);
   Line := LineBreakStyles[Style];
   I := 1;
@@ -1909,7 +1991,7 @@ begin
     Inc(I);
   end;
   SetLength(Result, J - 1);
-end;
+end;}
 
 function StrAdjustLineBreaks(const S: string): string;
 begin
@@ -2164,6 +2246,26 @@ end;
 function StringHelper.ArrayIndex(const Values: array of string): Integer;
 begin
   Result := StrIndex(Self, Values);
+end;
+
+function StringHelper.Lines: StringArray;
+var
+  S: string;
+begin
+  S := StrAdjustLineBreaks(Self, DefaultTextLineBreakStyle);
+  Result := StrSplit(S, LineBreak);
+end;
+
+function StringHelper.LineWith(const SubStr: string; IgnoreCase: Boolean = False): string;
+var
+  A: StringArray;
+  S: string;
+begin
+  A := Lines;
+  for S in A do
+    if S.Contains(SubStr, IgnoreCase) then
+      Exit(S);
+  Result := '';
 end;
 
 function StringHelper.Split(Separator: string): StringArray;
@@ -3453,9 +3555,12 @@ end;
 
 { TSimpleThread }
 
-constructor TSimpleThread.Create(ExecuteMethod: TThreadExecuteMethod);
+constructor TSimpleThread.Create(ExecuteMethod: TThreadExecuteMethod;
+  OnStatus: TNotifyEvent = nil; OnTerminate: TNotifyEvent = nil);
 begin
   FExecuteMethod := ExecuteMethod;
+  FOnStatus := OnStatus;
+  Self.OnTerminate := OnTerminate;
   inherited Create(False);
 end;
 
@@ -3469,6 +3574,23 @@ procedure TSimpleThread.Synch(Method: TThreadMethod);
 begin
   Synchronize(Method);
 end;
+
+procedure TSimpleThread.DoStatus;
+begin
+  if Assigned(FOnStatus) then
+    FOnStatus(Self);
+end;
+
+procedure TSimpleThread.SetStatus(const Value: string);
+begin
+  if Value <> FStatus then
+  begin
+    FStatus := Value;
+    if Assigned(FOnStatus) then
+      Synchronize(DoStatus);
+  end;
+end;
+
 {$endregion}
 
 {$region waiting routines}
