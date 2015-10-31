@@ -167,6 +167,8 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure BeginUpdate;
     procedure EndUpdate;
+    { Copy the underlying bitmap object }
+    procedure CopyTo(Bitmap: IBitmap);
     { Use a quaility resampling }
     procedure Resample(Size: Integer);
     { Load a series of images }
@@ -185,7 +187,8 @@ type
       X, Y: Integer; State: TDrawState); overload;
     procedure Draw(Surface: ISurface; Index: Integer;
       const Rect: TRectI; Opacity: Byte = $FF; Saturation: Float = 1.0); overload;
-    procedure Add(Image: TSurfaceBitmap);
+    procedure Add(Image: IBitmap); overload;
+    procedure Add(Image: TSurfaceBitmap); overload;
     procedure Insert(Image: TSurfaceBitmap; Index: Integer);
     procedure Remove(Index: Integer);
     procedure Move(OldIndex, NewIndex: Integer);
@@ -1124,6 +1127,21 @@ begin
   Result := FBitmap.Frames[0].Height;
 end;
 
+procedure TImageStrip.CopyTo(Bitmap: IBitmap);
+var
+  B: IBitmap;
+  R: TRectI;
+begin
+  Bitmap.Clear;
+  if not FBitmap.Empty  then
+  begin
+    B := FBitmap.Bitmap;
+    R := B.ClientRect;
+    Bitmap.SetSize(R.Width, R.Height);
+    B.Surface.CopyTo(R, Bitmap.Surface, R);
+  end;
+end;
+
 procedure TImageStrip.Resample(Size: Integer);
 begin
   FBitmap.Resample(Size * Count, Size, rqBest);
@@ -1210,6 +1228,19 @@ begin
     Image.Draw(B.Surface, S, D);
   end;
   SwapBitmap(B);
+end;
+
+procedure TImageStrip.Add(Image: IBitmap);
+var
+  B: TSurfaceBitmap;
+begin
+  B := TSurfaceBitmap.Create;
+  try
+    B.CopyReference(Image);
+    Add(B);
+  finally
+    B.Free;
+  end;
 end;
 
 procedure TImageStrip.Insert(Image: TSurfaceBitmap; Index: Integer);

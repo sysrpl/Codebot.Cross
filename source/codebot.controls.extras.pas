@@ -171,6 +171,7 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure Render; override;
     procedure FontChanged(Sender: TObject); override;
+    procedure TextChanged; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -719,6 +720,12 @@ end;
 procedure TIndeterminateProgress.FontChanged(Sender: TObject);
 begin
   inherited FontChanged(Sender);
+  Invalidate;
+end;
+
+procedure TIndeterminateProgress.TextChanged;
+begin
+  inherited TextChanged;
   Invalidate;
 end;
 

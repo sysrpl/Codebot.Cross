@@ -51,6 +51,7 @@ type
     property ImageIndex: Integer read FImageIndex write SetImageIndex default -1;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X,
       Y: Integer); override;
+    procedure Click; override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseEnter; override;
@@ -255,15 +256,33 @@ begin
   Result := True;
 end;
 
+procedure TCustomThinButton.Click;
+var
+  P: TPoint;
+begin
+  if not Enabled then
+    Exit;
+  if FKind = bkSplitter then
+    Exit;
+  if not FDown then
+    DrawState := DrawState - [dsPressed];
+  DrawState := DrawState - [dsHot];
+  inherited Click;
+  P := Mouse.CursorPos;
+  P := ScreenToClient(P);
+  if TRectI(ClientRect).Contains(P) then
+    DrawState := DrawState + [dsHot];
+end;
+
 procedure TCustomThinButton.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
-  inherited MouseDown(Button, Shift, X, Y);
   if FKind = bkSplitter then
     Exit;
   if not FDown then
     if Button = mbLeft then
       DrawState := DrawState + [dsPressed];
+  inherited MouseDown(Button, Shift, X, Y);
 end;
 
 procedure TCustomThinButton.MouseMove(Shift: TShiftState; X, Y: Integer);
@@ -273,17 +292,18 @@ begin
     Exit;
   if FKind = bkSplitter then
     Exit;
+  DrawState := DrawState + [dsHot];
 end;
 
 procedure TCustomThinButton.MouseUp(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
-  inherited MouseUp(Button, Shift, X, Y);
   if FKind = bkSplitter then
     Exit;
   if not FDown then
     if Button = mbLeft then
       DrawState := DrawState - [dsPressed];
+  inherited MouseUp(Button, Shift, X, Y);
 end;
 
 procedure TCustomThinButton.MouseEnter;
@@ -292,10 +312,7 @@ begin
   if FKind = bkSplitter then
     Exit;
   if not FDown then
-  begin
     DrawState := DrawState + [dsHot];
-    Invalidate;
-  end;
 end;
 
 procedure TCustomThinButton.MouseLeave;
