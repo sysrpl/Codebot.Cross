@@ -23,7 +23,8 @@ const
   ModuleNil = HModule(0);
   SharedSuffix = DynLibs.SharedSuffix;
 
-function LibraryLoad(const Name: string): HModule;
+function LibraryLoad(const Name: string): HModule; overload;
+function LibraryLoad(const Name, AltName: string): HModule; overload;
 function LibraryUnload(Module: HModule): Boolean;
 function LibraryGetProc(Module: HModule; const ProcName: string): Pointer;
 
@@ -35,6 +36,13 @@ implementation
 function LibraryLoad(const Name: string): HModule;
 begin
   Result := LoadLibrary(Name);
+end;
+
+function LibraryLoad(const Name, AltName: string): HModule;
+begin
+  Result := LoadLibrary(Name);
+  if Result = ModuleNil then
+    Result := LoadLibrary(AltName);
 end;
 
 function LibraryUnload(Module: HModule): Boolean;

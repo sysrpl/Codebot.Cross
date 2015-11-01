@@ -135,11 +135,15 @@ var
 const
 {$ifdef windows}
   libssl = 'libssl32.dll';
+  libssl100 = libssl;
   libcrypto = 'libeay32.dll';
+  libcrypto1 = libcrypto;
 {$endif}
-{$ifdef unix}
+{$ifdef linux}
   libssl = 'libssl.' + SharedSuffix;
+  libssl100 = libssl + '.1.0.0';
   libcrypto = 'libcrypto.' + SharedSuffix;
+  libcrypto1 = libcrypto + '.1';
 {$endif}
 
 function OpenSSLInit(ThrowExceptions: Boolean = False): Boolean;
@@ -184,7 +188,7 @@ begin
   Result := False;
   FailedModuleName := libssl;
   FailedProcName := '';
-  Module := LibraryLoad(FailedModuleName);
+  Module := LibraryLoad(libssl, libssl100);
   if Module = ModuleNil then
   begin
     CheckExceptions;
@@ -210,7 +214,7 @@ begin
   Result := False;
   FailedModuleName := libcrypto;
   FailedProcName := '';
-  Module := LibraryLoad(FailedModuleName);
+  Module := LibraryLoad(libcrypto, libcrypto1);
   if Module = ModuleNil then
   begin
     CheckExceptions;

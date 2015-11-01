@@ -40,6 +40,7 @@ var
   Size, Point: TPointI;
   S: string;
 begin
+
   if Tip = nil then
   begin
     Tip := NewSplash;

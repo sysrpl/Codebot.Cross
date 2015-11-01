@@ -72,8 +72,8 @@
         <UnitName Value="Codebot.Interop.Windows.Msxml"/>
       </Item9>
       <Item10>
-        <Filename Value="codebot.interop.unix.xml2.pas"/>
-        <UnitName Value="Codebot.Interop.Unix.Xml2"/>
+        <Filename Value="codebot.interop.linux.xml2.pas"/>
+        <UnitName Value="Codebot.Interop.Linux.Xml2"/>
       </Item10>
       <Item11>
         <Filename Value="codebot.interop.sockets.pas"/>
@@ -100,8 +100,7 @@
         <UnitName Value="codebot.text.xml.windows"/>
       </Item16>
       <Item17>
-        <Filename Value="codebot.text.xml.unix.inc"/>
-        <UnitName Value="codebot.text.xml.unix"/>
+        <Filename Value="codebot.text.xml.linux.inc"/>
       </Item17>
       <Item18>
         <Filename Value="codebot.networking.pas"/>
@@ -153,7 +152,7 @@
       </Item29>
       <Item30>
         <Filename Value="codebot.controls.tooltips.pas"/>
-        <UnitName Value="codebot.controls.tooltips"/>
+        <UnitName Value="Codebot.Controls.Tooltips"/>
       </Item30>
       <Item31>
         <Filename Value="codebot.controls.extras.pas"/>
