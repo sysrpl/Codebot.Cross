@@ -45,8 +45,6 @@ type
   end;
 {$endif}
 
-interface
-
 implementation
 
 {$ifdef linux}
