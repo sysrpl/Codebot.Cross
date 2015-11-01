@@ -2356,6 +2356,8 @@ type
     FWidget: PGtkWidget;
     FOpacity: Byte;
     FVisible: Boolean;
+    FSize: TPointI;
+    procedure Resize;
   public
     constructor Create;
     destructor Destroy; override;
@@ -2444,6 +2446,16 @@ begin
   inherited Destroy;
 end;
 
+procedure TSplashCairo.Resize;
+begin
+  if (FBitmap.Width <> FSize.X) or (FBitmap.Height <> FSize.Y) then
+  begin
+    gtk_window_resize(GTK_WINDOW(FWidget), FBitmap.Width, FBitmap.Height);
+    FSize.X := FBitmap.Width;
+    FSize.Y := FBitmap.Height;
+  end;
+end;
+
 function TSplashCairo.GetBitmap: IBitmap;
 begin
     Result := FBitmap;
@@ -2457,8 +2469,10 @@ end;
 procedure TSplashCairo.SetOpacity(Value: Byte);
 begin
   if Value <> FOpacity then
+  begin
     gtk_window_set_opacity(GTK_WINDOW(FWidget), Value / $FF);
-  FOpacity := Value;
+    FOpacity := Value;
+  end;
 end;
 
 function TSplashCairo.GetVisible: Boolean;
@@ -2474,7 +2488,7 @@ begin
     FVisible := Value;
     if FVisible then
     begin
-      gtk_window_resize(GTK_WINDOW(FWidget), FBitmap.Width, FBitmap.Height);
+      Resize;
       gtk_widget_show_all(FWidget);
     end
     else
@@ -2498,7 +2512,7 @@ begin
     SetVisible(False)
   else if FVisible then
   begin
-    gtk_window_resize(GTK_WINDOW(FWidget), FBitmap.Width, FBitmap.Height);
+    Resize;
     gtk_widget_queue_draw(FWidget);
   end;
 end;
