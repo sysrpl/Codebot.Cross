@@ -1,10 +1,10 @@
-(*******************************************************)
+(********************************************************)
 (*                                                      *)
-(*  Codebot Pascal Design Time Library                  *)
+(*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified November 2015                              *)
 (*                                                      *)
-(*******************************************************)
+(********************************************************)
 
 { <include docs/codebot.interop.linux.xml2.txt> }
 unit Codebot.Interop.Linux.Xml2;
@@ -13,7 +13,7 @@ unit Codebot.Interop.Linux.Xml2;
 
 interface
 
-{$ifdef unix}
+{$ifdef linux}
 uses
   Codebot.Core;
 
