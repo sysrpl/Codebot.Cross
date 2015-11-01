@@ -137,8 +137,8 @@ function XmlValidate(const Xml: string): Boolean;
 
 implementation
 
-{$ifdef unix}
-  {$i codebot.text.xml.unix.inc}
+{$ifdef linux}
+  {$i codebot.text.xml.linux.inc}
 {$endif}
 {$ifdef windows}
   {$i codebot.text.xml.windows.inc}
