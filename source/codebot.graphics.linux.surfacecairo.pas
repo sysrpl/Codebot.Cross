@@ -2432,6 +2432,8 @@ begin
   FBitmap := TBitmapCairo.Create;
   FOpacity := $FF;
   FWidget := gtk_window_new(GTK_WINDOW_POPUP);
+  // gtk_window_set_accept_focus(PGtkWindow(FWidget), True);
+  gtk_window_set_type_hint(PGtkWindow(FWidget), GDK_WINDOW_TYPE_HINT_SPLASHSCREEN);
   gtk_widget_set_app_paintable(FWidget, True);
   g_signal_connect(G_OBJECT(FWidget), 'expose-event',
     G_CALLBACK(@SplashExpose), Pointer(Self));

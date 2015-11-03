@@ -473,6 +473,8 @@ function Blend(A, B: TColorB; Percent: Float): TColorB;
 function Fade(Color: TColorB; Percent: Float): TColorB;
 function Darken(Color: TColorB; Percent: Float): TColorB;
 function Lighten(Color: TColorB; Percent: Float): TColorB;
+function Rgba(R, G, B: Byte; A: Float): TColorB; overload;
+function Rgba(Color:TColor; A: Float): TColorB; overload;
 
 { Miscellaneous routines }
 
@@ -2518,6 +2520,20 @@ end;
 function Lighten(Color: TColorB; Percent: Float): TColorB;
 begin
   Result := Color.Lighten(Clamp(Percent));
+end;
+
+function Rgba(R, G, B: Byte; A: Float): TColorB;
+begin
+  Result.Red := R;
+  Result.Green := R;
+  Result.Blue := R;
+  Result.Alpha := Round(Clamp(A) * $FF);
+end;
+
+function Rgba(Color:TColor; A: Float): TColorB;
+begin
+  Result := Color;
+  Result.Alpha := Round(Clamp(A) * $FF);
 end;
 
 { Miscellaneous routines }
