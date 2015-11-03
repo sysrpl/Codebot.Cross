@@ -37,12 +37,10 @@ type
     Timer: TTimer;
     Tip: ISplash;
     TipFont: IFont;
+    MouseAt: TPoint;
     constructor Create(AOwner: TComponent); override;
     procedure DoTipify(HintControl: TControl);
     procedure DoActive(Sender: TObject);
-    procedure DoWaitShowTimer(Sender: TObject);
-    procedure DoShowTimer(Sender: TObject);
-    procedure DoHideTimer(Sender: TObject);
   end;
 
 constructor TTipMaster.Create(AOwner: TComponent);
@@ -76,11 +74,7 @@ begin
   Timer.OnTimer := nil;
   if HintControl = nil then
   begin
-    if Control <> nil then
-    begin
-      Timer.OnTimer := DoHideTimer;
-      Timer.Enabled := True;
-    end;
+    Tip.Opacity := 0;
     Exit;
   end;
   Control := HintControl;
@@ -91,8 +85,6 @@ begin
     Form := nil;
     Exit;
   end;
-  Tip.Opacity := 0;
-  Tip.Visible := False;
   S := HintControl.Hint;
   S := S.Trim;
   if S.Length < 1 then
@@ -127,75 +119,27 @@ begin
   Point := HintControl.ClientToScreen(Point);
   Rect := Tip.Bitmap.ClientRect;
   Rect.Center(Point);
-  Tip.Move(Rect.X,Rect.Y);
+  Tip.Move(Rect.X, Rect.Y + 8);
   Tip.Update;
-  Timer.OnTimer := DoWaitShowTimer;
+  Tip.Opacity := $FF;
+  Timer.OnTimer := DoActive;
   Timer.Enabled := True;
+  MouseAt := Mouse.CursorPos;
 end;
 
 procedure TTipMaster.DoActive(Sender: TObject);
+var
+  Changed: Boolean;
+  P: TPoint;
 begin
-  if (Form <> FormCurrent) or (not Form.Enabled) or (not Control.Enabled) then
+  P := Mouse.CursorPos;
+  Changed := (P.X <> MouseAt.X) and (P.Y <> MouseAt.Y);
+  if Changed or (Form <> FormCurrent) or (not Form.Enabled) or (not Control.Enabled) then
   begin
     Form := nil;
     Control := nil;
     Timer.Enabled := False;
     Tip.Opacity := 0;
-    Tip.Visible := True;
-  end;
-end;
-
-procedure TTipMaster.DoWaitShowTimer(Sender: TObject);
-var
-  F: Float;
-begin
-  Timer.Tag := Timer.Tag + 1;
-  F := Timer.Tag / 5;
-  if F >= 1 then
-  begin
-    Tip.Opacity := 0;
-    Tip.Visible := True;
-    Timer.Tag := 0;
-    Timer.OnTimer := DoShowTimer;
-  end;
-end;
-
-procedure TTipMaster.DoShowTimer(Sender: TObject);
-var
-  F: Float;
-begin
-  Timer.Tag := Timer.Tag + 1;
-  F := Timer.Tag / 10;
-  if F >= 1 then
-  begin
-    Tip.Opacity := $FF;
-    Timer.Enabled := False;
-    Timer.Interval := 100;
-    Timer.OnTimer := DoActive;
-    Timer.Enabled := True;
-  end
-  else
-    Tip.Opacity := Round(F * $FF);
-end;
-
-procedure TTipMaster.DoHideTimer(Sender: TObject);
-var
-  F: Float;
-begin
-  Timer.Tag := Timer.Tag + 1;
-  F := Timer.Tag / 6;
-  if F >= 1 then
-  begin
-    Control := nil;
-    Form :=  nil;
-    Tip.Opacity := 0;
-    Tip.Visible := False;
-    Timer.Enabled := False;
-  end
-  else
-  begin
-    F := 1 - F;
-    Tip.Opacity := Round(F * $FF);
   end;
 end;
 

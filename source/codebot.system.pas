@@ -204,6 +204,8 @@ function DefaultFloatConvertString(constref Item: Float): string;
 const
   Infinity = High(Integer);
 
+{ A positive wrapping modulus }
+function Modulus(Value, Divisor: Integer): Integer;
 { Return the even division of a quotient }
 function Divide(const Quotient, Divisor: Extended): Extended;
 { Return the remainder of an even division }
@@ -979,6 +981,13 @@ end;
 {$endregion}
 
 {$region math routines}
+function Modulus(Value, Divisor: Integer): Integer;
+begin
+  Result := Value mod Divisor;
+  if Result < 0 then
+    Result := Value + Divisor;
+end;
+
 function Divide(const Quotient, Divisor: Extended): Extended;
 begin
   if Divisor = 0 then
