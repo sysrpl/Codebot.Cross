@@ -35,8 +35,10 @@ function NewBrush(X1, Y1, X2, Y2: Float): ILinearGradientBrush; overload;
 function NewBrush(const A, B: TPointF): ILinearGradientBrush; overload;
 { Create a new radial gradient brush bounded by a rect }
 function NewBrush(const Rect: TRectF): IRadialGradientBrush; overload;
+{ Create a new font given a name and size }
+function NewFont(const FontName: string; FontSize: Integer = 10): IFont; overload;
 { Create a new font by copying a regular font object }
-function NewFont(Font: TFont): IFont;
+function NewFont(Font: TFont): IFont; overload;
 { Create a new surface using a regular canvas object }
 function NewSurface(Canvas: TCanvas): ISurface; overload;
 { Create a new surface using a window }
@@ -419,6 +421,11 @@ end;
 function NewBrush(const Rect: TRectF): IRadialGradientBrush;
 begin
   Result := NewRadialGradientBrushCairo(Rect);
+end;
+
+function NewFont(const FontName: string; FontSize: Integer = 10): IFont;
+begin
+  Result := NewFontCairo(FontName, FontSize);
 end;
 
 function NewFont(Font: TFont): IFont;

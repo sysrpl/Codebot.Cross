@@ -605,6 +605,7 @@ type
   IFont = interface
   ['{9ACA722A-6DDE-4C15-89E0-47DD1B86B981}']
     function GetName: string;
+    procedure SetName(const Value: string);
     function GetColor: TColorB;
     procedure SetColor(Value: TColorB);
     function GetQuality: TFontQuality;
@@ -613,7 +614,7 @@ type
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
-    property Name: string read GetName;
+    property Name: string read GetName write SetName;
     property Color: TColorB read GetColor write SetColor;
     property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
@@ -711,7 +712,7 @@ type
 
   TImageFormat = (fmPng, fmJpeg, fmGif, fmBmp, fmIco, fmTiff);
 
-  IBitmap = interface // (ICloneable<IBitmap>)
+  IBitmap = interface(ICloneable<IBitmap>)
   ['{DB935633-A218-4181-96A2-B0808697150F}']
     function Clone: IBitmap;
     function GetEmpty: Boolean;

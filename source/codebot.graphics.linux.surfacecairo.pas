@@ -24,13 +24,14 @@ uses
 
 function NewMatrixCairo: IMatrix;
 function NewPenCairo(Brush: IBrush; Width: Float = 1): IPen; overload;
-function NewPenCairo(Color: TBGRA; Width: Float = 1): IPen; overload;
-function NewSolidBrushCairo(Color: TBGRA): ISolidBrush;
+function NewPenCairo(Color: TColorB; Width: Float = 1): IPen; overload;
+function NewSolidBrushCairo(Color: TColorB): ISolidBrush;
 function NewBitmapBrushCairo(Bitmap: IBitmap): IBitmapBrush;
 function NewLinearGradientBrushCairo(X1, Y1, X2, Y2: Float): ILinearGradientBrush; overload;
 function NewLinearGradientBrushCairo(const A, B: TPointF): ILinearGradientBrush; overload;
 function NewRadialGradientBrushCairo(const Rect: TRectF): IRadialGradientBrush;
-function NewFontCairo(Font: TFont): IFont;
+function NewFontCairo(const FontName: string; FontSize: Integer): IFont; overload;
+function NewFontCairo(Font: TFont): IFont; overload;
 function NewSurfaceCairo(Canvas: TCanvas): ISurface; overload;
 function NewSurfaceCairo(Control: TWinControl): ISurface; overload;
 function NewBitmapCairo(Width, Height: Integer): IBitmap;
@@ -216,7 +217,7 @@ type
   TPenCairo = class(TInterfacedObject, IPen)
   private
     FBrush: IBrush;
-    FColor: TBGRA;
+    FColor: TColorB;
     FWidth: Float;
     FLinePattern: TLinePattern;
     FLinePatternOffset: Float;
@@ -225,11 +226,11 @@ type
     FMiterLimit: Float;
   public
     constructor Create(B: IBrush; W: Float); overload;
-    constructor Create(C: TBGRA; W: Float); overload;
+    constructor Create(C: TColorB; W: Float); overload;
     function GetBrush: IBrush;
     procedure SetBrush(Value: IBrush);
-    function GetColor: TBGRA;
-    procedure SetColor(Value: TBGRA);
+    function GetColor: TColorB;
+    procedure SetColor(Value: TColorB);
     function GetWidth: Float;
     procedure SetWidth(Value: Float);
     function GetLinePattern: TLinePattern;
@@ -243,7 +244,7 @@ type
     function GetMiterLimit: Float;
     procedure SetMiterLimit(Value: Float);
     property Brush: IBrush read GetBrush write SetBrush;
-    property Color: TBGRA read GetColor write SetColor;
+    property Color: TColorB read GetColor write SetColor;
     property Width: Float read GetWidth write SetWidth;
     property LinePattern: TLinePattern read GetLinePattern write SetLinePattern;
     property LinePatternOffset: Float read GetLinePatternOffset write SetLinePatternOffset;
@@ -271,12 +272,12 @@ type
 
   TSolidBrushCairo = class(TBrushCairo, ISolidBrush)
   private
-    FColor: TBGRA;
+    FColor: TColorB;
   public
-    constructor Create(C: TBGRA);
-    function GetColor: TBGRA;
-    procedure SetColor(Value: TBGRA);
-    property Color: TBGRA read GetColor write SetColor;
+    constructor Create(C: TColorB);
+    function GetColor: TColorB;
+    procedure SetColor(Value: TColorB);
+    property Color: TColorB read GetColor write SetColor;
   end;
 
 { TPatternBrush }
@@ -315,7 +316,7 @@ type
     constructor Create(Pattern: PCairoPattern; M: IMatrix);
     function GetWrap: TGradientWrap;
     procedure SetWrap(Value: TGradientWrap);
-    procedure AddStop(Color: TBGRA; Offset: Float);
+    procedure AddStop(Color: TColorB; Offset: Float);
     property Wrap: TGradientWrap read GetWrap write SetWrap;
   end;
 
@@ -349,24 +350,26 @@ type
   private
     FDesc: PPangoFontDescription;
     FName: string;
-    FColor: TBGRA;
+    FColor: TColorB;
     FQuality: TFontQuality;
     FStyle: TFontStyles;
     FSize: Float;
   public
-    constructor Create(Font: TFont);
+    constructor Create(Font: TFont); overload;
+    constructor Create(const FontName: string; FontSize: Integer = 10); overload;
     destructor Destroy; override;
     function GetName: string;
-    function GetColor: TBGRA;
-    procedure SetColor(Value: TBGRA);
+    procedure SetName(const Value: string);
+    function GetColor: TColorB;
+    procedure SetColor(Value: TColorB);
     function GetQuality: TFontQuality;
     procedure SetQuality(Value: TFontQuality);
     function GetStyle: TFontStyles;
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
-    property Name: string read GetName;
-    property Color: TBGRA read GetColor write SetColor;
+    property Name: string read GetName write SetName;
+    property Color: TColorB read GetColor write SetColor;
     property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
     property Size: Float read GetSize write SetSize;
@@ -420,8 +423,7 @@ type
     FPathCairo: TSurfacePathCairo;
     FMatrix: IMatrixCairo;
     FLayout: PPangoLayout;
-    FFont: IFont;
-    procedure SetSource(const C: TBGRA); overload;
+    procedure SetSource(const C: TColorB); overload;
     procedure SetSource(P: IPen); overload;
     procedure SetSource(B: IBrush); overload;
     procedure SetFont(F: IFont);
@@ -437,7 +439,7 @@ type
     function GetPath: IPath;
     procedure Flush; virtual;
     procedure Clear; overload;
-    procedure Clear(Color: TBGRA); overload;
+    procedure Clear(Color: TColorB); overload;
     procedure CopyTo(const Source: TRectF; Surface: ISurface; const Dest: TRectF;
       Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
     procedure Save;
@@ -703,7 +705,7 @@ begin
   FMiterLimit := PenMiterLimitDefault;
 end;
 
-constructor TPenCairo.Create(C: TBGRA; W: Float);
+constructor TPenCairo.Create(C: TColorB; W: Float);
 begin
   inherited Create;
   FColor := C;
@@ -721,12 +723,12 @@ begin
   FBrush := Value;
 end;
 
-function TPenCairo.GetColor: TBGRA;
+function TPenCairo.GetColor: TColorB;
 begin
   Result := FColor;
 end;
 
-procedure TPenCairo.SetColor(Value: TBGRA);
+procedure TPenCairo.SetColor(Value: TColorB);
 begin
   FColor := Value;
 end;
@@ -828,18 +830,18 @@ end;
 
 { TSolidBrushCairo }
 
-constructor TSolidBrushCairo.Create(C: TBGRA);
+constructor TSolidBrushCairo.Create(C: TColorB);
 begin
   inherited Create;
   FColor := C;
 end;
 
-function TSolidBrushCairo.GetColor: TBGRA;
+function TSolidBrushCairo.GetColor: TColorB;
 begin
   Result := FColor;
 end;
 
-procedure TSolidBrushCairo.SetColor(Value: TBGRA);
+procedure TSolidBrushCairo.SetColor(Value: TColorB);
 begin
   FColor := Value;
 end;
@@ -949,7 +951,7 @@ begin
   end;
 end;
 
-procedure TGradientBrushCairo.AddStop(Color: TBGRA; Offset: Float);
+procedure TGradientBrushCairo.AddStop(Color: TColorB; Offset: Float);
 begin
   cairo_pattern_add_color_stop_rgba(FPattern, Offset, Color.Red / $FF,
     Color.Green / $FF, Color.Blue / $FF, Color.Alpha / $FF);
@@ -1073,9 +1075,19 @@ begin
   N := pango_font_description_to_string(FDesc);
   FName := N;
   g_free(N);
+  FQuality := Font.Quality;
   FColor := Font.Color;
   FStyle := Font.Style;
-  FSize := pango_font_description_get_size(FDesc) / PANGO_SCALE;
+  Size := Font.Size;
+end;
+
+constructor TFontCairo.Create(const FontName: string; FontSize: Integer = 10);
+begin
+  inherited Create;
+  FDesc := pango_font_description_new();
+  FColor := clBlack;
+  SetName(FontName);
+  SetSize(FontSize);
 end;
 
 destructor TFontCairo.Destroy;
@@ -1089,12 +1101,21 @@ begin
   Result := FName;
 end;
 
-function TFontCairo.GetColor: TBGRA;
+procedure TFontCairo.SetName(const Value: string);
+begin
+  if Value <> FName then
+  begin
+    FName := Value;
+    pango_font_description_set_family(FDesc, PChar(Value));
+  end;
+end;
+
+function TFontCairo.GetColor: TColorB;
 begin
   Result := FColor;
 end;
 
-procedure TFontCairo.SetColor(Value: TBGRA);
+procedure TFontCairo.SetColor(Value: TColorB);
 begin
   FColor := Value;
 end;
@@ -1291,7 +1312,6 @@ begin
   if FLayout <> nil then
     g_object_unref(FLayout);
   FLayout := nil;
-  FFont := nil;
   if FPathCairo <> nil then
     FPathCairo.FCairo := nil;
   if FCairo <> nil then
@@ -1307,7 +1327,7 @@ begin
     FLayout := pango_cairo_create_layout(FCairo);
 end;
 
-procedure TSurfaceCairo.SetSource(const C: TBGRA);
+procedure TSurfaceCairo.SetSource(const C: TColorB);
 begin
   if not HandleAvailable then Exit;
   cairo_set_source_rgba(FCairo, C.Red / $FF, C.Green / $FF,
@@ -1444,7 +1464,7 @@ begin
   cairo_restore(FCairo);
 end;
 
-procedure TSurfaceCairo.Clear(Color: TBGRA);
+procedure TSurfaceCairo.Clear(Color: TColorB);
 begin
   if not HandleAvailable then Exit;
   cairo_save(FCairo);
@@ -1601,14 +1621,12 @@ end;
 
 procedure TSurfaceCairo.SetFont(F: IFont);
 var
+  C: TFontCairo;
   D: PPangoFontDescription;
 begin
-  if F <> FFont then
-  begin
-    D := (F as TFontCairo).FDesc;
-    pango_layout_set_font_description(FLayout, D);
-    FFont := F;
-  end;
+  C := F as TFontCairo;
+  D := C.FDesc;
+  pango_layout_set_font_description(FLayout, D);
 end;
 
 function TSurfaceCairo.TextSize(Font: IFont; const Text: string): TPointF;
@@ -1901,7 +1919,7 @@ begin
       H := FBitmap.Height;
       B := PByte(FBitmap.Pixels);
       S := cairo_image_surface_create_for_data(B, CAIRO_FORMAT_ARGB32,
-        W, H, W * SizeOf(TBGRA));
+        W, H, W * SizeOf(TColorB));
       FCairo := cairo_create(S);
       cairo_surface_destroy(S);
        FDirty := False;
@@ -2254,12 +2272,12 @@ begin
   Result := TPenCairo.Create(Brush, Width);
 end;
 
-function NewPenCairo(Color: TBGRA; Width: Float = 1): IPen;
+function NewPenCairo(Color: TColorB; Width: Float = 1): IPen;
 begin
   Result := TPenCairo.Create(Color, Width);
 end;
 
-function NewSolidBrushCairo(Color: TBGRA): ISolidBrush;
+function NewSolidBrushCairo(Color: TColorB): ISolidBrush;
 begin
   Result := TSolidBrushCairo.Create(Color);
 end;
@@ -2282,6 +2300,11 @@ end;
 function NewBitmapBrushCairo(Bitmap: IBitmap): IBitmapBrush;
 begin
   Result := TBitmapBrushCairo.Create(Bitmap);
+end;
+
+function NewFontCairo(const FontName: string; FontSize: Integer): IFont;
+begin
+  Result := TFontCairo.Create(FontName, FontSize);
 end;
 
 function NewFontCairo(Font: TFont): IFont;
