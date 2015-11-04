@@ -52,7 +52,7 @@ var
   Form: TCustomForm;
   I: Integer;
 begin
-  Window := WindowManager.GetForegroundWindow;
+  Window := WindowManager.ForegroundWindow;
   for I := 0 to Screen.FormCount - 1 do
   begin
     Form := Screen.Forms[I];

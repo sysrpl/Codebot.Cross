@@ -2398,8 +2398,8 @@ begin
   Window := gtk_widget_get_window(Widget);
   Bits := 0;
   Bitmap := gdk_bitmap_create_from_data(Widget.window, Pointer(@Bits), 1, 1);
-    gdk_window_input_shape_combine_mask(Window, Bitmap, 0, 0);
-    g_object_unref(Bitmap);
+  gdk_window_input_shape_combine_mask(Window, Bitmap, 0, 0);
+  g_object_unref(Bitmap);
 end;
 
 procedure SplashExpose(widget: PGtkWidget; event: PGdkEventExpose;
