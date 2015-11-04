@@ -23,13 +23,13 @@ uses
 type
   WindowManager = record
   private
+    class function GetForegroundWindow: TWindow; static;
+    class function GetName: string; static;
     class function SetState(Window: TWindow; State: string;
       Active: Boolean; Toggle: Boolean = False): Boolean; static;
   public
     { Show or hide all the windows on your current workspace }
     class function ShowDesktop(Show: Boolean): Boolean; static;
-    { Retrive the window with input focus }
-    class function GetForegroundWindow: TWindow; static;
     { Switch workspace, bring a window to the foreground, and give it input }
     class function Activate(Window: TWindow): Boolean; static;
     { Stick a window to the same place in all workspaces }
@@ -42,6 +42,10 @@ type
     class function Above(Window: TWindow; Topmost: Boolean): Boolean; static;
     { Asks the window manage to bring attention to the window }
     class function Attention(Window: TWindow): Boolean; static;
+    { The foreground window is the window with input focus }
+    class property ForegroundWindow: TWindow read GetForegroundWindow;
+    { The name of the window manager }
+    class property Name: string read GetName;
   end;
 {$endif}
 
@@ -101,12 +105,48 @@ begin
   try
     Root := DefaultRootWindow(Display);
     Prop := XInternAtom(Display, '_NET_ACTIVE_WINDOW', False);
+    Data := nil;
     if (XGetWindowProperty(Display, Root, Prop, 0, not 0, False,
       AnyPropertyType, @Actual, @Dummy, @Dummy, @Dummy,
       @Data) = Success) and (Data <> nil) then
     begin
       Result := PWindow(Data)^;
       XFree(Data);
+    end;
+  finally
+    XCloseDisplay(Display);
+  end;
+end;
+
+class function WindowManager.GetName: string;
+var
+  Display: PDisplay;
+  Root, Support: TWindow;
+  Prop, Actual: TAtom;
+  Dummy: LongWord;
+  Data: PChar;
+begin
+  Result := '';
+  Display := XOpenDisplay(nil);
+  try
+    Root := DefaultRootWindow(Display);
+    Prop := XInternAtom(Display, '_NET_SUPPORTING_WM_CHECK', False);
+    Support := 0;
+    Data := nil;
+    if (XGetWindowProperty(Display, Root, Prop, 0, not 0, False,
+      AnyPropertyType, @Actual, @Dummy, @Dummy, @Dummy,
+      @Data) = Success) and (Data <> nil) then
+    begin
+      Support := PWindow(Data)^;
+      XFree(Data);
+      Prop := XInternAtom(Display, '_NET_WM_NAME', False);
+      if (XGetWindowProperty(Display, Support, Prop, 0, not 0, False,
+        AnyPropertyType, @Actual, @Dummy, @Dummy, @Dummy,
+        @Data) = Success) and (Data <> nil) then
+      begin
+        Result := Data;
+        XFree(Data);
+      end;
     end;
   finally
     XCloseDisplay(Display);
