@@ -18,7 +18,8 @@ uses
   SysUtils, Classes, Graphics, Controls,
   Codebot.System,
   Codebot.Collections,
-  Codebot.Graphics.Types;
+  Codebot.Graphics.Types,
+  Codebot.Forms.Management;
 
 { New object routines }
 
@@ -31,7 +32,7 @@ function NewLinearGradientBrushCairo(X1, Y1, X2, Y2: Float): ILinearGradientBrus
 function NewLinearGradientBrushCairo(const A, B: TPointF): ILinearGradientBrush; overload;
 function NewRadialGradientBrushCairo(const Rect: TRectF): IRadialGradientBrush;
 function NewFontCairo(const FontName: string; FontSize: Integer): IFont; overload;
-function NewFontCairo(Font: TFont): IFont; overload;
+function NewFontCairo(Font: TFont = nil): IFont; overload;
 function NewSurfaceCairo(Canvas: TCanvas): ISurface; overload;
 function NewSurfaceCairo(Control: TWinControl): ISurface; overload;
 function NewBitmapCairo(Width, Height: Integer): IBitmap;
@@ -1056,35 +1057,28 @@ end;
 { TFontCairo }
 
 constructor TFontCairo.Create(Font: TFont);
-var
-  Obj: PGDIObject;
-  Layout: PPangoLayout;
-  Context: PPangoContext;
-  Description: PPangoFontDescription;
-  N: PAnsiChar;
 begin
   inherited Create;
-  Obj := PGDIObject(Font.Handle);
-  Layout := PPangoLayout(Obj.GDIFontObject);
-  Context := pango_layout_get_context(Layout);
-  pango_cairo_context_set_resolution(Context, 96);
-  Description := pango_layout_get_font_description(Layout);
-  if Description = nil then
-    Description := pango_context_get_font_description(Context);
-  FDesc := pango_font_description_copy(Description);
-  N := pango_font_description_to_string(FDesc);
-  FName := N;
-  g_free(N);
-  FQuality := Font.Quality;
-  FColor := Font.Color;
-  FStyle := Font.Style;
-  Size := Font.Size;
+  FDesc := pango_font_description_new;
+  if Font = nil then
+    Font := FormManager.DefaulFont;
+  if Font.Name <> 'default' then
+    SetName(Font.Name)
+  else
+    SetName(FormManager.DefaulFont.Name);
+  if Font.Size > 4 then
+    SetSize(Font.Size)
+  else
+    SetSize(FormManager.DefaulFont.Size);
+  Quality := Font.Quality;
+  Color := Font.Color;
+  Style := Font.Style;
 end;
 
 constructor TFontCairo.Create(const FontName: string; FontSize: Integer = 10);
 begin
   inherited Create;
-  FDesc := pango_font_description_new();
+  FDesc := pango_font_description_new;
   FColor := clBlack;
   SetName(FontName);
   SetSize(FontSize);
@@ -2307,7 +2301,7 @@ begin
   Result := TFontCairo.Create(FontName, FontSize);
 end;
 
-function NewFontCairo(Font: TFont): IFont;
+function NewFontCairo(Font: TFont = nil): IFont;
 begin
   Result := TFontCairo.Create(Font);
 end;
@@ -2389,7 +2383,7 @@ type
     procedure SetOpacity(Value: Byte);
     function GetVisible: Boolean;
     procedure SetVisible(Value: Boolean);
-    function GetHandle: THandle;
+    function GetHandle: IntPtr;
     procedure Move(X, Y: Integer);
     procedure Update;
   end;
@@ -2521,9 +2515,9 @@ begin
   end;
 end;
 
-function TSplashCairo.GetHandle: THandle;
+function TSplashCairo.GetHandle: IntPtr;
 begin
-  Result := THandle(FWidget);
+  Result := IntPtr(FWidget);
 end;
 
 procedure TSplashCairo.Move(X, Y: Integer);

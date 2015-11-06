@@ -472,7 +472,7 @@ begin
   FTitle := TBannerText.Create;
   FTitle.Text := 'Your title here';
   FTitle.ParentFont := False;
-  FTitle.Font.Height := 20;
+  FTitle.Font.Size := 20;
   FTitle.Font.Style := [fsBold];
   FTitle.OnChange.Add(PartChange);
   FTitleSub := TBannerText.Create;
@@ -603,7 +603,7 @@ begin
   FTitle := TBannerText.Create;
   FTitle.Text := 'Your title here';
   FTitle.ParentFont := False;
-  FTitle.Font.Height := 20;
+  FTitle.Font.Size := 20;
   FTitle.Font.Style := [fsBold];
   FTitle.OnChange.Add(PartChange);
   FTitleSub := TBannerText.Create;
