@@ -21,7 +21,7 @@ uses
   Codebot.Forms.Management;
 
 var
-  UseTipify: Boolean = True;
+  UseTipify: Boolean = False;
 
 procedure Tipify(HintControl: TControl);
 
@@ -78,8 +78,8 @@ begin
     Exit;
   end;
   Control := HintControl;
-  Form := FormParent(Control);
-  if Form <> FormCurrent then
+  Form := FormManager.ParentForm(Control);
+  if Form <> FormManager.Current then
   begin
     Control := nil;
     Form := nil;
@@ -134,7 +134,7 @@ var
 begin
   P := Mouse.CursorPos;
   Changed := (P.X <> MouseAt.X) and (P.Y <> MouseAt.Y);
-  if Changed or (Form <> FormCurrent) or (not Form.Enabled) or (not Control.Enabled) then
+  if Changed or (Form <> FormManager.Current) or (not Form.Enabled) or (not Control.Enabled) then
   begin
     Form := nil;
     Control := nil;

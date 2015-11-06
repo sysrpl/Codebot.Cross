@@ -14,17 +14,27 @@ unit Codebot.Forms.Management;
 interface
 
 uses
-  Classes, SysUtils, Controls, Forms;
+  Classes, SysUtils, Graphics, Controls, Forms,
+  Codebot.System;
 
-procedure FormActivate(Form: TCustomForm);
-function FormCurrent: TCustomForm;
-function FormParent(Control: TControl): TCustomForm;
+type
+  FormManager = record
+  private
+    class var FDefaultFont: TFont;
+    class function GetCurrent: TCustomForm; static;
+    class function GetDefaultFont: TFont; static;
+  public
+    class procedure Activate(Form: TCustomForm); static;
+    class function ParentForm(Control: TControl): TCustomForm; static;
+    class property Current: TCustomForm read GetCurrent;
+    class property DefaulFont: TFont read GetDefaultFont;
+  end;
 
 implementation
 
 {$if defined(linux) and defined(lclgtk2)}
 uses
-  X, Gtk2, Gdk2, Gdk2X,
+  X, GLib2, Gtk2, Gdk2, Gdk2X,
   Codebot.Interop.Linux.NetWM;
 
 function XWindow(Control: TControl): TWindow;
@@ -33,7 +43,7 @@ var
   W: PGdkWindow;
 begin
   Result := 0;
-  F := FormParent(Control);
+  F := FormManager.ParentForm(Control);
   if F <> nil then
   begin
     W := GTK_WIDGET(PGtkWidget(F.Handle)).window;
@@ -41,12 +51,12 @@ begin
   end;
 end;
 
-procedure FormActivate(Form: TCustomForm);
+class procedure FormManager.Activate(Form: TCustomForm);
 begin
   WindowManager.Activate(XWindow(Form));
 end;
 
-function FormCurrent: TCustomForm;
+class function FormManager.GetCurrent: TCustomForm;
 var
   Window: TWindow;
   Form: TCustomForm;
@@ -61,9 +71,28 @@ begin
   end;
   Result:= nil;
 end;
+
+class function FormManager.GetDefaultFont: Graphics.TFont;
+var
+  Items: StringArray;
+  S: string;
+  P: PChar;
+begin
+  Result := FDefaultFont;
+  if Result <> nil then
+    Exit;
+  FDefaultFont := Graphics.TFont.Create;
+  g_object_get(gtk_settings_get_default, 'gtk-font-name', [@P, nil]);
+  S := P;
+  g_free(P);
+  Items := S.Split(' ');
+  FDefaultFont.Size := StrToInt(Items.Pop);
+  FDefaultFont.Name := Items.Join(' ');
+  Result := FDefaultFont;
+end;
 {$endif}
 
-function FormParent(Control:TControl): TCustomForm;
+class function FormManager.ParentForm(Control:TControl): TCustomForm;
 var
   P: TWinControl;
 begin

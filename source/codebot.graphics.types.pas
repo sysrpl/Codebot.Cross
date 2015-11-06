@@ -748,7 +748,7 @@ type
     procedure SetOpacity(Value: Byte);
     function GetVisible: Boolean;
     procedure SetVisible(Value: Boolean);
-    function GetHandle: THandle;
+    function GetHandle: IntPtr;
     { Move the window to x and y }
     procedure Move(X, Y: Integer);
     { Update the window when you're done drawing on bitmap }
@@ -760,7 +760,7 @@ type
     { Visible shows or hide the window }
     property Visible: Boolean read GetVisible write SetVisible;
     { Handle is the udnerlying operating system window handle }
-    property Handle: THandle read GetHandle;
+    property Handle: IntPtr read GetHandle;
   end;
 
 const

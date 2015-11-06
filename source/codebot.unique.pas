@@ -44,9 +44,20 @@ type
   end;
 
 { UniqueInstance should be called with a valid key at program startup }
-function UniqueInstance(Key: Word = 0): TUniqueInstance;
+function UniqueInstance(Key: Word = 0): TUniqueInstance; overload;
+{ UniqueInstance overloaded to generate a Key by hashing a string }
+function UniqueInstance(const Key: string): TUniqueInstance; overload;
 
 implementation
+
+function HashOf(const S: string): LongWord;
+var
+  I: Integer;
+begin
+  Result := 0;
+  for I := 1 to Length(S) do
+    Result := ((Result shl 2) or (Result shr (SizeOf(Result) * 8 - 2))) xor Ord(S[I]);
+end;
 
 { TUniqueInstance }
 
@@ -119,6 +130,15 @@ begin
   if InternalUniqueInstance = nil then
     InternalUniqueInstance := TUniqueInstance.Create(Key);
   Result := TUniqueInstance(InternalUniqueInstance);
+end;
+
+function UniqueInstance(const Key: string): TUniqueInstance;
+var
+  L: LongWord;
+begin
+  L := HashOf(Key);
+  L := L mod (High(Word) div 2 + High(Word) div 4) + High(Word) div 4;
+  Result := UniqueInstance(L);
 end;
 
 initialization

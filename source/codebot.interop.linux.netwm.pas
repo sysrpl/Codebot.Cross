@@ -15,7 +15,7 @@ interface
 
 {$ifdef linux}
 uses
-   X, XLib, XAtom;
+   SysUtils, X, XLib, XAtom;
 
 { WindowManager is a static type implementing SOME of the
   NetWM protocol. It is a starter type. }
@@ -23,8 +23,12 @@ uses
 type
   WindowManager = record
   private
+    class var FName: string;
+    class var FDesktopEnvironment: string;
     class function GetForegroundWindow: TWindow; static;
+    class function GetCompositing: Boolean; static;
     class function GetName: string; static;
+    class function GetDesktopEnvironment: string; static;
     class function SetState(Window: TWindow; State: string;
       Active: Boolean; Toggle: Boolean = False): Boolean; static;
   public
@@ -44,8 +48,12 @@ type
     class function Attention(Window: TWindow): Boolean; static;
     { The foreground window is the window with input focus }
     class property ForegroundWindow: TWindow read GetForegroundWindow;
-    { The name of the window manager }
+    { Compositing is true when the window manager renders windows to textures }
+    class property Compositing: Boolean read GetCompositing;
+    { The name of the window manager such as Compiz, KWin, Mutter, Metacity }
     class property Name: string read GetName;
+    { The name of the desktop environment such as Unity, KDE, Xcfe }
+    class property DesktopEnvironment: string read GetDesktopEnvironment;
   end;
 {$endif}
 
@@ -126,7 +134,9 @@ var
   Dummy: LongWord;
   Data: PChar;
 begin
-  Result := '';
+  Result := FName;
+  if Result <> '' then
+    Exit;
   Display := XOpenDisplay(nil);
   try
     Root := DefaultRootWindow(Display);
@@ -151,6 +161,24 @@ begin
   finally
     XCloseDisplay(Display);
   end;
+  FName := Result;
+end;
+
+class function WindowManager.GetCompositing: Boolean;
+var
+  S: string;
+begin
+  S := WindowManager.Name;
+  Result := (S = 'Compiz') or (S = 'Mutter') or (S = 'KWin') or (S = 'Muffin');
+end;
+
+class function WindowManager.GetDesktopEnvironment: string;
+begin
+  Result := FDesktopEnvironment;
+  if Result <> '' then
+    Exit;
+  Result := GetEnvironmentVariable('XDG_CURRENT_DESKTOP');
+  FDesktopEnvironment := Result;
 end;
 
 class function WindowManager.Activate(Window: TWindow): Boolean;
