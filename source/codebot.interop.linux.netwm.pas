@@ -166,10 +166,13 @@ end;
 
 class function WindowManager.GetCompositing: Boolean;
 var
-  S: string;
+  Display: PDisplay;
+  Prop: TAtom;
 begin
-  S := WindowManager.Name;
-  Result := (S = 'Compiz') or (S = 'Mutter') or (S = 'KWin') or (S = 'Muffin');
+  Display := XOpenDisplay(nil);
+  Prop := XInternAtom(Display,'_NET_WM_CM_S0', False);
+  Result := XGetSelectionOwner(Display, Prop) <> Prop;
+  XCloseDisplay(Display);
 end;
 
 class function WindowManager.GetDesktopEnvironment: string;
