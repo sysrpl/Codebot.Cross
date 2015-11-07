@@ -76,7 +76,11 @@ type
 { TConvert\<Source, Target\> is used to convert from one type to another }
   // TConvert<TItem, T> = function(constref Item: TItem): T; see issue #28766
 { TConvertString\<T\> is used to convert a type to a string }
-  TConvertString<TItem> = function(constref Item: TItem): string;
+ TConvertString<TItem> = function(constref Item: TItem): string;
+
+{ TFilterFunc\<T\> is used to test if and item passes a test }
+
+  TFilterFunc<T> = function(constref Value: T): Boolean;
 
 { ICloneable\<T\> represents an object which can clone T
   See also
@@ -155,8 +159,12 @@ type
     procedure PushRange(const Collection: array of T);
     { Remove an item from the end of the list }
     function Pop: T;
-    { Remove an item from the end of the list }
+    { Remove an item randomly from the list }
     function PopRandom: T;
+    { Return a copy of the list with items passing through a filter }
+    function Filter(Func: TFilterFunc<T>): TArrayList<T>;
+    { Resurn the first item matching a condition }
+    function FirstOf(Func: TFilterFunc<T>): T;
     { Removes an item by index from the list and decresaes the count by one }
     procedure Delete(Index: Integer);
     { Removes all items setting the count of the list to 0 }
@@ -456,7 +464,7 @@ type
     function ArrayIndex(const Values: array of string): Integer;
     { Break a string into lines separated by the break style  }
     function Lines: StringArray;
-    { Retruns the first entire line containing SubStr }
+    { Returns the first entire line containing SubStr }
     function LineWith(const SubStr: string; IgnoreCase: Boolean = False): string;
     { Splits a string into a string array using a separator }
     function Split(Separator: string): StringArray;
@@ -2935,6 +2943,32 @@ begin
     Result := Items[I];
     Delete(I);
   end;
+end;
+
+function TArrayList<T>.Filter(Func: TFilterFunc<T>): TArrayList<T>;
+var
+  I, J: Integer;
+begin
+  J := System.Length(Items);
+  System.SetLength(Result.Items, J);
+  J := 0;
+  for I := 0 to System.Length(Items) - 1 do
+    if Func(Items[I]) then
+    begin
+      Result.Items[J] := Items[I];
+      Inc(J);
+    end;
+  System.SetLength(Result.Items, J);
+end;
+
+function TArrayList<T>.FirstOf(Func: TFilterFunc<T>): T;
+var
+  I: Integer;
+begin
+  for I := 0 to System.Length(Items) - 1 do
+    if Func(Items[I]) then
+      Exit(Items[I]);
+  Result := Default(T);
 end;
 
 procedure TArrayList<T>.Delete(Index: Integer);
