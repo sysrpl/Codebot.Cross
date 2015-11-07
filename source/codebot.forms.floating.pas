@@ -14,7 +14,9 @@ unit Codebot.Forms.Floating;
 interface
 
 uses
-  Classes, SysUtils, Controls, Forms;
+  Classes, SysUtils, Controls, Forms,
+  Codebot.System,
+  Codebot.Graphics.Types;
 
 { TFloatingForm }
 
@@ -31,6 +33,7 @@ type
     procedure CreateHandle; override;
   public
     constructor Create(AOwner: TComponent); override;
+    procedure MoveSize(Rect: TRectI);
     property Opacity: Byte read FOpacity write SetOpacity;
     property Compositing: Boolean read GetCompositing;
     property Faded: Boolean read FFaded write SetFaded;
@@ -43,21 +46,14 @@ uses
   GLib2, Gdk2, Gtk2, Gtk2Def, Gtk2Extra, Gtk2Globals,
   Codebot.Interop.Linux.NetWM;
 
-{ TFloatingForm }
-
-constructor TFloatingForm.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-  BorderStyle := bsNone;
-  FOpacity := $FF;
-end;
-
 procedure gdk_window_input_shape_combine_mask (window: PGdkWindow;
   mask: PGdkBitmap; x, y: GInt); cdecl; external gdklib;
 function gtk_widget_get_window(widget: PGtkWidget): PGdkWindow; cdecl; external gtklib;
+function gdk_window_get_screen(window: PGdkWindow): PGdkScreen; cdecl; external gdklib;
+function gdk_screen_is_composited(screen: PGdkScreen): gboolean; cdecl; external gdklib;
 
 procedure FormScreenChanged(widget: PGtkWidget; old_screen: PGdkScreen;
-    userdata: GPointer); cdecl;
+  userdata: GPointer); cdecl;
 var
   Screen: PGdkScreen;
   Colormap: PGdkColormap;
@@ -65,6 +61,15 @@ begin
   Screen := gtk_widget_get_screen(widget);
   Colormap := gdk_screen_get_rgba_colormap(Screen);
     gtk_widget_set_colormap(widget, Colormap);
+end;
+
+{ TFloatingForm }
+
+constructor TFloatingForm.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  BorderStyle := bsNone;
+  FOpacity := $FF;
 end;
 
 procedure TFloatingForm.CreateHandle;
@@ -88,6 +93,14 @@ begin
   end;
 end;
 
+procedure TFloatingForm.MoveSize(Rect: TRectI);
+var
+  Window: PGdkWindow;
+begin
+  Window := GTK_WIDGET(Pointer(Handle)).window;
+  gdk_window_move_resize(Window, Rect.Left, Rect.Top, Rect.Width, Rect.Height);
+end;
+
 procedure TFloatingForm.SetOpacity(Value: Byte);
 begin
   if Value <> FOpacity then
@@ -98,8 +111,11 @@ begin
 end;
 
 function TFloatingForm.GetCompositing: Boolean;
+var
+  Screen: PGdkScreen;
 begin
-  Result := WindowManager.Compositing;
+  Screen := gdk_window_get_screen(GTK_WIDGET(Pointer(Handle)).window);
+  Result := gdk_screen_is_composited(screen);
 end;
 
 procedure TFloatingForm.SetFaded(Value: Boolean);
@@ -113,10 +129,9 @@ begin
       else
         Opacity := $FF
     else
-      Visible := FFaded;
+      Visible := not FFaded;
   end;
 end;
-
 {$endif}
 
 end.
