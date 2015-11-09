@@ -15,7 +15,7 @@ uses
   Codebot.Cryptography, Codebot.Text.Xml, Codebot.Networking, 
   Codebot.Networking.Storage, Codebot.Networking.Ftp, Codebot.Networking.Web, 
   Codebot.Forms.Management, Codebot.Forms.Floating, Codebot.Forms.Popup, 
-  Codebot.Graphics.Windows.ImageBitmap, 
+  Codebot.Forms.Widget, Codebot.Graphics.Windows.ImageBitmap, 
   Codebot.Graphics.Windows.InterfacedBitmap, Codebot.Graphics, 
   Codebot.Graphics.Extras, Codebot.Graphics.Types, 
   Codebot.Graphics.Windows.SurfaceGdiPlus, 

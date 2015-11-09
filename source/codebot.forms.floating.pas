@@ -14,7 +14,7 @@ unit Codebot.Forms.Floating;
 interface
 
 uses
-  Classes, SysUtils, Controls, Forms,
+  Classes, SysUtils, Controls, Forms, LCLIntf, LCLType,
   Codebot.System,
   Codebot.Graphics.Types;
 
@@ -26,6 +26,8 @@ type
     FWindow: Pointer;
     FOpacity: Byte;
     FFaded: Boolean;
+    FFadeTop: Integer;
+    FFadeMoved: Boolean;
     function GetCompositing: Boolean;
     procedure SetFaded(Value: Boolean);
     procedure SetOpacity(Value: Byte);
@@ -33,6 +35,7 @@ type
     procedure CreateHandle; override;
   public
     constructor Create(AOwner: TComponent); override;
+    procedure ClipEvents;
     procedure MoveSize(Rect: TRectI);
     property Opacity: Byte read FOpacity write SetOpacity;
     property Compositing: Boolean read GetCompositing;
@@ -46,7 +49,7 @@ uses
   GLib2, Gdk2, Gtk2, Gtk2Def, Gtk2Extra, Gtk2Globals,
   Codebot.Interop.Linux.NetWM;
 
-procedure gdk_window_input_shape_combine_mask (window: PGdkWindow;
+procedure gdk_window_input_shape_combine_mask(window: PGdkWindow;
   mask: PGdkBitmap; x, y: GInt); cdecl; external gdklib;
 function gtk_widget_get_window(widget: PGtkWidget): PGdkWindow; cdecl; external gtklib;
 function gdk_window_get_screen(window: PGdkWindow): PGdkScreen; cdecl; external gdklib;
@@ -93,6 +96,21 @@ begin
   end;
 end;
 
+procedure TFloatingForm.ClipEvents;
+var
+  Window: PGdkWindow;
+  Mask: PGdkPixmap;
+  Bitmap: IBitmap;
+  Surface: ISurface;
+begin
+  {Window := GTK_WIDGET(Pointer(Handle)).window;
+  Mask := gdk_pixmap_new(Window, Width, Height, 1);
+  Bitmap := NewBitmapCairo(Mask);
+  Surface := NewSurfaceCairo(Self);
+  Surface.CopyTo(ClientRect, Bitmap.Surface, ClientRect);
+  gdk_window_input_shape_combine_mask(Window, Mask, 0, 0);}
+end;
+
 procedure TFloatingForm.MoveSize(Rect: TRectI);
 var
   Window: PGdkWindow;
@@ -118,14 +136,33 @@ begin
   Result := gdk_screen_is_composited(screen);
 end;
 
+procedure FadeTimer(hWnd: HWND; uMsg: UINT; idEvent: UINT_PTR; dwTime: DWORD);
+var
+  F: TFloatingForm absolute idEvent;
+begin
+  KillTimer(hWnd, UIntPtr(idEvent));
+  F.FFadeTop := F.Top;
+  F.FFadeMoved := True;
+  F.Top := 30000;
+end;
+
 procedure TFloatingForm.SetFaded(Value: Boolean);
 begin
   if FFaded <> Value then
   begin
+    KillTimer(Handle, UIntPtr(Self));
+    if FFadeMoved then
+    begin
+      FFadeMoved := False;
+      Top := FFadeTop;
+    end;
     FFaded := Value;
     if WindowManager.Compositing and (WindowManager.Name = 'Compiz') then
       if FFaded then
-        Opacity := 0
+      begin
+        Opacity := 0;
+        SetTimer(Handle, UIntPtr(Self), 750, @FadeTimer);
+      end
       else
         Opacity := $FF
     else

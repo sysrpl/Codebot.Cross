@@ -474,7 +474,7 @@ function Fade(Color: TColorB; Percent: Float): TColorB;
 function Darken(Color: TColorB; Percent: Float): TColorB;
 function Lighten(Color: TColorB; Percent: Float): TColorB;
 function Rgba(R, G, B: Byte; A: Float): TColorB; overload;
-function Rgba(Color:TColor; A: Float): TColorB; overload;
+function Rgba(Color: TColor; A: Float): TColorB; overload;
 
 { Miscellaneous routines }
 

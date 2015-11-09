@@ -35,7 +35,8 @@ function NewFontCairo(const FontName: string; FontSize: Integer): IFont; overloa
 function NewFontCairo(Font: TFont = nil): IFont; overload;
 function NewSurfaceCairo(Canvas: TCanvas): ISurface; overload;
 function NewSurfaceCairo(Control: TWinControl): ISurface; overload;
-function NewBitmapCairo(Width, Height: Integer): IBitmap;
+function NewBitmapCairo(BitmapBuffer: Pointer): IBitmap; overload;
+function NewBitmapCairo(Width, Height: Integer): IBitmap; overload;
 function NewSplashCairo: ISplash;
 {$endif}
 
@@ -1546,7 +1547,10 @@ procedure TSurfaceCairo.ArcTo(const Rect: TRectF; BeginAngle, EndAngle: Float);
 const
   AngleDelta = Pi / 2;
 begin
-  if not HandleAvailable then Exit;
+  if not HandleAvailable then
+    Exit;
+  if Rect.Empty then
+    Exit;
   cairo_save(FCairo);
   cairo_translate(FCairo, Rect.X + Rect.Width / 2,
     Rect.Y + Rect.Height / 2);
@@ -1563,7 +1567,10 @@ end;
 
 procedure TSurfaceCairo.Ellipse(const Rect: TRectF);
 begin
-  if not HandleAvailable then Exit;
+  if not HandleAvailable then
+    Exit;
+  if Rect.Empty then
+    Exit;
   cairo_save(FCairo);
   cairo_new_sub_path(FCairo);
   cairo_translate(FCairo, Rect.X + Rect.Width / 2,
@@ -1588,6 +1595,8 @@ var
   D: Double;
 begin
   if Rect.Empty or (Radius <= 0) then
+    Exit;
+  if Rect.Empty then
     Exit;
   if HandleAvailable then
   begin
@@ -1777,7 +1786,10 @@ var
   Odd: Boolean;
   R: TRectI;
 begin
-  if not HandleAvailable then Exit;
+  if not HandleAvailable then
+    Exit;
+  if Rect.Empty then
+    Exit;
   cairo_new_path(FCairo);
   Odd := Round(Pen.Width) mod 2 = 1;
   if Odd then
@@ -1795,7 +1807,10 @@ procedure TSurfaceCairo.FillRect(Brush: IBrush; const Rect: TRectF);
 var
   R: TRectI;
 begin
-  if not HandleAvailable then Exit;
+  if not HandleAvailable then
+    Exit;
+  if Rect.Empty then
+    Exit;
   cairo_new_path(FCairo);
   R := TRectI(Rect);
   Rectangle(R);
@@ -1807,7 +1822,10 @@ var
   Odd: Boolean;
   R: TRectI;
 begin
-  if not HandleAvailable then Exit;
+  if not HandleAvailable then
+    Exit;
+  if Rect.Empty then
+    Exit;
   cairo_new_path(FCairo);
   Odd := Round(Pen.Width) mod 2 = 1;
   if Odd then
@@ -1825,7 +1843,10 @@ procedure TSurfaceCairo.FillRoundRect(Brush: IBrush; const Rect: TRectF; Radius:
 var
   R: TRectI;
 begin
-  if not HandleAvailable then Exit;
+  if not HandleAvailable then
+    Exit;
+  if Rect.Empty then
+    Exit;
   cairo_new_path(FCairo);
   R := TRectI(Rect);
   RoundRectangle(R, Radius);
@@ -2355,6 +2376,11 @@ end;
 function NewSurfaceCairo(Control: TWinControl): ISurface;
 begin
   Result := TControlSurfaceCairo.Create(Control);
+end;
+
+function NewBitmapCairo(BitmapBuffer: Pointer): IBitmap;
+begin
+  TBitmapCairo.Create(PGdkPixmap(BitmapBuffer));
 end;
 
 function NewBitmapCairo(Width, Height: Integer): IBitmap;

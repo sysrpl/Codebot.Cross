@@ -108,7 +108,64 @@ type
     property OnTimer: TNotifyEvent read FOnTimer write FOnTimer;
   end;
 
+{ TAnimator }
+
+  TAnimator = class
+  private
+  type
+    TAnimationItem = record
+      Prop: PFloat;
+      StartTarget: Float;
+      StopTarget: Float;
+      StartTime: Double;
+      StopTime: Double;
+      Easing: TEasing;
+    end;
+    PAnimationItem = ^TAnimationItem;
+
+    TAnimations = TArrayList<TAnimationItem>;
+
+  var
+    FAnimations: TAnimations;
+    FAnimated:Boolean;
+  public
+    procedure Animate(var Prop: Float; Target: Float; const Easing: string; Duration: Double = 0.25); overload;
+    procedure Animate(var Prop: Float; Target: Float; Easing: TEasing = nil; Duration: Double = 0.25); overload;
+    procedure Stop(var Prop: Float);
+    procedure Step;
+    property Animated: Boolean read FAnimated;
+  end;
+
+function Animator: TAnimator;
+
 implementation
+
+{ Easings }
+
+var
+  InternalEasings: TObject;
+
+function Easings: TEasings;
+begin
+  if InternalEasings = nil then
+  begin
+    InternalEasings := TEasings.Create;
+    TEasings(InternalEasings).RegisterDefaults;
+  end;
+  Result := TEasings(InternalEasings);
+end;
+
+{ TAnimator }
+
+var
+  InternalAnimator: TObject;
+
+function Animator: TAnimator;
+begin
+  if InternalAnimator = nil then
+    InternalAnimator := TAnimator.Create;
+  Result := TAnimator(InternalAnimator);
+end;
 
 const
   NegCosPi = 1.61803398874989; { 2 / -Cos(Pi * 1.2) }
@@ -340,6 +397,18 @@ type
     procedure Disable;
   end;
 
+{ TThreadedTimer }
+
+var
+  InternalThreadedTimer: TObject;
+
+function ThreadedTimer: TThreadedTimer;
+begin
+  if InternalThreadedTimer = nil then
+    InternalThreadedTimer := TThreadedTimer.Create;
+  Result := TThreadedTimer(InternalThreadedTimer);
+end;
+
 var
   InternalThread: TObject;
 
@@ -366,16 +435,6 @@ begin
     InternalThread := nil;
 end;
 
-var
-  InternalThreadedTimer: TThreadedTimer;
-
-function ThreadedTimer: TThreadedTimer;
-begin
-  if InternalThreadedTimer = nil then
-    InternalThreadedTimer := TThreadedTimer.Create;
-  Result := InternalThreadedTimer;
-end;
-
 { TAnimationThread }
 
 constructor TAnimationThread.Create;
@@ -392,8 +451,8 @@ begin
     Exit;
   if InternalThreadedTimer = nil then
     Exit;
-  for Event in InternalThreadedTimer.FOnTimer do
-    Event(InternalThreadedTimer);
+  for Event in TThreadedTimer(InternalThreadedTimer).FOnTimer do
+    Event(TThreadedTimer(InternalThreadedTimer));
 end;
 
 procedure TAnimationThread.Execute;
@@ -452,24 +511,78 @@ begin
     ThreadedTimer.Disable;
 end;
 
-{ Easings }
+{ TAnimator }
 
+procedure TAnimator.Animate(var Prop: Float; Target: Float; const Easing: string; Duration: Double = 0.25);
 var
-  InternalEasings: TEasings;
-
-function Easings: TEasings;
+  E: TEasing;
 begin
-  if InternalEasings = nil then
+  E := nil;
+  if Easings.KeyExists(Easing) then
+    E := Easings[Easing];
+  Animate(Prop, Target, E, Duration);
+end;
+
+procedure TAnimator.Animate(var Prop: Float; Target: Float; Easing: TEasing = nil; Duration: Double = 0.25);
+var
+  Item: TAnimationItem;
+begin
+  Stop(Prop);
+  if Duration <= 0 then
   begin
-    InternalEasings := TEasings.Create;
-    InternalEasings.RegisterDefaults;
+    Prop := Target;
+    Exit;
   end;
-  Result := InternalEasings;
+  Item.Prop := @Prop;
+  Item.StartTarget := Prop;
+  Item.StopTarget := Target;
+  Item.StartTime := TimeQuery;
+  Item.StopTime := Item.StartTime + Duration;
+  if @Easing = nil then
+    Easing := TEasingDefaults.Easy;
+  Item.Easing := Easing;
+  FAnimations.Push(Item);
+end;
+
+procedure TAnimator.Stop(var Prop: Float);
+var
+  I: Integer;
+begin
+  FAnimated := True;
+  for I := FAnimations.Length - 1 downto 0 do
+    if FAnimations.Items[I].Prop = @Prop then
+    begin
+      FAnimations.Delete(I);
+      Exit;
+    end;
+end;
+
+procedure TAnimator.Step;
+var
+  Time: Double;
+  Percent: Float;
+  Item: PAnimationItem;
+  I: Integer;
+begin
+  Time := TimeQuery;
+  FAnimated := FAnimations.Length > 0;
+  for I := FAnimations.Length - 1 downto 0 do
+  begin
+    Item := @FAnimations.Items[I];
+    if Time >= Item.StopTime then
+    begin
+      Item.Prop^ := Item.StopTarget;
+      FAnimations.Delete(I);
+      Continue;
+    end;
+    Percent := (Time - Item.StartTime) / (Item.StopTime - Item.StartTime);
+    Item.Prop^ := Interpolate(Item.Easing, Percent, Item.StartTarget, Item.StopTarget);
+  end;
 end;
 
 finalization
-  FreeAndNil(InternalThreadedTimer);
-  FreeAndNil(InternalEasings);
+  InternalThreadedTimer.Free;
+  InternalEasings.Free;
+  InternalAnimator.Free;
 end.
-
 
