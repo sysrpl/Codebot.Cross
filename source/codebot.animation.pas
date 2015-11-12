@@ -114,6 +114,7 @@ type
   private
   type
     TAnimationItem = record
+      Notify: IFloatPropertyNotify;
       Prop: PFloat;
       StartTarget: Float;
       StopTarget: Float;
@@ -127,13 +128,25 @@ type
 
   var
     FAnimations: TAnimations;
-    FAnimated:Boolean;
+    FAnimated: Boolean;
+    FOnStart: TNotifyDelegate;
+    FOnStop: TNotifyDelegate;
   public
+    { Animate adds a property to the list of animated items }
     procedure Animate(var Prop: Float; Target: Float; const Easing: string; Duration: Double = 0.25); overload;
     procedure Animate(var Prop: Float; Target: Float; Easing: TEasing = nil; Duration: Double = 0.25); overload;
+    procedure Animate(NotifyObject: TObject; var Prop: Float; Target: Float; const Easing: string; Duration: Double = 0.25); overload;
+    procedure Animate(NotifyObject: TObject; var Prop: Float; Target: Float; Easing: TEasing = nil; Duration: Double = 0.25); overload;
+    { Stop removes a property animation }
     procedure Stop(var Prop: Float);
+    { Step causes all animated properties to be evaluated }
     procedure Step;
+    { Animated is True is if a property value changed when Step was last invoked }
     property Animated: Boolean read FAnimated;
+    { OnStart is invoked if an animated property requires steps }
+    property OnStart: TNotifyDelegate read FOnStart;
+    { OnStop is when there are no more properties to animate }
+    property OnStop: TNotifyDelegate read FOnStop;
   end;
 
 function Animator: TAnimator;
@@ -520,19 +533,45 @@ begin
   E := nil;
   if Easings.KeyExists(Easing) then
     E := Easings[Easing];
-  Animate(Prop, Target, E, Duration);
+  Animate(nil, Prop, Target, E, Duration);
 end;
 
 procedure TAnimator.Animate(var Prop: Float; Target: Float; Easing: TEasing = nil; Duration: Double = 0.25);
+begin
+  Animate(nil, Prop, Target, Easing, Duration);
+end;
+
+procedure TAnimator.Animate(NotifyObject: TObject; var Prop: Float; Target: Float;
+  const Easing: string; Duration: Double = 0.25);
 var
+  E: TEasing;
+begin
+  E := nil;
+  if Easings.KeyExists(Easing) then
+    E := Easings[Easing];
+  Animate(NotifyObject, Prop, Target, E, Duration);
+end;
+
+procedure TAnimator.Animate(NotifyObject: TObject; var Prop: Float; Target: Float;
+  Easing: TEasing = nil; Duration: Double = 0.25);
+var
+  Notify: IFloatPropertyNotify;
+  Event: TNotifyEvent;
   Item: TAnimationItem;
 begin
   Stop(Prop);
+  if (NotifyObject <> nil) and (NotifyObject is IFloatPropertyNotify) then
+    Notify := NotifyObject as IFloatPropertyNotify
+  else
+    Notify := nil;
   if Duration <= 0 then
   begin
     Prop := Target;
+    if Notify <> nil then
+      Notify.PropChange(@Prop);
     Exit;
   end;
+  Item.Notify := Notify;
   Item.Prop := @Prop;
   Item.StartTarget := Prop;
   Item.StopTarget := Target;
@@ -541,24 +580,34 @@ begin
   if @Easing = nil then
     Easing := TEasingDefaults.Easy;
   Item.Easing := Easing;
+  if FAnimations.Length = 0 then
+    for Event in FOnStart do
+      Event(Self);
   FAnimations.Push(Item);
 end;
 
 procedure TAnimator.Stop(var Prop: Float);
 var
+  Item: PAnimationItem;
   I: Integer;
 begin
   FAnimated := True;
   for I := FAnimations.Length - 1 downto 0 do
-    if FAnimations.Items[I].Prop = @Prop then
+  begin
+    Item := @FAnimations.Items[I];
+    if Item.Prop = @Prop then
     begin
+      if Item.Notify <> nil then
+        Item.Notify.PropChange(Item.Prop);
       FAnimations.Delete(I);
       Exit;
     end;
+  end;
 end;
 
 procedure TAnimator.Step;
 var
+  Event: TNotifyEvent;
   Time: Double;
   Percent: Float;
   Item: PAnimationItem;
@@ -566,17 +615,27 @@ var
 begin
   Time := TimeQuery;
   FAnimated := FAnimations.Length > 0;
+  if not FAnimated then
+  begin
+    for Event in FOnStop do
+      Event(Self);
+    Exit;
+  end;
   for I := FAnimations.Length - 1 downto 0 do
   begin
     Item := @FAnimations.Items[I];
     if Time >= Item.StopTime then
     begin
       Item.Prop^ := Item.StopTarget;
+      if Item.Notify <> nil then
+        Item.Notify.PropChange(Item.Prop);
       FAnimations.Delete(I);
       Continue;
     end;
     Percent := (Time - Item.StartTime) / (Item.StopTime - Item.StartTime);
     Item.Prop^ := Interpolate(Item.Easing, Percent, Item.StartTarget, Item.StopTarget);
+    if Item.Notify <> nil then
+      Item.Notify.PropChange(Item.Prop);
   end;
 end;
 

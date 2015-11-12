@@ -2512,27 +2512,26 @@ var
 begin
   R := Rect;
   C := Control.CurrentColor;
-  if dsHot in State then
-    if dsPressed in State then
-    begin
-      G := NewBrush(0, 0, 0, R.Height);
-      G.AddStop(C.Fade(0.6).Darken(0.5), 0);
-      G.AddStop(C.Fade(0).Darken(0.5), 1);
-      Surface.FillRoundRect(G, Rect, 3);
-      Surface.StrokeRoundRect(NewPen(C.Fade(0.6).Darken(0.6)), Rect, Radius);
-    end
-    else
-    begin
-      G := NewBrush(R.Left, R.Top, R.Left, R.Bottom);
-      C := Control.CurrentColor;
-      G.AddStop(C.Lighten(0.5), 0);
-      G.AddStop(C.Darken(0.2), 1);
-      R.Inflate(-1, -1);
-      Surface.FillRect(G, R);
-      Surface.StrokeRect(NewPen(clWhite), R);
-      R.Inflate(1, 1);
-      Surface.StrokeRoundRect(NewPen(clBtnShadow), Rect, Radius);
-    end;
+  if dsPressed in State then
+  begin
+    G := NewBrush(0, 0, 0, R.Height);
+    G.AddStop(C.Fade(0.6).Darken(0.5), 0);
+    G.AddStop(C.Fade(0).Darken(0.5), 1);
+    Surface.FillRoundRect(G, Rect, 3);
+    Surface.StrokeRoundRect(NewPen(C.Fade(0.6).Darken(0.6)), Rect, Radius);
+  end
+  else if dsHot in State then
+  begin
+    G := NewBrush(R.Left, R.Top, R.Left, R.Bottom);
+    C := Control.CurrentColor;
+    G.AddStop(C.Lighten(0.5), 0);
+    G.AddStop(C.Darken(0.2), 1);
+    R.Inflate(-1, -1);
+    Surface.FillRect(G, R);
+    Surface.StrokeRect(NewPen(clWhite), R);
+    R.Inflate(1, 1);
+    Surface.StrokeRoundRect(NewPen(clBtnShadow), Rect, Radius);
+  end;
 end;
 
 class procedure TDefaultTheme.DrawSplit(const Rect: TRectI; Orientation: TThemeOrientation);
@@ -2821,8 +2820,6 @@ var
   R: TRectI;
 begin
   R := Rect;
-  if not (dsHot in State) then
-    Exit;
   Surface.StrokeRect(NewPen(cl3DDkShadow), R);
   R.Width := R.Width - 1;
   R.Height := R.Height - 1;
