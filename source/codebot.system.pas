@@ -768,6 +768,16 @@ type
     property OnChange: INotifyDelegate read GetOnChange;
   end;
 
+{ IFloatPropertyNotify is alerted when a property is updated
+  See also
+  <link Overview.Codebot.System.IFloatPropertyNotify, IFloatPropertyNotify members> }
+
+  IFloatPropertyNotify = interface
+  ['{52093327-66EF-4909-BEE6-91DB39E08C6C}']
+    { Notify an object one of its float properties has changed }
+    procedure PropChange(Prop: PFloat);
+  end;
+
 { Compare two block of memory returning true if they are the same }
 function MemCompare(const A, B; Size: LongWord): Boolean;
 {$endregion}
@@ -2612,7 +2622,7 @@ end;
 
 function FileReadStr(const FileName: string): string;
 Const
-  BufferSize = 1024;
+  BufferSize = 1024 * 10;
   MaxGrow = 1 shl 29;
 var
   F: TFileStream;
@@ -2626,8 +2636,8 @@ begin
     F := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
     try
       Result := '';
-      BufferLength:=0;
-      I:=1;
+      BufferLength := 0;
+      I := 1;
       repeat
         BufferDelta := BufferSize * I;
         SetLength(Result, BufferLength + BufferDelta);

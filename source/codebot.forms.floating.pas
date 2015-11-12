@@ -136,7 +136,7 @@ begin
   Result := gdk_screen_is_composited(screen);
 end;
 
-procedure FadeTimer(hWnd: HWND; uMsg: UINT; idEvent: UINT_PTR; dwTime: DWORD);
+procedure FadeTimer(hWnd: HWND; uMsg: UINT; idEvent: UINT_PTR; dwTime: DWORD); stdcall;
 var
   F: TFloatingForm absolute idEvent;
 begin

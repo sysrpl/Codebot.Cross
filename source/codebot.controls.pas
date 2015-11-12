@@ -98,32 +98,37 @@ type
   ESurfaceAccessError = class(Exception);
 {doc on}
 
+var
+  MouseEnters: Integer;
+  MouseLeaves: Integer;
+
 { TRenderGraphicControl is the base class for custom graphic controls
   which require an ISurface object
   See also
   <link Overview.Codebot.Controls.TRenderGraphicControl, TRenderGraphicControl members> }
 
-  TRenderGraphicControl = class(TGraphicControl)
+type
+  TRenderGraphicControl = class(TGraphicControl, IFloatPropertyNotify)
   private
     FSurface: ISurface;
     FThemeName: string;
     FOnRender: TDrawEvent;
+    FMouseDown: Boolean;
     function GetSurface: ISurface;
     procedure SetDrawState(Value: TDrawState);
     procedure SetThemeName(const Value: string);
-    {$ifdef lclgtk2}
-  private
-    FMouseDown: Boolean;
   protected
+    { Allow controls direct access to draw state }
+    FDrawState: TDrawState;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
+    procedure MouseEnter; override;
     procedure MouseLeave; override;
-    {$endif}
-  protected
-    { Allow controls direct access to draw state }
-    FDrawState: TDrawState;
+    procedure IncludeStateItem(Item: TDrawStateItem);  virtual;
+    procedure ExcludeStateItem(Item: TDrawStateItem);  virtual;
+    procedure PropChange(Prop: PFloat);  virtual;
     { Create a default size }
     class function GetControlClassDefaultSize: TSize; override;
     { Update draw state when enabled is changed }
@@ -154,7 +159,7 @@ type
   See also
   <link Overview.Codebot.Controls.TRenderCustomControl, TRenderCustomControl members> }
 
-  TRenderCustomControl = class(TCustomControl)
+  TRenderCustomControl = class(TCustomControl, IFloatPropertyNotify)
   private
     FSurface: ISurface;
     FThemeName: string;
@@ -165,6 +170,8 @@ type
   protected
     { Allow controls direct access to draw state }
     FDrawState: TDrawState;
+    { Float property change notification }
+    procedure PropChange(Prop: PFloat);  virtual;
     { Override ThemeAware and return true to subscribe to glabal theme changes }
     function ThemeAware: Boolean; virtual;
     { Invoked when the theme is changed }
@@ -419,40 +426,58 @@ begin
   Result.cy := 80;
 end;
 
-{$ifdef lclgtk2}
 procedure TRenderGraphicControl.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
   FMouseDown := Button = mbLeft;
   if FMouseDown then
-    MouseCapture := True;
+    DrawState := DrawState + [dsPressed, dsHot];
   inherited MouseDown(Button, Shift, X, Y)
 end;
 
 procedure TRenderGraphicControl.MouseUp(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
+var
+  Hot: Boolean;
 begin
   if Button = mbLeft then
   begin
     FMouseDown := False;
-    MouseCapture := False;
+    Hot := (X > -1) and (X < Width) and (Y > -1) and (Y < Height);
+    if Hot then
+      DrawState := DrawState - [dsPressed] + [dsHot]
+    else
+      DrawState := DrawState - [dsPressed, dsHot];
   end;
   inherited MouseUp(Button, Shift, X, Y)
 end;
 
-procedure TRenderGraphicControl.MouseLeave;
-var
-  P: TPoint;
-  R: TRectI;
+procedure TRenderGraphicControl.MouseEnter;
 begin
-  P := Mouse.CursorPos;
-  P := ScreenToClient(P);
-  R := ClientRect;
-  if not R.Contains(P) then
-    MouseUp(mbLeft, [], P.X, P.Y);
+  DrawState := DrawState + [dsHot];
+  inherited MouseEnter;
+end;
+
+procedure TRenderGraphicControl.MouseLeave;
+begin
+  DrawState := DrawState - [dsHot];
   inherited MouseLeave;
 end;
-{$endif}
+
+procedure TRenderGraphicControl.IncludeStateItem(Item: TDrawStateItem);
+begin
+
+end;
+
+procedure TRenderGraphicControl.ExcludeStateItem(Item: TDrawStateItem);
+begin
+
+end;
+
+procedure TRenderGraphicControl.PropChange(Prop: PFloat);
+begin
+
+end;
 
 function TRenderGraphicControl.ThemeAware: Boolean;
 begin
@@ -490,9 +515,17 @@ begin
 end;
 
 procedure TRenderGraphicControl.SetDrawState(Value: TDrawState);
+var
+  I: TDrawStateItem;
 begin
   if FDrawState <> Value then
   begin
+    for I := Low(I) to High(I) do
+      if (I in Value) and (not (I in FDrawState)) then
+        IncludeStateItem(I);
+    for I := Low(I) to High(I) do
+      if (not (I in Value)) and (I in FDrawState) then
+        ExcludeStateItem(I);
     FDrawState := Value;
     Invalidate;
   end;
@@ -545,6 +578,11 @@ begin
   if ThemeAware then
     ThemeNotifyRemove(ThemeChanged);
   inherited Destroy;
+end;
+
+procedure TRenderCustomControl.PropChange(Prop: PFloat);
+begin
+
 end;
 
 function TRenderCustomControl.ThemeAware: Boolean;
