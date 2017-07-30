@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Debug"/>
+    <Units Count="18">
+      <Unit0>
+        <Filename Value="easer.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="52" Y="21"/>
+        <UsageCount Value="54"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Main"/>
+        <TopLine Value="259"/>
+        <CursorPos Y="321"/>
+        <UsageCount Value="54"/>
+        <Bookmarks Count="1">
+          <Item0 Y="53" ID="1"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.graphics.types.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2361"/>
+        <CursorPos Y="2378"/>
+        <UsageCount Value="14"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.collections.pas"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="14"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.animation.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="399"/>
+        <CursorPos X="57" Y="404"/>
+        <UsageCount Value="14"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.graphics.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2398"/>
+        <CursorPos Y="2462"/>
+        <UsageCount Value="14"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\..\Components\Cross.Codebot\source\codebot.system.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="909"/>
+        <CursorPos X="14" Y="921"/>
+        <UsageCount Value="13"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\..\..\FreePascal\fpc\rtl\inc\systemh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1322"/>
+        <CursorPos X="30" Y="1339"/>
+        <UsageCount Value="13"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\..\..\FreePascal\fpc\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1613"/>
+        <CursorPos X="3" Y="1552"/>
+        <UsageCount Value="13"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\..\source\codebot.animation.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="374"/>
+        <CursorPos X="17" Y="401"/>
+        <UsageCount Value="8"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\idewindowintf.pas"/>
+        <UnitName Value="IDEWindowIntf"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="487"/>
+        <CursorPos X="11" Y="505"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\ideoptionsintf.pas"/>
+        <UnitName Value="IDEOptionsIntf"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="4"/>
+        <CursorPos X="2" Y="36"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\objectinspector.pp"/>
+        <UnitName Value="ObjectInspector"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="406"/>
+        <CursorPos X="61" Y="433"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\propedits.pp"/>
+        <UnitName Value="PropEdits"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="1330"/>
+        <CursorPos X="3" Y="1270"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\lazideintf.pas"/>
+        <UnitName Value="LazIDEIntf"/>
+        <EditorIndex Value="2"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\newfield.pas"/>
+        <UnitName Value="NewField"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="172"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\projpackintf.pas"/>
+        <UnitName Value="ProjPackIntf"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="21" Y="20"/>
+        <UsageCount Value="8"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\compoptsintf.pas"/>
+        <UnitName Value="CompOptsIntf"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="391"/>
+        <UsageCount Value="22"/>
+        <Loaded Value="True"/>
+      </Unit17>
+    </Units>
+    <JumpHistory Count="12" HistoryIndex="11">
+      <Position1>
+        <Filename Value="main.pas"/>
+        <Caret Line="306" TopLine="275"/>
+      </Position1>
+      <Position2>
+        <Filename Value="main.pas"/>
+        <Caret Line="218" Column="6" TopLine="197"/>
+      </Position2>
+      <Position3>
+        <Filename Value="main.pas"/>
+        <Caret Line="229" TopLine="206"/>
+      </Position3>
+      <Position4>
+        <Filename Value="main.pas"/>
+        <Caret Line="190" Column="35" TopLine="22"/>
+      </Position4>
+      <Position5>
+        <Filename Value="main.pas"/>
+        <Caret Line="190" Column="35" TopLine="22"/>
+      </Position5>
+      <Position6>
+        <Filename Value="main.pas"/>
+        <Caret Line="110" Column="7" TopLine="70"/>
+      </Position6>
+      <Position7>
+        <Filename Value="main.pas"/>
+      </Position7>
+      <Position8>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\idewindowintf.pas"/>
+      </Position8>
+      <Position9>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\objectinspector.pp"/>
+        <Caret Line="433" Column="61" TopLine="406"/>
+      </Position9>
+      <Position10>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\idewindowintf.pas"/>
+        <Caret Line="505" Column="11" TopLine="487"/>
+      </Position10>
+      <Position11>
+        <Filename Value="..\..\..\..\..\Base\lazarus\components\ideintf\lazideintf.pas"/>
+      </Position11>
+      <Position12>
+        <Filename Value="main.pas"/>
+        <Caret Line="27" Column="41"/>
+      </Position12>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>

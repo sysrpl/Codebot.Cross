@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="9"/>
+    <BuildModes Active="Default"/>
+    <Units Count="11">
+      <Unit0>
+        <Filename Value="clock.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="33"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="ClockWidget"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Main"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="451"/>
+        <CursorPos Y="478"/>
+        <UsageCount Value="33"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="../../Components/Cross.Codebot/source/codebot.animation.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="378"/>
+        <CursorPos X="17" Y="401"/>
+        <UsageCount Value="9"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="../../source/codebot.graphics.types.pas"/>
+        <UnitName Value="Codebot.Graphics.Types"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="696"/>
+        <CursorPos X="34" Y="715"/>
+        <UsageCount Value="12"/>
+        <Loaded Value="True"/>
+      </Unit3>
+      <Unit4>
+        <Filename Value="../../source/codebot.graphics.windows.surfacegdiplus.pas"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="67"/>
+        <UsageCount Value="9"/>
+        <Bookmarks Count="1">
+          <Item0 X="32" Y="1216" ID="1"/>
+        </Bookmarks>
+      </Unit4>
+      <Unit5>
+        <Filename Value="../../source/codebot.interop.windows.gdiplus.pas"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="372"/>
+        <CursorPos X="31" Y="386"/>
+        <UsageCount Value="9"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="../../source/codebot.forms.widget.pas"/>
+        <UnitName Value="Codebot.Forms.Widget"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="371"/>
+        <CursorPos Y="378"/>
+        <UsageCount Value="12"/>
+        <Loaded Value="True"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="../../../../../Base/lazarus/lcl/graphics.pp"/>
+        <UnitName Value="Graphics"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="39"/>
+        <CursorPos X="3" Y="58"/>
+        <UsageCount Value="11"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="../../../../../Base/lazarus/lcl/controls.pp"/>
+        <UnitName Value="Controls"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="1153"/>
+        <CursorPos X="18" Y="1433"/>
+        <UsageCount Value="12"/>
+        <Loaded Value="True"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="../../source/codebot.graphics.pas"/>
+        <UnitName Value="Codebot.Graphics"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="2791"/>
+        <CursorPos Y="2934"/>
+        <UsageCount Value="12"/>
+        <Loaded Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="../../source/codebot.graphics.linux.surfacecairo.pas"/>
+        <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="1810"/>
+        <CursorPos Y="1849"/>
+        <UsageCount Value="11"/>
+        <Loaded Value="True"/>
+      </Unit10>
+    </Units>
+    <JumpHistory Count="30" HistoryIndex="29">
+      <Position1>
+        <Filename Value="../../source/codebot.forms.widget.pas"/>
+        <Caret Line="66" Column="19" TopLine="47"/>
+      </Position1>
+      <Position2>
+        <Filename Value="../../source/codebot.forms.widget.pas"/>
+        <Caret Line="67" Column="77" TopLine="44"/>
+      </Position2>
+      <Position3>
+        <Filename Value="../../source/codebot.forms.widget.pas"/>
+        <Caret Line="92" Column="19" TopLine="85"/>
+      </Position3>
+      <Position4>
+        <Filename Value="../../source/codebot.forms.widget.pas"/>
+        <Caret Line="198" Column="30" TopLine="189"/>
+      </Position4>
+      <Position5>
+        <Filename Value="../../source/codebot.graphics.linux.surfacecairo.pas"/>
+        <Caret Line="18" Column="90"/>
+      </Position5>
+      <Position6>
+        <Filename Value="../../source/codebot.graphics.linux.surfacecairo.pas"/>
+      </Position6>
+      <Position7>
+        <Filename Value="../../source/codebot.forms.widget.pas"/>
+        <Caret Line="218" Column="12" TopLine="199"/>
+      </Position7>
+      <Position8>
+        <Filename Value="../../source/codebot.forms.widget.pas"/>
+        <Caret Line="227" TopLine="204"/>
+      </Position8>
+      <Position9>
+        <Filename Value="main.pas"/>
+        <Caret Line="405" Column="25" TopLine="332"/>
+      </Position9>
+      <Position10>
+        <Filename Value="main.pas"/>
+        <Caret Line="452" Column="13" TopLine="436"/>
+      </Position10>
+      <Position11>
+        <Filename Value="main.pas"/>
+        <Caret Line="408" Column="20" TopLine="384"/>
+      </Position11>
+      <Position12>
+        <Filename Value="main.pas"/>
+        <Caret Line="434" Column="59" TopLine="392"/>
+      </Position12>
+      <Position13>
+        <Filename Value="main.pas"/>
+        <Caret Line="49"/>
+      </Position13>
+      <Position14>
+        <Filename Value="main.pas"/>
+        <Caret Line="29" Column="24" TopLine="9"/>
+      </Position14>
+      <Position15>
+        <Filename Value="../../source/codebot.forms.widget.pas"/>
+        <Caret Line="216" Column="12" TopLine="118"/>
+      </Position15>
+      <Position16>
+        <Filename Value="main.pas"/>
+        <Caret Line="409" Column="39" TopLine="371"/>
+      </Position16>
+      <Position17>
+        <Filename Value="main.pas"/>
+        <Caret Line="508" TopLine="478"/>
+      </Position17>
+      <Position18>
+        <Filename Value="main.pas"/>
+        <Caret Line="509" TopLine="479"/>
+      </Position18>
+      <Position19>
+        <Filename Value="main.pas"/>
+        <Caret Line="511" TopLine="481"/>
+      </Position19>
+      <Position20>
+        <Filename Value="main.pas"/>
+        <Caret Line="520" Column="9" TopLine="486"/>
+      </Position20>
+      <Position21>
+        <Filename Value="main.pas"/>
+        <Caret Line="519" Column="9" TopLine="485"/>
+      </Position21>
+      <Position22>
+        <Filename Value="main.pas"/>
+        <Caret Line="500" Column="19" TopLine="476"/>
+      </Position22>
+      <Position23>
+        <Filename Value="main.pas"/>
+        <Caret Line="3" Column="20"/>
+      </Position23>
+      <Position24>
+        <Filename Value="main.pas"/>
+        <Caret Line="420" Column="15" TopLine="294"/>
+      </Position24>
+      <Position25>
+        <Filename Value="main.pas"/>
+        <Caret Line="27"/>
+      </Position25>
+      <Position26>
+        <Filename Value="main.pas"/>
+        <Caret Line="515" TopLine="477"/>
+      </Position26>
+      <Position27>
+        <Filename Value="main.pas"/>
+      </Position27>
+      <Position28>
+        <Filename Value="main.pas"/>
+        <Caret Line="451" Column="5" TopLine="432"/>
+      </Position28>
+      <Position29>
+        <Filename Value="main.pas"/>
+        <Caret Line="27" Column="26"/>
+      </Position29>
+      <Position30>
+        <Filename Value="main.pas"/>
+        <Caret Line="482" TopLine="447"/>
+      </Position30>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>

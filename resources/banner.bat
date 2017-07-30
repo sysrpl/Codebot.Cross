@@ -1,0 +1,1 @@
+..\..\..\..\FreePascal\lazarus\tools\lazres.exe ..\source\banner_blank.res banner_blank.png 
