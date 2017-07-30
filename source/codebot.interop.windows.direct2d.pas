@@ -1,0 +1,2605 @@
+(********************************************************)
+(*                                                      *)
+(*  Codebot Pascal Library                              *)
+(*  http://cross.codebot.org                            *)
+(*  Modified September 2013                             *)
+(*                                                      *)
+(********************************************************)
+
+{ <include docs/codebot.interop.windows.direct2d.txt> }
+unit Codebot.Interop.Windows.Direct2D;
+
+{$i codebot.inc}
+
+interface
+
+{$ifdef windows}
+uses
+  Windows,
+  Codebot.Core,
+  Codebot.Interop.Windows.ImageCodecs;
+
+type
+  DXGI_FORMAT = Integer;
+
+const
+  DXGI_FORMAT_UNKNOWN                    = 0;
+  DXGI_FORMAT_R32G32B32A32_TYPELESS      = 1;
+  DXGI_FORMAT_R32G32B32A32_FLOAT         = 2;
+  DXGI_FORMAT_R32G32B32A32_UINT          = 3;
+  DXGI_FORMAT_R32G32B32A32_SINT          = 4;
+  DXGI_FORMAT_R32G32B32_TYPELESS         = 5;
+  DXGI_FORMAT_R32G32B32_FLOAT            = 6;
+  DXGI_FORMAT_R32G32B32_UINT             = 7;
+  DXGI_FORMAT_R32G32B32_SINT             = 8;
+  DXGI_FORMAT_R16G16B16A16_TYPELESS      = 9;
+  DXGI_FORMAT_R16G16B16A16_FLOAT         = 10;
+  DXGI_FORMAT_R16G16B16A16_UNORM         = 11;
+  DXGI_FORMAT_R16G16B16A16_UINT          = 12;
+  DXGI_FORMAT_R16G16B16A16_SNORM         = 13;
+  DXGI_FORMAT_R16G16B16A16_SINT          = 14;
+  DXGI_FORMAT_R32G32_TYPELESS            = 15;
+  DXGI_FORMAT_R32G32_FLOAT               = 16;
+  DXGI_FORMAT_R32G32_UINT                = 17;
+  DXGI_FORMAT_R32G32_SINT                = 18;
+  DXGI_FORMAT_R32G8X24_TYPELESS          = 19;
+  DXGI_FORMAT_D32_FLOAT_S8X24_UINT       = 20;
+  DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS   = 21;
+  DXGI_FORMAT_X32_TYPELESS_G8X24_UINT    = 22;
+  DXGI_FORMAT_R10G10B10A2_TYPELESS       = 23;
+  DXGI_FORMAT_R10G10B10A2_UNORM          = 24;
+  DXGI_FORMAT_R10G10B10A2_UINT           = 25;
+  DXGI_FORMAT_R11G11B10_FLOAT            = 26;
+  DXGI_FORMAT_R8G8B8A8_TYPELESS          = 27;
+  DXGI_FORMAT_R8G8B8A8_UNORM             = 28;
+  DXGI_FORMAT_R8G8B8A8_UNORM_SRGB        = 29;
+  DXGI_FORMAT_R8G8B8A8_UINT              = 30;
+  DXGI_FORMAT_R8G8B8A8_SNORM             = 31;
+  DXGI_FORMAT_R8G8B8A8_SINT              = 32;
+  DXGI_FORMAT_R16G16_TYPELESS            = 33;
+  DXGI_FORMAT_R16G16_FLOAT               = 34;
+  DXGI_FORMAT_R16G16_UNORM               = 35;
+  DXGI_FORMAT_R16G16_UINT                = 36;
+  DXGI_FORMAT_R16G16_SNORM               = 37;
+  DXGI_FORMAT_R16G16_SINT                = 38;
+  DXGI_FORMAT_R32_TYPELESS               = 39;
+  DXGI_FORMAT_D32_FLOAT                  = 40;
+  DXGI_FORMAT_R32_FLOAT                  = 41;
+  DXGI_FORMAT_R32_UINT                   = 42;
+  DXGI_FORMAT_R32_SINT                   = 43;
+  DXGI_FORMAT_R24G8_TYPELESS             = 44;
+  DXGI_FORMAT_D24_UNORM_S8_UINT          = 45;
+  DXGI_FORMAT_R24_UNORM_X8_TYPELESS      = 46;
+  DXGI_FORMAT_X24_TYPELESS_G8_UINT       = 47;
+  DXGI_FORMAT_R8G8_TYPELESS              = 48;
+  DXGI_FORMAT_R8G8_UNORM                 = 49;
+  DXGI_FORMAT_R8G8_UINT                  = 50;
+  DXGI_FORMAT_R8G8_SNORM                 = 51;
+  DXGI_FORMAT_R8G8_SINT                  = 52;
+  DXGI_FORMAT_R16_TYPELESS               = 53;
+  DXGI_FORMAT_R16_FLOAT                  = 54;
+  DXGI_FORMAT_D16_UNORM                  = 55;
+  DXGI_FORMAT_R16_UNORM                  = 56;
+  DXGI_FORMAT_R16_UINT                   = 57;
+  DXGI_FORMAT_R16_SNORM                  = 58;
+  DXGI_FORMAT_R16_SINT                   = 59;
+  DXGI_FORMAT_R8_TYPELESS                = 60;
+  DXGI_FORMAT_R8_UNORM                   = 61;
+  DXGI_FORMAT_R8_UINT                    = 62;
+  DXGI_FORMAT_R8_SNORM                   = 63;
+  DXGI_FORMAT_R8_SINT                    = 64;
+  DXGI_FORMAT_A8_UNORM                   = 65;
+  DXGI_FORMAT_R1_UNORM                   = 66;
+  DXGI_FORMAT_R9G9B9E5_SHAREDEXP         = 67;
+  DXGI_FORMAT_R8G8_B8G8_UNORM            = 68;
+  DXGI_FORMAT_G8R8_G8B8_UNORM            = 69;
+  DXGI_FORMAT_BC1_TYPELESS               = 70;
+  DXGI_FORMAT_BC1_UNORM                  = 71;
+  DXGI_FORMAT_BC1_UNORM_SRGB             = 72;
+  DXGI_FORMAT_BC2_TYPELESS               = 73;
+  DXGI_FORMAT_BC2_UNORM                  = 74;
+  DXGI_FORMAT_BC2_UNORM_SRGB             = 75;
+  DXGI_FORMAT_BC3_TYPELESS               = 76;
+  DXGI_FORMAT_BC3_UNORM                  = 77;
+  DXGI_FORMAT_BC3_UNORM_SRGB             = 78;
+  DXGI_FORMAT_BC4_TYPELESS               = 79;
+  DXGI_FORMAT_BC4_UNORM                  = 80;
+  DXGI_FORMAT_BC4_SNORM                  = 81;
+  DXGI_FORMAT_BC5_TYPELESS               = 82;
+  DXGI_FORMAT_BC5_UNORM                  = 83;
+  DXGI_FORMAT_BC5_SNORM                  = 84;
+  DXGI_FORMAT_B5G6R5_UNORM               = 85;
+  DXGI_FORMAT_B5G5R5A1_UNORM             = 86;
+  DXGI_FORMAT_B8G8R8A8_UNORM             = 87;
+  DXGI_FORMAT_B8G8R8X8_UNORM             = 88;
+  DXGI_FORMAT_R10G10B10_XR_BIAS_A2_UNORM = 89;
+  DXGI_FORMAT_B8G8R8A8_TYPELESS          = 90;
+  DXGI_FORMAT_B8G8R8A8_UNORM_SRGB        = 91;
+  DXGI_FORMAT_B8G8R8X8_TYPELESS          = 92;
+  DXGI_FORMAT_B8G8R8X8_UNORM_SRGB        = 93;
+  DXGI_FORMAT_BC6H_TYPELESS              = 94;
+  DXGI_FORMAT_BC6H_UF16                  = 95;
+  DXGI_FORMAT_BC6H_SF16                  = 96;
+  DXGI_FORMAT_BC7_TYPELESS               = 97;
+  DXGI_FORMAT_BC7_UNORM                  = 98;
+  DXGI_FORMAT_BC7_UNORM_SRGB             = 99;
+  DXGI_FORMAT_FORCE_UINT                 = $FFFFFFFF;
+
+type
+  D3DCOLORVALUE = record
+    r: Single;
+    g: Single;
+    b: Single;
+    a: Single;
+  end;
+  TD3DColorValue = D3DCOLORVALUE;
+  PD3DColorValue = ^TD3DColorValue;
+
+  D2D_RECT_F = record
+    left: Single;
+    top: Single;
+    right: Single;
+    bottom: Single;
+  end;
+  TD2DRectF = D2D_RECT_F;
+  PD2DRectF = ^TD2dRectF;
+
+  D2D_RECT_U = record
+    left: Cardinal;
+    top: Cardinal;
+    right: Cardinal;
+    bottom: Cardinal;
+  end;
+  TD2DRectU = D2D_RECT_U;
+  PD2DRectU = ^TD2dRectU;
+
+  D2D_SIZE_F = record
+    width: Single;
+    height: Single;
+  end;
+  TD2DSizeF = D2D_SIZE_F;
+  PD2DSizeF = ^TD2dSizeF;
+
+  D2D_SIZE_U = record
+    width: UINT32;
+    height: UINT32;
+  end;
+  TD2DSizeU = D2D_SIZE_U;
+  PD2DSizeU = ^TD2dSizeU;
+
+  D2D_COLOR_F = D3DCOLORVALUE;
+
+  D2D_MATRIX_3X2_F = record
+    m11: Single;
+    m12: Single;
+    m21: Single;
+    m22: Single;
+    m31: Single;
+    m32: Single;
+  end;
+  TD2DMatrix3x2F = D2D_MATRIX_3X2_F;
+  PD2DMatrix3x2F = ^TD2dMatrix3x2F;
+
+  D2D_POINT_2U = record
+    x: Cardinal;
+    y: Cardinal;
+  end;
+  TD2DPoint2u = D2D_POINT_2U;
+  PD2DPoint2u = ^TD2dPoint2u;
+
+  D2D_POINT_2F = record
+    x: Single;
+    y: Single;
+  end;
+  TD2DPoint2f = D2D_POINT_2F;
+  PD2DPoint2f = ^TD2DPoint2f;
+
+const
+  SID_IDXGIObject                   = '{AEC22FB8-76F3-4639-9BE0-28EB43A67A2E}';
+  SID_IDXGIDeviceSubObject          = '{3D3E0379-F9DE-4D58-BB6C-18D62992F1A6}';
+  SID_IDXGISurface                  = '{CAFCB56C-6AC3-4889-BF47-9E23BBD260EC}';
+  SID_IDXGISurface1                 = '{4AE63092-6327-4C1B-80AE-BFE12EA32B86}';
+  SID_ID2D1Resource                 = '{2CD90691-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1Bitmap                   = '{A2296057-EA42-4099-983B-539FB6505426}';
+  SID_ID2D1GradientStopCollection   = '{2CD906A7-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1Brush                    = '{2CD906A8-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1BitmapBrush              = '{2CD906AA-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1SolidColorBrush          = '{2CD906A9-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1LinearGradientBrush      = '{2CD906AB-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1RadialGradientBrush      = '{2CD906AC-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1StrokeStyle              = '{2CD9069D-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1Geometry                 = '{2CD906A1-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1RectangleGeometry        = '{2CD906A2-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1RoundedRectangleGeometry = '{2CD906A3-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1EllipseGeometry          = '{2CD906A4-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1GeometryGroup            = '{2CD906A6-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1TransformedGeometry      = '{2CD906BB-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1SimplifiedGeometrySink   = '{2CD9069E-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1GeometrySink             = '{2CD9069F-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1TessellationSink         = '{2CD906C1-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1PathGeometry             = '{2CD906A5-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1Mesh                     = '{2CD906C2-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1Layer                    = '{2CD9069B-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1DrawingStateBlock        = '{28506E39-EBF6-46A1-BB47-FD85565AB957}';
+  SID_ID2D1RenderTarget             = '{2CD90694-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1BitmapRenderTarget       = '{2CD90695-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1HwndRenderTarget         = '{2CD90698-12E2-11DC-9FED-001143A055F9}';
+  SID_ID2D1GdiInteropRenderTarget   = '{E0DB51C3-6F77-4BAE-B3D5-E47509B35838}';
+  SID_ID2D1DCRenderTarget           = '{1C51BC64-DE61-46FD-9899-63A5D8F03950}';
+  SID_ID2D1Factory                  = '{06152247-6F50-465A-9245-118BFD3B6007}';
+
+  IID_ID2D1Resource                 : TGUID = SID_ID2D1Resource;
+  IID_ID2D1Bitmap                   : TGUID = SID_ID2D1Bitmap;
+  IID_ID2D1GradientStopCollection   : TGUID = SID_ID2D1GradientStopCollection;
+  IID_ID2D1Brush                    : TGUID = SID_ID2D1Brush;
+  IID_ID2D1BitmapBrush              : TGUID = SID_ID2D1BitmapBrush;
+  IID_ID2D1SolidColorBrush          : TGUID = SID_ID2D1SolidColorBrush;
+  IID_ID2D1LinearGradientBrush      : TGUID = SID_ID2D1LinearGradientBrush;
+  IID_ID2D1RadialGradientBrush      : TGUID = SID_ID2D1RadialGradientBrush;
+  IID_ID2D1StrokeStyle              : TGUID = SID_ID2D1StrokeStyle;
+  IID_ID2D1Geometry                 : TGUID = SID_ID2D1Geometry;
+  IID_ID2D1RectangleGeometry        : TGUID = SID_ID2D1RectangleGeometry;
+  IID_ID2D1RoundedRectangleGeometry : TGUID = SID_ID2D1RoundedRectangleGeometry;
+  IID_ID2D1EllipseGeometry          : TGUID = SID_ID2D1EllipseGeometry;
+  IID_ID2D1GeometryGroup            : TGUID = SID_ID2D1GeometryGroup;
+  IID_ID2D1TransformedGeometry      : TGUID = SID_ID2D1TransformedGeometry;
+  IID_ID2D1SimplifiedGeometrySink   : TGUID = SID_ID2D1SimplifiedGeometrySink;
+  IID_ID2D1GeometrySink             : TGUID = SID_ID2D1GeometrySink;
+  IID_ID2D1TessellationSink         : TGUID = SID_ID2D1TessellationSink;
+  IID_ID2D1PathGeometry             : TGUID = SID_ID2D1PathGeometry;
+  IID_ID2D1Mesh                     : TGUID = SID_ID2D1Mesh;
+  IID_ID2D1Layer                    : TGUID = SID_ID2D1Layer;
+  IID_ID2D1DrawingStateBlock        : TGUID = SID_ID2D1DrawingStateBlock;
+  IID_ID2D1RenderTarget             : TGUID = SID_ID2D1RenderTarget;
+  IID_ID2D1BitmapRenderTarget       : TGUID = SID_ID2D1BitmapRenderTarget;
+  IID_ID2D1HwndRenderTarget         : TGUID = SID_ID2D1HwndRenderTarget;
+  IID_ID2D1GdiInteropRenderTarget   : TGUID = SID_ID2D1GdiInteropRenderTarget;
+  IID_ID2D1DCRenderTarget           : TGUID = SID_ID2D1DCRenderTarget;
+  IID_ID2D1Factory                  : TGUID = SID_ID2D1Factory;
+
+  SID_IDWriteFontFileLoader       = '{727CAD4E-D6AF-4C9E-8A08-D695B11CAA49}';
+  SID_IDWriteLocalFontFileLoader  = '{B2D9F3EC-C9FE-4A11-A2EC-D86208F7C0A2}';
+  SID_IDWriteFontFileStream       = '{6D4865FE-0AB8-4D91-8F62-5DD6BE34A3E0}';
+  SID_IDWriteFontFile             = '{739D886A-CEF5-47DC-8769-1A8B41BEBBB0}';
+  SID_IDWriteRenderingParams      = '{2F0DA53A-2ADD-47CD-82EE-D9EC34688E75}';
+  SID_IDWriteFontFace             = '{5F49804D-7024-4D43-BFA9-D25984F53849}';
+  SID_IDWriteFontCollectionLoader = '{CCA920E4-52F0-492B-BFA8-29C72EE0A468}';
+  SID_IDWriteFontFileEnumerator   = '{72755049-5FF7-435D-8348-4BE97CFA6C7C}';
+  SID_IDWriteLocalizedStrings     = '{08256209-099A-4B34-B86D-C22B110E7771}';
+  SID_IDWriteFontCollection       = '{A84CEE02-3EEA-4EEE-A827-87C1A02A0FCC}';
+  SID_IDWriteFontList             = '{1A0D8438-1D97-4EC1-AEF9-A2FB86ED6ACB}';
+  SID_IDWriteFontFamily           = '{DA20D8EF-812A-4C43-9802-62EC4ABD7ADD}';
+  SID_IDWriteFont                 = '{ACD16696-8C14-4F5D-877E-FE3FC1D32737}';
+  SID_IDWriteTextFormat           = '{9C906818-31D7-4FD3-A151-7C5E225DB55A}';
+  SID_IDWriteTypography           = '{55F1112B-1DC2-4B3C-9541-F46894ED85B6}';
+  SID_IDWriteNumberSubstitution   = '{14885CC9-BAB0-4F90-B6ED-5C366A2CD03D}';
+  SID_IDWriteTextAnalysisSource   = '{688E1A58-5094-47C8-ADC8-FBCEA60AE92B}';
+  SID_IDWriteTextAnalysisSink     = '{5810CD44-0CA0-4701-B3FA-BEC5182AE4F6}';
+  SID_IDWriteTextAnalyzer         = '{B7E6163E-7F46-43B4-84B3-E4E6249C365D}';
+  SID_IDWriteInlineObject         = '{8339FDE3-106F-47AB-8373-1C6295EB10B3}';
+  SID_IDWritePixelSnapping        = '{EAF3A2DA-ECF4-4D24-B644-B34F6842024B}';
+  SID_IDWriteTextRenderer         = '{EF8A8135-5CC6-45FE-8825-C5A0724EB819}';
+  SID_IDWriteTextLayout           = '{53737037-6D14-410B-9BFE-0B182BB70961}';
+  SID_IDWriteBitmapRenderTarget   = '{5E5A32A3-8DFF-4773-9FF6-0696EAB77267}';
+  SID_IDWriteGdiInterop           = '{1EDD9491-9853-4299-898F-6432983B6F3A}';
+  SID_IDWriteGlyphRunAnalysis     = '{7D97DBF7-E085-42D4-81E3-6A883BDED118}';
+  SID_IDWriteFactory              = '{B859EE5A-D838-4B5B-A2E8-1ADC7D93DB48}';
+
+  IID_IDWriteFontFileLoader       : TGUID = SID_IDWriteFontFileLoader;
+  IID_IDWriteLocalFontFileLoader  : TGUID = SID_IDWriteLocalFontFileLoader;
+  IID_IDWriteFontFileStream       : TGUID = SID_IDWriteFontFileStream;
+  IID_IDWriteFontFile             : TGUID = SID_IDWriteFontFile;
+  IID_IDWriteRenderingParams      : TGUID = SID_IDWriteRenderingParams;
+  IID_IDWriteFontFace             : TGUID = SID_IDWriteFontFace;
+  IID_IDWriteFontCollectionLoader : TGUID = SID_IDWriteFontCollectionLoader;
+  IID_IDWriteFontFileEnumerator   : TGUID = SID_IDWriteFontFileEnumerator;
+  IID_IDWriteLocalizedStrings     : TGUID = SID_IDWriteLocalizedStrings;
+  IID_IDWriteFontCollection       : TGUID = SID_IDWriteFontCollection;
+  IID_IDWriteFontList             : TGUID = SID_IDWriteFontList;
+  IID_IDWriteFontFamily           : TGUID = SID_IDWriteFontFamily;
+  IID_IDWriteFont                 : TGUID = SID_IDWriteFont;
+  IID_IDWriteTextFormat           : TGUID = SID_IDWriteTextFormat;
+  IID_IDWriteTypography           : TGUID = SID_IDWriteTypography;
+  IID_IDWriteNumberSubstitution   : TGUID = SID_IDWriteNumberSubstitution;
+  IID_IDWriteTextAnalysisSource   : TGUID = SID_IDWriteTextAnalysisSource;
+  IID_IDWriteTextAnalysisSink     : TGUID = SID_IDWriteTextAnalysisSink;
+  IID_IDWriteTextAnalyzer         : TGUID = SID_IDWriteTextAnalyzer;
+  IID_IDWriteInlineObject         : TGUID = SID_IDWriteInlineObject;
+  IID_IDWritePixelSnapping        : TGUID = SID_IDWritePixelSnapping;
+  IID_IDWriteTextRenderer         : TGUID = SID_IDWriteTextRenderer;
+  IID_IDWriteTextLayout           : TGUID = SID_IDWriteTextLayout;
+  IID_IDWriteBitmapRenderTarget   : TGUID = SID_IDWriteBitmapRenderTarget;
+  IID_IDWriteGdiInterop           : TGUID = SID_IDWriteGdiInterop;
+  IID_IDWriteGlyphRunAnalysis     : TGUID = SID_IDWriteGlyphRunAnalysis;
+  IID_IDWriteFactory              : TGUID = SID_IDWriteFactory;
+
+type
+  DWRITE_MEASURING_MODE = Integer;
+  TDWriteMeasuringMode = DWRITE_MEASURING_MODE;
+  PDWriteMeasuringMode = ^TDWriteMeasuringMode;
+const
+  DWRITE_MEASURING_MODE_NATURAL = 0;
+  DWRITE_MEASURING_MODE_GDI_CLASSIC = 1;
+  DWRITE_MEASURING_MODE_GDI_NATURAL = 2;
+
+const
+  D2D1_INVALID_TAG = $FFFFFFFFFFFFFFFF;
+  D2D1_DEFAULT_FLATTENING_TOLERANCE = (0.25);
+
+type
+  D2D1_ALPHA_MODE = Integer;
+  TD2D1AlphaMode = D2D1_ALPHA_MODE;
+  PD2D1AlphaMode = ^TD2D1AlphaMode;
+
+const
+  D2D1_ALPHA_MODE_UNKNOWN       = 0;
+  D2D1_ALPHA_MODE_PREMULTIPLIED = 1;
+  D2D1_ALPHA_MODE_STRAIGHT      = 2;
+  D2D1_ALPHA_MODE_IGNORE        = 3;
+  D2D1_ALPHA_MODE_FORCE_DWORD   = $FFFFFFFF;
+
+type
+  D2D1_GAMMA = Integer;
+  TD2D1Gamma = D2D1_GAMMA;
+  PD2D1Gamma = ^TD2D1Gamma;
+const
+  D2D1_GAMMA_2_2         = 0;
+  D2D1_GAMMA_1_0         = 1;
+  D2D1_GAMMA_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_OPACITY_MASK_CONTENT = Integer;
+  TD2D1OpacityMaskContent = D2D1_OPACITY_MASK_CONTENT;
+  PD2D1OpacityMaskContent = ^TD2D1OpacityMaskContent;
+const
+  D2D1_OPACITY_MASK_CONTENT_GRAPHICS            = 0;
+  D2D1_OPACITY_MASK_CONTENT_TEXT_NATURAL        = 1;
+  D2D1_OPACITY_MASK_CONTENT_TEXT_GDI_COMPATIBLE = 2;
+  D2D1_OPACITY_MASK_CONTENT_FORCE_DWORD         = $FFFFFFFF;
+
+type
+  D2D1_EXTEND_MODE = Integer;
+  TD2D1ExtendMode = D2D1_EXTEND_MODE;
+  PD2D1ExtendMode = ^TD2D1ExtendMode;
+const
+  D2D1_EXTEND_MODE_CLAMP       = 0;
+  D2D1_EXTEND_MODE_WRAP        = 1;
+  D2D1_EXTEND_MODE_MIRROR      = 2;
+  D2D1_EXTEND_MODE_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_ANTIALIAS_MODE = Integer;
+  TD2D1AntiAliasMode = D2D1_ANTIALIAS_MODE;
+  PD2D1AntiAliasMode = ^TD2D1AntiAliasMode;
+const
+  D2D1_ANTIALIAS_MODE_PER_PRIMITIVE = 0;
+  D2D1_ANTIALIAS_MODE_ALIASED       = 1;
+  D2D1_ANTIALIAS_MODE_FORCE_DWORD   = $FFFFFFFF;
+
+type
+  D2D1_TEXT_ANTIALIAS_MODE = Integer;
+  TD2D1TextAntiAliasMode = D2D1_TEXT_ANTIALIAS_MODE;
+  PD2D1TextAntiAliasMode = ^TD2D1TextAntiAliasMode;
+const
+  D2D1_TEXT_ANTIALIAS_MODE_DEFAULT     = 0;
+  D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE   = 1;
+  D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE   = 2;
+  D2D1_TEXT_ANTIALIAS_MODE_ALIASED     = 3;
+  D2D1_TEXT_ANTIALIAS_MODE_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_BITMAP_INTERPOLATION_MODE = Integer;
+  TD2D1BitmapInterpolationMode = D2D1_BITMAP_INTERPOLATION_MODE;
+  PD2D1BitmapInterpolationMode = ^TD2D1BitmapInterpolationMode;
+const
+  D2D1_BITMAP_INTERPOLATION_MODE_NEAREST_NEIGHBOR = 0;
+  D2D1_BITMAP_INTERPOLATION_MODE_LINEAR           = 1;
+  D2D1_BITMAP_INTERPOLATION_MODE_FORCE_DWORD      = $FFFFFFFF;
+
+type
+  D2D1_DRAW_TEXT_OPTIONS = Integer;
+  TD2D1DrawTextOptions = D2D1_DRAW_TEXT_OPTIONS;
+  PD2D1DrawTextOptions = ^TD2D1DrawTextOptions;
+const
+  D2D1_DRAW_TEXT_OPTIONS_NO_SNAP     = $00000001;
+  D2D1_DRAW_TEXT_OPTIONS_CLIP     = $00000002;
+  D2D1_DRAW_TEXT_OPTIONS_NONE        = $00000000;
+  D2D1_DRAW_TEXT_OPTIONS_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_ARC_SIZE = Integer;
+  TD2D1ArcSize = D2D1_ARC_SIZE;
+  PD2D1ArcSize = ^TD2D1ArcSize;
+const
+  D2D1_ARC_SIZE_SMALL       = 0;
+  D2D1_ARC_SIZE_LARGE       = 1;
+  D2D1_ARC_SIZE_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_CAP_STYLE = Integer;
+  TD2D1CapStyle = D2D1_CAP_STYLE;
+  PD2D1CapStyle = ^TD2D1CapStyle;
+
+const
+  D2D1_CAP_STYLE_FLAT        = 0;
+  D2D1_CAP_STYLE_SQUARE      = 1;
+  D2D1_CAP_STYLE_ROUND       = 2;
+  D2D1_CAP_STYLE_TRIANGLE    = 3;
+  D2D1_CAP_STYLE_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_DASH_STYLE = Integer;
+  TD2D1DashStyle = D2D1_DASH_STYLE;
+  PD2D1DashStyle = ^TD2D1DashStyle;
+const
+  D2D1_DASH_STYLE_SOLID        = 0;
+  D2D1_DASH_STYLE_DASH         = 1;
+  D2D1_DASH_STYLE_DOT          = 2;
+  D2D1_DASH_STYLE_DASH_DOT     = 3;
+  D2D1_DASH_STYLE_DASH_DOT_DOT = 4;
+  D2D1_DASH_STYLE_CUSTOM       = 5;
+  D2D1_DASH_STYLE_FORCE_DWORD  = $FFFFFFFF;
+
+type
+  D2D1_LINE_JOIN = Integer;
+  TD2D1LineJoin = D2D1_LINE_JOIN;
+  PD2D1LineJoin = ^TD2D1LineJoin;
+const
+  D2D1_LINE_JOIN_MITER          = 0;
+  D2D1_LINE_JOIN_BEVEL          = 1;
+  D2D1_LINE_JOIN_ROUND          = 2;
+  D2D1_LINE_JOIN_MITER_OR_BEVEL = 3;
+  D2D1_LINE_JOIN_FORCE_DWORD    = $FFFFFFFF;
+
+type
+  D2D1_COMBINE_MODE = Integer;
+  TD2D1CombineMode = D2D1_COMBINE_MODE;
+  PD2D1CombineMode = ^TD2D1CombineMode;
+const
+  D2D1_COMBINE_MODE_UNION       = 0;
+  D2D1_COMBINE_MODE_INTERSECT   = 1;
+  D2D1_COMBINE_MODE_XOR         = 2;
+  D2D1_COMBINE_MODE_EXCLUDE     = 3;
+  D2D1_COMBINE_MODE_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_GEOMETRY_RELATION = Integer;
+  TD2D1GeometryRelation = D2D1_GEOMETRY_RELATION;
+  PD2D1GeometryRelation = ^TD2D1GeometryRelation;
+const
+  D2D1_GEOMETRY_RELATION_UNKNOWN      = 0;
+  D2D1_GEOMETRY_RELATION_DISJOINT     = 1;
+  D2D1_GEOMETRY_RELATION_IS_CONTAINED = 2;
+  D2D1_GEOMETRY_RELATION_CONTAINS     = 3;
+  D2D1_GEOMETRY_RELATION_OVERLAP      = 4;
+  D2D1_GEOMETRY_RELATION_FORCE_DWORD  = $FFFFFFFF;
+
+type
+  D2D1_GEOMETRY_SIMPLIFICATION_OPTION = Integer;
+  TD2D1GeometrySimplificationOption = D2D1_GEOMETRY_SIMPLIFICATION_OPTION;
+  PD2D1GeometrySimplificationOption = ^TD2D1GeometrySimplificationOption;
+const
+  D2D1_GEOMETRY_SIMPLIFICATION_OPTION_CUBICS_AND_LINES = 0;
+  D2D1_GEOMETRY_SIMPLIFICATION_OPTION_LINES            = 1;
+  D2D1_GEOMETRY_SIMPLIFICATION_OPTION_FORCE_DWORD      = $FFFFFFFF;
+
+type
+  D2D1_FIGURE_BEGIN = Integer;
+  TD2D1FigureBegin = D2D1_FIGURE_BEGIN;
+  PD2D1FigureBegin = ^TD2D1FigureBegin;
+const
+  D2D1_FIGURE_BEGIN_FILLED      = 0;
+  D2D1_FIGURE_BEGIN_HOLLOW      = 1;
+  D2D1_FIGURE_BEGIN_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_FIGURE_END = Integer;
+  TD2D1_FigureEnd = D2D1_FIGURE_END;
+  PD2D1_FigureEnd = ^TD2D1_FigureEnd;
+const
+  D2D1_FIGURE_END_OPEN        = 0;
+  D2D1_FIGURE_END_CLOSED      = 1;
+  D2D1_FIGURE_END_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_PATH_SEGMENT = Integer;
+  TD2D1PathSegment = D2D1_PATH_SEGMENT;
+  PD2D1PathSegment = ^TD2D1PathSegment;
+const
+  D2D1_PATH_SEGMENT_NONE                  = $00000000;
+  D2D1_PATH_SEGMENT_FORCE_UNSTROKED       = $00000001;
+  D2D1_PATH_SEGMENT_FORCE_ROUND_LINE_JOIN = $00000002;
+  D2D1_PATH_SEGMENT_FORCE_DWORD           = $FFFFFFFF;
+
+type
+  D2D1_SWEEP_DIRECTION = Integer;
+  TD2D1SweepDirection = D2D1_SWEEP_DIRECTION;
+  PD2D1SweepDirection = ^TD2D1SweepDirection;
+const
+  D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE = 0;
+  D2D1_SWEEP_DIRECTION_CLOCKWISE         = 1;
+  D2D1_SWEEP_DIRECTION_FORCE_DWORD       = $FFFFFFFF;
+
+type
+  D2D1_FILL_MODE = Integer;
+  TD2D1FillMode = D2D1_FILL_MODE;
+  PD2D1FillMode = ^TD2D1FillMode;
+const
+  D2D1_FILL_MODE_ALTERNATE   = 0;
+  D2D1_FILL_MODE_WINDING     = 1;
+  D2D1_FILL_MODE_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_LAYER_OPTIONS = Integer;
+  TD2D1LayerOptions = D2D1_LAYER_OPTIONS;
+  PD2D1LayerOptions = ^TD2D1LayerOptions;
+const
+  D2D1_LAYER_OPTIONS_NONE                     = $00000000;
+  D2D1_LAYER_OPTIONS_INITIALIZE_FOR_CLEARTYPE = $00000001;
+  D2D1_LAYER_OPTIONS_FORCE_DWORD              = $FFFFFFFF;
+
+type
+  D2D1_WINDOW_STATE = Integer;
+  TD2D1WindowState = D2D1_WINDOW_STATE;
+  PD2D1WindowState = ^TD2D1WindowState;
+const
+  D2D1_WINDOW_STATE_NONE        = $0000000;
+  D2D1_WINDOW_STATE_OCCLUDED    = $0000001;
+  D2D1_WINDOW_STATE_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_RENDER_TARGET_TYPE = Integer;
+  TD2D1RenderTargetType = D2D1_RENDER_TARGET_TYPE;
+  PD2D1RenderTargetType = ^TD2D1RenderTargetType;
+const
+  D2D1_RENDER_TARGET_TYPE_DEFAULT = 0;
+  D2D1_RENDER_TARGET_TYPE_SOFTWARE = 1;
+  D2D1_RENDER_TARGET_TYPE_HARDWARE = 2;
+  D2D1_RENDER_TARGET_TYPE_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_FEATURE_LEVEL = Integer;
+  TD2D1FeatureLevel = D2D1_FEATURE_LEVEL;
+  PD2D1FeatureLevel = ^TD2D1FeatureLevel;
+const
+  D2D1_FEATURE_LEVEL_DEFAULT = 0;
+
+  D2D1_FEATURE_LEVEL_9 = $9100;
+  D2D1_FEATURE_LEVEL_10 = $A000;
+  D2D1_FEATURE_LEVEL_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_RENDER_TARGET_USAGE = Integer;
+  TD2D1RenderTargetUsage = D2D1_RENDER_TARGET_USAGE;
+  PD2D1RenderTargetUsage = ^TD2D1RenderTargetUsage;
+const
+  D2D1_RENDER_TARGET_USAGE_NONE                     = $00000000;
+  D2D1_RENDER_TARGET_USAGE_FORCE_BITMAP_REMOTING    = $00000001;
+  D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE           = $00000002;
+  D2D1_RENDER_TARGET_USAGE_FORCE_DWORD              = $FFFFFFFF;
+
+type
+  D2D1_PRESENT_OPTIONS = Integer;
+  TD2D1PresentOptions = D2D1_PRESENT_OPTIONS;
+  PD2D1PresentOptions = ^TD2D1PresentOptions;
+const
+  D2D1_PRESENT_OPTIONS_NONE            = $00000000;
+  D2D1_PRESENT_OPTIONS_RETAIN_CONTENTS = $00000001;
+  D2D1_PRESENT_OPTIONS_IMMEDIATELY     = $00000002;
+  D2D1_PRESENT_OPTIONS_FORCE_DWORD     = $FFFFFFFF;
+
+type
+  D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS = Integer;
+  TD2D1CompatibleRenderTargetOptions = D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS;
+  PD2D1CompatibleRenderTargetOptions = ^TD2D1CompatibleRenderTargetOptions;
+const
+    D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_NONE           = $00000000;
+  D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_GDI_COMPATIBLE = $00000001;
+  D2D1_COMPATIBLE_RENDER_TARGET_OPTIONS_FORCE_DWORD    = $FFFFFFFF;
+
+type
+  D2D1_DC_INITIALIZE_MODE = Integer;
+  TD2D1DCInitializeMode = D2D1_DC_INITIALIZE_MODE;
+  PD2D1DCInitializeMode = ^TD2D1DCInitializeMode;
+const
+  D2D1_DC_INITIALIZE_MODE_COPY        = 0;
+  D2D1_DC_INITIALIZE_MODE_CLEAR       = 1;
+  D2D1_DC_INITIALIZE_MODE_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_DEBUG_LEVEL = Integer;
+  TD2D1DebugLevel = D2D1_DEBUG_LEVEL;
+  PD2D1DebugLevel = ^TD2D1DebugLevel;
+const
+  D2D1_DEBUG_LEVEL_NONE        = 0;
+  D2D1_DEBUG_LEVEL_ERROR       = 1;
+  D2D1_DEBUG_LEVEL_WARNING     = 2;
+  D2D1_DEBUG_LEVEL_INFORMATION = 3;
+  D2D1_DEBUG_LEVEL_FORCE_DWORD = $FFFFFFFF;
+
+type
+  D2D1_FACTORY_TYPE = Integer;
+  TD2D1FactoryType = D2D1_FACTORY_TYPE;
+  PD2D1FactoryType = ^TD2D1FactoryType;
+const
+  D2D1_FACTORY_TYPE_SINGLE_THREADED = 0;
+  D2D1_FACTORY_TYPE_MULTI_THREADED  = 1;
+  D2D1_FACTORY_TYPE_FORCE_DWORD     = $FFFFFFFF;
+
+type
+  HMONITOR = THandle;
+
+  DWRITE_FONT_FILE_TYPE = Integer;
+  TDWriteFontFileType = DWRITE_FONT_FILE_TYPE;
+  PDWriteFontFileType = ^TDWriteFontFileType;
+const
+  DWRITE_FONT_FILE_TYPE_UNKNOWN             = 0;
+  DWRITE_FONT_FILE_TYPE_CFF                 = 1;
+  DWRITE_FONT_FILE_TYPE_TRUETYPE            = 2;
+  DWRITE_FONT_FILE_TYPE_TRUETYPE_COLLECTION = 3;
+  DWRITE_FONT_FILE_TYPE_TYPE1_PFM           = 4;
+  DWRITE_FONT_FILE_TYPE_TYPE1_PFB           = 5;
+  DWRITE_FONT_FILE_TYPE_VECTOR              = 6;
+  DWRITE_FONT_FILE_TYPE_BITMAP              = 7;
+
+type
+  DWRITE_FONT_FACE_TYPE = Integer;
+  TDWriteFontFaceType = DWRITE_FONT_FACE_TYPE;
+  PDWriteFontFaceType = ^TDWriteFontFaceType;
+const
+  DWRITE_FONT_FACE_TYPE_CFF                 = 0;
+  DWRITE_FONT_FACE_TYPE_TRUETYPE            = 1;
+  DWRITE_FONT_FACE_TYPE_TRUETYPE_COLLECTION = 2;
+  DWRITE_FONT_FACE_TYPE_TYPE1               = 3;
+  DWRITE_FONT_FACE_TYPE_VECTOR              = 4;
+  DWRITE_FONT_FACE_TYPE_BITMAP              = 5;
+  DWRITE_FONT_FACE_TYPE_UNKNOWN             = 6;
+
+type
+  DWRITE_FONT_SIMULATIONS = Integer;
+  TDWriteFontSimulations = DWRITE_FONT_SIMULATIONS;
+  PDWriteFontSimulations = ^TDWriteFontSimulations;
+const
+  DWRITE_FONT_SIMULATIONS_NONE    = $0000;
+  DWRITE_FONT_SIMULATIONS_BOLD    = $0001;
+  DWRITE_FONT_SIMULATIONS_OBLIQUE = $0002;
+
+type
+  DWRITE_FONT_WEIGHT = Integer;
+  TDWriteFontWeight = DWRITE_FONT_WEIGHT;
+  PDWriteFontWeight = ^TDWriteFontWeight;
+const
+  DWRITE_FONT_WEIGHT_THIN        = 100;
+  DWRITE_FONT_WEIGHT_EXTRA_LIGHT = 200;
+  DWRITE_FONT_WEIGHT_ULTRA_LIGHT = 200;
+  DWRITE_FONT_WEIGHT_LIGHT       = 300;
+  DWRITE_FONT_WEIGHT_NORMAL      = 400;
+  DWRITE_FONT_WEIGHT_REGULAR     = 400;
+  DWRITE_FONT_WEIGHT_MEDIUM      = 500;
+  DWRITE_FONT_WEIGHT_DEMI_BOLD   = 600;
+  DWRITE_FONT_WEIGHT_SEMI_BOLD   = 600;
+  DWRITE_FONT_WEIGHT_BOLD        = 700;
+  DWRITE_FONT_WEIGHT_EXTRA_BOLD  = 800;
+  DWRITE_FONT_WEIGHT_ULTRA_BOLD  = 800;
+  DWRITE_FONT_WEIGHT_BLACK       = 900;
+  DWRITE_FONT_WEIGHT_HEAVY       = 900;
+  DWRITE_FONT_WEIGHT_EXTRA_BLACK = 950;
+  DWRITE_FONT_WEIGHT_ULTRA_BLACK = 950;
+
+type
+  DWRITE_FONT_STRETCH = Integer;
+  TDWriteFontStretch = DWRITE_FONT_STRETCH;
+  PDWriteFontStretch = ^TDWriteFontStretch;
+const
+  DWRITE_FONT_STRETCH_UNDEFINED       = 0;
+  DWRITE_FONT_STRETCH_ULTRA_CONDENSED = 1;
+  DWRITE_FONT_STRETCH_EXTRA_CONDENSED = 2;
+  DWRITE_FONT_STRETCH_CONDENSED       = 3;
+  DWRITE_FONT_STRETCH_SEMI_CONDENSED  = 4;
+  DWRITE_FONT_STRETCH_NORMAL          = 5;
+  DWRITE_FONT_STRETCH_MEDIUM          = 5;
+  DWRITE_FONT_STRETCH_SEMI_EXPANDED   = 6;
+  DWRITE_FONT_STRETCH_EXPANDED        = 7;
+  DWRITE_FONT_STRETCH_EXTRA_EXPANDED  = 8;
+  DWRITE_FONT_STRETCH_ULTRA_EXPANDED  = 9;
+
+type
+  DWRITE_FONT_STYLE = Integer;
+  TDWriteFontStyle = DWRITE_FONT_STYLE;
+  PDWriteFontStyle = ^TDWriteFontStyle;
+const
+  DWRITE_FONT_STYLE_NORMAL  = 0;
+  DWRITE_FONT_STYLE_OBLIQUE = 1;
+  DWRITE_FONT_STYLE_ITALIC  = 2;
+
+type
+  DWRITE_INFORMATIONAL_STRING_ID = Integer;
+  TDWriteInformationalStringID = DWRITE_INFORMATIONAL_STRING_ID;
+  PDWriteInformationalStringID = ^TDWriteInformationalStringID;
+const
+  DWRITE_INFORMATIONAL_STRING_NONE                      = 0;
+  DWRITE_INFORMATIONAL_STRING_COPYRIGHT_NOTICE          = 1;
+  DWRITE_INFORMATIONAL_STRING_VERSION_STRINGS           = 2;
+  DWRITE_INFORMATIONAL_STRING_TRADEMARK                 = 3;
+  DWRITE_INFORMATIONAL_STRING_MANUFACTURER              = 4;
+  DWRITE_INFORMATIONAL_STRING_DESIGNER                  = 5;
+  DWRITE_INFORMATIONAL_STRING_DESIGNER_URL              = 6;
+  DWRITE_INFORMATIONAL_STRING_DESCRIPTION               = 7;
+  DWRITE_INFORMATIONAL_STRING_FONT_VENDOR_URL           = 8;
+  DWRITE_INFORMATIONAL_STRING_LICENSE_DESCRIPTION       = 9;
+  DWRITE_INFORMATIONAL_STRING_LICENSE_INFO_URL          = 10;
+  DWRITE_INFORMATIONAL_STRING_WIN32_FAMILY_NAMES        = 11;
+  DWRITE_INFORMATIONAL_STRING_WIN32_SUBFAMILY_NAMES     = 12;
+  DWRITE_INFORMATIONAL_STRING_PREFERRED_FAMILY_NAMES    = 13;
+  DWRITE_INFORMATIONAL_STRING_PREFERRED_SUBFAMILY_NAMES = 14;
+  DWRITE_INFORMATIONAL_STRING_SAMPLE_TEXT               = 15;
+
+type
+  DWRITE_FACTORY_TYPE = Integer;
+  TDWriteFactoryType = DWRITE_FACTORY_TYPE;
+  PDWriteFactoryType = ^TDWriteFactoryType;
+const
+  DWRITE_FACTORY_TYPE_SHARED   = 0;
+  DWRITE_FACTORY_TYPE_ISOLATED = 1;
+
+type
+  DWRITE_PIXEL_GEOMETRY = Integer;
+  TDWritePixelGeometry = DWRITE_PIXEL_GEOMETRY;
+  PDWritePixelGeometry = ^TDWritePixelGeometry;
+const
+  DWRITE_PIXEL_GEOMETRY_FLAT = 0;
+  DWRITE_PIXEL_GEOMETRY_RGB  = 1;
+  DWRITE_PIXEL_GEOMETRY_BGR  = 2;
+
+type
+  DWRITE_RENDERING_MODE = Integer;
+  TDWriteRenderingMode = DWRITE_RENDERING_MODE;
+  PDWriteRenderingMode = ^TDWriteRenderingMode;
+const
+  DWRITE_RENDERING_MODE_DEFAULT = 0;
+  DWRITE_RENDERING_MODE_ALIASED = 1;
+  DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC = 2;
+  DWRITE_RENDERING_MODE_CLEARTYPE_GDI_NATURAL = 3;
+  DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL = 4;
+  DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL_SYMMETRIC = 5;
+  DWRITE_RENDERING_MODE_OUTLINE = 6;
+
+type
+  DWRITE_READING_DIRECTION = Integer;
+  TDWriteReadingDirection = DWRITE_READING_DIRECTION;
+  PDWriteReadingDirection = ^TDWriteReadingDirection;
+const
+  DWRITE_READING_DIRECTION_LEFT_TO_RIGHT = 0;
+  DWRITE_READING_DIRECTION_RIGHT_TO_LEFT = 1;
+
+type
+  DWRITE_FLOW_DIRECTION = Integer;
+  TDWriteFlowDirection = DWRITE_FLOW_DIRECTION;
+  PDWriteFlowDirection = ^TDWriteFlowDirection;
+const
+  DWRITE_FLOW_DIRECTION_TOP_TO_BOTTOM = 0;
+
+type
+  DWRITE_TEXT_ALIGNMENT = Integer;
+  TDWriteTextAlignment = DWRITE_TEXT_ALIGNMENT;
+  PDWriteTextAlignment = ^TDWriteTextAlignment;
+const
+  DWRITE_TEXT_ALIGNMENT_LEADING = 0;
+  DWRITE_TEXT_ALIGNMENT_TRAILING = 1;
+  DWRITE_TEXT_ALIGNMENT_CENTER = 2;
+
+type
+  DWRITE_PARAGRAPH_ALIGNMENT = Integer;
+  TDWriteParagraphAlignment = DWRITE_PARAGRAPH_ALIGNMENT;
+  PDWriteParagraphAlignment = ^TDWriteParagraphAlignment;
+const
+  DWRITE_PARAGRAPH_ALIGNMENT_NEAR = 0;
+  DWRITE_PARAGRAPH_ALIGNMENT_FAR = 1;
+  DWRITE_PARAGRAPH_ALIGNMENT_CENTER = 2;
+
+type
+  DWRITE_WORD_WRAPPING = Integer;
+  TDWriteWordWrapping = DWRITE_WORD_WRAPPING;
+  PDWriteWordWrapping = ^TDWriteWordWrapping;
+const
+  DWRITE_WORD_WRAPPING_WRAP = 0;
+  DWRITE_WORD_WRAPPING_NO_WRAP = 1;
+
+type
+  DWRITE_LINE_SPACING_METHOD = Integer;
+  TDWwriteLineSpacingMethod = DWRITE_LINE_SPACING_METHOD;
+  PDWwriteLineSpacingMethod = ^TDWwriteLineSpacingMethod;
+const
+  DWRITE_LINE_SPACING_METHOD_DEFAULT = 0;
+  DWRITE_LINE_SPACING_METHOD_UNIFORM = 1;
+
+type
+  DWRITE_TRIMMING_GRANULARITY = Integer;
+  TDWriteTrimmingGranularity = DWRITE_TRIMMING_GRANULARITY;
+  PDWriteTrimmingGranularity = ^TDWriteTrimmingGranularity;
+const
+  DWRITE_TRIMMING_GRANULARITY_NONE      = 0;
+  DWRITE_TRIMMING_GRANULARITY_CHARACTER = 1;
+  DWRITE_TRIMMING_GRANULARITY_WORD      = 2;
+
+type
+  DWRITE_FONT_FEATURE_TAG = Integer;
+  TDWriteFontFeatureTag = DWRITE_FONT_FEATURE_TAG;
+  PDWriteFontFeatureTag = ^TDWriteFontFeatureTag;
+const
+  DWRITE_FONT_FEATURE_TAG_ALTERNATIVE_FRACTIONS           = $63726661;
+  DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS_FROM_CAPITALS   = $63703263;
+  DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS_FROM_CAPITALS    = $63733263;
+  DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_ALTERNATES           = $746C6163;
+  DWRITE_FONT_FEATURE_TAG_CASE_SENSITIVE_FORMS            = $65736163;
+  DWRITE_FONT_FEATURE_TAG_GLYPH_COMPOSITION_DECOMPOSITION = $706D6363;
+  DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_LIGATURES            = $67696C63;
+  DWRITE_FONT_FEATURE_TAG_CAPITAL_SPACING                 = $70737063;
+  DWRITE_FONT_FEATURE_TAG_CONTEXTUAL_SWASH                = $68777363;
+  DWRITE_FONT_FEATURE_TAG_CURSIVE_POSITIONING             = $73727563;
+  DWRITE_FONT_FEATURE_TAG_DEFAULT                         = $746C6664;
+  DWRITE_FONT_FEATURE_TAG_DISCRETIONARY_LIGATURES         = $67696C64;
+  DWRITE_FONT_FEATURE_TAG_EXPERT_FORMS                    = $74707865;
+  DWRITE_FONT_FEATURE_TAG_FRACTIONS                       = $63617266;
+  DWRITE_FONT_FEATURE_TAG_FULL_WIDTH                      = $64697766;
+  DWRITE_FONT_FEATURE_TAG_HALF_FORMS                      = $666C6168;
+  DWRITE_FONT_FEATURE_TAG_HALANT_FORMS                    = $6E6C6168;
+  DWRITE_FONT_FEATURE_TAG_ALTERNATE_HALF_WIDTH            = $746C6168;
+  DWRITE_FONT_FEATURE_TAG_HISTORICAL_FORMS                = $74736968;
+  DWRITE_FONT_FEATURE_TAG_HORIZONTAL_KANA_ALTERNATES      = $616E6B68;
+  DWRITE_FONT_FEATURE_TAG_HISTORICAL_LIGATURES            = $67696C68;
+  DWRITE_FONT_FEATURE_TAG_HALF_WIDTH                      = $64697768;
+  DWRITE_FONT_FEATURE_TAG_HOJO_KANJI_FORMS                = $6F6A6F68;
+  DWRITE_FONT_FEATURE_TAG_JIS04_FORMS                     = $3430706A;
+  DWRITE_FONT_FEATURE_TAG_JIS78_FORMS                     = $3837706A;
+  DWRITE_FONT_FEATURE_TAG_JIS83_FORMS                     = $3338706A;
+  DWRITE_FONT_FEATURE_TAG_JIS90_FORMS                     = $3039706A;
+  DWRITE_FONT_FEATURE_TAG_KERNING                         = $6E72656B;
+  DWRITE_FONT_FEATURE_TAG_STANDARD_LIGATURES              = $6167696C;
+  DWRITE_FONT_FEATURE_TAG_LINING_FIGURES                  = $6D756E6C;
+  DWRITE_FONT_FEATURE_TAG_LOCALIZED_FORMS                 = $6C636F6C;
+  DWRITE_FONT_FEATURE_TAG_MARK_POSITIONING                = $6B72616D;
+  DWRITE_FONT_FEATURE_TAG_MATHEMATICAL_GREEK              = $6B72676D;
+  DWRITE_FONT_FEATURE_TAG_MARK_TO_MARK_POSITIONING        = $6B6D6B6D;
+  DWRITE_FONT_FEATURE_TAG_ALTERNATE_ANNOTATION_FORMS      = $746C616E;
+  DWRITE_FONT_FEATURE_TAG_NLC_KANJI_FORMS                 = $6B636C6E;
+  DWRITE_FONT_FEATURE_TAG_OLD_STYLE_FIGURES               = $6D756E6F;
+  DWRITE_FONT_FEATURE_TAG_ORDINALS                        = $6E64726F;
+  DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_ALTERNATE_WIDTH    = $746C6170;
+  DWRITE_FONT_FEATURE_TAG_PETITE_CAPITALS                 = $70616370;
+  DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_FIGURES            = $6D756E70;
+  DWRITE_FONT_FEATURE_TAG_PROPORTIONAL_WIDTHS             = $64697770;
+  DWRITE_FONT_FEATURE_TAG_QUARTER_WIDTHS                  = $64697771;
+  DWRITE_FONT_FEATURE_TAG_REQUIRED_LIGATURES              = $67696C72;
+  DWRITE_FONT_FEATURE_TAG_RUBY_NOTATION_FORMS             = $79627572;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_ALTERNATES            = $746C6173;
+  DWRITE_FONT_FEATURE_TAG_SCIENTIFIC_INFERIORS            = $666E6973;
+  DWRITE_FONT_FEATURE_TAG_SMALL_CAPITALS                  = $70636D73;
+  DWRITE_FONT_FEATURE_TAG_SIMPLIFIED_FORMS                = $6C706D73;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_1                 = $31307373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_2                 = $32307373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_3                 = $33307373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_4                 = $34307373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_5                 = $35307373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_6                 = $36307373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_7                 = $37307373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_8                 = $38307373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_9                 = $39307373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_10                = $30317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_11                = $31317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_12                = $32317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_13                = $33317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_14                = $34317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_15                = $35317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_16                = $36317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_17                = $37317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_18                = $38317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_19                = $39317373;
+  DWRITE_FONT_FEATURE_TAG_STYLISTIC_SET_20                = $30327373;
+  DWRITE_FONT_FEATURE_TAG_SUBSCRIPT                       = $73627573;
+  DWRITE_FONT_FEATURE_TAG_SUPERSCRIPT                     = $73707573;
+  DWRITE_FONT_FEATURE_TAG_SWASH                           = $68737773;
+  DWRITE_FONT_FEATURE_TAG_TITLING                         = $6C746974;
+  DWRITE_FONT_FEATURE_TAG_TRADITIONAL_NAME_FORMS          = $6D616E74;
+  DWRITE_FONT_FEATURE_TAG_TABULAR_FIGURES                 = $6D756E74;
+  DWRITE_FONT_FEATURE_TAG_TRADITIONAL_FORMS               = $64617274;
+  DWRITE_FONT_FEATURE_TAG_THIRD_WIDTHS                    = $64697774;
+  DWRITE_FONT_FEATURE_TAG_UNICASE                         = $63696E75;
+  DWRITE_FONT_FEATURE_TAG_SLASHED_ZERO                    = $6F72657A;
+
+type
+  DWRITE_SCRIPT_SHAPES = Integer;
+  TDWriteScriptShapes = DWRITE_SCRIPT_SHAPES;
+  PDWriteScriptShapes = ^TDWriteScriptShapes;
+const
+  DWRITE_SCRIPT_SHAPES_DEFAULT = 0;
+  DWRITE_SCRIPT_SHAPES_NO_VISUAL = 1;
+
+type
+  DWRITE_BREAK_CONDITION = Integer;
+  TDWriteBreakCondition = DWRITE_BREAK_CONDITION;
+  PDWriteBreakCondition = ^TDWriteBreakCondition;
+const
+  DWRITE_BREAK_CONDITION_NEUTRAL = 0;
+  DWRITE_BREAK_CONDITION_CAN_BREAK = 1;
+  DWRITE_BREAK_CONDITION_MAY_NOT_BREAK = 2;
+  DWRITE_BREAK_CONDITION_MUST_BREAK = 3;
+
+type
+  DWRITE_NUMBER_SUBSTITUTION_METHOD = Integer;
+  TDWriteNumberSubstitutionMethod = DWRITE_NUMBER_SUBSTITUTION_METHOD;
+  PDWriteNumberSubstitutionMethod = ^TDWriteNumberSubstitutionMethod;
+const
+  DWRITE_NUMBER_SUBSTITUTION_METHOD_FROM_CULTURE = 0;
+  DWRITE_NUMBER_SUBSTITUTION_METHOD_CONTEXTUAL = 1;
+  DWRITE_NUMBER_SUBSTITUTION_METHOD_NONE = 2;
+  DWRITE_NUMBER_SUBSTITUTION_METHOD_NATIONAL = 3;
+  DWRITE_NUMBER_SUBSTITUTION_METHOD_TRADITIONAL = 4;
+
+type
+  DWRITE_TEXTURE_TYPE = Integer;
+  TDWriteTextureType = DWRITE_TEXTURE_TYPE;
+  PDWriteTextureType = ^TDWriteTextureType;
+const
+  DWRITE_TEXTURE_ALIASED_1x1 = 0;
+  DWRITE_TEXTURE_CLEARTYPE_3x1 = 1;
+
+const
+  DWRITE_ALPHA_MAX = $FF;
+
+type
+  ID2D1Geometry = interface;
+  ID2D1Brush = interface;
+  ID2D1Factory = interface;
+  ID2D1RenderTarget = interface;
+  ID2D1SimplifiedGeometrySink = interface;
+  ID2D1TessellationSink = interface;
+  ID2D1BitmapRenderTarget = interface;
+  IDWriteFontFace = interface;
+  IDWriteFontFileStream = interface;
+  IDWriteFactory = interface;
+  IDWriteFontFileEnumerator = interface;
+  IDWriteFontFamily = interface;
+  IDWriteFont = interface;
+  IDWriteInlineObject = interface;
+  IDWriteTextRenderer = interface;
+  IDWriteRenderingParams = interface;
+  IDWriteTextFormat = interface;
+  IDWriteTextLayout = interface;
+
+  D2D1_PIXEL_FORMAT = record
+    format: DXGI_FORMAT;
+    alphaMode: D2D1_ALPHA_MODE;
+  end;
+  TD2D1PixelFormat = D2D1_PIXEL_FORMAT;
+  PD2D1PixelFormat = ^TD2D1PixelFormat;
+
+  D2D1_POINT_2U = D2D_POINT_2U;
+  TD2D1Point2U = D2D1_POINT_2U;
+  PD2D1Point2U = ^TD2D1Point2U;
+
+  D2D1_POINT_2F = D2D_POINT_2F;
+  TD2D1Point2F = D2D1_POINT_2F;
+  PD2D1Point2F = ^TD2D1Point2F;
+
+  D2D1_RECT_F = D2D_RECT_F;
+  TD2D1RectF = D2D1_RECT_F;
+  PD2D1RectF = ^TD2D1RectF;
+
+  D2D1_RECT_U = D2D_RECT_U;
+  TD2D1RectU = D2D1_RECT_U;
+  PD2D1RectU = ^TD2D1RectU;
+
+  D2D1_SIZE_F = D2D_SIZE_F;
+  TD2D1SizeF = D2D1_SIZE_F;
+  PD2D1SizeF = ^TD2D1SizeF;
+
+  D2D1_SIZE_U = D2D_SIZE_U;
+  TD2D1SizeU = D2D1_SIZE_U;
+  PD2D1SizeU = ^TD2D1SizeU;
+
+  D2D1_COLOR_F = D2D_COLOR_F;
+  TD2D1ColorF = D2D1_COLOR_F;
+  PD2D1ColorF = ^TD2D1ColorF;
+
+  D2D1_MATRIX_3X2_F = D2D_MATRIX_3X2_F;
+  TD2D1Matrix3x2F = D2D1_MATRIX_3X2_F;
+  PD2D1Matrix3x2F = ^TD2D1Matrix3x2F;
+
+  D2D1_TAG = UINT64;
+  TD2D1Tag = D2D1_TAG;
+  PD2D1Tag = ^TD2D1Tag;
+
+  D2D1_BITMAP_PROPERTIES = record
+    pixelFormat: D2D1_PIXEL_FORMAT;
+    dpiX: Single;
+    dpiY: Single;
+  end;
+  TD2D1BitmapProperties = D2D1_BITMAP_PROPERTIES;
+  PD2D1BitmapProperties = ^TD2D1BitmapProperties;
+
+  D2D1_GRADIENT_STOP = record
+    position: Single;
+    color: D2D1_COLOR_F;
+  end;
+  TD2D1GradientStop = D2D1_GRADIENT_STOP;
+  PD2D1GradientStop = ^TD2D1GradientStop;
+
+  D2D1_BRUSH_PROPERTIES = record
+    opacity: Single;
+    transform: D2D1_MATRIX_3X2_F;
+  end;
+  TD2D1BrushProperties = D2D1_BRUSH_PROPERTIES;
+  PD2D1BrushProperties = ^TD2D1BrushProperties;
+
+  D2D1_BITMAP_BRUSH_PROPERTIES = record
+    extendModeX: D2D1_EXTEND_MODE;
+    extendModeY: D2D1_EXTEND_MODE;
+    interpolationMode: D2D1_BITMAP_INTERPOLATION_MODE;
+  end;
+  TD2D1BitmapBrushProperties = D2D1_BITMAP_BRUSH_PROPERTIES;
+  PD2D1BitmapBrushProperties = ^TD2D1BitmapBrushProperties;
+
+  D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES = record
+    startPoint: D2D1_POINT_2F;
+    endPoint: D2D1_POINT_2F;
+  end;
+  TD2D1LinearGradientBrushProperties = D2D1_LINEAR_GRADIENT_BRUSH_PROPERTIES;
+  PD2D1LinearGradientBrushProperties = ^TD2D1LinearGradientBrushProperties;
+
+  D2D1_RADIAL_GRADIENT_BRUSH_PROPERTIES = record
+    center: D2D1_POINT_2F;
+    gradientOriginOffset: D2D1_POINT_2F;
+    radiusX: Single;
+    radiusY: Single;
+  end;
+  TD2D1RadialGradientBrushProperties = D2D1_RADIAL_GRADIENT_BRUSH_PROPERTIES;
+  PD2D1RadialGradientBrushProperties = ^TD2D1RadialGradientBrushProperties;
+
+  D2D1_BEZIER_SEGMENT = record
+    point1: D2D1_POINT_2F;
+    point2: D2D1_POINT_2F;
+    point3: D2D1_POINT_2F;
+  end;
+  TD2D1BezierSegment = D2D1_BEZIER_SEGMENT;
+  PD2D1BezierSegment = ^TD2D1BezierSegment;
+
+  D2D1_TRIANGLE = record
+    point1: D2D1_POINT_2F;
+    point2: D2D1_POINT_2F;
+    point3: D2D1_POINT_2F;
+  end;
+  TD2D1Triangle = D2D1_TRIANGLE;
+  PD2D1Triangle = ^TD2D1Triangle;
+
+  D2D1_ARC_SEGMENT = record
+    point: D2D1_POINT_2F;
+    size: D2D1_SIZE_F;
+    rotationAngle: Single;
+    sweepDirection: D2D1_SWEEP_DIRECTION;
+    arcSize: D2D1_ARC_SIZE;
+  end;
+  TD2D1ArcSegment = D2D1_ARC_SEGMENT;
+  PD2D1ArcSegment = ^TD2D1ArcSegment;
+
+  D2D1_QUADRATIC_BEZIER_SEGMENT = record
+    point1: D2D1_POINT_2F;
+    point2: D2D1_POINT_2F;
+  end;
+  TD2D1QuadraticBezierSegment = D2D1_QUADRATIC_BEZIER_SEGMENT;
+  PD2D1QuadraticBezierSegment = ^TD2D1QuadraticBezierSegment;
+
+  D2D1_ELLIPSE = record
+    point: D2D1_POINT_2F;
+    radiusX: Single;
+    radiusY: Single;
+  end;
+  TD2D1Ellipse = D2D1_ELLIPSE;
+  PD2D1Ellipse = ^TD2D1Ellipse;
+
+  D2D1_ROUNDED_RECT = record
+    rect: D2D1_RECT_F;
+    radiusX: Single;
+    radiusY: Single;
+  end;
+  TD2D1RoundedRect = D2D1_ROUNDED_RECT;
+  PD2D1RoundedRect = ^TD2D1RoundedRect;
+
+  D2D1_STROKE_STYLE_PROPERTIES = record
+    startCap: D2D1_CAP_STYLE;
+    endCap: D2D1_CAP_STYLE;
+    dashCap: D2D1_CAP_STYLE;
+    lineJoin: D2D1_LINE_JOIN;
+    miterLimit: Single;
+    dashStyle: D2D1_DASH_STYLE;
+    dashOffset: Single;
+  end;
+  TD2D1StrokeStyleProperties = D2D1_STROKE_STYLE_PROPERTIES;
+  PD2D1StrokeStyleProperties = ^TD2D1StrokeStyleProperties;
+
+  D2D1_RENDER_TARGET_PROPERTIES = record
+    _type: TD2D1RenderTargetType;
+    pixelFormat: TD2D1PixelFormat;
+    dpiX: Single;
+    dpiY: Single;
+    usage: TD2D1RenderTargetUsage;
+    minLevel: TD2D1FeatureLevel;
+  end;
+  TD2D1RenderTargetProperties = D2D1_RENDER_TARGET_PROPERTIES;
+  PD2D1RenderTargetProperties = ^TD2D1RenderTargetProperties;
+
+  D2D1_HWND_RENDER_TARGET_PROPERTIES = record
+    hwnd: HWND;
+    pixelSize: D2D1_SIZE_U;
+    presentOptions: D2D1_PRESENT_OPTIONS;
+  end;
+  TD2D1HwndRenderTargetProperties = D2D1_HWND_RENDER_TARGET_PROPERTIES;
+  PD2D1HwndRenderTargetProperties = ^TD2D1HwndRenderTargetProperties;
+
+  D2D1_DRAWING_STATE_DESCRIPTION = record
+    antialiasMode: D2D1_ANTIALIAS_MODE;
+    textAntialiasMode: D2D1_TEXT_ANTIALIAS_MODE;
+    tag1: D2D1_TAG;
+    tag2: D2D1_TAG;
+    transform: D2D1_MATRIX_3X2_F;
+  end;
+  TD2D1DrawingStateDescription = D2D1_DRAWING_STATE_DESCRIPTION;
+  PD2D1DrawingStateDescription = ^TD2D1DrawingStateDescription;
+
+  D2D1_FACTORY_OPTIONS = record
+    debugLevel: D2D1_DEBUG_LEVEL;
+  end;
+  TD2D1FactoryOptions = D2D1_FACTORY_OPTIONS;
+  PD2D1FactoryOptions = ^TD2D1FactoryOptions;
+
+  D2D1_LAYER_PARAMETERS = record
+    contentBounds: TD2D1RectF;
+    geometricMask: ID2D1Geometry;
+    maskAntialiasMode: TD2D1AntiAliasMode;
+    maskTransform: TD2D1Matrix3x2F;
+    opacity: Single;
+    opacityBrush: ID2D1Brush;
+    layerOptions: TD2D1LayerOptions;
+  end;
+  TD2D1LayerParameters = D2D1_LAYER_PARAMETERS;
+  PD2D1LayerParameters = ^TD2D1LayerParameters;
+
+  DWRITE_FONT_METRICS = record
+    designUnitsPerEm: Word;
+    ascent: Word;
+    descent: Word;
+    lineGap: Shortint;
+    capHeight: Word;
+    xHeight: Word;
+    underlinePosition: Shortint;
+    underlineThickness: Word;
+    strikethroughPosition: Shortint;
+    strikethroughThickness: Word;
+  end;
+  TDWriteFontMetrics = DWRITE_FONT_METRICS;
+  PDWriteFontMetrics = ^TDWriteFontMetrics;
+
+  DWRITE_GLYPH_METRICS = record
+    leftSideBearing: Integer;
+    advanceWidth: Cardinal;
+    rightSideBearing: Integer;
+    topSideBearing: Integer;
+    advanceHeight: Cardinal;
+    bottomSideBearing: Integer;
+    verticalOriginY: Integer;
+  end;
+  TDWriteGlyphMetrics = DWRITE_GLYPH_METRICS;
+  PDWriteGlyphMetrics = ^TDWriteGlyphMetrics;
+
+  DWRITE_GLYPH_OFFSET = record
+    advanceOffset: Single;
+    ascenderOffset: Single;
+  end;
+  TDWriteGlyphOffset = DWRITE_GLYPH_OFFSET;
+  PDWriteGlyphOffset = ^TDWriteGlyphOffset;
+
+  DWRITE_MATRIX = record
+    m11: Single;
+    m12: Single;
+    m21: Single;
+    m22: Single;
+    dx: Single;
+    dy: Single;
+  end;
+  TDWriteMatrix = DWRITE_MATRIX;
+  PDWriteMatrix = ^TDWriteMatrix;
+
+  DWRITE_TEXT_RANGE = record
+    startPosition: Cardinal;
+    length: Cardinal;
+  end;
+  TDWriteTextRange = DWRITE_TEXT_RANGE;
+  PDWriteTextRange = ^TDWriteTextRange;
+
+  DWRITE_FONT_FEATURE = record
+    nameTag: DWRITE_FONT_FEATURE_TAG;
+    parameter: Cardinal;
+  end;
+  TDWriteFontFeature = DWRITE_FONT_FEATURE;
+  PDWriteFontFeature = ^TDWriteFontFeature;
+
+  DWRITE_TYPOGRAPHIC_FEATURES = record
+    features: PDWriteFontFeature;
+    featureCount: Cardinal;
+  end;
+  TDWriteTypographicFeatures = DWRITE_TYPOGRAPHIC_FEATURES;
+  PDWriteTypographicFeatures = ^TDWriteTypographicFeatures;
+
+  DWRITE_TRIMMING = record
+    granularity: DWRITE_TRIMMING_GRANULARITY;
+    delimiter: Cardinal;
+    delimiterCount: Cardinal;
+  end;
+  TDWriteTrimming = DWRITE_TRIMMING;
+  PDWriteTrimming = ^TDWriteTrimming;
+
+  DWRITE_SCRIPT_ANALYSIS = record
+    script: Word;
+    shapes: DWRITE_SCRIPT_SHAPES;
+  end;
+  TDWriteScriptAnalysis = DWRITE_SCRIPT_ANALYSIS;
+  PDWriteScriptAnalysis = ^TDWriteScriptAnalysis;
+
+  DWRITE_LINE_BREAKPOINT = record
+    data: Byte;
+  end;
+  TDWriteLineBreakpoint = DWRITE_LINE_BREAKPOINT;
+  PDWriteLineBreakpoint = ^TDWriteLineBreakpoint;
+
+  DWRITE_SHAPING_TEXT_PROPERTIES = record
+    data: WORD;
+  end;
+  TDWriteShapingTextProperties = DWRITE_SHAPING_TEXT_PROPERTIES;
+  PDWriteShapingTextProperties = ^TDWriteShapingTextProperties;
+
+  DWRITE_SHAPING_GLYPH_PROPERTIES = record
+    data: WORD;
+  end;
+  TDWriteShapingGlyphProperties = DWRITE_SHAPING_GLYPH_PROPERTIES;
+  PDWriteShapingGlyphProperties = ^TDWriteShapingGlyphProperties;
+
+  DWRITE_GLYPH_RUN = record
+    fontFace: IDWriteFontFace;
+    fontEmSize: Single;
+    glyphCount: Cardinal;
+    glyphIndices: PWord;
+    glyphAdvances: PSingle;
+    glyphOffsets: PDWriteGlyphOffset;
+    isSideways: BOOL;
+    bidiLevel: Cardinal;
+  end;
+  TDWriteGlyphRun = DWRITE_GLYPH_RUN;
+  PDWriteGlyphRun = ^TDWriteGlyphRun;
+
+  DWRITE_GLYPH_RUN_DESCRIPTION = record
+    localeName: PWCHAR;
+    _string: PWCHAR;
+    stringLength: Cardinal;
+    clusterMap: PWord;
+    textPosition: Cardinal;
+  end;
+  TDWriteGlyphRunDescription = DWRITE_GLYPH_RUN_DESCRIPTION;
+  PDWriteGlyphRunDescription = ^TDWriteGlyphRunDescription;
+
+  DWRITE_UNDERLINE = record
+    width: Single;
+    thickness: Single;
+    offset: Single;
+    runHeight: Single;
+    readingDirection: DWRITE_READING_DIRECTION;
+    flowDirection: DWRITE_FLOW_DIRECTION;
+    localeName: PWCHAR;
+  end;
+  TDWriteUnderline = DWRITE_UNDERLINE;
+  PDWriteUnderline = ^TDWriteUnderline;
+
+  DWRITE_STRIKETHROUGH = record
+    width: Single;
+    thickness: Single;
+    offset: Single;
+    readingDirection: DWRITE_READING_DIRECTION;
+    flowDirection: DWRITE_FLOW_DIRECTION;
+    localeName: PWCHAR;
+  end;
+  TDWriteStrikethrough = DWRITE_STRIKETHROUGH;
+  PDWriteStrikethrough = ^TDWriteStrikethrough;
+
+  DWRITE_LINE_METRICS = record
+    length: Cardinal;
+    trailingWhitespaceLength: Cardinal;
+    newlineLength: Cardinal;
+    height: Single;
+    baseline: Single;
+    isTrimmed: BOOL;
+  end;
+  TDWriteLineMetrics = DWRITE_LINE_METRICS;
+  PDWriteLineMetrics = ^TDWriteLineMetrics;
+
+  DWRITE_CLUSTER_METRICS = record
+    width: Single;
+    length: Word;
+    data: Word;
+  end;
+  TDWriteClusterMetrics = DWRITE_CLUSTER_METRICS;
+  PDWriteClusterMetrics = ^TDWriteClusterMetrics;
+
+  DWRITE_TEXT_METRICS = record
+    left: Single;
+    top: Single;
+    width: Single;
+    widthIncludingTrailingWhitespace: Single;
+    height: Single;
+    layoutWidth: Single;
+    layoutHeight: Single;
+    maxBidiReorderingDepth: Cardinal;
+    lineCount: Cardinal;
+  end;
+  TDWriteTextMetrics = DWRITE_TEXT_METRICS;
+  PDWriteTextMetrics = ^TDWriteTextMetrics;
+
+  DWRITE_INLINE_OBJECT_METRICS = record
+    width: Single;
+    height: Single;
+    baseline: Single;
+    supportsSideways: BOOL;
+  end;
+  TDWriteInlineObjectMetrics = DWRITE_INLINE_OBJECT_METRICS;
+  PDWriteInlineObjectMetrics = ^TDWriteInlineObjectMetrics;
+
+  DWRITE_OVERHANG_METRICS = record
+    left: Single;
+    top: Single;
+    right: Single;
+    bottom: Single;
+  end;
+  TDWriteOverhangMetrics = DWRITE_OVERHANG_METRICS;
+  PDWriteOverhangMetrics = ^TDWriteOverhangMetrics;
+
+  DWRITE_HIT_TEST_METRICS = record
+    textPosition: Cardinal;
+    length: Cardinal;
+    left: Single;
+    top: Single;
+    width: Single;
+    height: Single;
+    bidiLevel: Cardinal;
+    isText: BOOL;
+    isTrimmed: BOOL;
+  end;
+  TDWriteHitTestMetrics = DWRITE_HIT_TEST_METRICS;
+  PDWriteHitTestMetrics = ^TDWriteHitTestMetrics;
+
+{ IDXGIObject }
+
+  IDXGIObject = interface(IUnknown)
+  [SID_IDXGIObject]
+  {
+  public:
+      virtual HRESULT STDMETHODCALLTYPE SetPrivateData(
+          /* [in] */ REFGUID Name,
+          /* [in] */ UINT DataSize,
+          /* [in] */ const void *pData) = 0;
+      virtual HRESULT STDMETHODCALLTYPE SetPrivateDataInterface(
+          /* [in] */ REFGUID Name,
+          /* [in] */ const IUnknown *pUnknown) = 0;
+      virtual HRESULT STDMETHODCALLTYPE GetPrivateData(
+          /* [in] */ REFGUID Name,
+          /* [out][in] */ UINT *pDataSize,
+          /* [out] */ void *pData) = 0;
+      virtual HRESULT STDMETHODCALLTYPE GetParent(
+          /* [in] */ REFIID riid,
+          /* [retval][out] */ void **ppParent) = 0;
+  }
+  end;
+
+{ IDXGIDeviceSubObject }
+
+  IDXGIDeviceSubObject = interface(IDXGIObject)
+  [SID_IDXGIDeviceSubObject]
+  {
+  public:
+      virtual HRESULT STDMETHODCALLTYPE GetDevice(
+          /* [in] */ REFIID riid,
+          /* [retval][out] */ void **ppDevice) = 0;
+  }
+  end;
+
+{ IDXGISurface }
+
+  IDXGISurface = interface(IDXGIDeviceSubObject)
+  [SID_IDXGISurface]
+  {
+  public:
+      virtual HRESULT STDMETHODCALLTYPE GetDesc(
+          /* [out] */ DXGI_SURFACE_DESC *pDesc) = 0;
+      virtual HRESULT STDMETHODCALLTYPE Map(
+          /* [out] */ DXGI_MAPPED_RECT *pLockedRect,
+          /* [in] */ UINT MapFlags) = 0;
+      virtual HRESULT STDMETHODCALLTYPE Unmap( void) = 0;
+  }
+  end;
+
+{ IDXGISurface1 }
+
+  IDXGISurface1 = interface(IDXGISurface)
+  [SID_IDXGISurface1]
+  {
+  public extern(Windows):
+    HRESULT GetDC(BOOL Discard, HDC* phdc);
+    HRESULT ReleaseDC(RECT* pDirtyRect);
+  }
+  end;
+
+{ ID2D1Resource }
+
+  ID2D1Resource = interface(IUnknown)
+  [SID_ID2D1Resource]
+    procedure GetFactory(out factory: ID2D1Factory); stdcall;
+  end;
+
+{ ID2D1Bitmap }
+
+  ID2D1Bitmap = interface(ID2D1Resource)
+  [SID_ID2D1Bitmap]
+    procedure GetSize(out size: TD2D1SizeF); stdcall;
+    procedure GetPixelSize(out pixelSize: TD2D1SizeU); stdcall;
+    procedure GetPixelFormat(out pixelFormat: TD2D1PixelFormat); stdcall;
+    procedure GetDpi(out dpiX, dpiY: Single); stdcall;
+    function CopyFromBitmap(var destPoint: D2D1_POINT_2U; const bitmap: ID2D1Bitmap;
+      var srcRect: D2D1_RECT_U): HResult; stdcall;
+    function CopyFromRenderTarget(var destPoint: D2D1_POINT_2U;
+      const renderTarget: ID2D1RenderTarget; var srcRect: D2D1_RECT_U): HResult; stdcall;
+    function CopyFromMemory(var dstRect: D2D1_RECT_U; srcData: Pointer;
+      pitch: Cardinal): HResult; stdcall;
+  end;
+
+{ ID2D1GradientStopCollection }
+
+  ID2D1GradientStopCollection = interface(ID2D1Resource)
+  [SID_ID2D1GradientStopCollection]
+    function GetGradientStopCount: Cardinal; stdcall;
+    procedure GetGradientStops(gradientStops: PD2D1GradientStop;
+      gradientStopsCount: UINT); stdcall;
+    function GetColorInterpolationGamma: TD2D1Gamma; stdcall;
+    function GetExtendMode: TD2D1ExtendMode; stdcall;
+  end;
+
+{ ID2D1Brush }
+
+  ID2D1Brush = interface(ID2D1Resource)
+  [SID_ID2D1Brush]
+    procedure SetOpacity(opacity: Single); stdcall;
+    procedure SetTransform(const transform: TD2D1Matrix3x2F); stdcall;
+    function GetOpacity: Single; stdcall;
+    procedure GetTransform(out transform: TD2D1Matrix3x2F); stdcall;
+  end;
+
+{ ID2D1BitmapBrush }
+
+  ID2D1BitmapBrush = interface(ID2D1Brush)
+  [SID_ID2D1BitmapBrush]
+    procedure SetExtendModeX(extendModeX: D2D1_EXTEND_MODE); stdcall;
+    procedure SetExtendModeY(extendModeY: D2D1_EXTEND_MODE); stdcall;
+    procedure SetInterpolationMode(
+      interpolationMode: D2D1_BITMAP_INTERPOLATION_MODE); stdcall;
+    procedure SetBitmap(const bitmap: ID2D1Bitmap); stdcall;
+    function GetExtendModeX: TD2D1ExtendMode; stdcall;
+    function GetExtendModeY: TD2D1ExtendMode; stdcall;
+    function GetInterpolationMode: TD2D1BitmapInterpolationMode; stdcall;
+    procedure GetBitmap(out bitmap: ID2D1Bitmap); stdcall;
+  end;
+
+{ ID2D1SolidColorBrush }
+
+  ID2D1SolidColorBrush = interface(ID2D1Brush)
+  [SID_ID2D1SolidColorBrush]
+    procedure SetColor(const color: TD2D1ColorF); stdcall;
+    procedure GetColor(var color: TD2D1ColorF); stdcall;
+  end;
+
+{ ID2D1LinearGradientBrush }
+
+  ID2D1LinearGradientBrush = interface(ID2D1Brush)
+  [SID_ID2D1LinearGradientBrush]
+    procedure SetStartPoint(startPoint: TD2D1Point2F); stdcall;
+    procedure SetEndPoint(endPoint: TD2D1Point2F); stdcall;
+    procedure GetStartPoint(out startPoint: TD2D1Point2F); stdcall;
+    procedure GetEndPoint(out endPoint: TD2D1Point2F); stdcall;
+    procedure GetGradientStopCollection(
+      out gradientStopCollection: ID2D1GradientStopCollection); stdcall;
+  end;
+
+{ ID2D1RadialGradientBrush }
+
+  ID2D1RadialGradientBrush = interface(ID2D1Brush)
+  [SID_ID2D1RadialGradientBrush]
+    procedure SetCenter(center: TD2D1Point2F); stdcall;
+    procedure SetGradientOriginOffset(
+      gradientOriginOffset: TD2D1Point2F); stdcall;
+    procedure SetRadiusX(radiusX: Single); stdcall;
+    procedure SetRadiusY(radiusY: Single); stdcall;
+    procedure GetCenter(out center: TD2D1Point2F); stdcall;
+    procedure GetGradientOriginOffset(out gradientOriginOffset: TD2D1Point2F); stdcall;
+    function GetRadiusX: Single; stdcall;
+    function GetRadiusY: Single; stdcall;
+    procedure GetGradientStopCollection(
+      out gradientStopCollection: ID2D1GradientStopCollection); stdcall;
+  end;
+
+{ ID2D1StrokeStyle }
+
+  ID2D1StrokeStyle = interface(ID2D1Resource)
+  [SID_ID2D1StrokeStyle]
+    function GetStartCap: TD2D1CapStyle; stdcall;
+    function GetEndCap: TD2D1CapStyle; stdcall;
+    function GetDashCap: TD2D1CapStyle; stdcall;
+    function GetMiterLimit: Single; stdcall;
+    function GetLineJoin: TD2D1LineJoin; stdcall;
+    function GetDashOffset: Single; stdcall;
+    function GetDashStyle: TD2D1DashStyle; stdcall;
+    function GetDashesCount: Cardinal; stdcall;
+    procedure GetDashes(dashes: PSingle; dashesCount: UINT); stdcall;
+  end;
+
+{ ID2D1Geometry }
+
+  ID2D1Geometry = interface(ID2D1Resource)
+  [SID_ID2D1Geometry]
+    function GetBounds(const worldTransform: TD2D1Matrix3x2F;
+      out bounds: D2D1_RECT_F): HResult; stdcall;
+    function GetWidenedBounds(strokeWidth: Single; const strokeStyle: ID2D1StrokeStyle;
+      const worldTransform: TD2D1Matrix3x2F; flatteningTolerance: Single;
+      out bounds: D2D1_RECT_F): HResult; stdcall;
+    function StrokeContainsPoint(point: D2D1_POINT_2F; strokeWidth: Single;
+      strokeStyle: ID2D1StrokeStyle; const worldTransform: TD2D1Matrix3x2F;
+      flatteningTolerance: Single; out contains: Bool): HResult; stdcall;
+    function FillContainsPoint(point: D2D1_POINT_2F;
+      const worldTransform: TD2D1Matrix3x2F; flatteningTolerance: Single;
+      out contains: Bool): HResult; stdcall;
+    function CompareWithGeometry(const inputGeometry: ID2D1Geometry;
+      const inputGeometryTransform: TD2D1Matrix3x2F; flatteningTolerance: Single;
+      out relation: D2D1_GEOMETRY_RELATION): HResult; stdcall;
+    function Simplify(simplificationOption: D2D1_GEOMETRY_SIMPLIFICATION_OPTION;
+      const worldTransform: TD2D1Matrix3x2F; flatteningTolerance: Single;
+      const geometrySink: ID2D1SimplifiedGeometrySink): HResult; stdcall;
+    function Tessellate(const worldTransform: TD2D1Matrix3x2F;
+      flatteningTolerance: Single;
+      const tessellationSink: ID2D1TessellationSink): HResult; stdcall;
+    function CombineWithGeometry(const inputGeometry: ID2D1Geometry;
+      combineMode: D2D1_COMBINE_MODE; const inputGeometryTransform: TD2D1Matrix3x2F;
+      flatteningTolerance: Single;
+      const geometrySink: ID2D1SimplifiedGeometrySink): HResult; stdcall;
+    function Outline(const worldTransform: TD2D1Matrix3x2F;
+      flatteningTolerance: Single;
+      const geometrySink: ID2D1SimplifiedGeometrySink): HResult; stdcall;
+    function ComputeArea(const worldTransform: TD2D1Matrix3x2F;
+      flatteningTolerance: Single; out area: Single): HResult; stdcall;
+    function ComputeLength(const worldTransform: TD2D1Matrix3x2F;
+      flatteningTolerance: Single; out length: Single): HResult; stdcall;
+    function ComputePointAtLength(length: Single;
+      const worldTransform: TD2D1Matrix3x2F; flatteningTolerance: Single;
+      point, unitTangentVector: PD2D1Point2F): HResult; stdcall;
+    function Widen(strokeWidth: Single; const strokeStyle: ID2D1StrokeStyle;
+      const worldTransform: TD2D1Matrix3x2F; flatteningTolerance: Single;
+      const geometrySink: ID2D1SimplifiedGeometrySink): HResult; stdcall;
+  end;
+  PID2D1Geometry = ^ID2D1Geometry;
+
+{ ID2D1RectangleGeometry }
+
+  ID2D1RectangleGeometry = interface(ID2D1Geometry)
+  [SID_ID2D1RectangleGeometry]
+    procedure GetRect(var rect: D2D1_RECT_F); stdcall;
+  end;
+
+{ ID2D1RoundedRectangleGeometry }
+
+  ID2D1RoundedRectangleGeometry = interface(ID2D1Geometry)
+  [SID_ID2D1RoundedRectangleGeometry]
+    procedure GetRoundedRect(var roundedRect: D2D1_ROUNDED_RECT); stdcall;
+  end;
+
+{ ID2D1EllipseGeometry }
+
+  ID2D1EllipseGeometry = interface(ID2D1Geometry)
+  [SID_ID2D1EllipseGeometry]
+    procedure GetEllipse(var ellipse: D2D1_ELLIPSE); stdcall;
+  end;
+
+{ ID2D1GeometryGroup }
+
+  ID2D1GeometryGroup = interface(ID2D1Geometry)
+  [SID_ID2D1GeometryGroup]
+    function GetFillMode: TD2D1FillMode; stdcall;
+    function GetSourceGeometryCount: Cardinal; stdcall;
+    procedure GetSourceGeometries(geometries: PID2D1Geometry;
+      geometriesCount: UINT); stdcall;
+  end;
+
+{ ID2D1TransformedGeometry }
+
+  ID2D1TransformedGeometry = interface(ID2D1Geometry)
+  [SID_ID2D1TransformedGeometry]
+    procedure GetSourceGeometry(out sourceGeometry: ID2D1Geometry); stdcall;
+    procedure GetTransform(out transform: TD2D1Matrix3x2F); stdcall;
+  end;
+
+{ ID2D1SimplifiedGeometrySink }
+
+  ID2D1SimplifiedGeometrySink = interface(IUnknown)
+  [SID_ID2D1SimplifiedGeometrySink]
+    procedure SetFillMode(fillMode: D2D1_FILL_MODE); stdcall;
+    procedure SetSegmentFlags(vertexFlags: D2D1_PATH_SEGMENT); stdcall;
+    procedure BeginFigure(startPoint: D2D1_POINT_2F;
+      figureBegin: D2D1_FIGURE_BEGIN); stdcall;
+    procedure AddLines(points: PD2D1Point2F; pointsCount: UINT); stdcall;
+    procedure AddBeziers(beziers: PD2D1BezierSegment;
+      beziersCount: UINT); stdcall;
+    procedure EndFigure(figureEnd: D2D1_FIGURE_END); stdcall;
+    function Close: HResult; stdcall;
+  end;
+
+{ ID2D1GeometrySink }
+
+  ID2D1GeometrySink = interface(ID2D1SimplifiedGeometrySink)
+  [SID_ID2D1GeometrySink]
+    procedure AddLine(point: D2D1_POINT_2F); stdcall;
+    procedure AddBezier(const bezier: D2D1_BEZIER_SEGMENT); stdcall;
+    procedure AddQuadraticBezier(const bezier: D2D1_QUADRATIC_BEZIER_SEGMENT); stdcall;
+    procedure AddQuadraticBeziers(beziers: PD2D1QuadraticBezierSegment;
+      beziersCount: UINT); stdcall;
+    procedure AddArc(const arc: D2D1_ARC_SEGMENT); stdcall;
+  end;
+
+{ ID2D1TessellationSink }
+
+  ID2D1TessellationSink = interface(IUnknown)
+  [SID_ID2D1TessellationSink]
+    procedure AddTriangles(triangles: PD2D1Triangle; trianglesCount: UINT); stdcall;
+    function Close: HResult; stdcall;
+  end;
+
+{ ID2D1PathGeometry }
+
+  ID2D1PathGeometry = interface(ID2D1Geometry)
+  [SID_ID2D1PathGeometry]
+    function Open(out geometrySink: ID2D1GeometrySink): HResult; stdcall;
+    function Stream(const geometrySink: ID2D1GeometrySink): HResult; stdcall;
+    function GetSegmentCount(var count: Cardinal): HResult; stdcall;
+    function GetFigureCount(var count: Cardinal): HResult; stdcall;
+  end;
+
+{ ID2D1Mesh }
+
+  ID2D1Mesh = interface(ID2D1Resource)
+  [SID_ID2D1Mesh]
+    function Open(out tessellationSink: ID2D1TessellationSink): HResult; stdcall;
+  end;
+
+{ ID2D1Layer }
+
+  ID2D1Layer = interface(ID2D1Resource)
+  [SID_ID2D1Layer]
+    procedure GetSize(out size: TD2D1SizeF); stdcall;
+  end;
+
+{ ID2D1DrawingStateBlock }
+
+  ID2D1DrawingStateBlock = interface(ID2D1Resource)
+  [SID_ID2D1DrawingStateBlock]
+    procedure GetDescription(
+      var stateDescription: D2D1_DRAWING_STATE_DESCRIPTION); stdcall;
+    procedure SetDescription(
+      var stateDescription: D2D1_DRAWING_STATE_DESCRIPTION); stdcall;
+    procedure SetTextRenderingParams(
+      const textRenderingParams: IDWriteRenderingParams); stdcall;
+    procedure GetTextRenderingParams(
+      out textRenderingParams: IDWriteRenderingParams); stdcall;
+  end;
+
+{ ID2D1RenderTarget }
+
+  ID2D1RenderTarget = interface(ID2D1Resource)
+  [SID_ID2D1RenderTarget]
+    function CreateBitmap(size: D2D1_SIZE_U; srcData: Pointer; pitch: Cardinal;
+      const bitmapProperties: TD2D1BitmapProperties;
+      out bitmap: ID2D1Bitmap): HResult; stdcall;
+    function CreateBitmapFromWicBitmap(
+      const wicBitmapSource: IWICBitmapSource;
+      bitmapProperties: PD2D1BitmapProperties;
+      out bitmap: ID2D1Bitmap): HResult; stdcall;
+    function CreateSharedBitmap(const riid: TGUID; data: Pointer;
+      bitmapProperties: PD2D1BitmapProperties;
+      out bitmap: ID2D1Bitmap): HResult; stdcall;
+    function CreateBitmapBrush(const bitmap: ID2D1Bitmap;
+      bitmapBrushProperties: PD2D1BitmapBrushProperties;
+      brushProperties: PD2D1BrushProperties;
+      out bitmapBrush: ID2D1BitmapBrush): HResult; stdcall;
+    function CreateSolidColorBrush(const color: D2D1_COLOR_F;
+      brushProperties: PD2D1BrushProperties;
+      out solidColorBrush: ID2D1SolidColorBrush): HResult; stdcall;
+    function CreateGradientStopCollection(const gradientStops: PD2D1GradientStop;
+      gradientStopsCount: UINT; colorInterpolationGamma: TD2D1Gamma;
+      extendMode: TD2D1ExtendMode;
+      out gradientStopCollection: ID2D1GradientStopCollection): HResult; stdcall;
+    function CreateLinearGradientBrush(
+      const linearGradientBrushProperties: TD2D1LinearGradientBrushProperties;
+      brushProperties: PD2D1BrushProperties;
+      gradientStopCollection: ID2D1GradientStopCollection;
+      out linearGradientBrush: ID2D1LinearGradientBrush): HResult; stdcall;
+    function CreateRadialGradientBrush(
+      const radialGradientBrushProperties: TD2D1RadialGradientBrushProperties;
+      brushProperties: PD2D1BrushProperties;
+      gradientStopCollection: ID2D1GradientStopCollection;
+      out radialGradientBrush: ID2D1RadialGradientBrush): HResult; stdcall;
+    function CreateCompatibleRenderTarget(desiredSize: PD2D1SizeF;
+      desiredPixelSize: PD2D1SizeU; desiredFormat: PD2D1PixelFormat;
+      options: TD2D1CompatibleRenderTargetOptions;
+      out bitmapRenderTarget: ID2D1BitmapRenderTarget): HResult; stdcall;
+    function CreateLayer(size: PD2D1SizeF;
+      out layer: ID2D1Layer): HResult; stdcall;
+    function CreateMesh(out mesh: ID2D1Mesh): HResult; stdcall;
+    procedure DrawLine(point0, point1: TD2DPoint2f;
+      const brush: ID2D1Brush; strokeWidth: Single = 1.0;
+      const strokeStyle: ID2D1StrokeStyle = nil); stdcall;
+    procedure DrawRectangle(const rect: TD2D1RectF; const brush: ID2D1Brush;
+      strokeWidth: Single = 1.0; const strokeStyle: ID2D1StrokeStyle = nil); stdcall;
+    procedure FillRectangle(const rect: TD2D1RectF; const brush: ID2D1Brush); stdcall;
+    procedure DrawRoundedRectangle(const roundedRect: TD2D1RoundedRect;
+      const brush: ID2D1Brush; strokeWidth: Single = 1.0;
+      const strokeStyle: ID2D1StrokeStyle = nil); stdcall;
+    procedure FillRoundedRectangle(const roundedRect: TD2D1RoundedRect;
+      const brush: ID2D1Brush); stdcall;
+    procedure DrawEllipse(const ellipse: TD2D1Ellipse; const brush: ID2D1Brush;
+      strokeWidth: Single = 1.0; const strokeStyle: ID2D1StrokeStyle = nil); stdcall;
+    procedure FillEllipse(const ellipse: TD2D1Ellipse; const brush: ID2D1Brush); stdcall;
+    procedure DrawGeometry(geometry: ID2D1Geometry; const brush: ID2D1Brush;
+      strokeWidth: Single = 1.0; const strokeStyle: ID2D1StrokeStyle = nil); stdcall;
+    procedure FillGeometry(const geometry: ID2D1Geometry; const brush: ID2D1Brush;
+      const opacityBrush: ID2D1Brush = nil); stdcall;
+    procedure FillMesh(const mesh: ID2D1Mesh; const brush: ID2D1Brush); stdcall;
+    procedure FillOpacityMask(opacityMask: ID2D1Bitmap; brush: ID2D1Brush;
+      content: TD2D1OpacityMaskContent;
+      destinationRectangle: PD2D1RectF = nil;
+      sourceRectangle: PD2D1RectF = nil); stdcall;
+    procedure DrawBitmap(const bitmap: ID2D1Bitmap;
+      destinationRectangle: PD2D1RectF = nil; opacity: Single = 1.0;
+      interpolationMode: TD2D1BitmapInterpolationMode = D2D1_BITMAP_INTERPOLATION_MODE_LINEAR;
+      sourceRectangle: PD2D1RectF = nil); stdcall;
+    procedure DrawText(_string: PWCHAR; stringLength: UINT;
+      const textFormat: IDWriteTextFormat;
+      const layoutRect: D2D1_RECT_F;
+      const defaultForegroundBrush: ID2D1Brush;
+      options: TD2D1DrawTextOptions = D2D1_DRAW_TEXT_OPTIONS_NONE;
+      measuringMode: TDWriteMeasuringMode = DWRITE_MEASURING_MODE_NATURAL);
+      stdcall;
+    procedure DrawTextLayout(origin: D2D1_POINT_2F; textLayout: IDWriteTextLayout;
+      defaultForegroundBrush: ID2D1Brush;
+      options: D2D1_DRAW_TEXT_OPTIONS = D2D1_DRAW_TEXT_OPTIONS_NONE); stdcall;
+    procedure DrawGlyphRun(baselineOrigin: D2D1_POINT_2F;
+      var glyphRun: TDWriteGlyphRun;
+      const foregroundBrush: ID2D1Brush;
+      measuringMode: TDWriteMeasuringMode = DWRITE_MEASURING_MODE_NATURAL); stdcall;
+    procedure SetTransform(const transform: TD2D1Matrix3x2F); stdcall;
+    procedure GetTransform(var transform: TD2D1Matrix3x2F); stdcall;
+    procedure SetAntialiasMode(antialiasMode: TD2D1AntiAliasMode); stdcall;
+    function GetAntialiasMode: TD2D1AntiAliasMode; stdcall;
+    procedure SetTextAntialiasMode(textAntialiasMode: TD2D1TextAntiAliasMode); stdcall;
+    function GetTextAntialiasMode: TD2D1TextAntiAliasMode; stdcall;
+    procedure SetTextRenderingParams(const textRenderingParams: IDWriteRenderingParams); stdcall;
+    procedure GetTextRenderingParams(out textRenderingParams: IDWriteRenderingParams); stdcall;
+    procedure SetTags(tag1: D2D1_TAG; tag2: D2D1_TAG); stdcall;
+    procedure GetTags(tag1: PD2D1Tag = nil; tag2: PD2D1Tag = nil); stdcall;
+    procedure PushLayer(var layerParameters: D2D1_LAYER_PARAMETERS;
+      const layer: ID2D1Layer); stdcall;
+    procedure PopLayer; stdcall;
+    function Flush(tag1: PD2D1Tag = nil; tag2: PD2D1Tag = nil): HResult; stdcall;
+    procedure SaveDrawingState(
+      var drawingStateBlock: ID2D1DrawingStateBlock); stdcall;
+    procedure RestoreDrawingState(
+      const drawingStateBlock: ID2D1DrawingStateBlock); stdcall;
+    procedure PushAxisAlignedClip(const clipRect: TD2D1RectF;
+      antialiasMode: D2D1_ANTIALIAS_MODE); stdcall;
+    procedure PopAxisAlignedClip; stdcall;
+    procedure Clear(const clearColor: D2D1_COLOR_F); stdcall;
+    procedure BeginDraw; stdcall;
+    function EndDraw(tag1: PD2D1Tag = nil;
+      tag2: PD2D1Tag = nil): HResult; stdcall;
+    procedure GetPixelFormat(out pixelFormat: TD2D1PixelFormat); stdcall;
+    procedure SetDpi(dpiX, dpiY: Single); stdcall;
+    procedure GetDpi(out dpiX, dpiY: Single); stdcall;
+    procedure GetSize(out size: TD2D1SizeF); stdcall;
+    procedure GetPixelSize(out pixelSize: TD2D1SizeU); stdcall;
+    function GetMaximumBitmapSize: UInt32; stdcall;
+    function IsSupported(const renderTargetProperties: TD2D1RenderTargetProperties): BOOL; stdcall;
+  end;
+
+{ ID2D1BitmapRenderTarget }
+
+  ID2D1BitmapRenderTarget = interface(ID2D1RenderTarget)
+  [SID_ID2D1BitmapRenderTarget]
+    function GetBitmap(out bitmap: ID2D1Bitmap): HResult; stdcall;
+  end;
+
+{ ID2D1HwndRenderTarget }
+
+  ID2D1HwndRenderTarget = interface(ID2D1RenderTarget)
+  [SID_ID2D1HwndRenderTarget]
+    function CheckWindowState: TD2D1WindowState; stdcall;
+    function Resize(const pixelSize: D2D1_SIZE_U): HResult; stdcall;
+    function GetHwnd: HWND; stdcall;
+  end;
+
+{ ID2D1GdiInteropRenderTarget }
+
+  ID2D1GdiInteropRenderTarget = interface(IUnknown)
+  [SID_ID2D1GdiInteropRenderTarget]
+    function GetDC(mode: D2D1_DC_INITIALIZE_MODE; out hdc: HDC): HResult; stdcall;
+    function ReleaseDC(update: PRect): HResult; stdcall;
+  end;
+
+{ ID2D1DCRenderTarget }
+
+  ID2D1DCRenderTarget = interface(ID2D1RenderTarget)
+  [SID_ID2D1DCRenderTarget]
+    function BindDC(hDC: HDC; const pSubRect: TRect): HResult; stdcall;
+  end;
+
+{ ID2D1Factory }
+
+  ID2D1Factory = interface(IUnknown)
+  [SID_ID2D1Factory]
+    function ReloadSystemMetrics: HResult; stdcall;
+    procedure GetDesktopDpi(var dpiX, dpiY: Single); stdcall;
+    function CreateRectangleGeometry(const rectangle: TD2D1RectF;
+      out rectangleGeometry: ID2D1RectangleGeometry): HResult; stdcall;
+    function CreateRoundedRectangleGeometry(const roundedRectangle: TD2D1RoundedRect;
+      out roundedRectangleGeometry: ID2D1RoundedRectangleGeometry): HResult; stdcall;
+    function CreateEllipseGeometry(const ellipse: TD2D1Ellipse;
+      out ellipseGeometry: ID2D1EllipseGeometry): HResult; stdcall;
+    function CreateGeometryGroup(fillMode: D2D1_FILL_MODE;
+      geometries: PID2D1Geometry; geometriesCount: UINT;
+      out geometryGroup: ID2D1GeometryGroup): HResult; stdcall;
+    function CreateTransformedGeometry(const sourceGeometry: ID2D1Geometry;
+      const transform: TD2D1Matrix3x2F;
+      out transformedGeometry: ID2D1TransformedGeometry): HResult; stdcall;
+    function CreatePathGeometry(
+      out pathGeometry: ID2D1PathGeometry): HResult; stdcall;
+    function CreateStrokeStyle(const strokeStyleProperties: TD2D1StrokeStyleProperties;
+      const dashes: PSingle; dashesCount: UINT;
+      out strokeStyle: ID2D1StrokeStyle): HResult; stdcall;
+    function CreateDrawingStateBlock(
+      drawingStateDescription: PD2D1DrawingStateDescription;
+      const textRenderingParams: IDWriteRenderingParams;
+      out drawingStateBlock: ID2D1DrawingStateBlock): HResult; stdcall;
+    function CreateWicBitmapRenderTarget(
+      const target: IWICBitmap;
+      var renderTargetProperties: D2D1_RENDER_TARGET_PROPERTIES;
+      out renderTarget: ID2D1RenderTarget): HResult; stdcall;
+    function CreateHwndRenderTarget(
+      const renderTargetProperties: TD2D1RenderTargetProperties;
+      const hwndRenderTargetProperties: TD2D1HwndRenderTargetProperties;
+      out hwndRenderTarget: ID2D1HwndRenderTarget): HResult; stdcall;
+    function CreateDxgiSurfaceRenderTarget(
+      const dxgiSurface: IUnknown;
+      var renderTargetProperties: D2D1_RENDER_TARGET_PROPERTIES;
+      out renderTarget: ID2D1RenderTarget): HResult; stdcall;
+    function CreateDCRenderTarget(
+      const renderTargetProperties: TD2D1RenderTargetProperties;
+      out dcRenderTarget: ID2D1DCRenderTarget): HResult; stdcall;
+  end;
+
+{ IDWriteFontFileLoader }
+
+  IDWriteFontFileLoader = interface(IUnknown)
+  [SID_IDWriteFontFileLoader]
+    function CreateStreamFromKey(fontFileReferenceKey: Pointer;
+      fontFileReferenceKeySize: Cardinal;
+      out fontFileStream: IDWriteFontFileStream): HResult; stdcall;
+  end;
+
+{ IDWriteLocalFontFileLoader }
+
+  IDWriteLocalFontFileLoader = interface(IDWriteFontFileLoader)
+  [SID_IDWriteLocalFontFileLoader]
+    function GetFilePathLengthFromKey(fontFileReferenceKey: Pointer;
+      fontFileReferenceKeySize: Cardinal;
+      var filePathLength: Cardinal): HResult; stdcall;
+    function GetFilePathFromKey(fontFileReferenceKey: Pointer;
+      fontFileReferenceKeySize: Cardinal; var filePath: WCHAR;
+      filePathSize: Cardinal): HResult; stdcall;
+    function GetLastWriteTimeFromKey(fontFileReferenceKey: Pointer;
+      fontFileReferenceKeySize: Cardinal;
+      var lastWriteTime: FILETIME): HResult; stdcall;
+  end;
+
+{ IDWriteFontFileStream }
+
+  IDWriteFontFileStream = interface(IUnknown)
+  [SID_IDWriteFontFileStream]
+    function ReadFileFragment(var fragmentStart: Pointer; fileOffset: UINT64;
+      fragmentSize: UINT64; var fragmentContext: Pointer): HResult; stdcall;
+    procedure ReleaseFileFragment(fragmentContext: Pointer); stdcall;
+    function GetFileSize(var fileSize: UINT64): HResult; stdcall;
+    function GetLastWriteTime(var lastWriteTime: UINT64): HResult; stdcall;
+  end;
+
+{ IDWriteFontFile }
+
+  IDWriteFontFile = interface(IUnknown)
+    function GetReferenceKey(var fontFileReferenceKey: Pointer;
+      var fontFileReferenceKeySize: Cardinal): HResult; stdcall;
+    function GetLoader(
+      out fontFileLoader: IDWriteFontFileLoader): HResult; stdcall;
+    function Analyze(var isSupportedFontType: BOOL;
+      var fontFileType: DWRITE_FONT_FILE_TYPE;
+      var fontFaceType: DWRITE_FONT_FACE_TYPE;
+      var numberOfFaces: Cardinal): HResult; stdcall;
+  end;
+  PIDWriteFontFile = ^IDWriteFontFile;
+
+{ IDWriteRenderingParams }
+
+  IDWriteRenderingParams = interface(IUnknown)
+    function GetGamma: Single; stdcall;
+    function GetEnhancedContrast: Single; stdcall;
+    function GetClearTypeLevel: Single; stdcall;
+    function GetPixelGeometry: DWRITE_PIXEL_GEOMETRY; stdcall;
+    function GetRenderingMode: DWRITE_RENDERING_MODE; stdcall;
+  end;
+
+  IDWriteGeometrySink = ID2D1SimplifiedGeometrySink;
+
+{ IDWriteFontFace }
+
+  IDWriteFontFace = interface(IUnknown)
+  [SID_IDWriteFontFace]
+    function GetType: DWRITE_FONT_FACE_TYPE; stdcall;
+    function GetFiles(var numberOfFiles: Cardinal;
+      out fontFiles: IDWriteFontFile): HResult; stdcall;
+    function GetIndex: UINT32; stdcall;
+    function GetSimulations: DWRITE_FONT_SIMULATIONS; stdcall;
+    function IsSymbolFont: BOOL; stdcall;
+    procedure GetMetrics(var fontFaceMetrics: TDWriteFontMetrics); stdcall;
+    function GetGlyphCount: UINT16; stdcall;
+    function GetDesignGlyphMetrics(glyphIndices: PWord; glyphCount: Cardinal;
+      glyphMetrics: PDWriteGlyphMetrics; isSideways: BOOL = False): HResult; stdcall;
+    function GetGlyphIndices(var codePoints: Cardinal; codePointCount: Cardinal;
+      var glyphIndices: Word): HResult; stdcall;
+    function TryGetFontTable(openTypeTableTag: Cardinal; var tableData: Pointer;
+      var tableSize: Cardinal; var tableContext: Pointer;
+      var exists: BOOL): HResult; stdcall;
+    procedure ReleaseFontTable(tableContext: Pointer); stdcall;
+    function GetGlyphRunOutline(emSize: Single; const glyphIndices: PWord;
+      const glyphAdvances: PSingle; const glyphOffsets: PDWriteGlyphOffset;
+      glyphCount: Cardinal; isSideways: BOOL; isRightToLeft: BOOL;
+      geometrySink: IDWriteGeometrySink): HResult; stdcall;
+    function GetRecommendedRenderingMode(emSize: Single; pixelsPerDip: Single;
+      measuringMode: TDWriteMeasuringMode;
+      var renderingParams: IDWriteRenderingParams;
+      var renderingMode: TDWriteRenderingMode): HResult; stdcall;
+    function GetGdiCompatibleMetrics(emSize: Single; pixelsPerDip: Single;
+      const transform: DWRITE_MATRIX; var fontFaceMetrics: DWRITE_FONT_METRICS): HResult; stdcall;
+    function GetGDICompatibleGlyphMetrics(emSize: Single; pixelsPerDip: Single;
+      const transform: DWRITE_MATRIX; useGdiNatural: BOOL;
+      glyphIndicies: PWord; glpyhCount: Cardinal): HResult; stdcall;
+  end;
+
+{ IDWriteFontCollectionLoader }
+
+  IDWriteFontCollectionLoader = interface(IUnknown)
+  [SID_IDWriteFontCollectionLoader]
+    function CreateEnumeratorFromKey(var factory: IDWriteFactory;
+      collectionKey: Pointer; collectionKeySize: Cardinal;
+      out fontFileEnumerator: IDWriteFontFileEnumerator): HResult; stdcall;
+  end;
+
+{ IDWriteFontFileEnumerator }
+
+  IDWriteFontFileEnumerator = interface(IUnknown)
+  [SID_IDWriteFontFileEnumerator]
+    function MoveNext(var hasCurrentFile: BOOL): HResult; stdcall;
+    function GetCurrentFontFile(out fontFile: IDWriteFontFile): HResult; stdcall;
+  end;
+
+{ IDWriteLocalizedStrings }
+
+  IDWriteLocalizedStrings = interface(IUnknown)
+  [SID_IDWriteLocalizedStrings]
+    function GetCount: UINT32; stdcall;
+    function FindLocaleName(var localeName: WCHAR; var index: Cardinal;
+      var exists: BOOL): HResult; stdcall;
+    function GetLocaleNameLength(index: Cardinal;
+      var length: Cardinal): HResult; stdcall;
+    function GetLocaleName(index: Cardinal; var localeName: WCHAR;
+      size: Cardinal): HResult; stdcall;
+    function GetStringLength(index: Cardinal;
+      var length: Cardinal): HResult; stdcall;
+    function GetString(index: Cardinal; stringBuffer: PWCHAR;
+      size: Cardinal): HResult; stdcall;
+  end;
+
+{ IDWriteFontCollection }
+
+  IDWriteFontCollection = interface(IUnknown)
+  [SID_IDWriteFontCollection]
+    function GetFontFamilyCount: UINT32; stdcall;
+    function GetFontFamily(index: Cardinal;
+      out fontFamily: IDWriteFontFamily): HResult; stdcall;
+    function FindFamilyName(familyName: PWCHAR; var index: Cardinal;
+      var exists: BOOL): HResult; stdcall;
+    function GetFontFromFontFace(var fontFace: IDWriteFontFace;
+      out font: IDWriteFont): HResult; stdcall;
+  end;
+
+{ IDWriteFontList }
+
+  IDWriteFontList = interface(IUnknown)
+  [SID_IDWriteFontList]
+    function GetFontCollection(
+      out fontCollection: IDWriteFontCollection): HResult; stdcall;
+    function GetFontCount: UINT32; stdcall;
+    function GetFont(index: Cardinal; out font: IDWriteFont): HResult; stdcall;
+  end;
+
+{ IDWriteFontFamily }
+
+  IDWriteFontFamily = interface(IDWriteFontList)
+    function GetFamilyNames(out names: IDWriteLocalizedStrings): HResult; stdcall;
+    function GetFirstMatchingFont(weight: DWRITE_FONT_WEIGHT;
+      stretch: DWRITE_FONT_STRETCH; style: DWRITE_FONT_STYLE;
+      out matchingFont: IDWriteFont): HResult; stdcall;
+    function GetMatchingFonts(weight: DWRITE_FONT_WEIGHT;
+      stretch: DWRITE_FONT_STRETCH; style: DWRITE_FONT_STYLE;
+      out matchingFonts: IDWriteFontList): HResult; stdcall;
+  end;
+
+{ IDWriteFont }
+
+  IDWriteFont = interface(IUnknown)
+  [SID_IDWriteFont]
+    function GetFontFamily(out fontFamily: IDWriteFontFamily): HResult; stdcall;
+    function GetWeight: DWRITE_FONT_WEIGHT; stdcall;
+    function GetStretch: DWRITE_FONT_STRETCH; stdcall;
+    function GetStyle: DWRITE_FONT_STYLE; stdcall;
+    function IsSymbolFont: BOOL; stdcall;
+    function GetFaceNames(out names: IDWriteLocalizedStrings): HResult; stdcall;
+    function GetInformationalStrings(
+      informationalStringID: DWRITE_INFORMATIONAL_STRING_ID;
+      out informationalStrings: IDWriteLocalizedStrings;
+      var exists: BOOL): HResult; stdcall;
+    function GetSimulations: DWRITE_FONT_SIMULATIONS; stdcall;
+    procedure GetMetrics(var fontMetrics: TDWriteFontMetrics); stdcall;
+    function HasCharacter(unicodeValue: Cardinal;
+      var exists: BOOL): HResult; stdcall;
+    function CreateFontFace(out fontFace: IDWriteFontFace): HResult; stdcall;
+  end;
+
+{ IDWriteTextFormat }
+
+  IDWriteTextFormat = interface(IUnknown)
+  [SID_IDWriteTextFormat]
+    function SetTextAlignment(
+      textAlignment: DWRITE_TEXT_ALIGNMENT): HResult; stdcall;
+    function SetParagraphAlignment(
+      paragraphAlignment: DWRITE_PARAGRAPH_ALIGNMENT): HResult; stdcall;
+    function SetWordWrapping(wordWrapping: DWRITE_WORD_WRAPPING): HResult; stdcall;
+    function SetReadingDirection(
+      readingDirection: DWRITE_READING_DIRECTION): HResult; stdcall;
+    function SetFlowDirection(
+      flowDirection: DWRITE_FLOW_DIRECTION): HResult; stdcall;
+    function SetIncrementalTabStop(incrementalTabStop: Single): HResult; stdcall;
+    function SetTrimming(var trimmingOptions: TDWriteTrimming;
+      trimmingSign: IDWriteInlineObject): HResult; stdcall;
+    function SetLineSpacing(lineSpacingMethod: DWRITE_LINE_SPACING_METHOD;
+      lineSpacing: Single; baseline: Single): HResult; stdcall;
+    function GetTextAlignment: DWRITE_TEXT_ALIGNMENT; stdcall;
+    function GetParagraphAlignment: DWRITE_PARAGRAPH_ALIGNMENT; stdcall;
+    function GetWordWrapping: DWRITE_WORD_WRAPPING; stdcall;
+    function GetReadingDirection: DWRITE_READING_DIRECTION; stdcall;
+    function GetFlowDirection: DWRITE_FLOW_DIRECTION; stdcall;
+    function GetIncrementalTabStop: Single; stdcall;
+    function GetTrimming(var trimmingOptions: TDWriteTrimming;
+      out trimmingSign: IDWriteInlineObject): HResult; stdcall;
+    function GetLineSpacing(var lineSpacingMethod: DWRITE_LINE_SPACING_METHOD;
+      var lineSpacing: Single; var baseline: Single): HResult; stdcall;
+    function GetFontCollection(
+      out fontCollection: IDWriteFontCollection): HResult; stdcall;
+    function GetFontFamilyNameLength: UINT32; stdcall;
+    function GetFontFamilyName(var fontFamilyName: WCHAR;
+      nameSize: Cardinal): HResult; stdcall;
+    function GetFontWeight: DWRITE_FONT_WEIGHT; stdcall;
+    function GetFontStyle: DWRITE_FONT_STYLE; stdcall;
+    function GetFontStretch: DWRITE_FONT_STRETCH; stdcall;
+    function GetFontSize: Single; stdcall;
+    function GetLocaleNameLength: UINT32; stdcall;
+    function GetLocaleName(var localeName: WCHAR;
+      nameSize: Cardinal): HResult; stdcall;
+  end;
+
+{ IDWriteTypography }
+
+  IDWriteTypography = interface(IUnknown)
+  [SID_IDWriteTypography]
+    function AddFontFeature(fontFeature: TDWriteFontFeature): HResult; stdcall;
+    function GetFontFeatureCount: UINT32; stdcall;
+    function GetFontFeature(fontFeatureIndex: Cardinal;
+      var fontFeature: TDWriteFontFeature): HResult; stdcall;
+  end;
+
+{ IDWriteNumberSubstitution }
+
+  IDWriteNumberSubstitution = interface(IUnknown)
+  [SID_IDWriteNumberSubstitution]
+  end;
+
+{ IDWriteTextAnalysisSource }
+
+  IDWriteTextAnalysisSource = interface(IUnknown)
+  [SID_IDWriteTextAnalysisSource]
+    function GetTextAtPosition(textPosition: Cardinal; var textString: PWCHAR;
+      var textLength: Cardinal): HResult; stdcall;
+    function GetTextBeforePosition(textPosition: Cardinal; var textString: PWCHAR;
+      var textLength: Cardinal): HResult; stdcall;
+    function GetParagraphReadingDirection: DWRITE_READING_DIRECTION; stdcall;
+    function GetLocaleName(textPosition: Cardinal; var textLength: Cardinal;
+      var localeName: PWCHAR): HResult; stdcall;
+    function GetNumberSubstitution(textPosition: Cardinal; var textLength: Cardinal;
+      out numberSubstitution: IDWriteNumberSubstitution): HResult; stdcall;
+  end;
+
+{ IDWriteTextAnalysisSink }
+
+  IDWriteTextAnalysisSink = interface(IUnknown)
+  [SID_IDWriteTextAnalysisSink]
+    function SetScriptAnalysis(textPosition: Cardinal; textLength: Cardinal;
+      var scriptAnalysis: TDWriteScriptAnalysis): HResult; stdcall;
+    function SetLineBreakpoints(textPosition: Cardinal; textLength: Cardinal;
+      var lineBreakpoints: TDWriteLineBreakpoint): HResult; stdcall;
+    function SetBidiLevel(textPosition: Cardinal; textLength: Cardinal;
+      explicitLevel: Byte; resolvedLevel: Byte): HResult; stdcall;
+    function SetNumberSubstitution(textPosition: Cardinal; textLength: Cardinal;
+      var numberSubstitution: IDWriteNumberSubstitution): HResult; stdcall;
+  end;
+
+{ IDWriteTextAnalyzer }
+
+  IDWriteTextAnalyzer = interface(IUnknown)
+  [SID_IDWriteTextAnalyzer]
+    function AnalyzeScript(var analysisSource: IDWriteTextAnalysisSource;
+      textPosition: Cardinal; textLength: Cardinal;
+      var analysisSink: IDWriteTextAnalysisSink): HResult; stdcall;
+    function AnalyzeBidi(var analysisSource: IDWriteTextAnalysisSource;
+      textPosition: Cardinal; textLength: Cardinal;
+      var analysisSink: IDWriteTextAnalysisSink): HResult; stdcall;
+    function AnalyzeNumberSubstitution(
+      var analysisSource: IDWriteTextAnalysisSource; textPosition: Cardinal;
+      textLength: Cardinal;
+      var analysisSink: IDWriteTextAnalysisSink): HResult; stdcall;
+    function AnalyzeLineBreakpoints(var analysisSource: IDWriteTextAnalysisSource;
+      textPosition: Cardinal; textLength: Cardinal;
+      var analysisSink: IDWriteTextAnalysisSink): HResult; stdcall;
+    function GetGlyphs(var textString: WCHAR; textLength: Cardinal;
+      var fontFace: IDWriteFontFace; isSideways: BOOL; isRightToLeft: BOOL;
+      var scriptAnalysis: TDWriteScriptAnalysis; var localeName: WCHAR;
+      var numberSubstitution: IDWriteNumberSubstitution;
+      var features: PDWriteTypographicFeatures; var featureRangeLengths: Cardinal;
+      featureRanges: Cardinal; maxGlyphCount: Cardinal; var clusterMap: Word;
+      var textProps: TDWriteShapingTextProperties; var glyphIndices: Word;
+      var glyphProps: TDWriteShapingGlyphProperties;
+      var actualGlyphCount: Cardinal): HResult; stdcall;
+    function GetGlyphPlacements(var textString: WCHAR; var clusterMap: Word;
+      var textProps: TDWriteShapingTextProperties; textLength: Cardinal;
+      var glyphIndices: Word; var glyphProps: TDWriteShapingGlyphProperties;
+      glyphCount: Cardinal; var fontFace: IDWriteFontFace; fontEmSize: Single;
+      isSideways: BOOL; isRightToLeft: BOOL;
+      var scriptAnalysis: TDWriteScriptAnalysis; var localeName: WCHAR;
+      var features: PDWriteTypographicFeatures; var featureRangeLengths: Cardinal;
+      featureRanges: Cardinal; var glyphAdvances: Single;
+      var glyphOffsets: TDWriteGlyphOffset): HResult; stdcall;
+    function GetGdiCompatibleGlyphPlacements(var textString: WCHAR; var clusterMap: Word;
+      var textProps: TDWriteShapingTextProperties; textLength: Cardinal;
+      var glyphIndices: Word; var glyphProps: TDWriteShapingGlyphProperties;
+      glyphCount: Cardinal; var fontFace: IDWriteFontFace; fontEmSize: Single;
+      pixelsPerDip: Single; const transform: DWRITE_MATRiX; useGdiNatural: BOOL;
+      isSideways: BOOL; isRightToLeft: BOOL;
+      var scriptAnalysis: TDWriteScriptAnalysis; var localeName: WCHAR;
+      var features: PDWriteTypographicFeatures; var featureRangeLengths: Cardinal;
+      featureRanges: Cardinal; var glyphAdvances: Single;
+      var glyphOffsets: TDWriteGlyphOffset): HResult; stdcall;
+  end;
+
+{ IDWriteInlineObject }
+
+  IDWriteInlineObject = interface(IUnknown)
+  [SID_IDWriteInlineObject]
+    function Draw(clientDrawingContext: Pointer; renderer: IDWriteTextRenderer;
+      originX: Single; originY: Single; isSideways: BOOL; isRightToLeft: BOOL;
+      clientDrawingEffect: IUnknown): HResult; stdcall;
+    function GetMetrics(var metrics: TDWriteInlineObjectMetrics): HResult; stdcall;
+    function GetOverhangMetrics(
+      var overhangs: TDWriteOverhangMetrics): HResult; stdcall;
+    function GetBreakConditions(var breakConditionBefore: DWRITE_BREAK_CONDITION;
+      var breakConditionAfter: DWRITE_BREAK_CONDITION): HResult; stdcall;
+  end;
+
+{ IDWritePixelSnapping }
+
+  IDWritePixelSnapping = interface(IUnknown)
+  [SID_IDWritePixelSnapping]
+    function IsPixelSnappingDisabled(clientDrawingContext: Pointer;
+      var isDisabled: BOOL): HResult; stdcall;
+    function GetCurrentTransform(clientDrawingContext: Pointer;
+      var transform: TDWriteMatrix): HResult; stdcall;
+    function GetPixelsPerDip(clientDrawingContext: Pointer;
+      var pixelsPerDip: Single): HResult; stdcall;
+  end;
+
+{ IDWriteTextRenderer }
+
+  IDWriteTextRenderer = interface(IDWritePixelSnapping)
+  [SID_IDWriteTextRenderer]
+    function DrawGlyphRun(clientDrawingContext: Pointer; baselineOriginX: Single;
+      baselineOriginY: Single; measuringMode: TDWriteMeasuringMode;
+      var glyphRun: TDWriteGlyphRun;
+      var glyphRunDescription: TDWriteGlyphRunDescription;
+      clientDrawingEffect: IUnknown): HResult; stdcall;
+    function DrawUnderline(clientDrawingContext: Pointer; baselineOriginX: Single;
+      baselineOriginY: Single; var underline: TDWriteUnderline;
+      clientDrawingEffect: IUnknown): HResult; stdcall;
+    function DrawStrikethrough(clientDrawingContext: Pointer;
+      baselineOriginX: Single; baselineOriginY: Single;
+      var strikethrough: TDWriteStrikethrough;
+      clientDrawingEffect: IUnknown): HResult; stdcall;
+    function DrawInlineObject(clientDrawingContext: Pointer; originX: Single;
+      originY: Single; inlineObject: IDWriteInlineObject; isSideways: BOOL;
+      isRightToLeft: BOOL; clientDrawingEffect: IUnknown): HResult; stdcall;
+  end;
+
+{ IDWriteTextLayout }
+
+  IDWriteTextLayout = interface(IDWriteTextFormat)
+  [SID_IDWriteTextLayout]
+    function SetMaxWidth(maxWidth: Single): HResult; stdcall;
+    function SetMaxHeight(maxHeight: Single): HResult; stdcall;
+    function SetFontCollection(var fontCollection: IDWriteFontCollection;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetFontFamilyName(var fontFamilyName: WCHAR;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetFontWeight(fontWeight: DWRITE_FONT_WEIGHT;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetFontStyle(fontStyle: DWRITE_FONT_STYLE;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetFontStretch(fontStretch: DWRITE_FONT_STRETCH;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetFontSize(fontSize: Single;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetUnderline(hasUnderline: BOOL;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetStrikethrough(hasStrikethrough: BOOL;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetDrawingEffect(const drawingEffect: IUnknown;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetInlineObject(var inlineObject: IDWriteInlineObject;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetTypography(const typography: IDWriteTypography;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function SetLocaleName(var localeName: WCHAR;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function GetMaxWidth: Single; stdcall;
+    function GetMaxHeight: Single; stdcall;
+    function GetFontCollection(currentPosition: Cardinal;
+      out fontCollection: IDWriteFontCollection;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetFontFamilyNameLength(currentPosition: Cardinal;
+      var nameLength: Cardinal;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetFontFamilyName(currentPosition: Cardinal; var fontFamilyName: WCHAR;
+      nameSize: Cardinal;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetFontWeight(currentPosition: Cardinal;
+      var fontWeight: DWRITE_FONT_WEIGHT;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetFontStyle(currentPosition: Cardinal;
+      var fontStyle: DWRITE_FONT_STYLE;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetFontStretch(currentPosition: Cardinal;
+      var fontStretch: DWRITE_FONT_STRETCH;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetFontSize(currentPosition: Cardinal; var fontSize: Single;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetUnderline(currentPosition: Cardinal; var hasUnderline: BOOL;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetStrikethrough(currentPosition: Cardinal; var hasStrikethrough: BOOL;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetDrawingEffect(currentPosition: Cardinal;
+      out drawingEffect: IUnknown;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetInlineObject(currentPosition: Cardinal;
+      out inlineObject: IDWriteInlineObject;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetTypography(currentPosition: Cardinal;
+      out typography: IDWriteTypography;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetLocaleNameLength(currentPosition: Cardinal;
+      var nameLength: Cardinal;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function GetLocaleName(currentPosition: Cardinal; var localeName: WCHAR;
+      nameSize: Cardinal;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function Draw(clientDrawingContext: Pointer; renderer: IDWriteTextRenderer;
+      originX: Single; originY: Single): HResult; stdcall;
+    function GetLineMetrics(lineMetrics: PDWriteLineMetrics;
+      maxLineCount: Cardinal; var actualLineCount: Cardinal): HResult; stdcall;
+    function GetMetrics(var textMetrics: TDWriteTextMetrics): HResult; stdcall;
+    function GetOverhangMetrics(
+      var overhangs: TDWriteOverhangMetrics): HResult; stdcall;
+    function GetClusterMetrics(clusterMetrics: PDWriteClusterMetrics;
+      maxClusterCount: Cardinal;
+      var actualClusterCount: Cardinal): HResult; stdcall;
+    function DetermineMinWidth(var minWidth: Single): HResult; stdcall;
+    function HitTestPoint(pointX, pointY: Single;
+      out isTrailingHit: BOOL; out isInside: BOOL;
+      out hitTestMetrics: TDWriteHitTestMetrics): HResult; stdcall;
+    function HitTestTextPosition(textPosition: Cardinal; isTrailingHit: BOOL;
+      var pointX: Single; var pointY: Single;
+      var hitTestMetrics: TDWriteHitTestMetrics): HResult; stdcall;
+    function HitTestTextRange(textPosition: Cardinal; textLength: Cardinal;
+      originX: Single; originY: Single; var hitTestMetrics: TDWriteHitTestMetrics;
+      maxHitTestMetricsCount: Cardinal;
+      var actualHitTestMetricsCount: Cardinal): HResult; stdcall;
+  end;
+
+{ IDWriteBitmapRenderTarget }
+
+  IDWriteBitmapRenderTarget = interface(IUnknown)
+  [SID_IDWriteBitmapRenderTarget]
+    function DrawGlyphRun(baselineOriginX: Single; baselineOriginY: Single;
+      measuringMode: TDWriteMeasuringMode; var glyphRun: TDWriteGlyphRun;
+      renderingParams: IDWriteRenderingParams; textColor: COLORREF;
+      blackBoxRect: PRect): HResult; stdcall;
+    function GetMemoryDC: HDC; stdcall;
+    function GetPixelsPerDip: Single; stdcall;
+    function SetPixelsPerDip(pixelsPerDip: Single): HResult; stdcall;
+    function GetCurrentTransform(var transform: TDWriteMatrix): HResult; stdcall;
+    function SetCurrentTransform(var transform: TDWriteMatrix): HResult; stdcall;
+    function GetSize(var size: TSize): HResult; stdcall;
+    function Resize(width: Cardinal; height: Cardinal): HResult; stdcall;
+  end;
+
+{ IDWriteGdiInterop }
+
+  IDWriteGdiInterop = interface(IUnknown)
+  [SID_IDWriteGdiInterop]
+    function CreateFontFromLOGFONT(var logFont: LOGFONTW;
+      out font: IDWriteFont): HResult; stdcall;
+    function ConvertFontToLOGFONT(font: IDWriteFont; var logFont: LOGFONTW;
+      var isSystemFont: BOOL): HResult; stdcall;
+    function ConvertFontFaceToLOGFONT(var font: IDWriteFontFace;
+      var logFont: LOGFONTW): HResult; stdcall;
+    function CreateFontFaceFromHdc(hdc: HDC;
+      out fontFace: IDWriteFontFace): HResult; stdcall;
+    function CreateBitmapRenderTarget(hdc: HDC; width: Cardinal; height: Cardinal;
+      out renderTarget: IDWriteBitmapRenderTarget): HResult; stdcall;
+  end;
+
+{ IDWriteGlyphRunAnalysis }
+
+  IDWriteGlyphRunAnalysis = interface(IUnknown)
+  [SID_IDWriteGlyphRunAnalysis]
+    function GetAlphaTextureBounds(textureType: DWRITE_TEXTURE_TYPE;
+      var textureBounds: TRect): HResult; stdcall;
+    function CreateAlphaTexture(textureType: DWRITE_TEXTURE_TYPE;
+      var textureBounds: TRect; var alphaValues: Byte;
+      bufferSize: Cardinal): HResult; stdcall;
+    function GetAlphaBlendParams(var renderingParams: IDWriteRenderingParams;
+      var blendGamma: Single; var blendEnhancedContrast: Single;
+      var blendClearTypeLevel: Single): HResult; stdcall;
+  end;
+
+{ IDWriteFactory }
+
+  IDWriteFactory = interface(IUnknown)
+  [SID_IDWriteFactory]
+    function GetSystemFontCollection(out fontCollection: IDWriteFontCollection;
+      checkForUpdates: BOOL = FALSE): HResult; stdcall;
+    function CreateCustomFontCollection(
+      var collectionLoader: IDWriteFontCollectionLoader; collectionKey: Pointer;
+      collectionKeySize: Cardinal;
+      out fontCollection: IDWriteFontCollection): HResult; stdcall;
+    function RegisterFontCollectionLoader(
+      var fontCollectionLoader: IDWriteFontCollectionLoader): HResult; stdcall;
+    function UnregisterFontCollectionLoader(
+      var fontCollectionLoader: IDWriteFontCollectionLoader): HResult; stdcall;
+    function CreateFontFileReference(var filePath: WCHAR;
+      var lastWriteTime: FILETIME;
+      out fontFile: IDWriteFontFile): HResult; stdcall;
+    function CreateCustomFontFileReference(fontFileReferenceKey: Pointer;
+      fontFileReferenceKeySize: Cardinal; var fontFileLoader: IDWriteFontFileLoader;
+      out fontFile: IDWriteFontFile): HResult; stdcall;
+    function CreateFontFace(fontFaceType: DWRITE_FONT_FACE_TYPE;
+      numberOfFiles: Cardinal; fontFiles: PIDWriteFontFile;
+      faceIndex: Cardinal; fontFaceSimulationFlags: DWRITE_FONT_SIMULATIONS;
+      out fontFace: IDWriteFontFace): HResult; stdcall;
+    function CreateRenderingParams(
+      out renderingParams: IDWriteRenderingParams): HResult; stdcall;
+    function CreateMonitorRenderingParams(monitor: HMONITOR;
+      out renderingParams: IDWriteRenderingParams): HResult; stdcall;
+    function CreateCustomRenderingParams(gamma: Single; enhancedContrast: Single;
+      clearTypeLevel: Single; pixelGeometry: DWRITE_PIXEL_GEOMETRY;
+      renderingMode: DWRITE_RENDERING_MODE;
+      out renderingParams: IDWriteRenderingParams): HResult; stdcall;
+    function RegisterFontFileLoader(
+      var fontFileLoader: IDWriteFontFileLoader): HResult; stdcall;
+    function UnregisterFontFileLoader(
+      var fontFileLoader: IDWriteFontFileLoader): HResult; stdcall;
+    function CreateTextFormat(const fontFamilyName: PWideChar;
+      fontCollection: IDWriteFontCollection; fontWeight: DWRITE_FONT_WEIGHT;
+      fontStyle: DWRITE_FONT_STYLE; fontStretch: DWRITE_FONT_STRETCH;
+      fontSize: Single; const localeName: PWideChar;
+      out textFormat: IDWriteTextFormat): HResult; stdcall;
+    function CreateTypography(
+      out typography: IDWriteTypography): HResult; stdcall;
+    function GetGdiInterop(out gdiInterop: IDWriteGdiInterop): HResult; stdcall;
+    function CreateTextLayout(_string: PWCHAR; stringLength: Cardinal;
+      const textFormat: IDWriteTextFormat; maxWidth: Single; maxHeight: Single;
+      out textLayout: IDWriteTextLayout): HResult; stdcall;
+    function CreateGdiCompatibleTextLayout(_string: PWCHAR; stringLength: Cardinal;
+      textFormat: IDWriteTextFormat; layoutWidth: Single; layoutHeight: Single;
+      pixelsPerDip: Single; transform: PDWriteMatrix; useGdiNatural: BOOL;
+      out textLayout: IDWriteTextLayout): HResult; stdcall;
+    function CreateEllipsisTrimmingSign(textFormat: IDWriteTextFormat;
+      out trimmingSign: IDWriteInlineObject): HResult; stdcall;
+    function CreateTextAnalyzer(
+      out textAnalyzer: IDWriteTextAnalyzer): HResult; stdcall;
+    function CreateNumberSubstitution(
+      substitutionMethod: DWRITE_NUMBER_SUBSTITUTION_METHOD;
+      var localeName: WideString; ignoreUserOverride: BOOL;
+      out numberSubstitution: IDWriteNumberSubstitution): HResult; stdcall;
+    function CreateGlyphRunAnalysis(var glyphRun: TDWriteGlyphRun;
+      pixelsPerDip: Single; var transform: TDWriteMatrix;
+      renderingMode: TDWriteRenderingMode; measuringMode: TDWriteMeasuringMode;
+      baselineOriginX: Single; baselineOriginY: Single;
+      out glyphRunAnalysis: IDWriteGlyphRunAnalysis): HResult; stdcall;
+  end;
+
+const
+  D2DERR_UNSUPPORTED_PIXEL_FORMAT     = WINCODEC_ERR_UNSUPPORTEDPIXELFORMAT;
+  D2DERR_INSUFFICIENT_BUFFER          = ERROR_INSUFFICIENT_BUFFER;
+
+  D2DERR_WRONG_STATE                  = HResult($88990001);
+  D2DERR_NOT_INITIALIZED              = HResult($88990002);
+  D2DERR_UNSUPPORTED_OPERATION        = HResult($88990003);
+  D2DERR_SCANNER_FAILED               = HResult($88990004);
+  D2DERR_SCREEN_ACCESS_DENIED         = HResult($88990005);
+  D2DERR_DISPLAY_STATE_INVALID        = HResult($88990006);
+  D2DERR_ZERO_VECTOR                  = HResult($88990007);
+  D2DERR_INTERNAL_ERROR               = HResult($88990008);
+  D2DERR_DISPLAY_FORMAT_NOT_SUPPORTED = HResult($88990009);
+  D2DERR_INVALID_CALL                 = HResult($8899000A);
+  D2DERR_NO_HARDWARE_DEVICE           = HResult($8899000B);
+  D2DERR_RECREATE_TARGET              = HResult($8899000C);
+  D2DERR_TOO_MANY_SHADER_ELEMENTS     = HResult($8899000D);
+  D2DERR_SHADER_COMPILE_FAILED        = HResult($8899000E);
+  D2DERR_MAX_TEXTURE_SIZE_EXCEEDED    = HResult($8899000F);
+  D2DERR_UNSUPPORTED_VERSION          = HResult($88990010);
+  D2DERR_BAD_NUMBER                   = HResult($88990011);
+  D2DERR_WRONG_FACTORY                = HResult($88990012);
+  D2DERR_LAYER_ALREADY_IN_USE         = HResult($88990013);
+  D2DERR_POP_CALL_DID_NOT_MATCH_PUSH  = HResult($88990014);
+  D2DERR_WRONG_RESOURCE_DOMAIN        = HResult($88990015);
+  D2DERR_PUSH_POP_UNBALANCED          = HResult($88990016);
+  D2DERR_RENDER_TARGET_HAS_LAYER_OR_CLIPRECT = HResult($88990017);
+  D2DERR_INCOMPATIBLE_BRUSH_TYPES     = HResult($88990018);
+  D2DERR_WIN32_ERROR                  = HResult($88990019);
+  D2DERR_TARGET_NOT_GDI_COMPATIBLE    = HResult($8899001A);
+  D2DERR_TEXT_EFFECT_IS_WRONG_TYPE    = HResult($8899001B);
+  D2DERR_TEXT_RENDERER_NOT_RELEASED   = HResult($8899001C);
+  D2DERR_EXCEEDS_MAX_BITMAP_SIZE      = HResult($8899001D);
+
+  DWRITE_E_FILEFORMAT                 = HResult($88985000);
+  DWRITE_E_UNEXPECTED                 = HResult($88985001);
+  DWRITE_E_NOFONT                     = HResult($88985002);
+  DWRITE_E_FILENOTFOUND               = HResult($88985003);
+  DWRITE_E_FILEACCESS                 = HResult($88985004);
+  DWRITE_E_FONTCOLLECTIONOBSOLETE     = HResult($88985005);
+  DWRITE_E_ALREADYREGISTERED          = HResult($88985006);
+
+var
+  D2D1CreateFactory: function (factoryType: D2D1_FACTORY_TYPE; const riid: TGUID;
+    pFactoryOptions: PD2D1FactoryOptions; out ppIFactory: ID2D1Factory): HRESULT; stdcall;
+  D2D1MakeRotateMatrix: procedure(angle: Single; center: D2D1_POINT_2F;
+    matrix: PD2D1Matrix3x2F); stdcall;
+  D2D1MakeSkewMatrix: procedure(angleX: Single; angleY: Single;
+    center: D2D1_POINT_2F; matrix: PD2D1Matrix3x2F); stdcall;
+  D2D1IsMatrixInvertible: function(matrix: PD2D1Matrix3x2F): BOOL; stdcall;
+  D2D1InvertMatrix: function(matrix: PD2D1Matrix3x2F): BOOL; stdcall;
+  DWriteCreateFactory: function(factoryType: DWRITE_FACTORY_TYPE;
+    const iid: TGUID; out factory: IUnknown): HRESULT; stdcall;
+
+function Direct2DInit(ThrowExceptions: Boolean = False): Boolean;
+{$endif}
+
+implementation
+
+{$ifdef windows}
+var
+  Loaded: Boolean;
+  Initialized: Boolean;
+  FailedModuleName: string;
+  FailedProcName: string;
+
+function Direct2DInit(ThrowExceptions: Boolean = False): Boolean;
+var
+  Module: HModule;
+
+  procedure CheckExceptions;
+  begin
+    if (not Initialized) and (ThrowExceptions) then
+      LibraryExceptProc(FailedModuleName, FailedProcName);
+  end;
+
+  function TryLoad(const ProcName: string; var Proc: Pointer): Boolean;
+  begin
+    FailedProcName := ProcName;
+    Proc := LibraryGetProc(Module, ProcName);
+    Result := Proc <> nil;
+    if not Result then
+      CheckExceptions;
+  end;
+
+const
+  d2d1 = 'd2d1.dll';
+  dwrite = 'dwrite.dll';
+begin
+  ThrowExceptions := ThrowExceptions and (@LibraryGetProc <> nil);
+  if Loaded then
+  begin
+    CheckExceptions;
+    Exit(Initialized);
+  end;
+  Loaded := True;
+  if Initialized then
+    Exit(True);
+  Result := False;
+  FailedModuleName := d2d1;
+  FailedProcName := '';
+  Module := LibraryLoad(FailedModuleName);
+  if Module = ModuleNil then
+  begin
+    CheckExceptions;
+    Exit;
+  end;
+  Result :=
+    TryLoad('D2D1CreateFactory', @D2D1CreateFactory) and
+    TryLoad('D2D1MakeRotateMatrix', @D2D1MakeRotateMatrix) and
+    TryLoad('D2D1MakeSkewMatrix', @D2D1MakeSkewMatrix) and
+    TryLoad('D2D1IsMatrixInvertible', @D2D1IsMatrixInvertible) and
+    TryLoad('D2D1InvertMatrix', @D2D1InvertMatrix);
+  if not Result then
+    Exit;
+  Result := False;
+  FailedModuleName := dwrite;
+  FailedProcName := '';
+  Module := LibraryLoad(FailedModuleName);
+  if Module = ModuleNil then
+  begin
+    CheckExceptions;
+    Exit;
+  end;
+  Result := TryLoad('DWriteCreateFactory', @DWriteCreateFactory);
+  if not Result then
+    Exit;
+  FailedModuleName := '';
+  FailedProcName := '';;
+  Initialized := True;
+end;
+{$endif}
+
+end.
+
