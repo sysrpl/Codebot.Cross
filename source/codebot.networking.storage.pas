@@ -134,6 +134,7 @@ end;
 
 function TCloudStorage.Fetch(const Resource: string; Stream: TStream): Boolean;
 begin
+  Result := False;
 end;
 
 end.

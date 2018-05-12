@@ -52,8 +52,6 @@ type
     RightDown: Boolean;
   end;
 
-  TMouseStateArray = TArrayList<TMouseState>;
-
 { TMouseThread }
 
   TMouseThread = class(TThread)

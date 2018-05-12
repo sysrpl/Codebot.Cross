@@ -278,7 +278,7 @@ type
 { TColorB }
 
   TColorB = packed record
-    public
+  public
     Blue, Green, Red, Alpha: Byte;
     class operator Implicit(Value: TColorB): TColorAlpha;
     class operator Implicit(Value: TColorAlpha): TColorB;
@@ -717,7 +717,6 @@ type
 
   IBitmap = interface(ICloneable<IBitmap>)
   ['{DB935633-A218-4181-96A2-B0808697150F}']
-    function Clone: IBitmap;
     function GetEmpty: Boolean;
     function GetSurface: ISurface;
     function GetClientRect: TRectI;
@@ -785,6 +784,8 @@ type
     ErrorCorrection: Boolean;
     { Use gamma corrected gradients on supported back ends }
     GammaCorrection: Boolean;
+    { Use premultiplication when loading or saving images }
+    UsePremultiply: Boolean;
   end;
 
 var
@@ -793,6 +794,7 @@ var
     SoftwareBuffering: False;
     ErrorCorrection: False;
     GammaCorrection: False;
+    UsePremultiply: True;
   );
 
 implementation
@@ -1796,8 +1798,6 @@ begin
 end;
 
 class operator TColorB.Implicit(Value: TColorAlpha): TColorB;
-var
-  B: TColorB absolute Value;
 begin
   Result.Blue := Value.Blue;
   Result.Green := Value.Green;
@@ -1859,7 +1859,6 @@ begin
   Result.Blue := FloatToByte(B);
   Result.Alpha := HiByte;
 end;
-
 
 {var
   M1, M2: Float;
@@ -2503,7 +2502,7 @@ begin
   H := H + 0.5;
   if H > 1 then
     H := H - 1;
-  Result := THSL(H)
+  Result := THSL(H);
 end;
 
 function Blend(A, B: TColorB; Percent: Float): TColorB;

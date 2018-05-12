@@ -311,7 +311,7 @@ begin
   if FSecure then
     if not OpenSSLInit then
       Exit(False);
-	FAddress := Address;
+  FAddress := Address;
   FPort := Port;
   if not FAddress.Resolve then
     Exit(False);

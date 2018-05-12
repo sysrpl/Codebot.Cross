@@ -111,13 +111,13 @@ type
 
   TSaturationPicker = class(TCustomColorControl)
   private
-    FHue: Single;
-    FSaturation: Single;
-    FLightness: Single;
+    FHue: Float;
+    FSaturation: Float;
+    FLightness: Float;
     FStyle: TSaturationStyle;
-    procedure SetHue(Value: Single);
-    procedure SetSaturation(Value: Single);
-    procedure SetLightness(Value: Single);
+    procedure SetHue(Value: Float);
+    procedure SetSaturation(Value: Float);
+    procedure SetLightness(Value: Float);
     procedure SetStyle(Value: TSaturationStyle);
   protected
     function GetColorValue: TColorB; override;
@@ -128,9 +128,9 @@ type
     constructor Create(AOwner: TComponent); override;
     property ColorValue: TColorB read GetColorValue write SetColorValue;
   published
-    property Hue: Single read FHue write SetHue;
-    property Saturation: Single read FSaturation write SetSaturation;
-    property Lightness: Single read FLightness write SetLightness;
+    property Hue: Float read FHue write SetHue;
+    property Saturation: Float read FSaturation write SetSaturation;
+    property Lightness: Float read FLightness write SetLightness;
     property Style: TSaturationStyle read FStyle write SetStyle;
     property Align;
     property Anchors;
@@ -162,6 +162,21 @@ type
     property OnStartDrag;
     property ShowHint;
     property Visible;
+  end;
+
+{ TAlphaPicker }
+
+  TAlphaPicker = class(TCustomColorControl)
+  private
+    FAlpha: Float;
+    procedure SetAlpha(Value: Float);
+  protected
+    function GetColorValue: TColorB; override;
+    procedure SetColorValue(Value: TColorB); override;
+    procedure Render; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    property Alpha: Float read FAlpha write SetAlpha;
   end;
 
 implementation
@@ -423,7 +438,7 @@ begin
   end;
 end;
 
-procedure TSaturationPicker.SetHue(Value: Single);
+procedure TSaturationPicker.SetHue(Value: Float);
 begin
   Value := Clamp(Value);
   if FHue <> Value then
@@ -434,7 +449,7 @@ begin
   end;
 end;
 
-procedure TSaturationPicker.SetSaturation(Value: Single);
+procedure TSaturationPicker.SetSaturation(Value: Float);
 begin
   Value := Clamp(Value);
   if Value <> FSaturation then
@@ -444,7 +459,7 @@ begin
   end;
 end;
 
-procedure TSaturationPicker.SetLightness(Value: Single);
+procedure TSaturationPicker.SetLightness(Value: Float);
 begin
   Value := Clamp(Value);
   if Value <> FLightness then
@@ -529,5 +544,63 @@ begin
   S.Ellipse(R);
   S.Stroke(NewPen(ColorValue.Invert, 3));
 end;
+
+{ TAlphaPicker }
+
+constructor TAlphaPicker.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  Width := 200;
+  Height := 24;
+end;
+
+procedure TAlphaPicker.SetAlpha(Value: Float);
+begin
+  if FAlpha = Value then Exit;
+  FAlpha := Value;
+end;
+
+function TAlphaPicker.GetColorValue: TColorB;
+begin
+  Result := clTransparent;
+end;
+
+procedure TAlphaPicker.SetColorValue(Value: TColorB);
+begin
+
+end;
+
+procedure TAlphaPicker.Render;
+var
+  X, Y: Integer;
+  S: ISurface;
+  R: TRectI;
+begin
+  if FBitmap = nil then
+      FBitmap := NewBitmap(Width, Height)
+    else
+      FBitmap.SetSize(Width, Height);
+  if FBitmap.Empty then
+    Exit;
+  S := Surface;
+  DrawBitmap(S, FBitmap, 0, 0);
+  S.Rectangle(ClientRect);//Brushes.Checker(clWhite, clBlack, 0, 10));
+  S.Fill(Brushes.Checker(clWhite, clSilver, 0, 8));
+  {if FStyle = ssSaturate then
+  begin
+    X := Round(Width * Saturation);
+    Y := Round(Height * Lightness);
+  end
+  else
+  begin
+    X := MousePos.X;
+    Y := MousePos.Y;
+  end;
+  R := TRectI.Create(CircleSize, CircleSize);
+  R.Center(X, Y);
+  S.Ellipse(R);
+  S.Stroke(NewPen(ColorValue.Invert, 3));}
+end;
+
 
 end.

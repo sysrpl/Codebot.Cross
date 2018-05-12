@@ -9,12 +9,13 @@
 { <include docs/codebot.forms.widget.txt> }
 unit Codebot.Forms.Widget;
 
-{$mode delphi}
+{$i codebot.inc}
 
 interface
 
+{$if defined(linuxgtk) or defined(windows)}
 uses
-  Classes, SysUtils, Graphics, Controls, Forms, ExtCtrls, gtk2winapiwindow,
+  Classes, SysUtils, Graphics, Controls, Forms, ExtCtrls,
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types,
@@ -32,7 +33,9 @@ type
   TWidget = class(TFloatingForm)
   private
     FAspectRatio: Float;
+    FDraggable: Boolean;
     FEdgeSizable: TEdgeSizable;
+    FSaveCursor: TCursor;
     FHotQuad: Integer;
     FMaxHeight: Integer;
     FMaxWidth: Integer;
@@ -46,6 +49,7 @@ type
     FSizeQuad: Integer;
     FSizeBounds: TRectI;
     FTimer: TTimer;
+    FGripSize: Integer;
     FGripOpacity: Float;
     FClickBoxes: TArrayList<TRectI>;
     FBoxIndex: Integer;
@@ -54,6 +58,7 @@ type
     function GetAnimated: Boolean;
     procedure SetAnimated(Value: Boolean);
     procedure SetAspectRatio(Value: Float);
+    procedure SetGripSize(Value: Integer);
     procedure SetHotQuad(Value: Integer);
     procedure SetMaxHeight(Value: Integer);
     procedure SetMaxWidth(Value: Integer);
@@ -74,6 +79,7 @@ type
     property OnClickBox: TClickBoxEvent read FOnClickBox write FOnClickBox;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure ClickBoxes(Boxes: TArrayList<TRectI>);
     procedure Center;
     property Animated: Boolean read GetAnimated write SetAnimated;
@@ -82,18 +88,19 @@ type
     property Dragged: Boolean read FDragged;
     property Sized: Boolean read FSized;
     property AspectRatio: Float read FAspectRatio write SetAspectRatio;
+    property Draggable: Boolean read FDraggable write FDraggable default True;
     property MinWidth: Integer read FMinWidth write SetMinWidth default 128;
     property MinHeight: Integer read FMinHeight write SetMinHeight default 128;
     property MaxWidth: Integer read FMaxWidth write SetMaxWidth default 2000;
     property MaxHeight: Integer read FMaxHeight write SetMaxHeight default 2000;
+    property GripSize: Integer read FGripSize write SetGripSize default 24;
     property OnTick: TNotifyEvent read FOnTick write FOnTick;
   end;
+{$endif}
 
 implementation
 
-const
-  GripSize = 24;
-
+{$if defined(linuxgtk) or defined(windows)}
 constructor TWidget.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -101,16 +108,25 @@ begin
   Height := 300;
   Center;
   FEdgeSizable := [esNW, esNE, esSE, esSW];
+  FDraggable := True;
   FMinWidth := 128;
   FMinHeight := 128;
   FMaxWidth := 2000;
   FMaxHeight := 2000;
+  FGripSize := 24;
   FHotQuad := -1;
   FBoxIndex := -1;
   FSizeQuad := -1;
-  FTimer := TTimer.Create(Self);
+  FTimer := TTimer.Create(nil);
   FTimer.Interval := 30;
   FTimer.OnTimer := DoTimer;
+end;
+
+destructor TWidget.Destroy;
+begin
+  FTimer.Enabled := False;
+  FTimer.Free;
+  inherited Destroy;
 end;
 
 procedure TWidget.ClickBoxes(Boxes: TArrayList<TRectI>);
@@ -154,7 +170,7 @@ end;
 
 function TWidget.GetAnimated: Boolean;
 begin
-  Result := FTimer.Enabled;
+  Result := FTimer.Enabled
 end;
 
 procedure TWidget.SetAnimated(Value: Boolean);
@@ -166,6 +182,13 @@ procedure TWidget.SetAspectRatio(Value: Float);
 begin
   if FAspectRatio = Value then Exit;
   FAspectRatio := Value;
+end;
+
+procedure TWidget.SetGripSize(Value: Integer);
+begin
+  if FGripSize = Value then Exit;
+  FGripSize := Value;
+  Invalidate;
 end;
 
 procedure TWidget.SetHotQuad(Value: Integer);
@@ -183,7 +206,7 @@ begin
       2: Cursor := crSizeSE;
       3: Cursor := crSizeSW;
     else
-      Cursor := crDefault;
+      Cursor := FSaveCursor;
     end;
     if FHotQuad > -1 then
       Animator.Animate(FGripOpacity, 1)
@@ -249,6 +272,7 @@ var
   I: Integer;
 begin
   inherited MouseDown(Button, Shift, X, Y);
+  FSaveCursor := Cursor;
   if Button = mbLeft then
     for I := 0 to FClickBoxes.Length - 1 do
       if FClickBoxes[I].Contains(X, Y) then
@@ -256,7 +280,7 @@ begin
         FBoxIndex := I;
         Exit;
       end;
-  FDragged := Button = mbLeft;
+  FDragged := (Button = mbLeft) and FDraggable;
   if FDragged then
   begin
     FDragPoint.X := X;
@@ -417,7 +441,7 @@ begin
       FSizeQuad := -1;
       FSized := False;
     end;
-    Cursor := crDefault;
+    Cursor := FSaveCursor;
   end;
 end;
 
@@ -472,6 +496,7 @@ begin
     Surface.Fill(NewBrush(Color.Fade(0.75 * Alpha)));
   end;
 end;
+{$endif}
 
 end.
 

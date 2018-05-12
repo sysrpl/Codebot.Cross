@@ -155,6 +155,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    { True if the mouse is down inside the control }
+    property IsMouseDown: Boolean read FMouseDown;
   end;
 
 { TRenderCustomControl is the base class for custom windowed controls
