@@ -1328,12 +1328,12 @@ end;
 
 function TFontD2D.GetQuality: TFontQuality;
 begin
-	Result := FQuality;
+  Result := FQuality;
 end;
 
 procedure TFontD2D.SetQuality(Value: TFontQuality);
 begin
-	FQuality := Value;
+  FQuality := Value;
 end;
 
 function TFontD2D.GetStyle: TFontStyles;
@@ -2214,11 +2214,11 @@ procedure TSurfaceD2D.TextOut(Font: IFont; const Text: string; const Rect: TRect
 const
   TrimChar: TDWriteTrimming = (granularity: DWRITE_TRIMMING_GRANULARITY_CHARACTER);
   RenderingModes: array[TFontQuality] of DWORD = (DWRITE_RENDERING_MODE_DEFAULT,
-	  DWRITE_RENDERING_MODE_ALIASED, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC, DWRITE_RENDERING_MODE_ALIASED,
-	  DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
-	  DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL);
+    DWRITE_RENDERING_MODE_ALIASED, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC, DWRITE_RENDERING_MODE_ALIASED,
+    DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC, DWRITE_RENDERING_MODE_CLEARTYPE_GDI_CLASSIC,
+    DWRITE_RENDERING_MODE_CLEARTYPE_NATURAL);
   AntialiasModes: array[TFontQuality] of DWORD = (D2D1_TEXT_ANTIALIAS_MODE_DEFAULT,
-  	D2D1_TEXT_ANTIALIAS_MODE_ALIASED, D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE,
+    D2D1_TEXT_ANTIALIAS_MODE_ALIASED, D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE,
     D2D1_TEXT_ANTIALIAS_MODE_ALIASED, D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE,
     D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE, D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE);
 var
@@ -2239,7 +2239,7 @@ begin
     Path.Remove;
   if Rect.Empty or (Text = '') then
     Exit;
-	Draw;
+  Draw;
   Path.Add;
   FontObj := Font as TFontD2D;
   { It's hard to tell if CreateGdiTextLayout makes any difference }
@@ -2314,9 +2314,9 @@ var
 begin
   State := MatrixIdentity;
   if Brush = nil then
-  	Exit;
+    Exit;
   M := (Matrix as TMatrixD2D).FMatrix;
-	Brush.GetTransform(State);
+  Brush.GetTransform(State);
   M := MatrixMultiply(State, M);
   Brush.SetTransform(M);
 end;
@@ -2324,14 +2324,14 @@ end;
 procedure RestoreMatrix(Brush: ID2D1Brush; State: TD2D1Matrix3x2F);
 begin
   if Brush = nil then
-  	Exit;
+    Exit;
   Brush.SetTransform(State);
 end;
 
 function PenWidth(Matrix: IMatrix; Width: Float): Float;
 const
-	A: TPointF = (X: 1; Y : 0);
-	B: TPointF = (X: 0; Y : 0);
+  A: TPointF = (X: 1; Y : 0);
+  B: TPointF = (X: 0; Y : 0);
 begin
   Result := Matrix.Transform(A).Dist(Matrix.Transform(B));
   Result := Abs(Result * Width);
@@ -2354,15 +2354,15 @@ begin
   begin
     Acquired := AcquireBrush(Brush, B);
     if Acquired then
-    	ApplyMatrix(B, GetMatrix, State);
-	end
-	else
+      ApplyMatrix(B, GetMatrix, State);
+  end
+  else
   begin
     Acquired := AcquirePen(Pen, B, S);
     if Acquired then
-    	ApplyMatrix(B, GetMatrix, State);
-	end;
-	if not Acquired then
+      ApplyMatrix(B, GetMatrix, State);
+  end;
+  if not Acquired then
     Exit;
   Draw;
   P := Path;
@@ -2378,10 +2378,10 @@ begin
     FTarget.FillGeometry(G, B)
   else
     FTarget.DrawGeometry(G, B, PenWidth(GetMatrix, Pen.Width), S);
-	if not Preserve then
+  if not Preserve then
     P.Remove;
   if B <> nil then
-  	RestoreMatrix(B, State);
+    RestoreMatrix(B, State);
 end;
 
 procedure TSurfaceD2D.Stroke(Pen: IPen; Preserve: Boolean = False);
@@ -2638,7 +2638,7 @@ begin
   if Canvas = nil then
   begin
     if ScreenDC = 0 then
-			ScreenDC := GetDC(0);
+      ScreenDC := GetDC(0);
     GetWindowRect(GetDesktopWindow, R);
     T.BindDC(ScreenDC, TRectI.Create(R.Right - R.Left, R.Bottom - R.Top));
   end

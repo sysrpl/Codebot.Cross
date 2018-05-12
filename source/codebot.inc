@@ -15,3 +15,15 @@
 {$else}
 	{$define apicall := cdecl}
 {$endif}
+
+{$if defined(linux) and defined(lclgtk2)}
+	{$define linuxgtk}
+{$endif}
+
+{$if defined(linux) and defined(lclqt)}
+	{$define linuxqt}
+{$endif}
+
+{$WARN 4055 off : Conversion between ordinals and pointers is not portable}
+{$WARN 5024 off : Parameter "$1" not used}
+

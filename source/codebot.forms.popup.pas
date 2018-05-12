@@ -19,7 +19,6 @@ uses
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types,
-  Codebot.Controls.Scrolling,
   Codebot.Input.MouseMonitor;
 
 { TPopupForm }

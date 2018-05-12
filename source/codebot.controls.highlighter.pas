@@ -25,7 +25,7 @@ uses
 type
   TControlHighlighter = class(TComponent)
   private
-		FOnRender: TDrawRectEvent;
+    FOnRender: TDrawRectEvent;
     FSplash: ISplash;
     FTimer: TAnimationTimer;
     FControl: TControl;
@@ -113,20 +113,20 @@ var
   P: IPen;
 begin
   if Assigned(FOnRender) then
-  	FOnRender(Self, Surface, Rect)
-	else
+    FOnRender(Self, Surface, Rect)
+  else
   begin
     R := Rect;
     R.Inflate(FThickness / -2  - 1, FThickness / -2  - 1);
     Surface.RoundRectangle(R, FRadius);
     C := Color;
     C.Alpha := FOpacity;
-  	P := NewPen(C, FThickness);
+    P := NewPen(C, FThickness);
     P.LinePattern := pnDash;
     P.LineCap := cpRound;
     P.LinePatternOffset := TimeQuery * 12;
     Surface.Stroke(P);
-	end;
+  end;
 end;
 
 procedure TControlHighlighter.Update;
@@ -145,7 +145,7 @@ procedure TControlHighlighter.Update;
       Exit;
     C := FControl;
     if C.Parent = nil then
-    	Exit;
+      Exit;
     F := nil;
     while C <> nil do
     begin

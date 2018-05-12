@@ -1254,19 +1254,19 @@ function TLine2.Intersects(const Line: TLine2): Boolean;
 const
   Sigma = 0.001;
 var
-	A, B: Single;
+  A, B: Single;
 begin
   Result := False;
-	A := (P1.X - P0.X) * (Line.P1.Y - Line.P0.Y) - (P1.Y - P0.Y) * (Line.P1.X - Line.P0.X);
-	if (Abs(A) < Sigma) then
-		Exit;
-	B := ((P0.Y - Line.P0.Y) * (Line.P1.X - Line.P0.X) - (P0.X - Line.P0.X) * (Line.P1.Y - Line.P0.Y)) / A;
-	if (B > 0.0) and (B < 1.0) then
-	begin
-		B := ((P0.Y - Line.P0.Y) * (P1.X - P0.X) - (P0.X - Line.P0.X) * (P1.Y - P0.Y)) / A;
-		if (B > 0.0) and (B < 1.0) then
-			Result := True;
-	end;
+  A := (P1.X - P0.X) * (Line.P1.Y - Line.P0.Y) - (P1.Y - P0.Y) * (Line.P1.X - Line.P0.X);
+  if (Abs(A) < Sigma) then
+    Exit;
+  B := ((P0.Y - Line.P0.Y) * (Line.P1.X - Line.P0.X) - (P0.X - Line.P0.X) * (Line.P1.Y - Line.P0.Y)) / A;
+  if (B > 0.0) and (B < 1.0) then
+  begin
+    B := ((P0.Y - Line.P0.Y) * (P1.X - P0.X) - (P0.X - Line.P0.X) * (P1.Y - P0.Y)) / A;
+    if (B > 0.0) and (B < 1.0) then
+      Result := True;
+  end;
 end;
 
 { TCurve2 }

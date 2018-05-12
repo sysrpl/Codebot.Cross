@@ -17,10 +17,12 @@ uses
   Classes, SysUtils, Graphics, Controls, Forms,
   Codebot.System;
 
+{ FormManager }
+
 type
   FormManager = record
   private
-    class var FDefaultFont: TFont;
+    class var {%H-}FDefaultFont: TFont;
     class function GetCurrent: TCustomForm; static;
     class function GetDefaultFont: TFont; static;
   public
@@ -32,7 +34,7 @@ type
 
 implementation
 
-{$if defined(linux) and defined(lclgtk2)}
+{$if defined(linuxgtk)}
 uses
   X, GLib2, Gtk2, Gdk2, Gdk2X,
   Codebot.Interop.Linux.NetWM;
@@ -89,6 +91,23 @@ begin
   FDefaultFont.Size := StrToInt(Items.Pop);
   FDefaultFont.Name := Items.Join(' ');
   Result := FDefaultFont;
+end;
+{$endif}
+
+{$if defined(linux) and defined(lclqt)}
+class function FormManager.GetCurrent: TCustomForm;
+begin
+  Result := nil;
+end;
+
+class function FormManager.GetDefaultFont: TFont;
+begin
+  Result := nil;
+end;
+
+class procedure FormManager.Activate(Form: TCustomForm);
+begin
+
 end;
 {$endif}
 

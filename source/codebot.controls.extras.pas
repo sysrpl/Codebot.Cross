@@ -511,6 +511,25 @@ var
   GlobalBusyImages: TImageStrip;
   GlobalStatusImages: TImageStrip;
 
+procedure RecolorBitmap(Bitmap: TSurfaceBitmap; Color: TColorB);
+var
+  P: PPixel;
+  F: Float;
+  I: Integer;
+begin
+  if Bitmap.Empty then
+    Exit;
+  P := Bitmap.Pixels;
+  for I := 1 to Bitmap.Width * Bitmap.Height do
+  begin
+    F := P.Alpha / $FF;
+    P.Red := Round(Color.Red * F);
+    P.Green := Round(Color.Green * F);
+    P.Blue := Round(Color.Blue * F);
+    Inc(P);
+  end;
+end;
+
 constructor TIndeterminateProgress.Create(AOwner: TComponent);
 var
   B: TSurfaceBitmap;
@@ -525,10 +544,12 @@ begin
   FTimer.Enabled := False;
   FTimer.Interval := 20;
   FTimer.OnTimer := TimerExpired;
+  Font.Color := clWindowText;
   if GlobalBusyImages = nil then
   begin
     B := TSurfaceBitmap.Create;
     B.LoadFromResourceName(HINSTANCE, 'progress_busy');
+    RecolorBitmap(B, clWindowText);
     GlobalBusyImages := TImageStrip.Create(Application);
     GlobalBusyImages.Add(B);
     B.Free;

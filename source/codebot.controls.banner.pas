@@ -376,7 +376,7 @@ begin
       FillRectColor(Surface, R, C);
     end;
     if Theme.Selected then
-      Theme.DrawHeader(FHeight)
+      Theme.DrawHeader(FHeight);
   end
   else
   begin

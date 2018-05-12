@@ -55,20 +55,23 @@ type
     function IndexFromCoord(const Coord: TGridCoord): Integer;
   end;
 
-function EditImageStrip(Images: TImageStrip): Boolean;
+function EditImageStrip(Images: TImageStrip; Caption: string = ''): Boolean;
 
 implementation
 
 {$R *.lfm}
 
-function EditImageStrip(Images: TImageStrip): Boolean;
+function EditImageStrip(Images: TImageStrip; Caption: string = ''): Boolean;
 var
   F: TImageListEditor;
 begin
   F := TImageListEditor.Create(nil);
   try
     F.Images.Assign(Images);
-    F.Caption := 'Editing: ' + StrCompPath(Images);
+    if Caption = '' then
+      F.Caption := Caption
+    else
+      F.Caption := 'Editing: ' + StrCompPath(Images);
     Result := F.ShowModal = mrOk;
     if Result then
       Images.Assign(F.Images);

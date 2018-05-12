@@ -15,7 +15,7 @@ interface
 
 {$ifdef linux}
 uses
-   SysUtils, X, XLib, XAtom;
+   SysUtils, X, XLib;
 
 { WindowManager is a static type implementing SOME of the
   NetWM protocol. It is a starter type. }

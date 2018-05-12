@@ -13,11 +13,10 @@ unit Codebot.Graphics.Linux.SurfaceCairo;
 
 interface
 
-{$ifdef linux}
+{$ifdef linuxgtk}
 uses
   SysUtils, Classes, Graphics, Controls,
   Codebot.System,
-  Codebot.Collections,
   Codebot.Graphics.Types,
   Codebot.Forms.Management;
 
@@ -42,7 +41,7 @@ function NewSplashCairo: ISplash;
 
 implementation
 
-{$ifdef linux}
+{$ifdef linuxgtk}
 uses
   glib2, gdk2, gtk2, gtk2def, gtk2proc, gtk2int, gdk2pixbuf, gtk2extra,
   cairo, pango, pangocairo;
@@ -61,7 +60,8 @@ type
   TCairoLineJoin = cairo_line_join_t;
   TCairoMatrix = cairo_matrix_t;
   PCairoMatrix = Pcairo_matrix_t;
-  TCairoFontOptions = cairo_font_options_t;
+  { TODO: Research why TCairoFontOptions is not used }
+  // TCairoFontOptions = cairo_font_options_t;
   PCairoFontOptions = Pcairo_font_options_t;
   TCairoAntiAlias = cairo_antialias_t;
   TCairoFilter = cairo_filter_t;
@@ -89,7 +89,7 @@ type
 
 function gdk_pixbuf_loader_get_format(loader: PGdkPixbufLoader): PGdkPixbufFormat; cdecl; external gdkpixbuflib;
 function gdk_pixbuf_save_to_callback(pixbuf: PGdkPixbuf; save_func: GdkPixbufSaveFunc;
-  data: gpointer; _type: PGChar; error: PPGError): GBoolean; cdecl; external gdkpixbuflib;
+  data: gpointer; _type: PGChar; error: PPGError; empty: Pointer): GBoolean; cdecl; external gdkpixbuflib;
 
 { Extra cairo routines }
 
@@ -1479,7 +1479,7 @@ procedure TSurfaceCairo.CopyTo(const Source: TRectF; Surface: ISurface;
   const Dest: TRectF; Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
 const
   Resamples: array[TResampleQuality] of TCairoFilter =
-    (CAIRO_FILTER_FAST, CAIRO_FILTER_GOOD, CAIRO_FILTER_BEST);
+    (CAIRO_FILTER_FAST, CAIRO_FILTER_GOOD, CAIRO_FILTER_BILINEAR);
 var
   DestSurface: TSurfaceCairo;
   CairoSurface: PCairoSurface;
@@ -2011,6 +2011,8 @@ var
 begin
   if Empty then
     Exit;
+  if not SurfaceOptions.UsePremultiply then
+    Exit;
   Found := False;
   A := Pointer(gdk_pixbuf_get_pixels(FBuffer));
   B := A;
@@ -2270,14 +2272,12 @@ begin
   if not Empty then
   begin
     { For some unknow reason this WriteLn causes the IDE to realize property data }
-    WriteLn('bitmap save start');
     if not (FFormat in [fmBmp, fmJpeg, fmPng, fmTiff]) then
       FFormat := fmPng;
     S := ImageFormatToStr(FFormat);
     FlipPixels;
-    gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil);
+    gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil, nil);
     FlipPixels;
-    WriteLn('bitmap save complete');
   end;
 end;
 
@@ -2386,7 +2386,7 @@ end;
 
 function NewBitmapCairo(BitmapBuffer: Pointer): IBitmap;
 begin
-  TBitmapCairo.Create(PGdkPixmap(BitmapBuffer));
+  Result := TBitmapCairo.Create(PGdkPixmap(BitmapBuffer));
 end;
 
 function NewBitmapCairo(Width, Height: Integer): IBitmap;

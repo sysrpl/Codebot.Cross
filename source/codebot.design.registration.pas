@@ -27,7 +27,8 @@ uses
   Codebot.Controls.Colors,
   Codebot.Controls.Extras,
   Codebot.Controls.Scrolling,
-  Codebot.Controls.Sliders;
+  Codebot.Controls.Sliders,
+  Codebot.Forms.Widget;
 
 procedure Register;
 
@@ -59,6 +60,8 @@ begin
     'Codebot.Controls');
   RegisterForm(TBannerForm, 'Banner Form', 'A form a customizable header and footer',
     'Codebot.Controls.Banner');
+  RegisterForm(TWidget, 'Widget Form', 'A form that uses an overlay to define its shape',
+    'Codebot.Forms.Widget');
 end;
 
 end.

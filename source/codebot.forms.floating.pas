@@ -13,6 +13,7 @@ unit Codebot.Forms.Floating;
 
 interface
 
+{$if defined(linux) and defined(lclgtk2)}
 uses
   Classes, SysUtils, Controls, Forms, LCLIntf, LCLType,
   Codebot.System,
@@ -42,6 +43,7 @@ type
     property Compositing: Boolean read GetCompositing;
     property Faded: Boolean read FFaded write SetFaded;
   end;
+{$endif}
 
 implementation
 
@@ -64,7 +66,7 @@ var
 begin
   Screen := gtk_widget_get_screen(widget);
   Colormap := gdk_screen_get_rgba_colormap(Screen);
-    gtk_widget_set_colormap(widget, Colormap);
+  gtk_widget_set_colormap(widget, Colormap);
 end;
 
 { TFloatingForm }
@@ -98,6 +100,8 @@ begin
     g_signal_connect(G_OBJECT(FWindow), 'screen-changed',
       G_CALLBACK(@FormScreenChanged), nil);
     FormScreenChanged(PGtkWidget(FWindow), nil, nil);
+    FOpacity := not FOpacity;
+    SetOpacity(not FOpacity);
   end;
 end;
 

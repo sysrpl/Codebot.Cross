@@ -13,6 +13,7 @@ unit Codebot.Input.Hotkeys;
 
 interface
 
+{$if defined(linuxgtk)}
 uses
   SysUtils, Classes, LCLType,
   Codebot.System;
@@ -52,10 +53,11 @@ function HotkeyCompare(constref A, B: THotkeyNotify): Integer;
 
 { Returns the global hotkey capture instance }
 function HotkeyCapture: THotkeyCapture;
+{$endif}
 
 implementation
 
-{$if defined(LCLgtk2) and defined(linux)}
+{$if defined(linuxgtk)}
 uses
   X, XLib, Gdk2, Gdk2x, Gtk2Proc, KeySym;
 
@@ -90,7 +92,8 @@ type
 const
   AltMask = Mod1Mask;
   SuperMask = Mod4Mask;
-  ModifiersMask = ShiftMask or AltMask or ControlMask or SuperMask;
+  { TODO: Check on the reason for this mask }
+  // ModifiersMask = ShiftMask or AltMask or ControlMask or SuperMask;
   CapLock = LockMask;
   NumLock = Mod2Mask;
   NotLock = Integer(not (CapLock or NumLock));
@@ -429,7 +432,6 @@ begin
   if Count = 0 then
     gdk_window_remove_filter(FRoot, @FilterKeys, Self);
 end;
-{$endif}
 
 function IsKeyValid(Key: Word): Boolean;
 begin
@@ -626,5 +628,6 @@ initialization
   THotkeyList.DefaultCompare := HotkeyCompare;
 finalization
   InternalCapture.Free;
+{$endif}
 end.
 

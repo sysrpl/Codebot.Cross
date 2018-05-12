@@ -17,7 +17,7 @@ uses
   { Codebot core unit }
   Codebot.Core,
   { Free pascal units }
-  SysUtils, Classes, FileUtil;
+  SysUtils, Classes, Process, FileUtil;
 
 {$region types}
 type
@@ -426,7 +426,9 @@ function StrOf(C: Char; Len: Integer): string;
 { Returns a string made to fit a given length padded on the left with a character [group string] }
 function StrPadLeft(const S: string; C: Char; Len: Integer): string;
 { Returns a string made to fit a given length padded on the right with a character [group string] }
-function StrPadRight(const S: string; C: Char; Len: Integer): string;
+function StrPadRight(const S: string; C: Char; Len: Integer): string; overload;
+{ Returns a string made to fit a given length padded on the right zeros [group string] }
+function StrPadRight(const I: Integer; Len: Integer): string; overload;
 { Returns a string surrounded by quotes if it contains whitespace [group string] }
 function StrQuote(const S: string): string;
 { Returns true if a string contains only whitespace characters [group string] }
@@ -790,8 +792,8 @@ type
 
 { INamedValues<T> is a reference type for TNamedValues<T> }
 
-	INamedValues<T> = interface(IEnumerable<T>)
-  	['{D228ADD8-4C4E-4C6C-A6F6-FA17FC307253}']
+  INamedValues<T> = interface(IEnumerable<T>)
+    ['{D228ADD8-4C4E-4C6C-A6F6-FA17FC307253}']
     function GetCount: Integer;
     function GetEmpty: Boolean;
     function GetName(Index: Integer): string;
@@ -816,13 +818,13 @@ type
 
   INamedStrings = interface(INamedValues<string>)
     ['{C03EF776-46AC-4757-8654-F31EC34E67A7}']
-	end;
+  end;
 
 { TNamedValuesIntf<T> exposes INamedValues<T> }
 
   TNamedValuesIntf<T> = class(TInterfacedObject, IEnumerable<T>, INamedValues<T>)
   private
-		FData: TNamedValues<T>;
+    FData: TNamedValues<T>;
   public
     { IEnumerable<T> }
     function GetEnumerator: IEnumerator<string>;
@@ -836,12 +838,12 @@ type
     procedure Remove(const Name: string);
     procedure Delete(Index: Integer);
     procedure Clear;
-	end;
+  end;
 
 { TNamedStringsIntf exposes INamedStrings }
 
   TNamedStringsIntf = class(TNamedValuesIntf<string>, INamedStrings)
-	end;
+  end;
 
 { IDelegate\<T\> allows event subscribers to add or remove their event handlers
   See also
@@ -1102,6 +1104,8 @@ type
     property Terminated;
   end;
 
+{ Execute a process, wait for it to terminate, and return its output }
+function ProcessExecute(const Command: string; const Arguments: string = ''): string;
 {$endregion}
 
 {$region waiting routines}
@@ -1732,7 +1736,7 @@ begin
     begin
       Inc(OldIndex, OldPattern.Length);
       for I := 0 to NewPattern.Length - 1 do
-      	Result[NewIndex + I] := NewPattern[I + 1];
+        Result[NewIndex + I] := NewPattern[I + 1];
       Inc(NewIndex, NewPattern.Length);
       Inc(FindIndex);
     end
@@ -1997,6 +2001,12 @@ begin
   Result := StrOf(C,  Len - I) + S;
 end;
 
+function StrPadRight(const I: Integer; Len: Integer): string;
+begin
+  Result := IntToStr(I);
+  Result := StrPadRight(Result, '0', Len);
+end;
+
 function StrQuote(const S: string): string;
 begin
   if StrContains(S, ' ' ) then
@@ -2097,11 +2107,11 @@ begin
       #13:
         if Style = tlbsCRLF then
           if (I < L) and (S[I+1] = #10) then
-	          Inc(I)
+            Inc(I)
           else
-  	        Inc(DestLen)
+            Inc(DestLen)
           else if (I < L) and (S[I + 1] = #10) then
-    	      Dec(DestLen);
+            Dec(DestLen);
     end;
     Inc(I);
   end;
@@ -2734,7 +2744,7 @@ end;
 
 function FileExists(const FileName: string): Boolean;
 begin
-  Result := FileExists(FileName);
+  Result := SysUtils.FileExists(FileName);
 end;
 
 function FileSize(const FileName: string): LargeWord;
@@ -2901,10 +2911,10 @@ end;
 
 function PathCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
 begin
-	if IncludeDelimiter then
-	  Result := PathIncludeDelimiter(A) + PathIncludeDelimiter(B)
+  if IncludeDelimiter then
+    Result := PathIncludeDelimiter(A) + PathIncludeDelimiter(B)
   else
-	  Result := PathIncludeDelimiter(A) + PathExcludeDelimiter(B);
+    Result := PathIncludeDelimiter(A) + PathExcludeDelimiter(B);
   Result := PathAdjustDelimiters(Result);
 end;
 
@@ -4133,12 +4143,14 @@ procedure ThreadsInit;
 var
   M: TThreadManager;
 begin
-  GetThreadManager(M);
+  GetThreadManager(M{%H-});
   SemaphoreInit := @M.InitCriticalSection;
   SemaphoreDestroy := @M.DoneCriticalSection;
   SemaphoreWait := @M.EnterCriticalSection;
   SemaphoreLeave := @M.LeaveCriticalSection;
 end;
+
+{ TODO: Remove TMuxtex and use RTL critical sections only }
 
 { TMutexObject }
 
@@ -4183,11 +4195,13 @@ end;
 function TMutexObject.Lock: LongInt;
 begin
   SemaphoreWait(FSemaphore);
+  Result := 0;
 end;
 
 function TMutexObject.Unlock: LongInt;
 begin
   SemaphoreLeave(FSemaphore);
+  Result := 0;
 end;
 
 constructor TEventObject.Create;
@@ -4258,11 +4272,41 @@ end;
 
 procedure TSimpleThread.SetStatus(const Value: string);
 begin
-  if (Value <> FTempStatus) and (Handle = GetCurrentThreadId) then
+  if Handle = GetCurrentThreadId then
   begin
     FTempStatus := Value;
     if Assigned(FOnStatus) then
       Synchronize(DoStatus);
+  end;
+end;
+
+function ProcessExecute(const Command: string; const Arguments: string = ''): string;
+const
+  BUFFER_SIZE = 2048;
+var
+  Process: TProcess;
+  Stream: TStringStream;
+  BytesRead: LongInt;
+  Buffer: array[0..BUFFER_SIZE - 1] of Byte;
+begin
+  Process := TProcess.Create(nil);
+  Stream := TStringStream.Create;
+  try
+    Process.Executable := Command;
+    if Arguments <> '' then
+      Process.Parameters.Text := Arguments;
+    Process.Options := [poUsePipes];
+    Process.Execute;
+    repeat
+      BytesRead := Process.Output.Read(Buffer{%H-}, BUFFER_SIZE);
+      Stream.Write(Buffer, BytesRead)
+    until BytesRead = 0;
+    Process.Terminate(0);
+    Process.WaitOnExit;
+    Result := Stream.DataString;
+  finally
+    Stream.Free;
+    Process.Free;
   end;
 end;
 
