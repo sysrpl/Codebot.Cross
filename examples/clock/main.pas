@@ -411,8 +411,8 @@ begin
 end;
 
 procedure TClockWidget.FormCreate(Sender: TObject);
-var
-  Stream: TStream;
+//var
+  //Stream: TStream;
 begin
   EdgeSizable := [esNW, esSE, esSW];
   Width := 220;
@@ -421,11 +421,11 @@ begin
   OnTick := ClockTick;
   FBitmap := NewBitmap(Size, Size);
   FClose := NewBitmap;
-  Stream := TResourceStream.Create(HInstance, 'CLOSE', RT_RCDATA);
+  //Stream := TResourceStream.Create(HInstance, 'CLOSE', RT_RCDATA);
   try
     // FClose.LoadFromStream(Stream);
   finally
-    Stream.Free;
+    //Stream.Free;
   end;
 end;
 
