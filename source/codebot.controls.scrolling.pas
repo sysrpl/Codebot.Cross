@@ -15,7 +15,7 @@ interface
 
 uses
   Classes, SysUtils, Graphics, Controls, Forms,
-  LCLType, LCLIntf, LMessages, Grids,
+  LCLType, LCLIntf, LMessages,
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types,
@@ -1165,11 +1165,11 @@ begin
     VK_PRIOR: SetScrollIndex(ItemIndex - (ClientHeight - FHeaderSize) div FItemHeight);
     VK_UP: SetScrollIndex(ItemIndex - 1);
     VK_DOWN: SetScrollIndex(ItemIndex + 1);
-  else
+	else
     Wanted := False;
   end;
   if Wanted then
-    Key := 0;
+  	Key := 0;
   InsureItemVisible;
 end;
 
