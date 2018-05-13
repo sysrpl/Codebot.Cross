@@ -465,6 +465,8 @@ function SwitchIndex(const Switch: string): Integer;
 function SwitchValue(const Switch: string): string;
 { Convert an integer to a string [group string] }
 function IntToStr(Value: Integer): string;
+{ Convert an integer to a byte storage string [group string] }
+function IntToStorage(Bytes: QWord): string;
 { Convert a string to an integer. Can throw an EConvertError exception. [group string] }
 function StrToInt(const S: string): Integer;
 { Convert a string an integer. Returns a default value if conversion cannot be done. [group string] }
@@ -690,6 +692,14 @@ function PathExpand(const Path: string): string;
 function PathIncludeDelimiter(const Path: string): string;
 { Exclude the end delimiter for a path }
 function PathExcludeDelimiter(const Path: string): string;
+{ Combine a uri }
+function UriCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
+{ Include a slash at the end of a uri }
+function UriIncludeDelimiter(const Uri: string): string;
+{ Exclude a slash from the end of a uri }
+function UriExcludeDelimiter(const Uri: string): string;
+{ Exclude a path element from a uri }
+function UriExtractPath(const Uri: string): string;
 { Returns the location of the application configuration file }
 function ConfigAppFile(Global: Boolean; CreateDir: Boolean = False): string;
 { Returns the location of the application configuration directory }
@@ -2271,6 +2281,32 @@ begin
   Str(Value, Result);
 end;
 
+function IntToStorage(Bytes: QWord): string;
+var
+  B, I: QWord;
+  D: Double;
+begin
+  Result := 'Unknown';
+  B := 1024;
+  I := 0;
+  while Bytes > B do
+  begin
+    B := B * 1024;
+    Inc(I);
+    if I > 4 then
+      Exit;
+  end;
+  B := B div 1024;
+  D := Round((Bytes * 10) / B) / 10;
+  case I of
+    0: Result := IntToStr(Bytes) + ' bytes';
+    1: Result := FloatToStr(D) + ' KB';
+    2: Result := FloatToStr(D) + ' MB';
+    3: Result := FloatToStr(D) + ' GB';
+    4: Result := FloatToStr(D) + ' TB';
+  end;
+end;
+
 function StrToInt(const S: string): Integer;
 begin
   Result := SysUtils.StrToInt(S);
@@ -2931,6 +2967,45 @@ end;
 function PathExcludeDelimiter(const Path: string): string;
 begin
   Result := ExcludeTrailingPathDelimiter(Path);
+end;
+
+function UriCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
+begin
+  if (Length(B) > 0) and (B[1] <> '/') then
+    Result := UriIncludeDelimiter(A) + B
+  else
+    Result := A + B;
+  if IncludeDelimiter then
+    Result := UriIncludeDelimiter(Result);
+end;
+
+function UriIncludeDelimiter(const Uri: string): string;
+begin
+  Result := Uri;
+  if Result = '' then
+    Exit('/');
+  if Result[Length(Result)] <> '/' then
+    Result := Result + '/';
+end;
+
+function UriExcludeDelimiter(const Uri: string): string;
+begin
+  Result := Uri;
+  if Result = '' then
+    Exit;
+  if Result[Length(Result)] = '/' then
+    SetLength(Result, Length(Result) - 1);
+end;
+
+function UriExtractPath(const Uri: string): string;
+var
+  S: string;
+begin
+  S := StrLastOf(Uri, '/');
+  if S = '' then
+    Result := ''
+  else
+    Result := StrCopy(Uri, 1, Length(Uri) - Length(S) - 1);
 end;
 
 function ConfigAppFile(Global: Boolean; CreateDir: Boolean = False): string;
