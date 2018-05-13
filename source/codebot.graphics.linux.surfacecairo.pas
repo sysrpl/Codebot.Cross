@@ -1716,8 +1716,12 @@ begin
   { Ellipses }
   case Direction of
     drLeft, drUp, drRight, drDown, drCenter:
-      pango_layout_set_ellipsize(FLayout, PANGO_ELLIPSIZE_END);
+      begin
+        pango_layout_set_height(FLayout, -1);
+        pango_layout_set_ellipsize(FLayout, PANGO_ELLIPSIZE_END);
+      end;
   else
+    pango_layout_set_height(FLayout, High(Word));
     pango_layout_set_ellipsize(FLayout, PANGO_ELLIPSIZE_NONE);
   end;
   pango_cairo_update_layout(FCairo, FLayout);
