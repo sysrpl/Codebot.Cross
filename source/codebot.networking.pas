@@ -311,7 +311,7 @@ begin
   if FSecure then
     if not OpenSSLInit then
       Exit(False);
-	FAddress := Address;
+  FAddress := Address;
   FPort := Port;
   if not FAddress.Resolve then
     Exit(False);
@@ -346,12 +346,12 @@ begin
       Close;
       Exit(False);
     end;
-    if not SSL_set_fd(FSSLSocket, FHandle) then
+    if SSL_set_fd(FSSLSocket, FHandle) <> 1 then
     begin
       Close;
       Exit(False);
     end;
-    if not SSL_connect(FSSLSocket) then
+    if SSL_connect(FSSLSocket) <> 1 then
     begin
       Close;
       Exit(False);
@@ -577,4 +577,3 @@ begin
 end;
 
 end.
-

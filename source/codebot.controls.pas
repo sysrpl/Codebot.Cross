@@ -14,7 +14,7 @@ unit Codebot.Controls;
 interface
 
 uses
-  Classes, SysUtils, Types, Graphics, Controls, Forms, LCLType, LCLProc,
+  Classes, SysUtils, Types, Graphics, Controls, Forms, LCLType, LCLIntf, LCLProc,
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types;
@@ -114,9 +114,11 @@ type
     FThemeName: string;
     FOnRender: TDrawEvent;
     FMouseDown: Boolean;
+    FMouseTimer: Boolean;
     function GetSurface: ISurface;
     procedure SetDrawState(Value: TDrawState);
     procedure SetThemeName(const Value: string);
+    procedure MouseTimer(Enable: Boolean);
   protected
     { Allow controls direct access to draw state }
     FDrawState: TDrawState;
@@ -129,6 +131,7 @@ type
     procedure IncludeStateItem(Item: TDrawStateItem);  virtual;
     procedure ExcludeStateItem(Item: TDrawStateItem);  virtual;
     procedure PropChange(Prop: PFloat);  virtual;
+    procedure SetParent(NewParent: TWinControl); override;
     { Create a default size }
     class function GetControlClassDefaultSize: TSize; override;
     { Update draw state when enabled is changed }
@@ -152,6 +155,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    { True if the mouse is down inside the control }
+    property IsMouseDown: Boolean read FMouseDown;
   end;
 
 { TRenderCustomControl is the base class for custom windowed controls
@@ -415,6 +420,7 @@ end;
 
 destructor TRenderGraphicControl.Destroy;
 begin
+  MouseTimer(False);
   if ThemeAware then
     ThemeNotifyRemove(ThemeChanged);
   inherited Destroy;
@@ -426,12 +432,55 @@ begin
   Result.cy := 80;
 end;
 
+procedure TRenderGraphicControl.SetParent(NewParent: TWinControl);
+begin
+  MouseTimer(False);
+  inherited SetParent(NewParent);
+end;
+
+type
+  PControl = ^TControl;
+
+procedure ControlTimer(hWnd: HWND; uMsg: UINT; idEvent: UINT_PTR; dwTime: DWORD); stdcall;
+var
+  C: TRenderGraphicControl absolute idEvent;
+  P: TPointI;
+begin
+  if C.FMouseDown then
+    Exit;
+  P := Mouse.CursorPos;
+  P := C.ScreenToClient(P);
+  if (P.X < 0) or (P.X >= C.Width) or (P.Y < 0) or (P.Y >= C.Height) then
+  begin
+    C.Perform(CM_MOUSELEAVE, 0, 0);
+    if Application.MouseControl = C then
+      PControl(@Application.MouseControl)^ := nil;
+  end;
+end;
+
+procedure TRenderGraphicControl.MouseTimer(Enable: Boolean);
+begin
+  if Parent = nil then
+    Exit;
+  if Enable <> FMouseTimer then
+  begin
+    FMouseTimer := Enable;
+    if FMouseTimer then
+      SetTimer(Parent.Handle, UIntPtr(Self), 250, @ControlTimer)
+    else
+      KillTimer(Parent.Handle, UIntPtr(Self));
+  end;
+end;
+
 procedure TRenderGraphicControl.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
   FMouseDown := Button = mbLeft;
   if FMouseDown then
+  begin
     DrawState := DrawState + [dsPressed, dsHot];
+    MouseTimer(False);
+  end;
   inherited MouseDown(Button, Shift, X, Y)
 end;
 
@@ -445,21 +494,29 @@ begin
     FMouseDown := False;
     Hot := (X > -1) and (X < Width) and (Y > -1) and (Y < Height);
     if Hot then
-      DrawState := DrawState - [dsPressed] + [dsHot]
+    begin
+      DrawState := DrawState - [dsPressed]  + [dsHot];
+    end
     else
-      DrawState := DrawState - [dsPressed, dsHot];
+    begin
+      DrawState := (DrawState - [dsPressed, dsHot]);
+      Perform(CM_MOUSELEAVE, 0, 0);
+      PControl(@Application.MouseControl)^ := nil;
+    end;
   end;
   inherited MouseUp(Button, Shift, X, Y)
 end;
 
 procedure TRenderGraphicControl.MouseEnter;
 begin
+  MouseTimer(True);
   DrawState := DrawState + [dsHot];
   inherited MouseEnter;
 end;
 
 procedure TRenderGraphicControl.MouseLeave;
 begin
+  MouseTimer(False);
   DrawState := DrawState - [dsHot];
   inherited MouseLeave;
 end;

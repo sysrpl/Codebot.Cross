@@ -99,7 +99,7 @@ begin
       if FSocket.Accept(Client) and (Client.Read(S) > 0) and (not Thread.Terminated) then
       begin
         FMessage := S;
-        Thread.Synch(ReceiveMessage);
+        Thread.Synchronize(ReceiveMessage);
       end;
       Client.Close;
     end;

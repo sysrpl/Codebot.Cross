@@ -7048,7 +7048,7 @@ end;
 
 function TGdiBrush.GetTransform: IGdiMatrix;
 begin
-	Result := TGdiMatrix.Create;
+  Result := TGdiMatrix.Create;
 end;
 
 procedure TGdiBrush.SetTransform(Value: IGdiMatrix);
@@ -7058,27 +7058,27 @@ end;
 
 function TGdiBrush.ResetTransform: TStatus;
 begin
-	Result := Ok;
+  Result := Ok;
 end;
 
 function TGdiBrush.MultiplyTransform(Matrix: IGdiMatrix; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
 begin
-	Result := Ok;
+  Result := Ok;
 end;
 
 function TGdiBrush.TranslateTransform(DX, DY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
 begin
-	Result := Ok;
+  Result := Ok;
 end;
 
 function TGdiBrush.ScaleTransform(SX, SY: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
 begin
-	Result := Ok;
+  Result := Ok;
 end;
 
 function TGdiBrush.RotateTransform(Angle: Single; Order: TGdiMatrixOrder = MatrixOrderPrepend): TStatus;
 begin
-	Result := Ok;
+  Result := Ok;
 end;
 
 { TGdiSolidBrush }

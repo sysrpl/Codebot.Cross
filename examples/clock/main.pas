@@ -5,38 +5,43 @@ unit Main;
 interface
 
 uses
-  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs,
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, LCLIntf,
+  LCLType, Buttons,
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types,
   Codebot.Geometry,
-  Codebot.Controls.Scrolling,
-  Codebot.Controls.Sliders,
-  Codebot.Animation;
+  Codebot.Forms.Widget,
+  Codebot.Animation,
+  Codebot.Controls.Buttons;
 
-{ TForm1 }
+{ TClockWidget }
 
 type
-  TForm1 = class(TForm)
-    ScaleBar: TSlideBar;
-    procedure FormCloseQuery(Sender: TObject; var CanClose: boolean);
-    procedure FormShow(Sender: TObject);
-    procedure ScaleBarChange(Sender: TObject);
+  TClockWidget = class(TWidget)
+    Images: TImageStrip;
+    CloseButton: TThinButton;
+    procedure FormClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure CloseButtonClick(Sender: TObject);
   private
-    FSplash: ISplash;
-    FClock: IBitmap;
-    FTimer: TAnimationTimer;
-    procedure Tick(Sender: TObject);
+    procedure ClockTick(Sender: TObject);
+  protected
+    FBitmap: IBitmap;
+    FClose: IBitmap;
+    FMoused: Boolean;
+    FMouseOpacity: Float;
+    procedure Render; override;
   end;
 
 var
-  Form1: TForm1;
+  ClockWidget: TClockWidget;
 
 implementation
 
 {$R *.lfm}
 
-{ TForm1 }
+{ TClockWidget }
 
 { Since we are using vector graphics, we can scale the widget
   size using a scaling factor }
@@ -45,10 +50,6 @@ var
   Factor: Float;
   { For our example Size always equals Round(Factor * 256) }
   Size: Integer;
-
-  { Offsets when moving }
-  OffsetX: Integer = 10;
-  OffsetY: Integer = 30;
 
 procedure DrawClock(Bitmap: IBitmap);
 const
@@ -279,7 +280,7 @@ const
 
   { Draw a light reflection above and below the center of the clock face }
 
-  procedure DrawLens(Surface: iSurface);
+  procedure DrawLens(Surface: ISurface);
   var
     R: TRectF;
     C: TColorB;
@@ -329,8 +330,6 @@ var
   C: TColorB;
   G: IGradientBrush;
 begin
-  { If the scale factor was changed, make the bitmap match }
-  Bitmap.SetSize(Size, Size);
   Surface := Bitmap.Surface;
   { Erase the last clock }
   Surface.Clear(clTransparent);
@@ -401,51 +400,113 @@ begin
   DrawLens(Surface);
 end;
 
-procedure TForm1.FormShow(Sender: TObject);
+procedure TClockWidget.FormClick(Sender: TObject);
+var
+  P: TPointI;
 begin
-  Sleep(100);
-  OnShow := nil;
-  { Default the factor to 1 }
-  Factor := 1;
-  { And Size to 256 * Factor }
-  Size := Round(256 * Factor);
-  { Here is our widget }
-  FSplash := NewSplash;
-  { Here is the bitmap which defines the widget size and pixels }
-  FClock := FSplash.Bitmap;
-  { Draw the clock }
-  DrawClock(FClock);
-  { Move it to the top right of the screen }
-  FSplash.Move(Screen.Width - Size - OffsetX, OffsetY);
-  { Show it }
-  FSplash.Visible := True;
-  { Start a timer to redraw the clock synched with the pc
-    refresh rate }
-  FTimer := TAnimationTimer.Create(Self);
-  FTimer.OnTimer := Tick;
-  FTimer.Enabled := True;
+  P := Mouse.CursorPos;
+  P.Offset(-Left, -Top);
+  if (P.Y < FClose.Height) and (P.X > Width - FClose.Width) then
+    Close;
 end;
 
-procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+procedure TClockWidget.FormCreate(Sender: TObject);
+//var
+  //Stream: TStream;
 begin
-  FTimer.Enabled := False;
+  EdgeSizable := [esNW, esSE, esSW];
+  Width := 220;
+  Height := Width;
+  AspectRatio := 1;
+  OnTick := ClockTick;
+  FBitmap := NewBitmap(Size, Size);
+  FClose := NewBitmap;
+  //Stream := TResourceStream.Create(HInstance, 'CLOSE', RT_RCDATA);
+  try
+    // FClose.LoadFromStream(Stream);
+  finally
+    //Stream.Free;
+  end;
 end;
 
-procedure TForm1.Tick(Sender: TObject);
+procedure TClockWidget.ClockTick(Sender: TObject);
 begin
-  { At the screen refresh rate interval, draw a new clock }
-  DrawClock(FClock);
-  { And update the widget }
-  FSplash.Update;
+  if not Dragged then
+    Invalidate
+  else if Sized then
+    Invalidate;
 end;
 
-procedure TForm1.ScaleBarChange(Sender: TObject);
+procedure TClockWidget.Render;
+var
+  PriorMoused: Boolean;
+  Alpha: Float;
+  P: TPointI;
+  B: IGradientBrush;
+  R: TRectI;
 begin
-  { Scale the clock using a slider }
-  Factor := ScaleBar.Position;
-  Size := Round(256 * Factor);
-  { And reposition it }
-  FSplash.Move(Screen.Width - Size - OffsetX, OffsetY);
+  R := BoundsRect;
+  P := Mouse.CursorPos;
+  PriorMoused := FMoused;
+  FMoused := R.Contains(P);
+  if FMoused <> PriorMoused then
+    if FMoused then
+      Animator.Animate(FMouseOpacity, 1)
+    else
+      Animator.Animate(FMouseOpacity, 0);
+  Alpha := FMouseOpacity;
+  if Sized then
+  begin
+    R := ClientRect;
+    B := NewBrush(R.TopLeft, R.BottomLeft);
+    B.AddStop(Rgba(clHighlight, 0.3), 0);
+    B.AddStop(Rgba(clHighlight, 0.2), 0.66);
+    B.AddStop(Rgba(clHighlight, 0.1), 1);
+    Surface.FillRect(B ,R);
+    R := FClose.ClientRect;
+    R.X := Width - R.Width - 4;
+    R.Y := 4;
+    FClose.Surface.CopyTo(FClose.ClientRect, Surface, R, $FF);
+  end
+  else if FMoused or Animator.Animated then
+  begin
+    R := ClientRect;
+    B := NewBrush(R.TopLeft, R.BottomLeft);
+    B.AddStop(TColorB($A7B2B6).Fade(Alpha), 0);
+    B.AddStop(TColorB($D8E9EC).Fade(Alpha), 0.4);
+    B.AddStop(TColorB($A7B2B6).Fade(Alpha), 1);
+    Surface.RoundRectangle(R, 8);
+    Surface.Fill(B, True);
+    Surface.Stroke(NewPen(TColorB($9D9E9E).Fade(Alpha), 1));
+    CloseButton.Visible := True;
+  end;
+  if Sized then
+  begin
+    R := ClientRect;
+    R.Inflate(-4, -4);
+    Surface.Ellipse(R);
+    Surface.Fill(NewBrush(Rgba(clHighlight, 0.5)), True);
+  end
+  else
+  begin
+    Size := Width;
+    Factor := Width / 256;
+    FBitmap.SetSize(Size, Size);
+    DrawClock(FBitmap);
+    FBitmap.Surface.CopyTo(FBitmap.ClientRect, Surface, FBitmap.ClientRect);
+    R := FClose.ClientRect;
+    R.X := Width - R.Width - 4;
+    R.Y := 4;
+    if Alpha = 0 then
+      CloseButton.Visible := False
+    else
+      CloseButton.Visible := True;
+  end;
+end;
+
+procedure TClockWidget.CloseButtonClick(Sender: TObject);
+begin
+  Close;
 end;
 
 end.

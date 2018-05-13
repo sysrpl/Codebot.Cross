@@ -28,7 +28,7 @@ uses
   Codebot.Controls.Buttons, Codebot.Graphics.Markup, 
   Codebot.Controls.Containers, Codebot.Controls.Highlighter, 
   Codebot.Animation, Codebot.Geometry, Codebot.Debug, Codebot.Unique, 
-  LazarusPackageIntf;
+  Codebot.Files, LazarusPackageIntf;
 
 implementation
 

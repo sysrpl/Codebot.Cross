@@ -30,11 +30,16 @@
           <DebugInfoType Value="dsDwarf2Set"/>
         </Debugging>
       </Linking>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx6058="True" idx5089="True" idx5024="True" idx4055="True" idx3177="True"/>
+        </CompilerMessages>
+      </Other>
     </CompilerOptions>
     <Description Value="Codebot.Cross a set of tools"/>
     <License Value="LGPL"/>
     <Version Major="1"/>
-    <Files Count="55">
+    <Files Count="56">
       <Item1>
         <Filename Value="codebot.inc"/>
         <Type Value="Binary"/>
@@ -137,7 +142,7 @@
       </Item25>
       <Item26>
         <Filename Value="codebot.forms.widget.pas"/>
-        <UnitName Value="codebot.forms.widget"/>
+        <UnitName Value="Codebot.Forms.Widget"/>
       </Item26>
       <Item27>
         <Filename Value="codebot.graphics.windows.imagebitmap.pas"/>
@@ -255,6 +260,10 @@
         <Filename Value="codebot.unique.pas"/>
         <UnitName Value="Codebot.Unique"/>
       </Item55>
+      <Item56>
+        <Filename Value="codebot.files.pas"/>
+        <UnitName Value="Codebot.Files"/>
+      </Item56>
     </Files>
     <RequiredPkgs Count="2">
       <Item1>

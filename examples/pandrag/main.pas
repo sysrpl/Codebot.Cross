@@ -5,7 +5,7 @@ unit Main;
 interface
 
 uses
-	Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Types,
+  Classes, SysUtils, FileUtil, Forms, Controls, Graphics, Dialogs, Types,
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types;
@@ -13,23 +13,23 @@ uses
 { TForm1 }
 
 type
-	TForm1 = class(TForm)
-		procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
-			Shift: TShiftState; X, Y: Integer);
-		procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
-		procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
-			Shift: TShiftState; X, Y: Integer);
-		procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
-			WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
-		procedure FormPaint(Sender: TObject);
-	private
-		{ private declarations }
-	public
-		{ public declarations }
-	end;
+  TForm1 = class(TForm)
+    procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure FormMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure FormPaint(Sender: TObject);
+  private
+    { private declarations }
+  public
+    { public declarations }
+  end;
 
 var
-	Form1: TForm1;
+  Form1: TForm1;
 
 implementation
 

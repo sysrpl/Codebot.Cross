@@ -13,6 +13,7 @@ unit Codebot.Forms.Floating;
 
 interface
 
+{$if defined(linux) and defined(lclgtk2)}
 uses
   Classes, SysUtils, Controls, Forms, LCLIntf, LCLType,
   Codebot.System,
@@ -33,20 +34,22 @@ type
     procedure SetOpacity(Value: Byte);
   protected
     procedure CreateHandle; override;
+    procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
-    procedure ClipEvents;
+    procedure ClipEvents(Surface: ISurface);
     procedure MoveSize(Rect: TRectI);
     property Opacity: Byte read FOpacity write SetOpacity;
     property Compositing: Boolean read GetCompositing;
     property Faded: Boolean read FFaded write SetFaded;
   end;
+{$endif}
 
 implementation
 
 {$if defined(linux) and defined(lclgtk2)}
 uses
-  GLib2, Gdk2, Gtk2, Gtk2Def, Gtk2Extra, Gtk2Globals,
+  GLib2, Gdk2, Gtk2, Gtk2Def, Gtk2Extra, Gtk2Globals, Cairo,
   Codebot.Interop.Linux.NetWM;
 
 procedure gdk_window_input_shape_combine_mask(window: PGdkWindow;
@@ -63,7 +66,7 @@ var
 begin
   Screen := gtk_widget_get_screen(widget);
   Colormap := gdk_screen_get_rgba_colormap(Screen);
-    gtk_widget_set_colormap(widget, Colormap);
+  gtk_widget_set_colormap(widget, Colormap);
 end;
 
 { TFloatingForm }
@@ -75,17 +78,21 @@ begin
   FOpacity := $FF;
 end;
 
-procedure TFloatingForm.CreateHandle;
 type
   PFormBorderStyle = ^TFormBorderStyle;
+
+procedure TFloatingForm.CreateHandle;
 var
   W: TGtkWindowType;
 begin
   PFormBorderStyle(@BorderStyle)^ := bsNone;
   W := FormStyleMap[bsNone];
   FormStyleMap[bsNone] := GTK_WINDOW_POPUP;
-  inherited CreateHandle;
-  FormStyleMap[bsNone] := W;
+  try
+    inherited CreateHandle;
+  finally
+    FormStyleMap[bsNone] := W;
+  end;
   if not (csDesigning in ComponentState) then
   begin
     FWindow := Pointer(Handle);
@@ -93,22 +100,32 @@ begin
     g_signal_connect(G_OBJECT(FWindow), 'screen-changed',
       G_CALLBACK(@FormScreenChanged), nil);
     FormScreenChanged(PGtkWidget(FWindow), nil, nil);
+    FOpacity := not FOpacity;
+    SetOpacity(not FOpacity);
   end;
 end;
 
-procedure TFloatingForm.ClipEvents;
+procedure TFloatingForm.Loaded;
+begin
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+  inherited Loaded;
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+end;
+
+procedure TFloatingForm.ClipEvents(Surface: ISurface);
 var
   Window: PGdkWindow;
   Mask: PGdkPixmap;
-  Bitmap: IBitmap;
-  Surface: ISurface;
+  Cairo: Pcairo_t;
 begin
-  {Window := GTK_WIDGET(Pointer(Handle)).window;
-  Mask := gdk_pixmap_new(Window, Width, Height, 1);
-  Bitmap := NewBitmapCairo(Mask);
-  Surface := NewSurfaceCairo(Self);
-  Surface.CopyTo(ClientRect, Bitmap.Surface, ClientRect);
-  gdk_window_input_shape_combine_mask(Window, Mask, 0, 0);}
+  Mask := gdk_pixmap_new(nil, Width, Height, 1);
+  Cairo := gdk_cairo_create(Mask);
+  cairo_set_source_surface(Cairo, cairo_get_target(Surface.Handle), 0, 0);
+  cairo_paint(Cairo);
+  Window := GTK_WIDGET(Pointer(Handle)).window;
+  gdk_window_input_shape_combine_mask(Window, Mask, 0, 0);
+  cairo_destroy(Cairo);
+  g_object_unref(Mask);
 end;
 
 procedure TFloatingForm.MoveSize(Rect: TRectI);

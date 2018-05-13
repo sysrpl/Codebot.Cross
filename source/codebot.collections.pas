@@ -1,8 +1,8 @@
 (********************************************************)
 (*                                                      *)
-(*  Codebot Pascal Library                              *)
-(*  http://cross.codebot.org                            *)
-(*  Modified September 2013                             *)
+(*  Bare Game Library                                   *)
+(*  http://www.baregame.org                             *)
+(*  2.0.0.0 Released under the LGPL license 2017        *)
 (*                                                      *)
 (********************************************************)
 
@@ -17,9 +17,18 @@ uses
   SysUtils, Classes,
   Codebot.System;
 
-type
 {doc off}
-  TListEnumerator<T> = class(TInterfacedObject, IEnumerator<T>)
+type
+  IIndexedEnumerator<T> = interface(IEnumerator<T>)
+  ['{4F6365A5-B833-4E35-BD2B-9C64C363CC4B}']
+    function GetEnumerator: IIndexedEnumerator<T>;
+    function GetCount: Integer;
+    function GetItem(Index: Integer): T;
+    property Count: Integer read GetCount;
+    property Item[Index: Integer]: T read GetItem; default;
+  end;
+
+  TListEnumerator<T> = class(TInterfacedObject, IEnumerator<T>, IIndexedEnumerator<T>)
   private
     FItems: TArrayList<T>;
     FPosition: Integer;
@@ -29,6 +38,11 @@ type
     function GetCurrent: T;
     function MoveNext: Boolean;
     procedure Reset;
+    function GetEnumerator: IIndexedEnumerator<T>;
+    function GetCount: Integer;
+    function GetItem(Index: Integer): T;
+    property Count: Integer read GetCount;
+    property Item[Index: Integer]: T read GetItem; default;
   end;
 {doc on}
 
@@ -44,7 +58,6 @@ type
     { Get the enumerator for the list }
     function GetEnumerator: IEnumerator<ItemType>;
   private
-    FItems: TArrayList<ItemType>;
     FCount: Integer;
     FCapacity: Integer;
     procedure QuickSort(Compare: TListCompare; L, R: Integer);
@@ -57,6 +70,7 @@ type
     function GetItem(Index: Integer): ItemType;
     procedure SetItem(Index: Integer; const Value: ItemType);
   protected
+    FItems: TArrayList<ItemType>;
     { Allows list types to take action on add }
     procedure AddItem(constref Item: ItemType); virtual;
     { Allows list types to take action on delete }
@@ -329,6 +343,21 @@ begin
   FPosition := -1;
 end;
 
+function TListEnumerator<T>.GetEnumerator: IIndexedEnumerator<T>;
+begin
+  Result := Self;
+end;
+
+function TListEnumerator<T>.GetCount: Integer;
+begin
+  Result := FCount;
+end;
+
+function TListEnumerator<T>.GetItem(Index: Integer): T;
+begin
+  Result := FItems[Index];
+end;
+
 { TList<TItem> }
 
 function TList<TItem>.GetEnumerator: IEnumerator<ItemType>;
@@ -408,6 +437,8 @@ begin
   I := FCount;
   if I < ActualMinCapacity then
     I := ActualMinCapacity;
+  if FCount = 0 then
+    I := 0;
   if I < FCapacity then
   begin
     FCapacity := I;
@@ -622,7 +653,7 @@ procedure TObjectList<TItem>.DeleteItem(var Item: ItemType);
 begin
   if FOwnsObjects then
     Item.Free;
-  Item := nil;
+  Item := TObject(nil);
 end;
 
 function TObjectList<TItem>.RequiresDelete: Boolean;
