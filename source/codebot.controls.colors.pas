@@ -572,9 +572,9 @@ end;
 
 procedure TAlphaPicker.Render;
 var
-  X, Y: Integer;
+  //X, Y: Integer;
   S: ISurface;
-  R: TRectI;
+  //R: TRectI;
 begin
   if FBitmap = nil then
       FBitmap := NewBitmap(Width, Height)
