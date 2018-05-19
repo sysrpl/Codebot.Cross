@@ -370,7 +370,7 @@ end;
 
 procedure TSplashWin.SetVisible(Value: Boolean);
 begin
-	Value := Value and (not FBitmap.Empty);
+  Value := Value and (not FBitmap.Empty);
   if Value <> FVisible then
   begin
     FVisible := Value;

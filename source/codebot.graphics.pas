@@ -653,7 +653,7 @@ function NewFont(const FontName: string; FontSize: Integer = 10): IFont;
 var
   F: TFont;
 begin
-	F := TFont.Create;
+  F := TFont.Create;
   try
     F.Name := FontName;
     F.Size := FontSize;
