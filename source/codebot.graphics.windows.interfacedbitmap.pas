@@ -286,7 +286,7 @@ type
     procedure SetOpacity(Value: Byte);
     function GetVisible: Boolean;
     procedure SetVisible(Value: Boolean);
-    function GetHandle: THandle;
+    function GetHandle: IntPtr;
     procedure Move(X, Y: Integer);
     procedure Update;
   end;
@@ -370,7 +370,7 @@ end;
 
 procedure TSplashWin.SetVisible(Value: Boolean);
 begin
-    Value := Value and (not FBitmap.Empty);
+  Value := Value and (not FBitmap.Empty);
   if Value <> FVisible then
   begin
     FVisible := Value;
@@ -385,9 +385,9 @@ begin
   end;
 end;
 
-function TSplashWin.GetHandle: THandle;
+function TSplashWin.GetHandle: IntPtr;
 begin
-  Result := THandle(FWindow);
+  Result := IntPtr(FWindow);
 end;
 
 procedure TSplashWin.Move(X, Y: Integer);

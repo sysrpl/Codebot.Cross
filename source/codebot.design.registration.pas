@@ -60,8 +60,10 @@ begin
     'Codebot.Controls');
   RegisterForm(TBannerForm, 'Banner Form', 'A form a customizable header and footer',
     'Codebot.Controls.Banner');
+  {$if defined(linuxgtk)}
   RegisterForm(TWidget, 'Widget Form', 'A form that uses an overlay to define its shape',
     'Codebot.Forms.Widget');
+  {$endif}
 end;
 
 end.

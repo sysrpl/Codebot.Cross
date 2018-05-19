@@ -110,7 +110,7 @@ type
 
 { TArrayList\<T\> is a simple extension to dynamic arrays
   See also
-  <link Overview.Bare.System.TArrayList, TArrayList\<T\> members> }
+  <link Overview.Codebot.System.TArrayList, TArrayList\<T\> members> }
 
   TArrayList<T> = record
   public type
@@ -197,7 +197,7 @@ type
 
 { TMap\<K, V\> is a array like simple dictionary
   See also
-  <link Overview.Bare.System.TMap, TMap\<K, V\> members> }
+  <link Overview.Codebot.System.TMap, TMap\<K, V\> members> }
 
   TMap<K, V> = record
   private
@@ -464,9 +464,9 @@ function SwitchIndex(const Switch: string): Integer;
   <link Codebot.System.SwitchIndex, SwitchIndex function> [group string] }
 function SwitchValue(const Switch: string): string;
 { Convert an integer to a string [group string] }
-function IntToStr(Value: Integer): string;
+function IntToStr(Value: Int64): string;
 { Convert an integer to a byte storage string [group string] }
-function IntToStorage(Bytes: QWord): string;
+function IntToStorage(Bytes: Int64): string;
 { Convert a string to an integer. Can throw an EConvertError exception. [group string] }
 function StrToInt(const S: string): Integer;
 { Convert a string an integer. Returns a default value if conversion cannot be done. [group string] }
@@ -1692,32 +1692,34 @@ end;
 
 function StrFindCount(const S, SubStr: string; IgnoreCase: Boolean = False): Integer;
 var
-  Start, Index: Integer;
+  Start, Index, Len: Integer;
 begin
   Result := 0;
   Start := 1;
+  Len := Length(SubStr);
   repeat
     Index := StrFind(S, SubStr, Start, IgnoreCase);
     if Index > 0 then
     begin
       Inc(Result);
-      Start := Index + Length(SubStr);
+      Start := Index + Len;
     end;
   until Index = 0;
 end;
 
 function StrFindIndex(const S, SubStr: string; IgnoreCase: Boolean = False): IntArray;
 var
-  Start, Index: Integer;
+  Start, Index, Len: Integer;
 begin
   Result.Length := StrFindCount(S, SubStr, IgnoreCase);
   Start := 1;
   Index := 0;
+  Len := Length(SubStr);
   while Index < Result.Length do
   begin
     Start := StrFind(S, SubStr, Start, IgnoreCase);
     Result[Index] := Start;
-    Inc(Start, Length(SubStr));
+    Inc(Start, Len);
     Inc(Index);
   end;
 end;
@@ -2105,7 +2107,7 @@ var
   DestLen: Integer;
   I, J, L: Longint;
 begin
-  Source:=Pointer(S);
+  Source := Pointer(S);
   L := Length(S);
   DestLen := L;
   I := 1;
@@ -2116,7 +2118,7 @@ begin
         if Style = tlbsCRLF then Inc(DestLen);
       #13:
         if Style = tlbsCRLF then
-          if (I < L) and (S[I+1] = #10) then
+          if (I < L) and (S[I + 1] = #10) then
             Inc(I)
           else
             Inc(DestLen)
@@ -2138,10 +2140,10 @@ begin
       case Source[I] of
         #10:
           begin
-            if Style=tlbsCRLF then
+            if Style = tlbsCRLF then
             begin
-             Dest[J] := #13;
-             Inc(J);
+              Dest[J] := #13;
+              Inc(J);
             end;
             Dest[J] := #10;
             Inc(J);
@@ -2157,7 +2159,7 @@ begin
              Dest[J] := #10;
              Inc(J);
              Inc(I);
-             if Source[I]=#10 then
+             if Source[I] = #10 then
                Inc(I);
           end;
       else
@@ -2167,54 +2169,6 @@ begin
       end;
     end;
 end;
-
-
-{var
-  Line: string;
-  I, J, K: Integer;
-begin
-  if Length(S) < 1 then
-    Exit('');
-  WriteLn(S);
-  I := StrFindCount(S, #10) + StrFindCount(S, #13);
-  WriteLn(I);
-  SetLength(Result, Length(S) + I * 2);
-  Line := LineBreakStyles[Style];
-  I := 1;
-  J := 1;
-  K := Length(S) + 1;
-  while (I < K) and (S[I] > #0) do
-  begin
-    if ((S[I] = #10) and (S[I + 1] = #13)) or ((S[I] = #13) and (S[I + 1] = #10)) then
-    begin
-      Result[J] := Line[1];
-      Inc(J);
-      if Style = tlbsCRLF then
-      begin
-        Result[J] := Line[2];
-        Inc(J);
-      end;
-      Inc(I);
-    end
-    else if (S[I] = #10) or (S[I] = #13) then
-    begin
-      Result[J] := Line[1];
-      Inc(J);
-      if Style = tlbsCRLF then
-      begin
-        Result[J] := Line[2];
-        Inc(J);
-      end;
-    end
-    else
-    begin
-      Result[J] := S[I];
-      Inc(J);
-    end;
-    Inc(I);
-  end;
-  SetLength(Result, J - 1);
-end;}
 
 function StrAdjustLineBreaks(const S: string): string;
 begin
@@ -2276,16 +2230,53 @@ begin
   Result := '';
 end;
 
-function IntToStr(Value: Integer): string;
+function IntToStr(Value: Int64): string;
+const
+  Digits: PChar = '0123456789';
+var
+  P: PChar;
+  I, J: Int64;
 begin
-  Str(Value, Result);
+  if Value < 0 then
+    I := -Value
+  else
+    I := Value;
+  J := 0;
+  while I > 0 do
+  begin
+    I := I div 10;
+    Inc(J);
+  end;
+  if J = 0 then
+    Exit('0');
+  if Value < 0 then
+  begin
+    SetLength(Result, J + 1);
+    Result[1] := '-'
+  end
+  else
+    SetLength(Result, J);
+  P := @Result[Length(Result)];
+  if Value < 0 then
+    I := -Value
+  else
+    I := Value;
+  while J > 0 do
+  begin
+    P^ := Digits[I mod 10];
+    I := I div 10;
+    Dec(P);
+    Dec(J);
+  end;
 end;
 
-function IntToStorage(Bytes: QWord): string;
+function IntToStorage(Bytes: Int64): string;
 var
-  B, I: QWord;
+  B, I: Int64;
   D: Double;
 begin
+  if Bytes <= 0 then
+    Exit('0 bytes');
   Result := 'Unknown';
   B := 1024;
   I := 0;
@@ -2293,7 +2284,7 @@ begin
   begin
     B := B * 1024;
     Inc(I);
-    if I > 4 then
+    if I > 5 then
       Exit;
   end;
   B := B div 1024;
@@ -2304,6 +2295,7 @@ begin
     2: Result := FloatToStr(D) + ' MB';
     3: Result := FloatToStr(D) + ' GB';
     4: Result := FloatToStr(D) + ' TB';
+    5: Result := FloatToStr(D) + ' PB';
   end;
 end;
 

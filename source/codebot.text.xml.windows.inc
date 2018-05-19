@@ -335,7 +335,7 @@ type
 
 constructor TNodeListEnumerator.Create(List: INodeList);
 begin
-	inherited Create;
+  inherited Create;
   FList := List;
   FPosition := -1;
 end;
@@ -367,7 +367,7 @@ end;
 
 function TNodeList.GetEnumerator: IEnumerator<INode>;
 begin
-	Result := TNodeListEnumerator.Create(Self);
+  Result := TNodeListEnumerator.Create(Self);
 end;
 
 procedure TNodeList.Clear;

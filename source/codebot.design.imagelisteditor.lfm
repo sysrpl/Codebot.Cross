@@ -1,17 +1,18 @@
 object ImageListEditor: TImageListEditor
   Left = 369
-  Height = 393
+  Height = 434
   Top = 139
-  Width = 531
-  ClientHeight = 393
-  ClientWidth = 531
-  Constraints.MinHeight = 393
-  Constraints.MinWidth = 531
+  Width = 586
+  Caption = 'Image Strip Editor'
+  ClientHeight = 434
+  ClientWidth = 586
+  Constraints.MinHeight = 434
+  Constraints.MinWidth = 586
+  DesignTimePPI = 106
   KeyPreview = True
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   Position = poDesktopCenter
-  LCLVersion = '1.9.0.0'
   Options = [boReanchor, boBannerShadow, boFooterShadow, boFooterGrip]
   Logo.Data = {
     89504E470D0A1A0A0000000D4948445200000040000000400806000000AA6971
@@ -406,78 +407,84 @@ object ImageListEditor: TImageListEditor
   Title.ParentFont = False
   Title.Font.Height = 20
   Title.Font.Style = [fsBold]
-  Title.Text = 'Image Strip Editor'
+  Title.Text = 'Edit a series of images'
   Title.X = 0
   Title.Y = 0
   TitleSub.ParentFont = True
-  TitleSub.Text = 'You can change the order of images by holding shift while dragging the mouse'
+  TitleSub.Text = 'This editor allows you to add, remove, load, and save image strips. You can change the order of images by holding shift while dragging the mouse'
   TitleSub.X = 0
   TitleSub.Y = 0
   object OKButton: TButton
-    Left = 365
-    Height = 25
-    Top = 360
-    Width = 75
+    Left = 403
+    Height = 28
+    Top = 397
+    Width = 83
     Anchors = [akRight, akBottom]
     Caption = '&OK'
     ModalResult = 1
+    ParentFont = False
     TabOrder = 0
   end
   object CancelButton: TButton
-    Left = 448
-    Height = 25
-    Top = 360
-    Width = 75
+    Left = 494
+    Height = 28
+    Top = 397
+    Width = 83
     Anchors = [akRight, akBottom]
     Caption = '&Cancel'
     ModalResult = 2
+    ParentFont = False
     TabOrder = 1
   end
   object AddButton: TButton
-    Left = 448
-    Height = 25
-    Top = 88
-    Width = 75
+    Left = 494
+    Height = 28
+    Top = 97
+    Width = 83
     Anchors = [akTop, akRight]
     Caption = 'Add'
     OnClick = AddButtonClick
+    ParentFont = False
     TabOrder = 2
   end
   object RemoveButton: TButton
-    Left = 448
-    Height = 25
-    Top = 120
-    Width = 75
+    Left = 494
+    Height = 28
+    Top = 132
+    Width = 83
     Anchors = [akTop, akRight]
     Caption = 'Remove'
     OnClick = RemoveButtonClick
+    ParentFont = False
     TabOrder = 3
   end
   object SaveButton: TButton
-    Left = 448
-    Height = 25
-    Top = 152
-    Width = 75
+    Left = 494
+    Height = 28
+    Top = 168
+    Width = 83
     Anchors = [akTop, akRight]
     Caption = 'Save'
     OnClick = SaveButtonClick
+    ParentFont = False
     TabOrder = 4
   end
   object ClearButton: TButton
-    Left = 448
-    Height = 25
-    Top = 185
-    Width = 75
+    Left = 494
+    Height = 28
+    Top = 204
+    Width = 83
     Anchors = [akTop, akRight]
     Caption = 'Clear'
     OnClick = ClearButtonClick
+    ParentFont = False
     TabOrder = 5
   end
   object Grid: TContentGrid
-    Left = 8
-    Height = 256
-    Top = 88
-    Width = 432
+    Left = 9
+    Height = 283
+    Top = 97
+    Width = 477
     DefColWidth = 75
     DefRowHeight = 25
     ColCount = 5
@@ -486,6 +493,7 @@ object ImageListEditor: TImageListEditor
     BorderStyle = bsSingle
     Color = clWindow
     ParentColor = False
+    ParentFont = False
     TabOrder = 6
     UseDockManager = False
     OnMouseDown = GridMouseDown
@@ -497,16 +505,16 @@ object ImageListEditor: TImageListEditor
     Filter = 'Graphic (*.png;*.bmp*.ico;*.jpeg;*.jpg;*.tif;*.gif)|*.png;*.bmp;*.ico;*.jpeg;*.jpg;*.tif;*.gif|Portable Network Graphic (*.png)|*.png|Bitmaps (*.bmp)|*.bmp|Icon (*.ico)|*.ico|Joint Picture Expert Group (*.jpeg;*.jpg)|*.jpeg;*.jpg|Tagged Image File Format (*.tif;*.tiff)|*.tif;*.tiff|Graphics Interchange Format (*.gif)|*.gif'
     InitialDir = 'C:\Development\Pascal\Components\Codebot.Cross\'
     Options = [ofAllowMultiSelect, ofEnableSizing, ofViewDetail]
-    Left = 56
-    Top = 96
+    Left = 62
+    Top = 106
   end
   object SavePictureDialog: TSavePictureDialog
     Filter = 'Portable Network Graphic (*.png)|*.png'
-    Left = 56
-    Top = 160
+    Left = 62
+    Top = 177
   end
   object Images: TImageStrip
-    Left = 56
-    Top = 224
+    Left = 62
+    Top = 247
   end
 end
