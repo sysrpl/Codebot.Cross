@@ -11,17 +11,17 @@
 {$macro on}
 
 {$ifdef windows}
-	{$define apicall := stdcall}
+  {$define apicall := stdcall}
 {$else}
-	{$define apicall := cdecl}
+  {$define apicall := cdecl}
 {$endif}
 
 {$if defined(linux) and defined(lclgtk2)}
-	{$define linuxgtk}
+  {$define linuxgtk}
 {$endif}
 
 {$if defined(linux) and defined(lclqt)}
-	{$define linuxqt}
+  {$define linuxqt}
 {$endif}
 
 {$WARN 4055 off : Conversion between ordinals and pointers is not portable}

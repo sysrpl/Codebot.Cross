@@ -68,7 +68,7 @@ begin
   F := TImageListEditor.Create(nil);
   try
     F.Images.Assign(Images);
-    if Caption = '' then
+    if Caption <> '' then
       F.Caption := Caption
     else
       F.Caption := 'Editing: ' + StrCompPath(Images);

@@ -229,6 +229,7 @@ type
   public
     constructor Create(F: TFont);
     function GetName: string;
+    procedure SetName(const Value: string);
     function GetColor: TColorB;
     procedure SetColor(Value: TColorB);
     function GetQuality: TFontQuality;
@@ -321,6 +322,7 @@ type
     function GetMatrix: IMatrix;
     procedure SetMatrix(Value: IMatrix);
     function GetPath: IPath;
+    function GetHandle: Pointer;
     procedure Flush; virtual;
     procedure Clear(Color: TColorB);
     procedure CopyTo(const Source: TRectF; Surface: ISurface; const Dest: TRectF;
@@ -1316,6 +1318,11 @@ begin
   Result := FName;
 end;
 
+procedure TFontD2D.SetName(const Value: string);
+begin
+  FName := Value;
+end;
+
 function TFontD2D.GetColor: TColorB;
 begin
   Result := FColor;
@@ -1708,6 +1715,11 @@ end;
 function TSurfaceD2D.GetPath: IPath;
 begin
   Result := FPath;
+end;
+
+function TSurfaceD2D.GetHandle: Pointer;
+begin
+  Result := Pointer(FTarget);
 end;
 
 procedure TSurfaceD2D.Draw;
