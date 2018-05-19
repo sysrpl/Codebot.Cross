@@ -83,6 +83,7 @@ type
     FUserName: string;
     FPassword: string;
     FTransfering: Boolean;
+    FPath: string;
     FFindMask: TFileSystemAttributes;
     FFindList: StringArray;
     FFindIndex: Integer;
@@ -689,7 +690,6 @@ begin
     end;
     if R.IsPass(150, 199) then
       Recv(R);
-    Sleep(10);
   finally
     Socket.Free;
   end;
@@ -712,12 +712,12 @@ begin
   end
   else
   begin
+    FPath := Path;
     S := S.AdjustLineBreaks(tlbsCRLF);
     FFindMask := Allow;
     FFindList := S.Split(#13#10);
     FFindIndex := -1;
     Result := FindNext(FindData);
-    FindData.Path := Path;
   end;
 end;
 
@@ -777,6 +777,7 @@ begin
       Result := FindNext(FindData);
       Exit;
     end;
+    FindData.Path := FPath;
     FindData.Name := SafeRead(Columns, FileColumn);
     FindData.Size := StrToQWordDef(SafeRead(Columns, SizeColumn), 0);
     M := 1;
