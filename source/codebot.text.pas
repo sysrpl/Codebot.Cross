@@ -537,7 +537,7 @@ function Base64Decode(const S: string): TBuffer;
   end;
 
 type
-  TOutput = array[0..High(LongWord)] of Byte;
+  TOutput = array[0..High(LongWord) div 4] of Byte;
   POutput = ^TOutput;
 var
   Buffer: TBuffer;

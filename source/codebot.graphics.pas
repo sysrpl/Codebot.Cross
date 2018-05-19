@@ -649,6 +649,20 @@ begin
     Result := NewFontGdi(Font);
 end;
 
+function NewFont(const FontName: string; FontSize: Integer = 10): IFont;
+var
+  F: TFont;
+begin
+	F := TFont.Create;
+  try
+    F.Name := FontName;
+    F.Size := FontSize;
+    Result := NewFont(F);
+  finally
+    F.Free;
+  end;
+end;
+
 function NewSurface(Canvas: TCanvas): ISurface;
 begin
   if LoadD2D then
@@ -2214,7 +2228,7 @@ type
   TBufferItem = record
     A, R, G, B: Integer;
   end;
-  TByteArray = array[0..High(LongWord)] of Byte;
+  TByteArray = array[0..High(LongWord) div 4] of Byte;
   PByteArray = ^TByteArray;
 
 var

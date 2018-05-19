@@ -13,6 +13,7 @@ unit Codebot.Controls.Tooltips;
 
 interface
 
+{$if defined(linuxgtk)} // or defined(windows)}
 uses
   Classes, SysUtils, Graphics, Controls, ExtCtrls, Forms,
   Codebot.System,
@@ -24,9 +25,11 @@ var
   UseTipify: Boolean = False;
 
 procedure Tipify(HintControl: TControl);
+{$endif}
 
 implementation
 
+{$if defined(linuxgtk)} // or defined(windows)}
 { TTipMaster }
 
 type
@@ -152,6 +155,7 @@ begin
     TipMaster := TTipMaster.Create(Application);
   TipMaster.DoTipify(HintControl);
 end;
+{$endif}
 
 end.
 

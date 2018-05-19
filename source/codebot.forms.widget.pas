@@ -13,7 +13,7 @@ unit Codebot.Forms.Widget;
 
 interface
 
-{$if defined(linuxgtk) or defined(windows)}
+{$if defined(linuxgtk)} // or defined(windows)}
 uses
   Classes, SysUtils, Graphics, Controls, Forms, ExtCtrls,
   Codebot.System,
@@ -100,7 +100,7 @@ type
 
 implementation
 
-{$if defined(linuxgtk) or defined(windows)}
+{$if defined(linuxgtk)} // or defined(windows)}
 constructor TWidget.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
