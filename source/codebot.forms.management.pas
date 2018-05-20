@@ -19,7 +19,7 @@ uses
 
 { FormManager }
 
-{$if defined(linuxgtk)}
+{$if defined(linuxgtk) or defined(windows)}
 type
   FormManager = record
   private
@@ -94,7 +94,9 @@ begin
   FDefaultFont.Name := Items.Join(' ');
   Result := FDefaultFont;
 end;
+{$endif}
 
+{$if defined(windows)}
 class function FormManager.GetCurrent: TCustomForm;
 begin
   Result := nil;
@@ -107,8 +109,8 @@ end;
 
 class procedure FormManager.Activate(Form: TCustomForm);
 begin
-
 end;
+{$endif}
 
 class function FormManager.ParentForm(Control:TControl): TCustomForm;
 var
@@ -126,6 +128,5 @@ begin
   if P is TCustomForm then
     Result := P as TCustomForm;
 end;
-{$endif}
 
 end.
