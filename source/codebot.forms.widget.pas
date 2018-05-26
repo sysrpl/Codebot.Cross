@@ -120,6 +120,7 @@ begin
   FTimer := TTimer.Create(nil);
   FTimer.Interval := 30;
   FTimer.OnTimer := DoTimer;
+  FSaveCursor := crSize;
 end;
 
 destructor TWidget.Destroy;
@@ -272,7 +273,7 @@ var
   I: Integer;
 begin
   inherited MouseDown(Button, Shift, X, Y);
-  FSaveCursor := Cursor;
+  FSaveCursor := crSize;
   if Button = mbLeft then
     for I := 0 to FClickBoxes.Length - 1 do
       if FClickBoxes[I].Contains(X, Y) then

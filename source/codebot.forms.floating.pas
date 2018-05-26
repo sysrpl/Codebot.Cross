@@ -24,6 +24,7 @@ uses
 type
   TFloatingForm = class(TForm)
   private
+    FOnTop: Boolean;
     FWindow: Pointer;
     FOpacity: Byte;
     FFaded: Boolean;
@@ -31,6 +32,7 @@ type
     FFadeMoved: Boolean;
     function GetCompositing: Boolean;
     procedure SetFaded(Value: Boolean);
+    procedure SetOnTop(AValue: Boolean);
     procedure SetOpacity(Value: Byte);
   protected
     procedure CreateHandle; override;
@@ -42,6 +44,7 @@ type
     property Opacity: Byte read FOpacity write SetOpacity;
     property Compositing: Boolean read GetCompositing;
     property Faded: Boolean read FFaded write SetFaded;
+    property OnTop:Boolean read FOnTop write SetOnTop;
   end;
 {$endif}
 
@@ -76,6 +79,7 @@ begin
   inherited Create(AOwner);
   BorderStyle := bsNone;
   FOpacity := $FF;
+  FOnTop:= True;
 end;
 
 type
@@ -87,7 +91,8 @@ var
 begin
   PFormBorderStyle(@BorderStyle)^ := bsNone;
   W := FormStyleMap[bsNone];
-  FormStyleMap[bsNone] := GTK_WINDOW_POPUP;
+  if FOnTop then FormStyleMap[bsNone] := GTK_WINDOW_POPUP else
+  FormStyleMap[bsNone] := GTK_WINDOW_TOPLEVEL;
   try
     inherited CreateHandle;
   finally
@@ -186,6 +191,13 @@ begin
       Visible := not FFaded;
   end;
 end;
+
+procedure TFloatingForm.SetOnTop(AValue: Boolean);
+begin
+  if FOnTop=AValue then Exit;
+  FOnTop:=AValue;
+end;
+
 {$endif}
 
 end.
