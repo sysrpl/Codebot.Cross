@@ -429,6 +429,7 @@ end;
 
 procedure TWidget.Paint;
 begin
+  inherited Paint;
   FSurface := NewSurface(Canvas);
   BeforeRender;
   Render;

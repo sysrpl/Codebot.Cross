@@ -22,8 +22,8 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="84"/>
-        <CursorPos X="6" Y="112"/>
+        <TopLine Value="43"/>
+        <CursorPos Y="60"/>
         <UsageCount Value="95"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -70,15 +70,13 @@
       </Unit6>
       <Unit7>
         <Filename Value="..\..\..\..\fpc\packages\gtk2\src\pango\pango.pas"/>
-        <UnitName Value="pango"/>
-        <EditorIndex Value="3"/>
+        <EditorIndex Value="-1"/>
         <TopLine Value="54"/>
         <CursorPos X="13" Y="70"/>
         <UsageCount Value="10"/>
-        <Loaded Value="True"/>
       </Unit7>
     </Units>
-    <JumpHistory Count="11" HistoryIndex="10">
+    <JumpHistory Count="9" HistoryIndex="8">
       <Position1>
         <Filename Value="main.pas"/>
         <Caret Line="38" TopLine="19"/>
@@ -101,27 +99,30 @@
       </Position5>
       <Position6>
         <Filename Value="main.pas"/>
-        <Caret Line="8" Column="73" TopLine="19"/>
+        <Caret Line="147" Column="10" TopLine="126"/>
       </Position6>
       <Position7>
         <Filename Value="main.pas"/>
-        <Caret Line="147" Column="10" TopLine="126"/>
+        <Caret Line="117" Column="35" TopLine="102"/>
       </Position7>
       <Position8>
-        <Filename Value="main.pas"/>
-        <Caret Line="117" Column="35" TopLine="102"/>
+        <Filename Value="..\..\source\codebot.graphics.linux.surfacecairo.pas"/>
       </Position8>
       <Position9>
         <Filename Value="..\..\source\codebot.graphics.linux.surfacecairo.pas"/>
-      </Position9>
-      <Position10>
-        <Filename Value="..\..\source\codebot.graphics.linux.surfacecairo.pas"/>
         <Caret Line="347" Column="15" TopLine="343"/>
-      </Position10>
-      <Position11>
-        <Filename Value="..\..\..\..\fpc\packages\gtk2\src\pango\pango.pas"/>
-        <Caret Line="69" Column="3" TopLine="53"/>
-      </Position11>
+      </Position9>
     </JumpHistory>
   </ProjectSession>
+  <Debugging>
+    <BreakPoints Count="1">
+      <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="main.pas"/>
+        <Line Value="60"/>
+      </Item1>
+    </BreakPoints>
+  </Debugging>
 </CONFIG>

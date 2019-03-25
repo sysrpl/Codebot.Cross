@@ -14,8 +14,8 @@ unit Codebot.Networking.Web;
 interface
 
 uses
-  Classes,
-  SysUtils,
+	Classes,
+	SysUtils,
   Codebot.System,
   Codebot.Text.Xml,
   Codebot.Networking;
@@ -198,6 +198,8 @@ function UrlDecode(const Value: string): string;
 function ArgsEncode(const Args: TNamedStrings): string;
 { ArgsDecode converts a posted string back to name value pairs }
 function ArgsDecode(const Args: string): TNamedStrings;
+{ MimeType extracts a mime type given a file name }
+function MimeType(const FileName: string): string;
 
 implementation
 
@@ -699,7 +701,7 @@ var
   I, J: Integer;
 begin
   Result := '';
-  I := Value.Length;
+  I := Value.Length  + 1;
   J := 1;
   while J < I do
   begin
@@ -754,6 +756,106 @@ begin
     if N <> '' then
       Result.Add(N, V);
   end;
+end;
+
+function MimeType(const FileName: string): string;
+var
+  S: string;
+begin
+	S := FileExtractExt(FileName).ToLower;
+  if s = '.7z' then
+    Exit('application/x-7z-compressed');
+  if s = '.aac' then
+    Exit('audio/aac');
+  if s = '.avi' then
+    Exit('video/avi');
+  if s = '.bmp' then
+    Exit('image/bmp');
+  if s = '.css' then
+    Exit('text/css');
+  if s = '.csv' then
+    Exit('text/csv');
+  if s = '.doc' then
+    Exit('application/msword');
+  if s = '.ocx' then
+    Exit('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  if s = '.gif' then
+    Exit('image/gif');
+  if s = '.htm' then
+	  Exit('text/html');
+  if s = '.html' then
+    Exit('text/html');
+  if s = '.jpeg' then
+    Exit('image/jpeg');
+  if s = '.jpg' then
+    Exit('image/jpeg');
+  if s = '.js' then
+    Exit('application/javascript');
+  if s = '.json' then
+    Exit('application/json');
+  if s = '.mov' then
+    Exit('video/quicktime');
+  if s = '.m4a' then
+    Exit('audio/mp4a');
+  if s = '.mp3' then
+    Exit('audio/mpeg');
+  if s = '.m4v' then
+    Exit('video/mp4');
+  if s = '.mp4' then
+    Exit('video/mp4');
+  if s = '.mpeg' then
+    Exit('video/mpeg');
+  if s = '.mpg' then
+    Exit('video/mpeg');
+  if s = '.ogg' then
+    Exit('audio/ogg');
+  if s = '.ogv' then
+    Exit('video/ogv');
+  if s = '.pdf' then
+    Exit('application/pdf');
+  if s = '.png' then
+    Exit('image/png');
+  if s = '.ppt' then
+    Exit('application/vnd.ms-powerpoint');
+  if s = '.ptx' then
+    Exit('application/vnd.openxmlformats-officedocument.presentationml.presentation');
+  if s = '.qt' then
+    Exit('video/quicktime');
+  if s = '.svg' then
+    Exit('image/svg');
+  if s = '.swf' then
+    Exit('application/x-shockwave-flash');
+  if s = '.tif' then
+	  Exit('image/tiff');
+  if s = '.tiff' then
+    Exit('image/tiff');
+  if s = '.ini' then
+    Exit('text/plain');
+  if s = '.cfg' then
+    Exit('text/plain');
+  if s = '.cs' then
+    Exit('text/plain');
+  if s = '.pas' then
+    Exit('text/plain');
+  if s = '.sh' then
+    Exit('text/plain');
+  if s = '.txt' then
+    Exit('text/plain');
+  if s = '.wav' then
+    Exit('audio/x-wav');
+  if s = '.wma' then
+    Exit('audio/x-ms-wma');
+  if s = '.wmv' then
+    Exit('audio/x-ms-wmv');
+  if s = '.xls' then
+    Exit('application/vnd.ms-excel');
+  if s = '.lsx' then
+    Exit('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  if s = '.xml' then
+    Exit('text/xml');
+  if s = '.zip' then
+    Exit('application/zip');
+	Result := 'application/octet-stream';
 end;
 
 function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = ''): Boolean;

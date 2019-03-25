@@ -2524,8 +2524,8 @@ begin
   begin
     G := NewBrush(R.Left, R.Top, R.Left, R.Bottom);
     C := Control.CurrentColor;
-    G.AddStop(C.Lighten(0.5), 0);
-    G.AddStop(C.Darken(0.2), 1);
+    G.AddStop(C.Lighten(0.4), 0);
+    G.AddStop(C.Darken(0.1), 1);
     R.Inflate(-1, -1);
     Surface.FillRect(G, R);
     Surface.StrokeRect(NewPen(clWhite), R);

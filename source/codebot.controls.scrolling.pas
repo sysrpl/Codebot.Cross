@@ -1046,17 +1046,16 @@ begin
     LCLIntf.ScreenToClient(Handle, Point);
     ScrollDir := sdNone;
     Distance := 0;
-    with Point do
-      if Y < 0 then
-      begin
-        Distance := -Y div FItemHeight + 1;
-        ScrollDir := sdUp;
-      end
-      else if Y > ClientHeight then
-      begin
-        Distance :=  (Y - ClientHeight) div FItemHeight + 1;
-        ScrollDir := sdDown;
-      end;
+    if Point.Y < 0 then
+    begin
+      Distance := -Point.Y div FItemHeight + 1;
+      ScrollDir := sdUp;
+    end
+    else if Point.Y > ClientHeight then
+    begin
+      Distance :=  (Point.Y - ClientHeight) div FItemHeight + 1;
+      ScrollDir := sdDown;
+    end;
     if ScrollDir = sdUp then
       ScrollMove(Distance, ScrollDir)
     else if ScrollDir = sdDown then

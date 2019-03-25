@@ -14,6 +14,9 @@ unit Codebot.Core;
 interface
 
 uses
+  {$ifdef unix}
+  CThreads,
+  {$endif}
   DynLibs;
 
 type

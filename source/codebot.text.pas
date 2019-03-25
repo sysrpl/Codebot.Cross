@@ -537,7 +537,7 @@ function Base64Decode(const S: string): TBuffer;
   end;
 
 type
-  TOutput = array[0..0] of Byte;
+  TOutput = array[0..High(LongWord)] of Byte;
   POutput = ^TOutput;
 var
   Buffer: TBuffer;
@@ -571,12 +571,15 @@ begin
     if S[I] = '=' then Zero(C, I) else if not Search(C, I) then Exit;
     if S[I] = '=' then Zero(D, I) else if not Search(D, I) then Exit;
     E := A shl 18 + B shl 12 + C shl 6 + D;
-    if J = OutLen then Break;
-    Output[J] := E shr 16 and $FF; Inc(J);
-    if J = OutLen then Break;
-    Output[J] := E shr 8 and $FF; Inc(J);
-    if J = OutLen then Break;
-    Output[J] := E and $FF; Inc(J);
+    if J >= OutLen then Break;
+    Output^[J] := E shr 16 and $FF;
+    Inc(J);
+    if J >= OutLen then Break;
+    Output^[J] := E shr 8 and $FF;
+    Inc(J);
+    if J >= OutLen then Break;
+    Output^[J] := E and $FF;
+    Inc(J);
   end;
   Result := Buffer;
 end;

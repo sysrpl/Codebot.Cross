@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="codebotctrls"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Parsing>
+        <SyntaxOptions>
+          <IncludeAssertionCode Value="True"/>
+        </SyntaxOptions>
+      </Parsing>
+      <CodeGeneration>
+        <Checks>
+          <IOChecks Value="True"/>
+          <RangeChecks Value="True"/>
+          <OverflowChecks Value="True"/>
+          <StackChecks Value="True"/>
+        </Checks>
+        <VerifyObjMethodCallValidity Value="True"/>
+      </CodeGeneration>
+      <Linking>
+        <Debugging>
+          <DebugInfoType Value="dsDwarf2Set"/>
+        </Debugging>
+      </Linking>
+    </CompilerOptions>
+    <Files Count="35">
+      <Item1>
+        <Filename Value="codebot.forms.management.pas"/>
+        <UnitName Value="Codebot.Forms.Management"/>
+      </Item1>
+      <Item2>
+        <Filename Value="codebot.forms.floating.pas"/>
+        <UnitName Value="Codebot.Forms.Floating"/>
+      </Item2>
+      <Item3>
+        <Filename Value="codebot.forms.popup.pas"/>
+        <UnitName Value="Codebot.Forms.Popup"/>
+      </Item3>
+      <Item4>
+        <Filename Value="codebot.forms.widget.pas"/>
+        <UnitName Value="Codebot.Forms.Widget"/>
+      </Item4>
+      <Item5>
+        <Filename Value="codebot.graphics.windows.imagebitmap.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.ImageBitmap"/>
+      </Item5>
+      <Item6>
+        <Filename Value="codebot.graphics.windows.interfacedbitmap.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.InterfacedBitmap"/>
+      </Item6>
+      <Item7>
+        <Filename Value="codebot.graphics.pas"/>
+        <UnitName Value="Codebot.Graphics"/>
+      </Item7>
+      <Item8>
+        <Filename Value="codebot.graphics.extras.pas"/>
+        <UnitName Value="Codebot.Graphics.Extras"/>
+      </Item8>
+      <Item9>
+        <Filename Value="codebot.graphics.types.pas"/>
+        <UnitName Value="Codebot.Graphics.Types"/>
+      </Item9>
+      <Item10>
+        <Filename Value="codebot.graphics.windows.surfacegdiplus.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
+      </Item10>
+      <Item11>
+        <Filename Value="codebot.graphics.windows.surfaced2d.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
+      </Item11>
+      <Item12>
+        <Filename Value="codebot.graphics.linux.surfacecairo.pas"/>
+        <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
+      </Item12>
+      <Item13>
+        <Filename Value="codebot.controls.tooltips.pas"/>
+        <UnitName Value="Codebot.Controls.Tooltips"/>
+      </Item13>
+      <Item14>
+        <Filename Value="codebot.controls.extras.pas"/>
+        <UnitName Value="Codebot.Controls.Extras"/>
+      </Item14>
+      <Item15>
+        <Filename Value="codebot.controls.scrolling.pas"/>
+        <UnitName Value="Codebot.Controls.Scrolling"/>
+      </Item15>
+      <Item16>
+        <Filename Value="codebot.controls.sliders.pas"/>
+        <UnitName Value="Codebot.Controls.Sliders"/>
+      </Item16>
+      <Item17>
+        <Filename Value="codebot.input.hotkeys.pas"/>
+        <UnitName Value="Codebot.Input.Hotkeys"/>
+      </Item17>
+      <Item18>
+        <Filename Value="codebot.input.mousemonitor.pas"/>
+        <UnitName Value="Codebot.Input.MouseMonitor"/>
+      </Item18>
+      <Item19>
+        <Filename Value="codebot.controls.pas"/>
+        <UnitName Value="Codebot.Controls"/>
+      </Item19>
+      <Item20>
+        <Filename Value="codebot.controls.colors.pas"/>
+        <UnitName Value="Codebot.Controls.Colors"/>
+      </Item20>
+      <Item21>
+        <Filename Value="codebot.controls.edits.pas"/>
+        <UnitName Value="Codebot.Controls.Edits"/>
+      </Item21>
+      <Item22>
+        <Filename Value="codebot.controls.banner.pas"/>
+        <UnitName Value="Codebot.Controls.Banner"/>
+      </Item22>
+      <Item23>
+        <Filename Value="codebot.controls.grids.pas"/>
+        <UnitName Value="Codebot.Controls.Grids"/>
+      </Item23>
+      <Item24>
+        <Filename Value="codebot.design.imagelisteditor.pas"/>
+        <UnitName Value="Codebot.Design.ImageListEditor"/>
+      </Item24>
+      <Item25>
+        <Filename Value="codebot.design.surfacebitmapeditor.pas"/>
+        <UnitName Value="Codebot.Design.SurfaceBitmapEditor"/>
+      </Item25>
+      <Item26>
+        <Filename Value="codebot.controls.buttons.pas"/>
+        <UnitName Value="Codebot.Controls.Buttons"/>
+      </Item26>
+      <Item27>
+        <Filename Value="codebot.graphics.markup.pas"/>
+        <UnitName Value="Codebot.Graphics.Markup"/>
+      </Item27>
+      <Item28>
+        <Filename Value="codebot.controls.containers.pas"/>
+        <UnitName Value="Codebot.Controls.Containers"/>
+      </Item28>
+      <Item29>
+        <Filename Value="codebot.controls.highlighter.pas"/>
+        <UnitName Value="Codebot.Controls.Highlighter"/>
+      </Item29>
+      <Item30>
+        <Filename Value="codebot.animation.pas"/>
+        <UnitName Value="Codebot.Animation"/>
+      </Item30>
+      <Item31>
+        <Filename Value="codebot.geometry.pas"/>
+        <UnitName Value="Codebot.Geometry"/>
+      </Item31>
+      <Item32>
+        <Filename Value="codebot.debug.pas"/>
+        <UnitName Value="Codebot.Debug"/>
+      </Item32>
+      <Item33>
+        <Filename Value="codebot.unique.pas"/>
+        <UnitName Value="Codebot.Unique"/>
+      </Item33>
+      <Item34>
+        <Filename Value="codebot.files.pas"/>
+        <UnitName Value="Codebot.Files"/>
+      </Item34>
+      <Item35>
+        <Filename Value="codebot.networking.unix.pas"/>
+        <UnitName Value="codebot.networking.unix"/>
+      </Item35>
+    </Files>
+    <RequiredPkgs Count="1">
+      <Item1>
+        <PackageName Value="codebot"/>
+      </Item1>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
