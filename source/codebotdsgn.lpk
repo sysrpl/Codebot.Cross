@@ -28,10 +28,10 @@
     </Files>
     <RequiredPkgs Count="2">
       <Item1>
-        <PackageName Value="IDEIntf"/>
+        <PackageName Value="codebotctrls"/>
       </Item1>
       <Item2>
-        <PackageName Value="codebot"/>
+        <PackageName Value="IDEIntf"/>
       </Item2>
     </RequiredPkgs>
     <UsageOptions>

@@ -27,11 +27,7 @@ type
   PLargeInt = ^LargeInt;
   LargeWord = QWord;
   PLargeWord = ^LargeWord;
-{$ifdef cpu64}
-  SysInt = Int64;
-{$else}
-  SysInt = LongInt;
-{$endif}
+  SysInt = NativeInt;
   PSysInt = ^SysInt;
   HFile = Pointer;
 {$endregion}
@@ -66,7 +62,7 @@ procedure FillZero(out Buffer; Size: UIntPtr); inline;
 {$endregion}
 
 {$region generic containers}
-{ TArray<T> is a shortvut to a dtyped dynamic array }
+{ TArray<T> is a shortcut to a typed dynamic array }
 
 type
   TArray<T> = array of T;
@@ -552,6 +548,10 @@ type
     procedure AddFormat(const S: string; const Args: array of const);
     function Contains(const S: string; IgnoreCase: Boolean = False): Boolean;
   end;
+
+{ Returns the current date and time }
+
+function Now: TDateTime;
 {$endregion}
 
 {$region file management routines}
@@ -585,6 +585,8 @@ function FileReadStr(const FileName: string): string;
 procedure FileWriteLine(const FileName: string; const Line: string);
 { Create a directory }
 function DirCreate(const Dir: string): Boolean;
+{ Change to a new directory }
+procedure DirChange(const Dir: string);
 { Get the current working directory }
 function DirGetCurrent: string;
 { Set the current working directory }
@@ -600,7 +602,7 @@ function DirForce(const Dir: string): Boolean;
 { Change path delimiter to match system settings [group files] }
 function PathAdjustDelimiters(const Path: string): string;
 { Combine two paths }
-function PathCombine(const A, B: string): string;
+function PathCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
 { Expand a path to the absolute path }
 function PathExpand(const Path: string): string;
 { Include the end delimiter for a path }
@@ -611,12 +613,56 @@ function PathExcludeDelimiter(const Path: string): string;
 function ConfigAppFile(Global: Boolean; CreateDir: Boolean = False): string;
 { Returns the location of the application configuration directory }
 function ConfigAppDir(Global: Boolean; CreateDir: Boolean = False): string;
+{ Find files from ParamStr at start index returning a strings object }
+procedure FindFileParams(StartIndex: Integer; out FileParams: TStrings);
+
+const
+  faReadOnly  = $00000001;
+  faHidden    = $00000002;
+  faSysFile   = $00000004;
+  faVolumeId  = $00000008;
+  faDirectory = $00000010;
+  faArchive   = $00000020;
+  faSymLink   = $00000040;
+  faAnyFile   = $0000003f;
+
 { FindOpen corrects path delimiters and convert search to an output parameter }
 function FindOpen(const Path: string; Attr: Longint; out Search: TSearchRec): LongInt;
-{ Find files in a path returning a strings object }
-function FindFiles(const Path: string): TStrings;
-{ Find files from ParamStr at start index returning a strings object }
-function FindFileParams(StartIndex: Integer): TStrings;
+{ Find file system items from a path outputting to a TStrings object }
+procedure FindFiles(const Path: string; out FileSearch: TStrings; Attributes: Integer = 0); overload;
+
+{ TNamedValues\<T\> is a simple case insensitive string based dictionary
+  See also
+  <link Overview.Codebot.System.TNamedValues, TNamedValues\<T\> members> }
+
+type
+  TFileSearchItem = record
+  public
+    { The full path to the file or folder }
+    Name: string;
+    { The size in bytes of the item }
+    Size: LargeInt;
+    { The last modified date and time }
+    Modified: TDateTime;
+    { Details about the type of item found }
+    Attributes: Integer;
+  end;
+
+  TFileSearch = type TArrayList<TFileSearchItem>;
+
+{ Find file system items from a path outputting to a TFileSearch array }
+procedure FindFiles(const Path: string; out FileSearch: TFileSearch; Attributes: Integer = 0); overload;
+
+type
+  TFileSearchHelper = record helper for TFileSearch
+  public
+    { Sort search items by file name }
+    procedure SortName(Order: TSortingOrder = soAscend);
+    { Sort search items by file size }
+    procedure SortSize(Order: TSortingOrder = soAscend);
+    { Sort search items by file modified date }
+    procedure SortModified(Order: TSortingOrder = soAscend);
+  end;
 {$endregion}
 
 { TNamedValues\<T\> is a simple case insensitive string based dictionary
@@ -645,13 +691,15 @@ type
     procedure Delete(Index: Integer);
     { Removes all named values setting the count of the dictionary to 0 }
     procedure Clear;
+    { Returns true if a named key is in the dictionary }
+    function HasName(const Name: string): Boolean;
     { The number of key value pairs in the dictionary }
     property Count: Integer read GetCount;
-    { Returns true if ther are no named values in the dictionary }
+    { Returns true if there are no named values in the dictionary }
     property Empty: Boolean read GetEmpty;
     { Names indexed by an integer }
     property Names[Index: Integer]: string read GetName;
-    { Values indexed by a name }
+    { Values indexed by a named key }
     property Values[Name: string]: T read GetValue; default;
     { Values indexed by an integer }
     property ValueByIndex[Index: Integer]: T read GetValueByIndex;
@@ -667,9 +715,60 @@ type
     function GetEnumerator: IEnumerator<string>;
   end;
 
+{ INamedValues<T> is a reference type for TNamedValues<T> }
+
+	INamedValues<T> = interface(IEnumerable<T>)
+  	['{D228ADD8-4C4E-4C6C-A6F6-FA17FC307253}']
+    function GetCount: Integer;
+    function GetEmpty: Boolean;
+    function GetName(Index: Integer): string;
+    function GetValue(const Name: string): T;
+    function GetValueByIndex(Index: Integer): T;
+    procedure Add(const Name: string; const Value: T);
+    procedure Remove(const Name: string);
+    procedure Delete(Index: Integer);
+    procedure Clear;
+    property Count: Integer read GetCount;
+    property Empty: Boolean read GetEmpty;
+    property Names[Index: Integer]: string read GetName;
+    property Values[Name: string]: T read GetValue; default;
+    property ValueByIndex[Index: Integer]: T read GetValueByIndex;
+  end;
+
 { TNamedStrings is a dictionary of string name value pairs }
 
   TNamedStrings = TNamedValues<string>;
+
+{ INamedStrings is a reference type for TNamedStrings }
+
+  INamedStrings = interface(INamedValues<string>)
+    ['{C03EF776-46AC-4757-8654-F31EC34E67A7}']
+	end;
+
+{ TNamedValuesIntf<T> exposes INamedValues<T> }
+
+  TNamedValuesIntf<T> = class(TInterfacedObject, IEnumerable<T>, INamedValues<T>)
+  private
+		FData: TNamedValues<T>;
+  public
+    { IEnumerable<T> }
+    function GetEnumerator: IEnumerator<string>;
+    { INamedValues<T> }
+    function GetCount: Integer;
+    function GetEmpty: Boolean;
+    function GetName(Index: Integer): string;
+    function GetValue(const Name: string): T;
+    function GetValueByIndex(Index: Integer): T;
+    procedure Add(const Name: string; const Value: T);
+    procedure Remove(const Name: string);
+    procedure Delete(Index: Integer);
+    procedure Clear;
+	end;
+
+{ TNamedStringsIntf exposes INamedStrings }
+
+  TNamedStringsIntf = class(TNamedValuesIntf<string>, INamedStrings)
+	end;
 
 { IDelegate\<T\> allows event subscribers to add or remove their event handlers
   See also
@@ -909,24 +1008,39 @@ type
   TSimpleThread = class(TThread)
   private
     FExecuteMethod: TThreadExecuteMethod;
+    FTempStatus: string;
     FStatus: string;
     FOnStatus: TNotifyEvent;
     procedure DoStatus;
     procedure SetStatus(const Value: string);
   protected
-    { Sets FreeOnTermiante to True and executes the method }
+    { Sets FreeOnTerminate to True and executes the method }
     procedure Execute; override;
   public
-    { Starts an executing method on a new thread }
+    { Create immediately starts ExecuteMethod on a new thread }
     constructor Create(ExecuteMethod: TThreadExecuteMethod;
       OnStatus: TNotifyEvent = nil; OnTerminate: TNotifyEvent = nil);
-    { Synch can be used by the executing method to move execution to the main thread }
-    procedure Synch(Method: TThreadMethod);
+    { Synchronize can be used by ExecuteMethod to invoke a method
+      on the main thread }
+    procedure Synchronize(Method: TThreadMethod);
     { You should only set status inside ExecuteMethod }
     property Status: string read FStatus write SetStatus;
-    { Terminated is set to True when Terminated is called }
+    { Terminated is set to True after the Terminate method is called }
     property Terminated;
   end;
+
+{ TThreadExecuteProc is the callback invoked when a TSimpleThread is created }
+
+  TThreadExecuteProc = procedure(Thread: TSimpleThread);
+
+{ Execute a procedure inside a simple thread }
+
+procedure ThreadExecute(ThreadProc: TThreadExecuteProc); overload;
+procedure ThreadExecute(Proc: TProcedure); overload;
+
+{ Sleep for a given number of milliseconds }
+
+procedure Sleep(Milliseconds: Cardinal);
 
 {$endregion}
 
@@ -1513,7 +1627,7 @@ begin
     if Index > 0 then
     begin
       Inc(Result);
-      Start := Index + 1;
+      Start := Index + Length(SubStr);
     end;
   until Index = 0;
 end;
@@ -1529,7 +1643,7 @@ begin
   begin
     Start := StrFind(S, SubStr, Start, IgnoreCase);
     Result[Index] := Start;
-    Inc(Start);
+    Inc(Start, Length(SubStr));
     Inc(Index);
   end;
 end;
@@ -1537,36 +1651,36 @@ end;
 function StrReplace(const S, OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;
 var
   PosIndex: IntArray;
-  I, J, K, L: Integer;
+  FindIndex, FindLen, OldIndex, OldLen, NewIndex, NewLen, I: Integer;
 begin
   PosIndex := StrFindIndex(S, OldPattern, IgnoreCase);
-  if PosIndex.Length = 0 then
+  FindLen := PosIndex.Length;
+  if FindLen = 0 then
   begin
     Result := S;
     Exit;
   end;
-  Result.length := S.Length + (NewPattern.Length - OldPattern.Length) * PosIndex.Length;
-  I := 0;
-  J := 1;
-  K := 1;
-  while K <= S.Length do
+  OldLen := S.Length;
+  NewLen := OldLen + NewPattern.Length * FindLen - OldPattern.Length * FindLen;
+  SetLength(Result, NewLen);
+  OldIndex := 1;
+  NewIndex := 1;
+  FindIndex := 0;
+  while OldIndex <= OldLen do
   begin
-    if K = PosIndex[I] then
+    if (FindIndex < FindLen) and (OldIndex = PosIndex[FindIndex]) then
     begin
-      if I < PosIndex.Hi then
-        Inc(I);
-      Inc(K, OldPattern.Length);
-      for L := 1 to NewPattern.Length do
-      begin
-        Result[J] := NewPattern[L];
-        Inc(J);
-      end;
+      Inc(OldIndex, OldPattern.Length);
+      for I := 0 to NewPattern.Length - 1 do
+      	Result[NewIndex + I] := NewPattern[I + 1];
+      Inc(NewIndex, NewPattern.Length);
+      Inc(FindIndex);
     end
     else
     begin
-      Result[J] := S[K];
-      Inc(J);
-      Inc(K);
+      Result[NewIndex] := S[OldIndex];
+      Inc(OldIndex);
+      Inc(NewIndex);
     end;
   end;
 end;
@@ -1907,65 +2021,67 @@ end;
 
 function StrAdjustLineBreaks(const S: string; Style: TTextLineBreakStyle): string;
 var
-  Source,Dest: PChar;
+  Source, Dest: PChar;
   DestLen: Integer;
-  I,J,L: Longint;
-
+  I, J, L: Longint;
 begin
   Source:=Pointer(S);
-  L:=Length(S);
-  DestLen:=L;
-  I:=1;
-  while (I<=L) do
-    begin
-    case S[i] of
-      #10: if (Style=tlbsCRLF) then
-               Inc(DestLen);
-      #13: if (Style=tlbsCRLF) then
-             if (I<L) and (S[i+1]=#10) then
-               Inc(I)
-             else
-               Inc(DestLen)
-             else if (I<L) and (S[I+1]=#10) then
-               Dec(DestLen);
+  L := Length(S);
+  DestLen := L;
+  I := 1;
+  while I <= L do
+  begin
+    case S[I] of
+      #10:
+        if Style = tlbsCRLF then Inc(DestLen);
+      #13:
+        if Style = tlbsCRLF then
+          if (I < L) and (S[I+1] = #10) then
+	          Inc(I)
+          else
+  	        Inc(DestLen)
+          else if (I < L) and (S[I + 1] = #10) then
+    	      Dec(DestLen);
     end;
     Inc(I);
-    end;
-  if (DestLen=L) then
-    Result:=S
+  end;
+  if DestLen = L then
+    Result := S
   else
-    begin
+  begin
     SetLength(Result, DestLen);
-    FillChar(Result[1],DestLen,0);
+    FillChar(Result[1], DestLen, 0);
     Dest := Pointer(Result);
-    J:=0;
-    I:=0;
-    While I<L do
+    J := 0;
+    I := 0;
+    while I < L do
       case Source[I] of
-        #10: begin
-             if Style=tlbsCRLF then
-               begin
-               Dest[j]:=#13;
-               Inc(J);
-              end;
-             Dest[J] := #10;
+        #10:
+          begin
+            if Style=tlbsCRLF then
+            begin
+             Dest[J] := #13;
              Inc(J);
-             Inc(I);
-             end;
-        #13: begin
-             if Style=tlbsCRLF then
-               begin
-               Dest[j] := #13;
+            end;
+            Dest[J] := #10;
+            Inc(J);
+            Inc(I);
+          end;
+        #13:
+          begin
+             if Style = tlbsCRLF then
+             begin
+               Dest[J] := #13;
                Inc(J);
-               end;
-             Dest[j]:=#10;
+             end;
+             Dest[J] := #10;
              Inc(J);
              Inc(I);
              if Source[I]=#10 then
                Inc(I);
-             end;
+          end;
       else
-        Dest[j]:=Source[i];
+        Dest[J] := Source[I];
         Inc(J);
         Inc(I);
       end;
@@ -2135,7 +2251,7 @@ end;
 
 function StrEnvironmentVariable(const Name: string): string;
 begin
-  Result := GetEnvironmentVariableUTF8(Name);
+  Result := GetEnvironmentVariable(Name);
 end;
 
 function StrFormat(const S: string; Args: array of const): string;
@@ -2485,6 +2601,8 @@ begin
     Result := FormatDateTime('ddd, d mmm yyyy hh:nn:ss', Self) + ' GMT'
   else if Format = 'UTC' then
     Result := FormatDateTime('ddd, d mmm yyyy hh:nn:ss', Self) + ' UTC'
+  else if Format <> '' then
+	  Result := FormatDateTime(Format, Self)
   else
     Result := FormatDateTime('yyyy-mm-dd hh:nn:ss', Self);
 end;
@@ -2520,6 +2638,11 @@ begin
   Result := D;
 end;
 
+function Now: TDateTime;
+begin
+  Result := SysUtils.Now;
+end;
+
 { TStringsHelper }
 
 procedure TStringsHelper.AddLine;
@@ -2542,7 +2665,7 @@ end;
 {$region file management routines}
 function FileDelete(const FileName: string): Boolean;
 begin
-  Result := FileUtil.DeleteFileUTF8(FileName);
+  Result := DeleteFile(FileName);
 end;
 
 function FileCopy(const SourceName, DestName: string;
@@ -2553,12 +2676,15 @@ end;
 
 function FileRename(const OldName, NewName: String): Boolean;
 begin
-  Result := FileUtil.RenameFileUTF8(OldName, NewName);
+  Result := RenameFile(OldName, NewName);
 end;
 
 function FileExists(const FileName: string): Boolean;
 begin
-  Result := FileUtil.FileExistsUTF8(FileName);
+  if DirExists(FileName) then
+  	Result := False
+	else
+	  Result := SysUtils.FileExists(FileName);
 end;
 
 function FileSize(const FileName: string): LargeWord;
@@ -2621,7 +2747,7 @@ begin
 end;
 
 function FileReadStr(const FileName: string): string;
-Const
+const
   BufferSize = 1024 * 10;
   MaxGrow = 1 shl 29;
 var
@@ -2631,7 +2757,7 @@ var
   I: Integer;
 begin
   Result := '';
-  if FileExistsUTF8(FileName) then
+  if FileExists(FileName) then
   begin
     F := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
     try
@@ -2658,7 +2784,7 @@ var
   F: TFileStream;
   S: string;
 begin
-  if FileUtil.FileExistsUTF8(FileName) then
+  if FileExists(FileName) then
     F := TFileStream.Create(FileName, fmOpenWrite)
   else
     F := TFileStream.Create(FileName, fmCreate);
@@ -2675,17 +2801,22 @@ end;
 
 function DirCreate(const Dir: string): Boolean;
 begin
-  Result := FileUtil.ForceDirectoriesUTF8(Dir);
+  Result := ForceDirectories(Dir);
+end;
+
+procedure DirChange(const Dir: string);
+begin
+  ChDir(Dir);
 end;
 
 function DirGetCurrent: string;
 begin
-  Result := FileUtil.GetCurrentDirUTF8;
+  Result := GetCurrentDir;
 end;
 
 function DirSetCurrent(const Dir: string): Boolean;
 begin
-  Result := FileUtil.SetCurrentDirUTF8(Dir);
+  Result := SetCurrentDir(Dir);
 end;
 
 function DirGetTemp(Global: Boolean = False): string;
@@ -2700,12 +2831,12 @@ end;
 
 function DirExists(const Dir: string): Boolean;
 begin
-  Result := FileUtil.DirectoryExistsUTF8(Dir);
+  Result := DirectoryExists(Dir);
 end;
 
 function DirForce(const Dir: string): Boolean;
 begin
-  Result := ForceDirectoriesUTF8(Dir);
+  Result := ForceDirectories(Dir);
 end;
 
 function PathAdjustDelimiters(const Path: string): string;
@@ -2718,14 +2849,18 @@ begin
   {$warnings on}
 end;
 
-function PathCombine(const A, B: string): string;
+function PathCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
 begin
-  Result := PathIncludeDelimiter(A) + PathExcludeDelimiter(B);
+	if IncludeDelimiter then
+	  Result := PathIncludeDelimiter(A) + PathIncludeDelimiter(B)
+  else
+	  Result := PathIncludeDelimiter(A) + PathExcludeDelimiter(B);
+  Result := PathAdjustDelimiters(Result);
 end;
 
 function PathExpand(const Path: string): string;
 begin
-  Result := ExpandFileNameUTF8(Path);
+  Result := ExpandFileName(Path);
 end;
 
 function PathIncludeDelimiter(const Path: string): string;
@@ -2740,12 +2875,37 @@ end;
 
 function ConfigAppFile(Global: Boolean; CreateDir: Boolean = False): string;
 begin
-  Result := GetAppConfigFileUTF8(Global, False, CreateDir);
+  Result := GetAppConfigFile(Global, CreateDir);
 end;
 
 function ConfigAppDir(Global: Boolean; CreateDir: Boolean = False): string;
 begin
-  Result := GetAppConfigDirUTF8(Global, CreateDir);
+  Result := GetAppConfigDir(Global);
+  if CreateDir and (not DirExists(Result)) then
+    DirCreate(Result);
+end;
+
+procedure FindFileParams(StartIndex: Integer; out FileParams: TStrings);
+var
+  Search: TStrings;
+  S: string;
+  I: Integer;
+begin
+  FileParams := TStringList.Create;
+  if StartIndex < 1 then
+    Exit;
+  for I := StartIndex to ParamCount do
+  begin
+    S := ParamStr(I);
+    if FileExists(S) then
+      FileParams.Add(S)
+    else
+    begin
+      FindFiles(S, Search);
+      FileParams.AddStrings(Search);
+      Search.Free;
+    end;
+  end;
 end;
 
 function FindOpen(const Path: string; Attr: Longint; out Search: TSearchRec): LongInt;
@@ -2753,7 +2913,7 @@ begin
   Result := FindFirst(PathAdjustDelimiters(Path), Attr, Search);
 end;
 
-function FindFiles(const Path: string): TStrings;
+procedure FindFiles(const Path: string; out FileSearch: TStrings; Attributes: Integer = 0);
 var
   Name, Folder: string;
   Search: TSearchRec;
@@ -2770,38 +2930,89 @@ begin
     if Folder = Path then
       Folder := '.'
   end;
-  Result := TStringList.Create;
-  if FindOpen(PathCombine(Folder, Name), faAnyFile and (not faDirectory), Search) = 0 then
+  FileSearch := TStringList.Create;
+  if FindOpen(PathCombine(Folder, Name), Attributes, Search) = 0 then
   begin
     repeat
-      Result.Add(PathCombine(Folder, Search.Name));
+      FileSearch.Add(PathCombine(Folder, Search.Name));
     until FindNext(Search) <> 0;
     FindClose(Search);
   end;
 end;
 
-function FindFileParams(StartIndex: Integer): TStrings;
+procedure FindFiles(const Path: string; out FileSearch: TFileSearch; Attributes: Integer = 0);
 var
-  Search: TStrings;
-  S: string;
-  I: Integer;
+  Name, Folder: string;
+  Search: TSearchRec;
+  Item: TFileSearchItem;
 begin
-  Result := TStringList.Create;
-  if StartIndex < 1 then
-    Exit;
-  for I := StartIndex to ParamCount do
+  if DirectoryExists(Path) then
   begin
-    S := ParamStrUTF8(I);
-    if FileUtil.FileExistsUTF8(S) then
-      Result.Add(S)
-    else
-    begin
-      Search := FindFiles(S);
-      Result.AddStrings(Search);
-      Search.Free;
-    end;
+    Name := '*';
+    Folder := Path;
+  end
+  else
+  begin
+    Name := FileExtractName(Path);
+    Folder := FileExtractPath(Path);
+    if Folder = Path then
+      Folder := '.'
+  end;
+  FileSearch.Length := 0;
+  if FindOpen(PathCombine(Folder, Name), Attributes, Search) = 0 then
+  begin
+    repeat
+      Item.Name := PathCombine(Folder, Search.Name);
+      Item.Attributes := Search.Attr;
+      Item.Size := Search.Size;
+      Item.Modified := FileDate(Item.Name);
+      FileSearch.Push(Item);
+    until FindNext(Search) <> 0;
+    FindClose(Search);
   end;
 end;
+
+function FileItemSortName(constref A, B: TFileSearchItem): Integer;
+begin
+  {$ifdef windows}
+  Result := StrCompare(A.Name, B.Name, True);
+  {$else}
+  Result := StrCompare(A.Name, B.Name);
+  {$endif}
+end;
+
+procedure TFileSearchHelper.SortName(Order: TSortingOrder = soAscend);
+begin
+  Self.Sort(Order, FileItemSortName);
+end;
+
+function FileItemSortSize(constref A, B: TFileSearchItem): Integer;
+begin
+  Result := A.Size - B.Size;
+end;
+
+
+procedure TFileSearchHelper.SortSize(Order: TSortingOrder = soAscend);
+begin
+  Self.Sort(Order, FileItemSortSize);
+end;
+
+function FileItemSortModified(constref A, B: TFileSearchItem): Integer;
+begin
+  if A.Modified < B.Modified then
+    Result := 1
+  else if A.Modified > B.Modified then
+    Result := -1
+  else
+    Result := 0;
+end;
+
+procedure TFileSearchHelper.SortModified(Order: TSortingOrder = soAscend);
+begin
+  Self.Sort(Order, FileItemSortModified);
+end;
+
+
 {$endregion}
 
 {$region generic containers}
@@ -3186,6 +3397,20 @@ begin
   FValues.Clear;
 end;
 
+function TNamedValues<T>.HasName(const Name: string): Boolean;
+var
+  S: string;
+  I: Integer;
+begin
+	Result := False;
+  if Name = '' then
+    Exit;
+  S := Name.ToUpper;
+  for I := FNames.Lo to FNames.Hi do
+    if S = FNames[I].ToUpper then
+    	Exit(True);
+end;
+
 function TNamedValues<T>.GetCount: Integer;
 begin
   Result := FNames.Length;
@@ -3227,6 +3452,60 @@ begin
     Result := FValues[Index]
   else
     Result := default(T);
+end;
+
+{ TNamedValuesIntf<T>.IEnumerable<T> }
+
+function TNamedValuesIntf<T>.GetEnumerator: IEnumerator<string>;
+begin
+  Result := FData.GetEnumerator;
+end;
+
+{ TNamedValuesIntf<T>.INamedValues<T> }
+
+function TNamedValuesIntf<T>.GetCount: Integer;
+begin
+  Result := FData.GetCount;
+end;
+
+function TNamedValuesIntf<T>.GetEmpty: Boolean;
+begin
+  Result := FData.GetEmpty;
+end;
+
+function TNamedValuesIntf<T>.GetName(Index: Integer): string;
+begin
+  Result := FData.GetName(Index);
+end;
+
+function TNamedValuesIntf<T>.GetValue(const Name: string): T;
+begin
+  Result := FData.GetValue(Name);
+end;
+
+function TNamedValuesIntf<T>.GetValueByIndex(Index: Integer): T;
+begin
+  Result := FData.GetValueByIndex(Index);
+end;
+
+procedure TNamedValuesIntf<T>.Add(const Name: string; const Value: T);
+begin
+  FData.Add(Name, Value);
+end;
+
+procedure TNamedValuesIntf<T>.Remove(const Name: string);
+begin
+  FData.Remove(Name);
+end;
+
+procedure TNamedValuesIntf<T>.Delete(Index: Integer);
+begin
+  FData.Delete(Index);
+end;
+
+procedure TNamedValuesIntf<T>.Clear;
+begin
+  FData.Clear;
 end;
 
 function MemCompare(const A, B; Size: LongWord): Boolean;
@@ -3496,22 +3775,21 @@ end;
 {$endregion}
 
 {$region threading}
-
 var
-  SemaphoreInit: TSempahoreInitHandler;
-  SemaphoreDestroy: TSemaphoreDestroyHandler;
-  SemaphorePost: TSemaphorePostHandler;
-  SemaphoreWait: TSemaphoreWaitHandler;
+  SemaphoreInit: TCriticalSectionHandler;
+  SemaphoreDestroy: TCriticalSectionHandler;
+  SemaphoreWait: TCriticalSectionHandler;
+  SemaphoreLeave: TCriticalSectionHandler;
 
 procedure ThreadsInit;
 var
   M: TThreadManager;
 begin
   GetThreadManager(M);
-  SemaphoreInit := M.SemaphoreInit;
-  SemaphoreDestroy := M.SemaphoreDestroy;
-  SemaphorePost := M.SemaphorePost;
-  SemaphoreWait := M.SemaphoreWait;
+  SemaphoreInit := @M.InitCriticalSection;
+  SemaphoreDestroy := @M.DoneCriticalSection;
+  SemaphoreWait := @M.EnterCriticalSection;
+  SemaphoreLeave := @M.LeaveCriticalSection;
 end;
 
 { TMutexObject }
@@ -3520,7 +3798,6 @@ type
   TMutexObject = class(TInterfacedObject, IMutex)
   private
     FSemaphore: Pointer;
-    FCounter: Integer;
   public
     constructor Create;
     destructor Destroy; override;
@@ -3546,7 +3823,7 @@ begin
   inherited Create;
   if @SemaphoreInit = nil then
     ThreadsInit;
-  FSemaphore := SemaphoreInit;
+  SemaphoreInit(FSemaphore);
 end;
 
 destructor TMutexObject.Destroy;
@@ -3557,16 +3834,12 @@ end;
 
 function TMutexObject.Lock: LongInt;
 begin
-  Result := InterLockedIncrement(FCounter);
-  if Result > 1 then
-    SemaphoreWait(FSemaphore);
+  SemaphoreWait(FSemaphore);
 end;
 
 function TMutexObject.Unlock: LongInt;
 begin
-  Result := InterLockedDecrement(FCounter);
-  if Result > 0 then
-    SemaphorePost(FSemaphore);
+  SemaphoreLeave(FSemaphore);
 end;
 
 constructor TEventObject.Create;
@@ -3623,25 +3896,75 @@ begin
   FExecuteMethod(Self);
 end;
 
-procedure TSimpleThread.Synch(Method: TThreadMethod);
+procedure TSimpleThread.Synchronize(Method: TThreadMethod);
 begin
-  Synchronize(Method);
+  inherited Synchronize(Method);
 end;
 
 procedure TSimpleThread.DoStatus;
 begin
+  FStatus := FTempStatus;
   if Assigned(FOnStatus) then
     FOnStatus(Self);
 end;
 
 procedure TSimpleThread.SetStatus(const Value: string);
 begin
-  if Value <> FStatus then
+  if (Value <> FTempStatus) and (Handle = GetCurrentThreadId) then
   begin
-    FStatus := Value;
+    FTempStatus := Value;
     if Assigned(FOnStatus) then
       Synchronize(DoStatus);
   end;
+end;
+
+{ TThreadContainer }
+
+type
+  TThreadContainer = class
+	private
+    FThreadProc: TThreadExecuteProc;
+    FProc: TProcedure;
+    procedure Execute(Thread: TSimpleThread);
+	public
+    constructor Create(ThreadProc: TThreadExecuteProc; Proc: TProcedure);
+    procedure Run;
+  end;
+
+constructor TThreadContainer.Create(ThreadProc: TThreadExecuteProc; Proc: TProcedure);
+begin
+	inherited Create;
+  FThreadProc := ThreadProc;
+  FProc := Proc;
+end;
+
+procedure TThreadContainer.Execute(Thread: TSimpleThread);
+begin
+  if Assigned(FThreadProc) then
+		FThreadProc(Thread)
+  else
+		FProc;
+  Free;
+end;
+
+procedure TThreadContainer.Run;
+begin
+	TSimpleThread.Create(Execute);
+end;
+
+procedure ThreadExecute(ThreadProc: TThreadExecuteProc);
+begin
+	TThreadContainer.Create(ThreadProc, nil).Run;
+end;
+
+procedure ThreadExecute(Proc: TProcedure);
+begin
+	TThreadContainer.Create(nil, Proc).Run;
+end;
+
+procedure Sleep(Milliseconds: Cardinal);
+begin
+  SysUtils.Sleep(Milliseconds);
 end;
 
 {$endregion}
@@ -3710,4 +4033,6 @@ initialization
   FloatArray.DefaultCompare := DefaultFloatCompare;
   FloatArray.DefaultConvertString := DefaultFloatConvertString;
 end.
+
+
 

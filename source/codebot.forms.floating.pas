@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified November 2015                              *)
+(*  Modified March 2019                                 *)
 (*                                                      *)
 (********************************************************)
 
@@ -23,6 +23,7 @@ uses
 type
   TFloatingForm = class(TForm)
   private
+    FInteractive: Boolean;
     FWindow: Pointer;
     FOpacity: Byte;
     FFaded: Boolean;
@@ -30,15 +31,18 @@ type
     FFadeMoved: Boolean;
     function GetCompositing: Boolean;
     procedure SetFaded(Value: Boolean);
+    procedure SetInteractive(Value: Boolean);
     procedure SetOpacity(Value: Byte);
   protected
     procedure CreateHandle; override;
+    procedure Loaded; override;
+		procedure Paint; override;
   public
     constructor Create(AOwner: TComponent); override;
-    procedure ClipEvents;
     procedure MoveSize(Rect: TRectI);
     property Opacity: Byte read FOpacity write SetOpacity;
     property Compositing: Boolean read GetCompositing;
+    property Interactive: Boolean read FInteractive write SetInteractive;
     property Faded: Boolean read FFaded write SetFaded;
   end;
 
@@ -46,7 +50,7 @@ implementation
 
 {$if defined(linux) and defined(lclgtk2)}
 uses
-  GLib2, Gdk2, Gtk2, Gtk2Def, Gtk2Extra, Gtk2Globals,
+  GLib2, Gdk2, Gtk2, Gtk2Def, Gtk2Extra, Gtk2Globals, Cairo,
   Codebot.Interop.Linux.NetWM;
 
 procedure gdk_window_input_shape_combine_mask(window: PGdkWindow;
@@ -63,7 +67,7 @@ var
 begin
   Screen := gtk_widget_get_screen(widget);
   Colormap := gdk_screen_get_rgba_colormap(Screen);
-    gtk_widget_set_colormap(widget, Colormap);
+	gtk_widget_set_colormap(widget, Colormap);
 end;
 
 { TFloatingForm }
@@ -73,19 +77,33 @@ begin
   inherited Create(AOwner);
   BorderStyle := bsNone;
   FOpacity := $FF;
+  FInteractive := True;
 end;
 
-procedure TFloatingForm.CreateHandle;
+procedure TFloatingForm.Loaded;
 type
   PFormBorderStyle = ^TFormBorderStyle;
+begin
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+  inherited Loaded;
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+end;
+
+type
+  PFormBorderStyle = ^TFormBorderStyle;
+
+procedure TFloatingForm.CreateHandle;
 var
   W: TGtkWindowType;
 begin
   PFormBorderStyle(@BorderStyle)^ := bsNone;
   W := FormStyleMap[bsNone];
   FormStyleMap[bsNone] := GTK_WINDOW_POPUP;
-  inherited CreateHandle;
-  FormStyleMap[bsNone] := W;
+  try
+    inherited CreateHandle;
+  finally
+    FormStyleMap[bsNone] := W;
+  end;
   if not (csDesigning in ComponentState) then
   begin
     FWindow := Pointer(Handle);
@@ -96,19 +114,30 @@ begin
   end;
 end;
 
-procedure TFloatingForm.ClipEvents;
+procedure TFloatingForm.SetInteractive(Value: Boolean);
+begin
+  if FInteractive <> Value then
+  begin
+    FInteractive := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFloatingForm.Paint;
 var
   Window: PGdkWindow;
   Mask: PGdkPixmap;
-  Bitmap: IBitmap;
-  Surface: ISurface;
 begin
-  {Window := GTK_WIDGET(Pointer(Handle)).window;
-  Mask := gdk_pixmap_new(Window, Width, Height, 1);
-  Bitmap := NewBitmapCairo(Mask);
-  Surface := NewSurfaceCairo(Self);
-  Surface.CopyTo(ClientRect, Bitmap.Surface, ClientRect);
-  gdk_window_input_shape_combine_mask(Window, Mask, 0, 0);}
+  Window := GTK_WIDGET(Pointer(Handle)).window;
+  if FInteractive then
+	  gdk_window_input_shape_combine_mask(Window, nil, 0, 0)
+  else
+  begin
+    Mask := gdk_pixmap_new(nil, Width, Height, 1);
+    gdk_window_input_shape_combine_mask(Window, nil, 0, 0);
+    gdk_window_input_shape_combine_mask(Window, Mask, 0, 0);
+    g_object_unref(Mask);
+	end
 end;
 
 procedure TFloatingForm.MoveSize(Rect: TRectI);

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <ProjectSession>
-    <Version Value="9"/>
+    <Version Value="11"/>
     <BuildModes Active="Default"/>
-    <Units Count="6">
+    <Units Count="11">
       <Unit0>
         <Filename Value="clock.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -11,19 +11,19 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="-1"/>
         <CursorPos X="-1" Y="-1"/>
-        <UsageCount Value="27"/>
+        <UsageCount Value="33"/>
       </Unit0>
       <Unit1>
         <Filename Value="main.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form1"/>
+        <ComponentName Value="ClockWidget"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="398"/>
-        <CursorPos X="12" Y="406"/>
-        <UsageCount Value="27"/>
+        <TopLine Value="437"/>
+        <CursorPos X="17" Y="466"/>
+        <UsageCount Value="33"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
@@ -36,10 +36,12 @@
       </Unit2>
       <Unit3>
         <Filename Value="../../source/codebot.graphics.types.pas"/>
-        <EditorIndex Value="-1"/>
-        <TopLine Value="742"/>
-        <CursorPos X="29" Y="777"/>
-        <UsageCount Value="9"/>
+        <UnitName Value="Codebot.Graphics.Types"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="696"/>
+        <CursorPos X="34" Y="715"/>
+        <UsageCount Value="12"/>
+        <Loaded Value="True"/>
       </Unit3>
       <Unit4>
         <Filename Value="../../source/codebot.graphics.windows.surfacegdiplus.pas"/>
@@ -57,74 +59,171 @@
         <CursorPos X="31" Y="386"/>
         <UsageCount Value="9"/>
       </Unit5>
+      <Unit6>
+        <Filename Value="../../source/codebot.forms.widget.pas"/>
+        <UnitName Value="Codebot.Forms.Widget"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="14"/>
+        <CursorPos X="3" Y="32"/>
+        <UsageCount Value="12"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="../../../../../Base/lazarus/lcl/graphics.pp"/>
+        <UnitName Value="Graphics"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="39"/>
+        <CursorPos X="3" Y="58"/>
+        <UsageCount Value="11"/>
+      </Unit7>
+      <Unit8>
+        <Filename Value="../../../../../Base/lazarus/lcl/controls.pp"/>
+        <UnitName Value="Controls"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1153"/>
+        <CursorPos X="18" Y="1433"/>
+        <UsageCount Value="12"/>
+      </Unit8>
+      <Unit9>
+        <Filename Value="../../source/codebot.graphics.pas"/>
+        <UnitName Value="Codebot.Graphics"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="2868"/>
+        <CursorPos Y="2931"/>
+        <UsageCount Value="12"/>
+        <Loaded Value="True"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="../../source/codebot.graphics.linux.surfacecairo.pas"/>
+        <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1813"/>
+        <CursorPos Y="1849"/>
+        <UsageCount Value="11"/>
+      </Unit10>
     </Units>
-    <JumpHistory Count="17" HistoryIndex="16">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="main.pas"/>
-        <Caret Line="9" Column="3"/>
+        <Caret Line="482" TopLine="447"/>
       </Position1>
       <Position2>
         <Filename Value="main.pas"/>
-        <Caret Line="413" Column="3" TopLine="392"/>
+        <Caret Line="478" TopLine="2"/>
       </Position2>
       <Position3>
         <Filename Value="main.pas"/>
-        <Caret Line="21"/>
+        <Caret Line="12" Column="62" TopLine="154"/>
       </Position3>
       <Position4>
         <Filename Value="main.pas"/>
-        <Caret Line="20"/>
+        <Caret Line="23" Column="10" TopLine="5"/>
       </Position4>
       <Position5>
         <Filename Value="main.pas"/>
-        <Caret Line="438" TopLine="404"/>
+        <Caret Line="26" Column="20" TopLine="5"/>
       </Position5>
       <Position6>
         <Filename Value="main.pas"/>
-        <Caret Line="424" Column="26" TopLine="405"/>
+        <Caret Line="31" Column="11" TopLine="5"/>
       </Position6>
       <Position7>
         <Filename Value="main.pas"/>
-        <Caret Line="418" Column="27" TopLine="342"/>
+        <Caret Line="155" Column="23" TopLine="126"/>
       </Position7>
       <Position8>
         <Filename Value="main.pas"/>
+        <Caret Line="156" Column="12" TopLine="127"/>
       </Position8>
       <Position9>
         <Filename Value="main.pas"/>
-        <Caret Line="139" Column="15" TopLine="103"/>
+        <Caret Line="182" Column="25" TopLine="153"/>
       </Position9>
       <Position10>
         <Filename Value="main.pas"/>
+        <Caret Line="209" Column="25" TopLine="180"/>
       </Position10>
       <Position11>
         <Filename Value="main.pas"/>
-        <Caret Line="25" Column="66"/>
+        <Caret Line="237" Column="25" TopLine="208"/>
       </Position11>
       <Position12>
         <Filename Value="main.pas"/>
-        <Caret Line="82" Column="41" TopLine="64"/>
+        <Caret Line="409" Column="53" TopLine="380"/>
       </Position12>
       <Position13>
         <Filename Value="main.pas"/>
-        <Caret Line="407" TopLine="397"/>
+        <Caret Line="410" Column="10" TopLine="381"/>
       </Position13>
       <Position14>
         <Filename Value="main.pas"/>
-        <Caret Line="411" Column="19" TopLine="402"/>
+        <Caret Line="423" Column="3" TopLine="395"/>
       </Position14>
       <Position15>
         <Filename Value="main.pas"/>
-        <Caret Line="405" TopLine="384"/>
       </Position15>
       <Position16>
         <Filename Value="main.pas"/>
-        <Caret Line="451" Column="3" TopLine="416"/>
+        <Caret Line="31" Column="11" TopLine="2"/>
       </Position16>
       <Position17>
         <Filename Value="main.pas"/>
-        <Caret TopLine="352"/>
+        <Caret Line="409" Column="53" TopLine="380"/>
       </Position17>
+      <Position18>
+        <Filename Value="main.pas"/>
+        <Caret Line="423" Column="9" TopLine="394"/>
+      </Position18>
+      <Position19>
+        <Filename Value="main.pas"/>
+        <Caret Line="426" Column="14" TopLine="397"/>
+      </Position19>
+      <Position20>
+        <Filename Value="main.pas"/>
+        <Caret Line="466" Column="16" TopLine="437"/>
+      </Position20>
+      <Position21>
+        <Filename Value="main.pas"/>
+        <Caret TopLine="13"/>
+      </Position21>
+      <Position22>
+        <Filename Value="main.pas"/>
+        <Caret Line="31" Column="11" TopLine="13"/>
+      </Position22>
+      <Position23>
+        <Filename Value="main.pas"/>
+        <Caret Line="429" Column="8" TopLine="398"/>
+      </Position23>
+      <Position24>
+        <Filename Value="main.pas"/>
+        <Caret Line="469" Column="64" TopLine="437"/>
+      </Position24>
+      <Position25>
+        <Filename Value="main.pas"/>
+        <Caret Line="500" Column="34" TopLine="469"/>
+      </Position25>
+      <Position26>
+        <Filename Value="main.pas"/>
+      </Position26>
+      <Position27>
+        <Filename Value="main.pas"/>
+        <Caret Line="31" Column="11" TopLine="2"/>
+      </Position27>
+      <Position28>
+        <Filename Value="main.pas"/>
+        <Caret Line="409" Column="53" TopLine="380"/>
+      </Position28>
+      <Position29>
+        <Filename Value="main.pas"/>
+        <Caret Line="423" Column="10" TopLine="394"/>
+      </Position29>
+      <Position30>
+        <Filename Value="main.pas"/>
+        <Caret Line="426" Column="14" TopLine="397"/>
+      </Position30>
     </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes Count="0" ActiveMode="default"/>
+    </RunParams>
   </ProjectSession>
 </CONFIG>

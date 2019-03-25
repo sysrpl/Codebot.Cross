@@ -655,6 +655,7 @@ type
     function GetMatrix: IMatrix;
     procedure SetMatrix(Value: IMatrix);
     function GetPath: IPath;
+    function GetHandle: Pointer;
     { Wait for drawing operations to complete }
     procedure Flush;
     { Fill the entire surface with a color }
@@ -706,6 +707,8 @@ type
     property Matrix: IMatrix read GetMatrix write SetMatrix;
     { The current path which can be stroked or filled }
     property Path: IPath read GetPath;
+    { Handle }
+    property Handle: Pointer read GetHandle;
   end;
 
 { IBitmap can load and save images as well as allow ISurface drawing in memory }

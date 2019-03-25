@@ -597,9 +597,9 @@ begin
     case FIconPosition of
       icNear:
         begin
-          Images.Draw(Surface, Index, 0,
+          Images.Draw(Surface, Index, Margin,
             R.MidPoint.Y - Images.Size div 2);
-          R.X := R.X + Images.Size + Margin;
+          R.X := R.X + Images.Size + Margin + Margin;
           Surface.TextOut(F, S, R, drLeft);
         end;
       icAbove:

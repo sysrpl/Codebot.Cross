@@ -439,6 +439,7 @@ type
     function GetMatrix: IMatrix;
     procedure SetMatrix(Value: IMatrix);
     function GetPath: IPath;
+    function GetHandle: Pointer;
     procedure Flush; virtual;
     procedure Clear; overload;
     procedure Clear(Color: TColorB); overload;
@@ -1437,6 +1438,11 @@ begin
     FPathCairo := FPath as TSurfacePathCairo;
   end;
   Result := FPath;
+end;
+
+function TSurfaceCairo.GetHandle: Pointer;
+begin
+  Result := FCairo;
 end;
 
 procedure TSurfaceCairo.Flush;
