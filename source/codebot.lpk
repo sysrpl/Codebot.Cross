@@ -1,284 +1,151 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
-    <PathDelim Value="\"/>
+  <Package Version="5">
     <Name Value="codebot"/>
     <Type Value="RunAndDesignTime"/>
-    <Author Value="Anthony Walter"/>
     <CompilerOptions>
       <Version Value="11"/>
-      <PathDelim Value="\"/>
       <SearchPaths>
-        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
-      <Parsing>
-        <SyntaxOptions>
-          <IncludeAssertionCode Value="True"/>
-        </SyntaxOptions>
-      </Parsing>
-      <CodeGeneration>
-        <Checks>
-          <IOChecks Value="True"/>
-          <RangeChecks Value="True"/>
-          <OverflowChecks Value="True"/>
-          <StackChecks Value="True"/>
-        </Checks>
-        <VerifyObjMethodCallValidity Value="True"/>
-      </CodeGeneration>
-      <Linking>
-        <Debugging>
-          <DebugInfoType Value="dsDwarf2Set"/>
-        </Debugging>
-      </Linking>
-      <Other>
-        <CompilerMessages>
-          <IgnoredMessages idx6058="True" idx5089="True" idx5024="True" idx4055="True" idx3177="True"/>
-        </CompilerMessages>
-      </Other>
     </CompilerOptions>
-    <Description Value="Codebot.Cross a set of tools"/>
-    <License Value="LGPL"/>
-    <Version Major="1"/>
-    <Files Count="56">
-      <Item1>
+    <Files>
+      <Item>
         <Filename Value="codebot.inc"/>
-        <Type Value="Binary"/>
-      </Item1>
-      <Item2>
-        <Filename Value="codebot.constants.pas"/>
-        <UnitName Value="Codebot.Constants"/>
-      </Item2>
-      <Item3>
-        <Filename Value="codebot.core.pas"/>
-        <UnitName Value="Codebot.Core"/>
-      </Item3>
-      <Item4>
-        <Filename Value="codebot.system.pas"/>
-        <UnitName Value="Codebot.System"/>
-      </Item4>
-      <Item5>
-        <Filename Value="codebot.collections.pas"/>
-        <UnitName Value="Codebot.Collections"/>
-      </Item5>
-      <Item6>
-        <Filename Value="codebot.interop.windows.direct2d.pas"/>
-        <UnitName Value="Codebot.Interop.Windows.Direct2D"/>
-      </Item6>
-      <Item7>
-        <Filename Value="codebot.interop.windows.gdiplus.pas"/>
-        <UnitName Value="Codebot.Interop.Windows.GdiPlus"/>
-      </Item7>
-      <Item8>
-        <Filename Value="codebot.interop.windows.imagecodecs.pas"/>
-        <UnitName Value="Codebot.Interop.Windows.ImageCodecs"/>
-      </Item8>
-      <Item9>
-        <Filename Value="codebot.interop.windows.msxml.pas"/>
-        <UnitName Value="Codebot.Interop.Windows.Msxml"/>
-      </Item9>
-      <Item10>
-        <Filename Value="codebot.interop.linux.netwm.pas"/>
-        <UnitName Value="Codebot.Interop.Linux.NetWM"/>
-      </Item10>
-      <Item11>
-        <Filename Value="codebot.interop.linux.xml2.pas"/>
-        <UnitName Value="Codebot.Interop.Linux.Xml2"/>
-      </Item11>
-      <Item12>
-        <Filename Value="codebot.interop.sockets.pas"/>
-        <UnitName Value="Codebot.Interop.Sockets"/>
-      </Item12>
-      <Item13>
-        <Filename Value="codebot.interop.openssl.pas"/>
-        <UnitName Value="Codebot.Interop.OpenSSL"/>
-      </Item13>
-      <Item14>
-        <Filename Value="codebot.text.pas"/>
-        <UnitName Value="Codebot.Text"/>
-      </Item14>
-      <Item15>
-        <Filename Value="codebot.cryptography.pas"/>
-        <UnitName Value="Codebot.Cryptography"/>
-      </Item15>
-      <Item16>
-        <Filename Value="codebot.text.xml.pas"/>
-        <UnitName Value="Codebot.Text.Xml"/>
-      </Item16>
-      <Item17>
-        <Filename Value="codebot.text.xml.windows.inc"/>
-        <UnitName Value="codebot.text.xml.windows"/>
-      </Item17>
-      <Item18>
-        <Filename Value="codebot.text.xml.linux.inc"/>
-        <UnitName Value="codebot.text.xml.linux"/>
-      </Item18>
-      <Item19>
-        <Filename Value="codebot.networking.pas"/>
-        <UnitName Value="Codebot.Networking"/>
-      </Item19>
-      <Item20>
-        <Filename Value="codebot.networking.storage.pas"/>
-        <UnitName Value="Codebot.Networking.Storage"/>
-      </Item20>
-      <Item21>
-        <Filename Value="codebot.networking.ftp.pas"/>
-        <UnitName Value="Codebot.Networking.Ftp"/>
-      </Item21>
-      <Item22>
-        <Filename Value="codebot.networking.web.pas"/>
-        <UnitName Value="Codebot.Networking.Web"/>
-      </Item22>
-      <Item23>
-        <Filename Value="codebot.forms.management.pas"/>
-        <UnitName Value="Codebot.Forms.Management"/>
-      </Item23>
-      <Item24>
-        <Filename Value="codebot.forms.floating.pas"/>
-        <UnitName Value="Codebot.Forms.Floating"/>
-      </Item24>
-      <Item25>
-        <Filename Value="codebot.forms.popup.pas"/>
-        <UnitName Value="Codebot.Forms.Popup"/>
-      </Item25>
-      <Item26>
-        <Filename Value="codebot.forms.widget.pas"/>
-        <UnitName Value="Codebot.Forms.Widget"/>
-      </Item26>
-      <Item27>
-        <Filename Value="codebot.graphics.windows.imagebitmap.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.ImageBitmap"/>
-      </Item27>
-      <Item28>
-        <Filename Value="codebot.graphics.windows.interfacedbitmap.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.InterfacedBitmap"/>
-      </Item28>
-      <Item29>
-        <Filename Value="codebot.graphics.pas"/>
-        <UnitName Value="Codebot.Graphics"/>
-      </Item29>
-      <Item30>
-        <Filename Value="codebot.graphics.extras.pas"/>
-        <UnitName Value="Codebot.Graphics.Extras"/>
-      </Item30>
-      <Item31>
-        <Filename Value="codebot.graphics.types.pas"/>
-        <UnitName Value="Codebot.Graphics.Types"/>
-      </Item31>
-      <Item32>
-        <Filename Value="codebot.graphics.windows.surfacegdiplus.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
-      </Item32>
-      <Item33>
-        <Filename Value="codebot.graphics.windows.surfaced2d.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
-      </Item33>
-      <Item34>
-        <Filename Value="codebot.graphics.linux.surfacecairo.pas"/>
-        <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
-      </Item34>
-      <Item35>
-        <Filename Value="codebot.controls.tooltips.pas"/>
-        <UnitName Value="Codebot.Controls.Tooltips"/>
-      </Item35>
-      <Item36>
-        <Filename Value="codebot.controls.extras.pas"/>
-        <UnitName Value="Codebot.Controls.Extras"/>
-      </Item36>
-      <Item37>
-        <Filename Value="codebot.controls.scrolling.pas"/>
-        <UnitName Value="Codebot.Controls.Scrolling"/>
-      </Item37>
-      <Item38>
-        <Filename Value="codebot.controls.sliders.pas"/>
-        <UnitName Value="Codebot.Controls.Sliders"/>
-      </Item38>
-      <Item39>
-        <Filename Value="codebot.input.hotkeys.pas"/>
-        <UnitName Value="Codebot.Input.Hotkeys"/>
-      </Item39>
-      <Item40>
-        <Filename Value="codebot.input.mousemonitor.pas"/>
-        <UnitName Value="Codebot.Input.MouseMonitor"/>
-      </Item40>
-      <Item41>
-        <Filename Value="codebot.controls.pas"/>
-        <UnitName Value="Codebot.Controls"/>
-      </Item41>
-      <Item42>
-        <Filename Value="codebot.controls.colors.pas"/>
-        <UnitName Value="Codebot.Controls.Colors"/>
-      </Item42>
-      <Item43>
-        <Filename Value="codebot.controls.edits.pas"/>
-        <UnitName Value="Codebot.Controls.Edits"/>
-      </Item43>
-      <Item44>
-        <Filename Value="codebot.controls.banner.pas"/>
-        <UnitName Value="Codebot.Controls.Banner"/>
-      </Item44>
-      <Item45>
-        <Filename Value="codebot.controls.grids.pas"/>
-        <UnitName Value="Codebot.Controls.Grids"/>
-      </Item45>
-      <Item46>
-        <Filename Value="codebot.design.imagelisteditor.pas"/>
-        <UnitName Value="Codebot.Design.ImageListEditor"/>
-      </Item46>
-      <Item47>
-        <Filename Value="codebot.design.surfacebitmapeditor.pas"/>
-        <UnitName Value="Codebot.Design.SurfaceBitmapEditor"/>
-      </Item47>
-      <Item48>
-        <Filename Value="codebot.controls.buttons.pas"/>
-        <UnitName Value="Codebot.Controls.Buttons"/>
-      </Item48>
-      <Item49>
-        <Filename Value="codebot.graphics.markup.pas"/>
-        <UnitName Value="Codebot.Graphics.Markup"/>
-      </Item49>
-      <Item50>
-        <Filename Value="codebot.controls.containers.pas"/>
-        <UnitName Value="Codebot.Controls.Containers"/>
-      </Item50>
-      <Item51>
-        <Filename Value="codebot.controls.highlighter.pas"/>
-        <UnitName Value="Codebot.Controls.Highlighter"/>
-      </Item51>
-      <Item52>
+        <Type Value="Include"/>
+      </Item>
+      <Item>
         <Filename Value="codebot.animation.pas"/>
         <UnitName Value="Codebot.Animation"/>
-      </Item52>
-      <Item53>
+      </Item>
+      <Item>
+        <Filename Value="codebot.collections.pas"/>
+        <UnitName Value="Codebot.Collections"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.constants.pas"/>
+        <UnitName Value="Codebot.Constants"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.core.pas"/>
+        <UnitName Value="Codebot.Core"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.cryptography.pas"/>
+        <UnitName Value="Codebot.Cryptography"/>
+      </Item>
+      <Item>
         <Filename Value="codebot.geometry.pas"/>
         <UnitName Value="Codebot.Geometry"/>
-      </Item53>
-      <Item54>
-        <Filename Value="codebot.debug.pas"/>
-        <UnitName Value="Codebot.Debug"/>
-      </Item54>
-      <Item55>
-        <Filename Value="codebot.unique.pas"/>
-        <UnitName Value="Codebot.Unique"/>
-      </Item55>
-      <Item56>
-        <Filename Value="codebot.files.pas"/>
-        <UnitName Value="Codebot.Files"/>
-      </Item56>
+      </Item>
+      <Item>
+        <Filename Value="codebot.graphics.linux.surfacecairo.pas"/>
+        <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.graphics.pas"/>
+        <UnitName Value="Codebot.Graphics"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.graphics.types.pas"/>
+        <UnitName Value="Codebot.Graphics.Types"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.graphics.windows.imagebitmap.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.ImageBitmap"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.graphics.windows.interfacedbitmap.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.InterfacedBitmap"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.graphics.windows.surfaced2d.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.graphics.windows.surfacegdiplus.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.interop.linux.xml2.pas"/>
+        <UnitName Value="Codebot.Interop.Linux.Xml2"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.interop.openssl.pas"/>
+        <UnitName Value="Codebot.Interop.OpenSSL"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.interop.sockets.pas"/>
+        <UnitName Value="Codebot.Interop.Sockets"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.interop.windows.direct2d.pas"/>
+        <UnitName Value="Codebot.Interop.Windows.Direct2D"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.interop.windows.gdiplus.pas"/>
+        <UnitName Value="Codebot.Interop.Windows.GdiPlus"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.interop.windows.imagecodecs.pas"/>
+        <UnitName Value="Codebot.Interop.Windows.ImageCodecs"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.interop.windows.msxml.pas"/>
+        <UnitName Value="Codebot.Interop.Windows.Msxml"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.networking.ftp.pas"/>
+        <UnitName Value="Codebot.Networking.Ftp"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.networking.pas"/>
+        <UnitName Value="Codebot.Networking"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.networking.storage.pas"/>
+        <UnitName Value="Codebot.Networking.Storage"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.networking.unix.pas"/>
+        <UnitName Value="Codebot.Networking.Unix"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.networking.web.pas"/>
+        <UnitName Value="Codebot.Networking.Web"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.system.pas"/>
+        <UnitName Value="Codebot.System"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.text.formats.pas"/>
+        <UnitName Value="Codebot.Text.Formats"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.text.json.pas"/>
+        <UnitName Value="Codebot.Text.Json"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.text.pas"/>
+        <UnitName Value="Codebot.Text"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.text.xml.pas"/>
+        <UnitName Value="Codebot.Text.Xml"/>
+      </Item>
     </Files>
-    <RequiredPkgs Count="2">
-      <Item1>
+    <RequiredPkgs>
+      <Item>
         <PackageName Value="LCL"/>
-      </Item1>
-      <Item2>
-        <PackageName Value="FCL"/>
-      </Item2>
+      </Item>
     </RequiredPkgs>
     <UsageOptions>
-      <CustomOptions Value="-dUseCThreads"/>
       <UnitPath Value="$(PkgOutDir)"/>
     </UsageOptions>
     <PublishOptions>
       <Version Value="2"/>
+      <UseFileFilters Value="True"/>
     </PublishOptions>
   </Package>
 </CONFIG>

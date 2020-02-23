@@ -404,15 +404,15 @@ procedure TClockWidget.FormClick(Sender: TObject);
 var
   P: TPointI;
 begin
-  P := Mouse.CursorPos;
+  {P := Mouse.CursorPos;
   P.Offset(-Left, -Top);
   if (P.Y < FClose.Height) and (P.X > Width - FClose.Width) then
-    Close;
+    Close;}
 end;
 
 procedure TClockWidget.FormCreate(Sender: TObject);
-//var
-  //Stream: TStream;
+var
+  Stream: TStream;
 begin
   EdgeSizable := [esNW, esSE, esSW];
   Width := 220;
@@ -420,13 +420,13 @@ begin
   AspectRatio := 1;
   OnTick := ClockTick;
   FBitmap := NewBitmap(Size, Size);
-  FClose := NewBitmap;
-  //Stream := TResourceStream.Create(HInstance, 'CLOSE', RT_RCDATA);
+  {FClose := NewBitmap;
+  Stream := TResourceStream.Create(HInstance, 'CLOSE', RT_RCDATA);
   try
     // FClose.LoadFromStream(Stream);
   finally
-    //Stream.Free;
-  end;
+    Stream.Free;
+  end;}
 end;
 
 procedure TClockWidget.ClockTick(Sender: TObject);
@@ -463,10 +463,10 @@ begin
     B.AddStop(Rgba(clHighlight, 0.2), 0.66);
     B.AddStop(Rgba(clHighlight, 0.1), 1);
     Surface.FillRect(B ,R);
-    R := FClose.ClientRect;
+    {R := FClose.ClientRect;
     R.X := Width - R.Width - 4;
     R.Y := 4;
-    FClose.Surface.CopyTo(FClose.ClientRect, Surface, R, $FF);
+    FClose.Surface.CopyTo(FClose.ClientRect, Surface, R, $FF);}
   end
   else if FMoused or Animator.Animated then
   begin
@@ -494,7 +494,7 @@ begin
     FBitmap.SetSize(Size, Size);
     DrawClock(FBitmap);
     FBitmap.Surface.CopyTo(FBitmap.ClientRect, Surface, FBitmap.ClientRect);
-    R := FClose.ClientRect;
+    R := CloseButton.ClientRect;
     R.X := Width - R.Width - 4;
     R.Y := 4;
     if Alpha = 0 then

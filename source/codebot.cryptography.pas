@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified September 2013                             *)
+(*  Modified August 2019                                *)
 (*                                                      *)
 (********************************************************)
 
@@ -117,12 +117,13 @@ begin
         Methods.Update := @SHA512_Update;
         Methods.Final := @SHA512_Final;
       end;
+  { If we add more...
   else
     Methods.Digest := TBuffer.Create(0);
     Methods.Init := nil;
     Methods.Update := nil;
     Methods.Final := nil;
-    Result := False;
+    Result := False; }
   end;
 end;
 
@@ -151,10 +152,11 @@ begin
         Method.Digest := TBuffer.Create(SizeOf(TSHA512Digest));
         Method.Method := EVP_sha512;
       end;
+  { If we add more...
   else
     Method.Digest := TBuffer.Create(0);
     Method.Method := nil;
-    Result := False;
+    Result := False;}
   end;
 end;
 

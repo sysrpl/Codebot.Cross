@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified August 2019                                *)
 (*                                                      *)
 (********************************************************)
 
@@ -14,10 +14,9 @@ unit Codebot.Networking.Web;
 interface
 
 uses
-  Classes,
-  SysUtils,
+	Classes,
+	SysUtils,
   Codebot.System,
-  Codebot.Text.Xml,
   Codebot.Networking;
 
 { TUrl parses urls such as https://example.com:8080/resource and
@@ -66,9 +65,9 @@ type
     Code: Integer;
     { Response status such as OK }
     Status: string;
-    { Reponse key values }
+    { Response key values }
     Keys:  TNamedStrings;
-    { Reponse raw header text }
+    { Response raw header text }
     RawHeader: string;
     { When Valid is true a complete header was processed from extract }
     Valid: Boolean;
@@ -86,6 +85,7 @@ type
 
   THttpClient = class
   private
+    FBufferSize: Integer;
     FCancelled: Boolean;
     FCompleted: Boolean;
     FUserAgent: string;
@@ -136,7 +136,9 @@ type
     { Send an HTTP POST request with a json body }
     function PostJson(const Url: TUrl; const Json: string): Boolean;
     { Send an HTTP POST request with an xml body }
-    function PostXml(const Url: TUrl; Doc: IDocument): Boolean;
+    function PostXml(const Url: TUrl; const Xml: string): Boolean;
+    { Optional size in bytes of the response buffer }
+    property BufferSize: Integer read FBufferSize write FBufferSize;
     { Holds true if the last request completed properly }
     property Completed: Boolean read FCompleted;
     { The user agent as seen by the server }
@@ -155,15 +157,24 @@ type
     property ResponseStream: TStream read FResponseStream write FResponseStream;
     { If ResponseStream is nil then the response body is stored in ResponseText instead }
     property ResponseText: string read GetResponseText;
-    { FOnCancel is invoked if the request is stoped before completion }
+    { OnCancel is invoked if the request is stoped before completion }
     property OnCancel: TNotifyEvent read FFOnCancel write FFOnCancel;
     { OnHeaderComplete is invoked after a complete response header is read }
     property OnHeaderComplete: TTransmistHeaderCompleteEvent read FOnHeaderComplete write FOnHeaderComplete;
-    { OnComplete is invoked after a response is read }
-    property OnComplete: TNotifyEvent read FOnComplete write FOnComplete;
-    { OnProgress is invoked as after the request header is received and while bytes are being read }
+    { OnProgress is invoked as after the request header is received while bytes are being read }
     property OnProgress: TTransmitEvent read FOnProgress write FOnProgress;
+    { OnComplete is invoked after a response is read in its entirety }
+    property OnComplete: TNotifyEvent read FOnComplete write FOnComplete;
   end;
+
+{ Simplified HTTP GET with response output to a stream }
+function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = ''): Boolean; overload;
+{ Simplified HTTP GET with response output to a string }
+function WebGet(const Url: TUrl; out Response: string; const UserAgent: string = ''): Boolean; overload;
+{ Simplified HTTP POST with response output to a stream }
+function WebPost(const Url: TUrl; Args: TNamedStrings; Response: TStream; const UserAgent: string = ''): Boolean; overload;
+{ Simplified HTTP POST with response output to a string }
+function WebPost(const Url: TUrl; Args: TNamedStrings; out Response: string; const UserAgent: string = ''): Boolean; overload;
 
 const
   ContentNone  = '';
@@ -172,11 +183,6 @@ const
   ContentArgs  = 'application/x-www-form-urlencoded';
   ContentJson  = 'application/json';
   ContentXml  = 'text/xml; charset=utf-8';
-
-{ Simplified HTTP GET with response output to a stream }
-function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = ''): Boolean; overload;
-{ Simplified HTTP GET with response output to a string }
-function WebGet(const Url: TUrl; out Response: string; const UserAgent: string = ''): Boolean; overload;
 
 { HttpResponseHeaderExtract attempts to parse buffer and find a
   valid http response header }
@@ -189,7 +195,7 @@ function HttpRequestPostArgs(const Url: TUrl; const Args: TNamedStrings; const U
 { HttpRequestPostJson creates an http post request given a url and json string }
 function HttpRequestPostJson(const Url: TUrl; const Json: string; const UserAgent: string = ''): string;
 { HttpRequestPostJson creates an http post request given a url and json string }
-function HttpRequestPostXml(const Url: TUrl; Doc: IDocument; const UserAgent: string = ''): string;
+function HttpRequestPostXml(const Url: TUrl; const Xml: string; const UserAgent: string = ''): string;
 { UrlEncode escapes char sequences suitable for posting data }
 function UrlEncode(const Value: string): string;
 { UrlDecode reverts previously escaped char sequences }
@@ -198,6 +204,8 @@ function UrlDecode(const Value: string): string;
 function ArgsEncode(const Args: TNamedStrings): string;
 { ArgsDecode converts a posted string back to name value pairs }
 function ArgsDecode(const Args: string): TNamedStrings;
+{ MimeType extracts a mime type given a file name }
+function MimeType(const FileName: string): string;
 
 implementation
 
@@ -413,15 +421,25 @@ function THttpClient.Process(const Url: TUrl; const Request: string): Boolean;
   end;
 
 const
-  BufferSize = $10000;
+  BufferSizeMin = $1000;
+  BufferSizeDef = $10000;
+  BufferSizeMax = $100000;
 var
   Socket: TSocket;
   Temp, S: string;
   ContentLength, ContentRead: LargeInt;
   Count: LongInt;
   Buffer: Pointer;
+  BufferSize: Integer;
   I: Integer;
 begin
+  BufferSize := FBufferSize;
+  if BufferSize < 1 then
+    BufferSize := BufferSizeDef
+  else if BufferSize < BufferSizeMin then
+    BufferSize := BufferSizeMin
+  else if BufferSize > BufferSizeMax then
+    BufferSize := BufferSizeMax;
   Result := False;
   Clear;
   try
@@ -573,11 +591,11 @@ begin
   Result := Process(Url, S);
 end;
 
-function THttpClient.PostXml(const Url: TUrl; Doc: IDocument): Boolean;
+function THttpClient.PostXml(const Url: TUrl; const Xml: string): Boolean;
 var
   S: string;
 begin
-  S := HttpRequestPostXml(Url, Doc, FUserAgent);
+  S := HttpRequestPostXml(Url, Xml, FUserAgent);
   Result := Process(Url, S);
 end;
 
@@ -657,23 +675,18 @@ begin
   Result := Result + 'Connection: Close'#13#10#13#10 + Json;
 end;
 
-function HttpRequestPostXml(const Url: TUrl; Doc: IDocument; const UserAgent: string = ''): string;
-var
-  S: string;
+function HttpRequestPostXml(const Url: TUrl; const Xml: string; const UserAgent: string = ''): string;
 begin
   if not Url.Valid then
-    Exit('');
-  S := Doc.Xml;
-  if S = '' then
     Exit('');
   Result :=
     'POST ' + Url.Resource + ' HTTP/1.0'#13#10 +
     'Host: ' + Url.Domain + #13#10 +
-    'Content-Length: ' + IntToStr(S.Length) + #13#10 +
+    'Content-Length: ' + IntToStr(Xml.Length) + #13#10 +
     'Content-Type: ' + ContentXml + #13#10;
   if UserAgent <> '' then
     Result := Result + 'User-Agent: ' + UserAgent + #13#10;
-  Result := Result + 'Connection: Close'#13#10#13#10 + S;
+  Result := Result + 'Connection: Close'#13#10#13#10 + Xml;
 end;
 
 function UrlEncode(const Value: string): string;
@@ -699,7 +712,7 @@ var
   I, J: Integer;
 begin
   Result := '';
-  I := Value.Length;
+  I := Value.Length  + 1;
   J := 1;
   while J < I do
   begin
@@ -756,6 +769,106 @@ begin
   end;
 end;
 
+function MimeType(const FileName: string): string;
+var
+  S: string;
+begin
+	S := FileExtractExt(FileName).ToLower;
+  if s = '.7z' then
+    Exit('application/x-7z-compressed');
+  if s = '.aac' then
+    Exit('audio/aac');
+  if s = '.avi' then
+    Exit('video/avi');
+  if s = '.bmp' then
+    Exit('image/bmp');
+  if s = '.css' then
+    Exit('text/css');
+  if s = '.csv' then
+    Exit('text/csv');
+  if s = '.doc' then
+    Exit('application/msword');
+  if s = '.ocx' then
+    Exit('application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+  if s = '.gif' then
+    Exit('image/gif');
+  if s = '.htm' then
+	  Exit('text/html');
+  if s = '.html' then
+    Exit('text/html');
+  if s = '.jpeg' then
+    Exit('image/jpeg');
+  if s = '.jpg' then
+    Exit('image/jpeg');
+  if s = '.js' then
+    Exit('application/javascript');
+  if s = '.json' then
+    Exit('application/json');
+  if s = '.mov' then
+    Exit('video/quicktime');
+  if s = '.m4a' then
+    Exit('audio/mp4a');
+  if s = '.mp3' then
+    Exit('audio/mpeg');
+  if s = '.m4v' then
+    Exit('video/mp4');
+  if s = '.mp4' then
+    Exit('video/mp4');
+  if s = '.mpeg' then
+    Exit('video/mpeg');
+  if s = '.mpg' then
+    Exit('video/mpeg');
+  if s = '.ogg' then
+    Exit('audio/ogg');
+  if s = '.ogv' then
+    Exit('video/ogv');
+  if s = '.pdf' then
+    Exit('application/pdf');
+  if s = '.png' then
+    Exit('image/png');
+  if s = '.ppt' then
+    Exit('application/vnd.ms-powerpoint');
+  if s = '.ptx' then
+    Exit('application/vnd.openxmlformats-officedocument.presentationml.presentation');
+  if s = '.qt' then
+    Exit('video/quicktime');
+  if s = '.svg' then
+    Exit('image/svg');
+  if s = '.swf' then
+    Exit('application/x-shockwave-flash');
+  if s = '.tif' then
+	  Exit('image/tiff');
+  if s = '.tiff' then
+    Exit('image/tiff');
+  if s = '.ini' then
+    Exit('text/plain');
+  if s = '.cfg' then
+    Exit('text/plain');
+  if s = '.cs' then
+    Exit('text/plain');
+  if s = '.pas' then
+    Exit('text/plain');
+  if s = '.sh' then
+    Exit('text/plain');
+  if s = '.txt' then
+    Exit('text/plain');
+  if s = '.wav' then
+    Exit('audio/x-wav');
+  if s = '.wma' then
+    Exit('audio/x-ms-wma');
+  if s = '.wmv' then
+    Exit('audio/x-ms-wmv');
+  if s = '.xls' then
+    Exit('application/vnd.ms-excel');
+  if s = '.lsx' then
+    Exit('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  if s = '.xml' then
+    Exit('text/xml');
+  if s = '.zip' then
+    Exit('application/zip');
+	Result := 'application/octet-stream';
+end;
+
 function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = ''): Boolean;
 var
   Request: THttpClient;
@@ -764,7 +877,7 @@ begin
   try
     Request.UserAgent := UserAgent;
     Request.ResponseStream := Response;
-    Result := Request.Get(Url);
+    Result := Request.Get(Url) and (Request.Code = 200);
   finally
     Request.Free;
   end;
@@ -777,7 +890,35 @@ begin
   Request := THttpClient.Create;
   try
     Request.UserAgent := UserAgent;
-    Result := Request.Get(Url);
+    Result := Request.Get(Url) and (Request.Code = 200);
+    Response := Request.ResponseText;
+  finally
+    Request.Free;
+  end;
+end;
+
+function WebPost(const Url: TUrl; Args: TNamedStrings; Response: TStream; const UserAgent: string = ''): Boolean;
+var
+  Request: THttpClient;
+begin
+  Request := THttpClient.Create;
+  try
+    Request.UserAgent := UserAgent;
+    Request.ResponseStream := Response;
+    Result := Request.PostArgs(Url, Args) and (Request.Code = 200);
+  finally
+    Request.Free;
+  end;
+end;
+
+function WebPost(const Url: TUrl; Args: TNamedStrings; out Response: string; const UserAgent: string = ''): Boolean;
+var
+  Request: THttpClient;
+begin
+  Request := THttpClient.Create;
+  try
+    Request.UserAgent := UserAgent;
+    Result := Request.PostArgs(Url, Args) and (Request.Code = 200);
     Response := Request.ResponseText;
   finally
     Request.Free;

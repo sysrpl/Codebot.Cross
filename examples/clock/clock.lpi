@@ -8,15 +8,13 @@
       <Title Value="clock"/>
       <ResourceType Value="res"/>
       <UseXPManifest Value="True"/>
-      <Resources Count="0">
+      <Resources Count="1">
+        <Resource_0 FileName="../../../../../../Pictures/close.png" Type="RCDATA" ResourceName="CLOSE"/>
       </Resources>
     </General>
     <i18n>
       <EnableI18N LFM="False"/>
     </i18n>
-    <MacroValues Count="1">
-      <Macro1 Name="LCLWidgetType" Value="gtk2"/>
-    </MacroValues>
     <BuildModes Count="2">
       <Item1 Name="Default" Default="True"/>
       <Item2 Name="linux-i386">
@@ -42,9 +40,6 @@
           </Linking>
         </CompilerOptions>
       </Item2>
-      <SharedMatrixOptions Count="1">
-        <Item1 ID="593210726518" Modes="Default" Type="IDEMacro" MacroName="LCLWidgetType" Value="gtk2"/>
-      </SharedMatrixOptions>
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
@@ -87,11 +82,6 @@
       <IncludeFiles Value="$(ProjOutDir)"/>
       <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
-    <Parsing>
-      <SyntaxOptions>
-        <SyntaxMode Value="Delphi"/>
-      </SyntaxOptions>
-    </Parsing>
     <Linking>
       <Options>
         <Win32>

@@ -743,6 +743,8 @@ begin
       end;
     XML_DOCUMENT_NODE:
       SetXml(Value);
+  else
+    // Do nothing
   end;
 end;
 
@@ -784,7 +786,7 @@ type
 
 constructor TNodeListEnumerator.Create(List: INodeList);
 begin
-  inherited Create;
+	inherited Create;
   FList := List;
   FPosition := -1;
 end;
@@ -816,7 +818,7 @@ end;
 
 function TNodeList.GetEnumerator: IEnumerator<INode>;
 begin
-  Result := TNodeListEnumerator.Create(Self);
+	Result := TNodeListEnumerator.Create(Self);
 end;
 
 procedure TNodeList.Clear;
@@ -834,6 +836,8 @@ begin
     XML_ATTRIBUTE_NODE:
       while FNode.properties <> nil do
         xmlRemoveProp(FNode.properties);
+  else
+    // Do nothing ...
   end;
 end;
 
@@ -900,6 +904,8 @@ begin
         if A <> nil then
           xmlRemoveProp(A);
       end;
+  else
+    // Do nothing ...
   end;
 end;
 
@@ -922,6 +928,8 @@ begin
         if (A <> nil) then
           Result := TNode.Create(N);
       end;
+  else
+    // Do nothing ...
   end;
 end;
 
@@ -944,6 +952,8 @@ begin
         if A <> nil then
           Result := TNode.Create(xmlNodePtr(A));
       end;
+  else
+    // Do nothing ...
   end;
 end;
 
@@ -955,6 +965,8 @@ begin
       Result := xmlGetElementChildCount(FNode);
     XML_ATTRIBUTE_NODE:
       Result := xmlGetAttributeChildCount(FNode);
+  else
+    // Do nothing ...
   end;
 end;
 
@@ -974,7 +986,7 @@ type
 
 constructor TXPathListEnumerator.Create(List: TXPathResult);
 begin
-  inherited Create;
+	inherited Create;
   FList := List;
   FPosition := -1;
 end;

@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified August 2019                                *)
 (*                                                      *)
 (********************************************************)
 
@@ -40,19 +40,89 @@ type
     FPrivateKey: string;
     FPublicKey: string;
     function ComputeSignature(const Verb, MD5, ContentType, Date, Resource: string): string;
-    function GetRequestHeader(const Resource: string): string;
+    function GetRequestHeader(const Host, Resource: string): string;
   public
     Header: THttpResponseHeader;
     constructor Create(Vendor: TCloudVendor; const PublicKey, PrivateKey: string);
+    function Request(const Host, Resource: string): string;
     function List(const Resource: string): IDocument;
     function ListRaw(const Resource: string): string;
-    function Fetch(const Resource: string; Stream: TStream): Boolean;
+    function Fetch(const {%H-}Resource: string; {%H-}Stream: TStream): Boolean;
   end;
+
+function NowUTC: TDateTime;
 
 implementation
 
 uses
-  lazutf8sysutils;
+{$ifdef windows}
+	Windows;
+
+function NowUTC: TDateTime;
+var
+  T: TSystemTime;
+begin
+  Windows.GetSystemTime(T{%H-});
+  Result := SystemTimeToDateTime(T);
+end;
+
+{$else}
+	Unix, BaseUnix;
+
+Procedure JulianToGregorian(Julian: LongInt; out Year, Month, Day: Word);
+const
+  D0 = 1461;
+  D1 = 146097;
+  D2 = 1721119;
+var
+  YYear, XYear, Temp, TempMonth: LongInt;
+begin
+  Temp := ((Julian-D2) shl 2) - 1;
+  Julian := Temp div D1;
+  XYear := (Temp mod D1) or 3;
+  YYear := (XYear div D0);
+  Temp := ((((XYear mod D0) +4 ) shr 2) * 5) - 3;
+  Day := ((Temp mod 153)+5) div 5;
+  TempMonth := Temp div 153;
+  if TempMonth >= 10 then
+  begin
+    Inc(YYear);
+    Dec(TempMonth, 12);
+  end;
+  Inc(TempMonth, 3);
+  Month := TempMonth;
+  Year := YYear + (Julian * 100);
+end;
+
+{ Transforms Epoch time into local time (hour, minute,seconds) }
+
+procedure EpochToLocal(Epoch: LongInt; out Y, M, D, H, N, S: Word);
+const
+  EDIV = 86400;
+  C1970 = 2440588;
+var
+  I: LongInt;
+begin
+  I := (Epoch div EDIV) + C1970;
+  JulianToGregorian(I, Y, M, D);
+  Epoch := Abs(Epoch mod 86400);
+  H := Epoch div 3600;
+  Epoch := Epoch mod 3600;
+  N := Epoch div 60;
+  S := Epoch mod 60;
+end;
+
+function NowUTC: TDateTime;
+var
+  T: TTimeVal;
+  S: TSystemTime;
+begin
+  fpgettimeofday(@T, nil);
+  EpochToLocal(T.tv_sec, S.Year, S.Month, S.Day, S.Hour, S.Minute, S.Second);
+  S.MilliSecond:=T.tv_usec div 1000;
+  Result := SystemTimeToDateTime(S);
+end;
+{$endif}
 
 const
   CloudHosts: array[TCloudVendor] of string = (
@@ -77,7 +147,7 @@ begin
   Result := 'Authorization: AWS ' + FPublicKey + ':' + AuthString(FPrivateKey, hashSHA1, S).Encode;
 end;
 
-function TCloudStorage.GetRequestHeader(const Resource: string): string;
+function TCloudStorage.GetRequestHeader(const Host, Resource: string): string;
 var
   Date: string;
   Signature: string;
@@ -85,13 +155,13 @@ begin
   Date := NowUTC.ToString('GMT');
   Signature := ComputeSignature('GET', '', '', Date, Resource);
   Result := 'GET ' + Resource + ' HTTP/1.0'#10 +
-    'Host: ' + CloudHosts[FVendor] + #10 +
+    'Host: ' + Host + #10 +
     'Connection: Close' + #10 +
     'Date: ' + Date + #10 +
     Signature + #10#10;
 end;
 
-function TCloudStorage.List(const Resource: string): IDocument;
+function TCloudStorage.Request(const Host, Resource: string): string;
 var
   Socket: TSocket;
   Body, Buffer: string;
@@ -100,9 +170,10 @@ begin
   Body := '';
   Socket := TSocket.Create;
   try
-    if Socket.Connect(CloudHosts[FVendor], 80) then
+    Socket.Secure := True;
+    if Socket.Connect(Host, 443) then
     begin
-      Buffer := GetRequestHeader(Resource);
+      Buffer := GetRequestHeader(Host, Resource);
       Socket.WriteAll(Buffer);
       while Socket.Read(Buffer) > 0 do
       begin
@@ -110,8 +181,6 @@ begin
         if Header.Code = 0 then
           if not Header.Extract(Body) then
             Continue;
-        if XmlValidate(Body) then
-          Break;
       end;
     end;
   finally
@@ -119,17 +188,18 @@ begin
   end;
   if Header.Code = 0 then
     Body := '';
+  Result := Body;
+end;
+
+function TCloudStorage.List(const Resource: string): IDocument;
+begin
   Result := DocumentCreate;
-  Result.Xml := Body.Replace(' xmlns="http://', ' X="');
+  Result.Xml := Request(CloudHosts[FVendor], Resource).Replace(' xmlns="http://', ' X="');
 end;
 
 function TCloudStorage.ListRaw(const Resource: string): string;
-var
-  D: IDocument;
 begin
-  D := List(Resource);
-  D.Beautify;
-  Result := D.Xml;
+  Result := Request(CloudHosts[FVendor], Resource);
 end;
 
 function TCloudStorage.Fetch(const Resource: string; Stream: TStream): Boolean;
@@ -138,4 +208,3 @@ begin
 end;
 
 end.
-

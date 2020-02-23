@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified August 2019                                *)
 (*                                                      *)
 (********************************************************)
 
@@ -205,8 +205,6 @@ begin
   case Method of
     encodeHex: Result := HexEncode(Data, Size);
     encodeBase64: Result := Base64Encode(Data, Size);
-  else
-    Result := '';
   end;
 end;
 
@@ -437,6 +435,7 @@ begin
 end;
 
 { Base64 routines }
+
 const
   Base64: PChar = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
 
@@ -456,6 +455,7 @@ var
   I: LongInt;
   J: LongInt;
 begin
+  Result := '';
   SetLength(Result, Base64EncodedSize(Size));
   B := Buffer;
   I := 0;
@@ -537,7 +537,7 @@ function Base64Decode(const S: string): TBuffer;
   end;
 
 type
-  TOutput = array[0..High(LongWord) div 4] of Byte;
+  TOutput = array[0..High(LongWord)] of Byte;
   POutput = ^TOutput;
 var
   Buffer: TBuffer;
