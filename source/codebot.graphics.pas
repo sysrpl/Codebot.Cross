@@ -64,7 +64,6 @@ type
     function GetClientRect: TRectI;
     procedure HandleRelease;
     procedure HandleNeeded;
-    procedure SetBitmap(Value: IBitmap);
     function GetSurface: ISurface;
     function GetFormat: TImageFormat;
     function GetFrames(Index: Integer): TRectI;
@@ -127,7 +126,7 @@ type
     { Resize the image erasing its contants and canvas }
     procedure SetSize(Width, Height: Integer);
     { Access to the underlying bitmap }
-    property Bitmap: IBitmap read FBitmap write SetBitmap;
+    property Bitmap: IBitmap read FBitmap;
     { Access to the underlying bitmap's canvas }
     property Surface: ISurface read GetSurface;
     { Boundary rect of the image }
@@ -170,14 +169,10 @@ type
     procedure Assign(Source: TPersistent); override;
     procedure BeginUpdate;
     procedure EndUpdate;
-    { Clone the underlying bitmap object }
-    procedure CloneTo(out Bitmap: IBitmap);
     { Copy the underlying bitmap object }
     procedure CopyTo(Bitmap: IBitmap);
-    { Use the lanczos resampling method }
+    { Use a quaility resampling }
     procedure Resample(Size: Integer);
-    { Scale the images in the center while leaving the original size }
-    procedure Scale(Size: Integer);
     { Load a series of images }
     procedure LoadRange(const Files: TStrings);
     { Load an image list from a file }
@@ -219,7 +214,7 @@ type
   TDrawStageEvent = procedure (Sender: TObject; Surface: ISurface; Rect: TRectF; Stage: TDrawStage) of object;
   TCalculateRectEvent = procedure (Sender: TObject; var Rect: TRectI) of object;
 
-{ Drawing routines which operate independent of a control }
+{ Drawing routines which operate indepentent of a control }
 
 procedure FillRectColor(Surface: ISurface; const Rect: TRectI; Color: TColorB; Radius: Float = 0);
 procedure StrokeRectColor(Surface: ISurface; const Rect: TRectI; Color: TColorB; Radius: Float = 0);
@@ -230,47 +225,7 @@ function DrawHueLinear(Width, Height: Integer): IBitmap;
 function DrawHueRadial(Width, Height: Integer): IBitmap;
 function DrawSaturationBox(Width, Height: Integer; Hue: Float): IBitmap;
 function DrawDesaturationBox(Width, Height: Integer; Hue: Float): IBitmap;
-procedure DrawShadow(Surface: ISurface; const Rect: TRectI; Direction: TDirection); overload;
-function DrawShadow(Image: IBitmap; Darkness: Float): IBitmap; overload;
-procedure DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Float; Alpha: Byte = $FF);
-
-{ Bitmap resampling functions }
-
-type
-  TFilterFunction = function(Value: Single): Single;
-
-  TSamplingFilter = (sfNearest, sfLinear, sfCosine, sfHermite, sfQuadratic,
-    sfGaussian, sfSpline, sfLanczos, sfMitchell, sfCatmullRom);
-
-{ Default resampling filter used for bicubic resizing }
-
-const
-  DefaultCubicFilter = sfCatmullRom;
-
-{ Built-in filter functions }
-
-var
-  SamplingFilterFunctions : array[TSamplingFilter] of TFilterFunction;
-
-{ Default radii of built-in filter functions }
-
-  SamplingFilterRadii: array[TSamplingFilter] of Float;
-
-{ Resamples rectangle in source image to rectangle in destination image
-  with resampling. You can use custom sampling function and filter radius.
-
-  Set WrapEdges to True for seamlessly tileable images }
-
-procedure ResampleBitmap(Src: IBitmap; SrcX, SrcY, SrcWidth, SrcHeight: LongInt;
-  Dst: IBitmap; DstX, DstY, DstWidth, DstHeight: LongInt;
-  Filter: TFilterFunction; Radius: Single; WrapEdges: Boolean); overload;
-function ResampleBitmap(Bitmap: IBitmap; Width, Height: Integer;
-  Filter: TSamplingFilter; WrapEdges: Boolean = False): IBitmap; overload;
-
-{ Perform a gaussian blur on a bitmap }
-
-procedure BlurBitmap(Bits: PPixel; W, H: Integer; const Radius: Double); overload;
-function BlurBitmap(Bitmap: IBitmap; const Radius: Double): IBitmap; overload;
+procedure DrawShadow(Surface: ISurface; const Rect: TRectI; Direction: TDirection);
 
 { Draw an easing function as a graph }
 
@@ -323,7 +278,7 @@ type
     function TextHeight: Integer;
     function TextSize(const Text: string): TPointI;
     procedure DrawDummyBlock(Surface: ISurface; const Rect: TRectI; State: TDrawState);
-    procedure DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Integer; Alpha: Byte = $FF);
+    procedure DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Integer);
     procedure DrawCaption(Surface: ISurface; const Caption: string; const Rect: TRectI; Enabled: Boolean = True);
     procedure DrawText(Surface: ISurface; const Text: string; const Rect: TRectI; Direction: TDirection);
     procedure DrawTextState(Surface: ISurface; const Text: string; const Rect: TRectI; State: TDrawState; Radius: Float = 0);
@@ -424,7 +379,7 @@ procedure ThemeNames(Strings: TStrings);
 
 implementation
 
-{$ifdef linuxgtk}
+{$ifdef linux}
 uses
   Codebot.Graphics.Linux.SurfaceCairo;
 
@@ -498,79 +453,6 @@ begin
   Result := NewSplashCairo;
 end;
 {$endif}
-
-{$ifdef linuxqt}
-function NewMatrix: IMatrix;
-begin
-  Result := nil;
-end;
-
-function NewPen(Brush: IBrush; Width: Float): IPen;
-begin
-  Result := nil;
-end;
-
-function NewPen(Color: TBGRA; Width: Float): IPen;
-begin
-  Result := nil;
-end;
-
-function NewBrush(Color: TBGRA): ISolidBrush;
-begin
-  Result := nil;
-end;
-
-function NewBrush(Bitmap: IBitmap): IBitmapBrush;
-begin
-  Result := nil;
-end;
-
-function NewBrush(X1, Y1, X2, Y2: Float): ILinearGradientBrush;
-begin
-  Result := nil;
-end;
-
-function NewBrush(const A, B: TPointF): ILinearGradientBrush;
-begin
-  Result := nil;
-end;
-
-function NewBrush(const Rect: TRectF): IRadialGradientBrush;
-begin
-  Result := nil;
-end;
-
-function NewFont(const FontName: string; FontSize: Integer = 10): IFont;
-begin
-  Result := nil;
-end;
-
-function NewFont(Font: TFont = nil): IFont;
-begin
-  Result := nil;
-end;
-
-function NewSurface(Canvas: TCanvas): ISurface;
-begin
-  Result := nil;
-end;
-
-function NewSurface(Control: TWinControl): ISurface;
-begin
-  Result := nil;
-end;
-
-function NewBitmap(Width: Integer = 0; Height: Integer = 0): IBitmap;
-begin
-  Result := nil;
-end;
-
-function NewSplash: ISplash;
-begin
-  Result := nil;
-end;
-{$endif}
-
 {$ifdef windows}
 uses
   Codebot.Graphics.Windows.InterfacedBitmap,
@@ -649,20 +531,6 @@ begin
     Result := NewFontGdi(Font);
 end;
 
-function NewFont(const FontName: string; FontSize: Integer = 10): IFont;
-var
-  F: TFont;
-begin
-  F := TFont.Create;
-  try
-    F.Name := FontName;
-    F.Size := FontSize;
-    Result := NewFont(F);
-  finally
-    F.Free;
-  end;
-end;
-
 function NewSurface(Canvas: TCanvas): ISurface;
 begin
   if LoadD2D then
@@ -700,9 +568,9 @@ end;
 function NewSplash: ISplash;
 begin
   if LoadD2D then
-    NewBitmapProc := NewBitmapD2DStub
-  else
-    NewBitmapProc := NewBitmapGdiStub;
+		NewBitmapProc := NewBitmapD2DStub
+	else
+		NewBitmapProc := NewBitmapGdiStub;
   Result := NewSplashWin;
 end;
 {$endif}
@@ -758,24 +626,6 @@ procedure TSurfaceBitmap.HandleNeeded;
 begin
   if FBitmap.Empty and (FWidth > 0) and (FHeight > 0) then
     UpdateBitmap(NewBitmap(FWidth, FHeight));
-end;
-
-procedure TSurfaceBitmap.SetBitmap(Value: IBitmap);
-begin
-  if Value = FBitmap then
-    Exit;
-  if Value = nil then
-  begin
-    FBitmap := NewBitmap;
-    FWidth := 0;
-    FHeight := 0;
-  end
-  else
-  begin
-    FBitmap := Value.Clone;
-    FWidth := FBitmap.Width;
-    FHeight := FBitmap.Height;
-  end;
 end;
 
 function TSurfaceBitmap.GetSurface: ISurface;
@@ -1283,14 +1133,6 @@ begin
   Result := FBitmap.Frames[0].Height;
 end;
 
-procedure TImageStrip.CloneTo(out Bitmap: IBitmap);
-begin
-  if FBitmap.Empty  then
-    Bitmap := NewBitmap
-  else
-    Bitmap := FBitmap.Bitmap.Clone;
-end;
-
 procedure TImageStrip.CopyTo(Bitmap: IBitmap);
 var
   B: IBitmap;
@@ -1308,37 +1150,7 @@ end;
 
 procedure TImageStrip.Resample(Size: Integer);
 begin
-  if FBitmap.Empty then
-    Exit;
-  if Size < 1 then Exit;
-  if Size > 1024 then Exit;
-  FBitmap.Bitmap := ResampleBitmap(FBitmap.Bitmap, Size * Count, Size, sfLanczos);
-end;
-
-procedure TImageStrip.Scale(Size: Integer);
-var
-  Source, Dest, Final: IBitmap;
-  Current, Offset: Integer;
-  I: Integer;
-begin
-  if FBitmap.Empty then
-    Exit;
-  if Size < 1 then Exit;
-  if Size > 1024 then Exit;
-  Current := Self.Size;
-  if Size = Current then Exit;
-  Offset := (Current - Size) div 2;
-  Final := NewBitmap(Count * Current, Current);
-  Source := NewBitmap(Current, Current);
-  for I := 0 to Count - 1 do
-  begin
-    Source.Surface.Clear(clTransparent);
-    Draw(Source.Surface, I, 0, 0);
-    Dest := ResampleBitmap(Source, Size, Size, sfLanczos);
-    DrawBitmap(Final.Surface, Dest, I * Current + Offset, Offset);
-  end;
-  Clear;
-  Add(Final);
+  FBitmap.Resample(Size * Count, Size, rqBest);
 end;
 
 procedure TImageStrip.LoadRange(const Files: TStrings);
@@ -1839,644 +1651,8 @@ begin
         R.Top := R.Top + 1;
       end;
     end;
-  end;
-end;
-
-function DrawShadow(Image: IBitmap; Darkness: Float): IBitmap;
-var
-  P: PPixel;
-  X, Y: Integer;
-begin
-  Darkness := Clamp(Darkness);
-  Result := Image.Clone;
-  P := Result.Pixels;
-  for X := 1 to Result.Width do
-    for Y := 1 to Result.Height do
-    begin
-      P.Red := 0;
-      P.Green := 0;
-      P.Blue := 0;
-      P.Alpha := Round(P.Alpha * Darkness);
-      Inc(P);
-    end;
-end;
-
-procedure DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Float; Alpha: Byte = $FF);
-var
-  S, D: TRectF;
-begin
-  S := Bitmap.ClientRect;
-  D := S;
-  D.Offset(X, Y);
-  Bitmap.Surface.CopyTo(S, Surface, D, Alpha);
-end;
-
-{ Type of custom sampling function}
-
-type
-  TPointRec = record
-    Pos: LongInt;
-    Weight: Single;
-  end;
-
-  TCluster = array of TPointRec;
-  TMappingTable = array of TCluster;
-
-var
-  FullEdge: Boolean = True;
-
-function ClampInt(Number: LongInt; Min, Max: LongInt): LongInt;
-begin
-  Result := Number;
-  if Result < Min then
-    Result := Min
-  else if Result > Max then
-    Result := Max;
-end;
-
-{ The following resampling code is modified and extended code from Graphics32
-  library by Alex A. Denisov }
-
-function BuildMappingTable(DstLow, DstHigh, SrcLow, SrcHigh, SrcImageWidth: LongInt; Filter: TFilterFunction; Radius: Single; WrapEdges: Boolean): TMappingTable;
-var
-  I, J, K, N: LongInt;
-  Left, Right, SrcWidth, DstWidth: LongInt;
-  Weight, Scale, Center, Count: Single;
-begin
-  Result := nil;
-  K := 0;
-  SrcWidth := SrcHigh - SrcLow;
-  DstWidth := DstHigh - DstLow;
-  if SrcWidth = 1 then
-  begin
-    SetLength(Result, DstWidth);
-    for I := 0 to DstWidth - 1 do
-    begin
-      SetLength(Result[I], 1);
-      Result[I][0].Pos := 0;
-      Result[I][0].Weight := 1.0;
-    end;
-    Exit;
-  end
-  else if (SrcWidth = 0) or (DstWidth = 0) then
-    Exit;
-  if FullEdge then
-    Scale := DstWidth / SrcWidth
   else
-    Scale := (DstWidth - 1) / (SrcWidth - 1);
-  SetLength(Result, DstWidth);
-  if Scale = 0.0 then
-  begin
-    Assert(Length(Result) = 1);
-    SetLength(Result[0], 1);
-    Result[0][0].Pos := (SrcLow + SrcHigh) div 2;
-    Result[0][0].Weight := 1.0;
-  end
-  else if Scale < 1.0 then
-  begin
-    Radius := Radius / Scale;
-    for I := 0 to DstWidth - 1 do
-    begin
-      if FullEdge then
-        Center := SrcLow - 0.5 + (I + 0.5) / Scale
-      else
-        Center := SrcLow + I / Scale;
-      Left := Round(Floor(Center - Radius));
-      Right := Round(Ceil(Center + Radius));
-      Count := -1.0;
-      for J := Left to Right do
-      begin
-        Weight := Filter((Center - J) * Scale) * Scale;
-        if Weight <> 0.0 then
-        begin
-          Count := Count + Weight;
-          K := Length(Result[I]);
-          SetLength(Result[I], K + 1);
-          Result[I][K].Pos := ClampInt(J, SrcLow, SrcHigh - 1);
-          Result[I][K].Weight := Weight;
-        end;
-      end;
-      if Length(Result[I]) = 0 then
-      begin
-        SetLength(Result[I], 1);
-        Result[I][0].Pos := Round(Floor(Center));
-        Result[I][0].Weight := 1.0;
-      end
-      else if Count <> 0.0 then
-        Result[I][K div 2].Weight := Result[I][K div 2].Weight - Count;
-    end;
-  end
-  else // if Scale > 1.0 then
-  begin
-    // Super-sampling - scales from smaller to bigger
-    Scale := 1.0 / Scale;
-    for I := 0 to DstWidth - 1 do
-    begin
-      if FullEdge then
-        Center := SrcLow - 0.5 + (I + 0.5) * Scale
-      else
-        Center := SrcLow + I * Scale;
-      Left := Round(Floor(Center - Radius));
-      Right := Round(Ceil(Center + Radius));
-      Count := -1.0;
-      for J := Left to Right do
-      begin
-        Weight := Filter(Center - J);
-        if Weight <> 0.0 then
-        begin
-          Count := Count + Weight;
-          K := Length(Result[I]);
-          SetLength(Result[I], K + 1);
-          if WrapEdges then
-          begin
-            if J < 0 then
-              N := SrcImageWidth + J
-            else if J >= SrcImageWidth then
-              N := J - SrcImageWidth
-            else
-              N := ClampInt(J, SrcLow, SrcHigh - 1);
-          end
-          else
-            N := ClampInt(J, SrcLow, SrcHigh - 1);
-          Result[I][K].Pos := N;
-          Result[I][K].Weight := Weight;
-        end;
-      end;
-      if Count <> 0.0 then
-        Result[I][K div 2].Weight := Result[I][K div 2].Weight - Count;
-    end;
   end;
-end;
-
-procedure FindExtremes(const Map: TMappingTable; out  MinPos, MaxPos: LongInt);
-var
-  I, J: LongInt;
-begin
-  MinPos := 0;
-  MaxPos := 0;
-  if Length(Map) > 0 then
-  begin
-    MinPos := Map[0][0].Pos;
-    MaxPos := MinPos;
-    for I := 0 to Length(Map) - 1 do
-      for J := 0 to Length(Map[I]) - 1 do
-      begin
-        if MinPos > Map[I][J].Pos then
-          MinPos := Map[I][J].Pos;
-        if MaxPos < Map[I][J].Pos then
-          MaxPos := Map[I][J].Pos;
-      end;
-  end;
-end;
-
-{ Filter function for nearest filtering. Also known as box filter }
-
-function FilterNearest(Value: Single): Single;
-begin
-  if (Value > -0.5) and (Value <= 0.5) then
-    Result := 1
-  else
-    Result := 0;
-end;
-
-{ Filter function for linear filtering. Also known as triangle or Bartlett filter }
-
-function FilterLinear(Value: Single): Single;
-begin
-  if Value < 0.0 then
-    Value := -Value;
-  if Value < 1.0 then
-    Result := 1.0 - Value
-  else
-    Result := 0.0;
-end;
-
-{ Cosine filter }
-
-function FilterCosine(Value: Single): Single;
-begin
-  Result := 0;
-  if Abs(Value) < 1 then
-    Result := (Cos(Value * Pi) + 1) / 2;
-end;
-
-{ Hermite filter }
-
-function FilterHermite(Value: Single): Single;
-begin
-  if Value < 0.0 then
-    Value := -Value;
-  if Value < 1 then
-    Result := (2 * Value - 3) * Sqr(Value) + 1
-  else
-    Result := 0;
-end;
-
-{ Quadratic filter. Also known as Bell }
-
-function FilterQuadratic(Value: Single): Single;
-begin
-  if Value < 0.0 then
-    Value := -Value;
-  if Value < 0.5 then
-    Result := 0.75 - Sqr(Value)
-  else
-  if Value < 1.5 then
-  begin
-    Value := Value - 1.5;
-    Result := 0.5 * Sqr(Value);
-  end
-  else
-    Result := 0.0;
-end;
-
-{ Gaussian filter }
-
-function FilterGaussian(Value: Single): Single;
-begin
-  Result := Exp(-2.0 * Sqr(Value)) * Sqrt(2.0 / Pi);
-end;
-
-{ 4th order (cubic) b-spline filter }
-
-function FilterSpline(Value: Single): Single;
-var
-  Temp: Single;
-begin
-  if Value < 0.0 then
-    Value := -Value;
-  if Value < 1.0 then
-  begin
-    Temp := Sqr(Value);
-    Result := 0.5 * Temp * Value - Temp + 2.0 / 3.0;
-  end
-  else
-  if Value < 2.0 then
-  begin
-    Value := 2.0 - Value;
-    Result := Sqr(Value) * Value / 6.0;
-  end
-  else
-    Result := 0.0;
-end;
-
-{ Lanczos-windowed sinc filter }
-
-function FilterLanczos(Value: Single): Single;
-
-  function SinC(Value: Single): Single;
-  begin
-    if Value <> 0.0 then
-    begin
-      Value := Value * Pi;
-      Result := Sin(Value) / Value;
-    end
-    else
-      Result := 1.0;
-  end;
-
-begin
-  if Value < 0.0 then
-    Value := -Value;
-  if Value < 3.0 then
-    Result := SinC(Value) * SinC(Value / 3.0)
-  else
-    Result := 0.0;
-end;
-
-{ Micthell cubic filter }
-
-function FilterMitchell(Value: Single): Single;
-const
-  B = 1.0 / 3.0;
-  C = 1.0 / 3.0;
-var
-  Temp: Single;
-begin
-  if Value < 0.0 then
-    Value := -Value;
-  Temp := Sqr(Value);
-  if Value < 1.0 then
-  begin
-    Value := (((12.0 - 9.0 * B - 6.0 * C) * (Value * Temp)) +
-      ((-18.0 + 12.0 * B + 6.0 * C) * Temp) +
-      (6.0 - 2.0 * B));
-    Result := Value / 6.0;
-  end
-  else
-  if Value < 2.0 then
-  begin
-    Value := (((-B - 6.0 * C) * (Value * Temp)) +
-      ((6.0 * B + 30.0 * C) * Temp) +
-      ((-12.0 * B - 48.0 * C) * Value) +
-      (8.0 * B + 24.0 * C));
-    Result := Value / 6.0;
-  end
-  else
-    Result := 0.0;
-end;
-
-{ CatmullRom spline filter }
-
-function FilterCatmullRom(Value: Single): Single;
-begin
-  if Value < 0.0 then
-    Value := -Value;
-  if Value < 1.0 then
-    Result := 0.5 * (2.0 + Sqr(Value) * (-5.0 + 3.0 * Value))
-  else
-  if Value < 2.0 then
-    Result := 0.5 * (4.0 + Value * (-8.0 + Value * (5.0 - Value)))
-  else
-    Result := 0.0;
-end;
-
-var
-  Init: Boolean;
-
-procedure InitResample;
-begin
-  if Init then
-    Exit;
-  Init := True;
-  SamplingFilterFunctions[sfNearest] := FilterNearest;
-  SamplingFilterFunctions[sfLinear] := FilterLinear;
-  SamplingFilterFunctions[sfCosine] := FilterCosine;
-  SamplingFilterFunctions[sfHermite] := FilterHermite;
-  SamplingFilterFunctions[sfQuadratic] := FilterQuadratic;
-  SamplingFilterFunctions[sfGaussian] := FilterGaussian;
-  SamplingFilterFunctions[sfSpline] := FilterSpline;
-  SamplingFilterFunctions[sfLanczos] := FilterLanczos;
-  SamplingFilterFunctions[sfMitchell] := FilterMitchell;
-  SamplingFilterFunctions[sfCatmullRom] := FilterCatmullRom;
-  SamplingFilterRadii[sfNearest] := 1.0;
-  SamplingFilterRadii[sfLinear] := 1.0;
-  SamplingFilterRadii[sfCosine] := 1.0;
-  SamplingFilterRadii[sfHermite] := 1.0;
-  SamplingFilterRadii[sfQuadratic] := 1.5;
-  SamplingFilterRadii[sfGaussian] := 1.25;
-  SamplingFilterRadii[sfSpline] := 2.0;
-  SamplingFilterRadii[sfLanczos] := 3.0;
-  SamplingFilterRadii[sfMitchell] := 2.0;
-  SamplingFilterRadii[sfCatmullRom] := 2.0;
-end;
-
-procedure ResampleBitmap(Src: IBitmap; SrcX, SrcY, SrcWidth, SrcHeight: LongInt;
-  Dst: IBitmap; DstX, DstY, DstWidth, DstHeight: LongInt;
-  Filter: TFilterFunction; Radius: Single; WrapEdges: Boolean);
-type
-  TBufferItem = record
-    A, R, G, B: Integer;
-  end;
-  TByteArray = array[0..High(LongWord) div 4] of Byte;
-  PByteArray = ^TByteArray;
-
-var
-  MapX, MapY: TMappingTable;
-  MinX, MaxX: Integer;
-  LineBufferInt: array of TBufferItem;
-  ClusterX, ClusterY: TCluster;
-  Speed, Weight, AccumA, AccumR, AccumG, AccumB: Integer;
-  SrcColor: TPixel;
-  Pixels: PPixel;
-  SrcPixels: array of PByteArray;
-  DstPixels: array of PByteArray;
-  I, J, X, Y: Integer;
-begin
-  InitResample;
-  if (Src.Width < 2) or (Src.Height < 2) or (Dst.Width < 2) or (Dst.Height < 2) then Exit;
-  MapX := BuildMappingTable(DstX, DstX + DstWidth , SrcX, SrcX + SrcWidth , Src.Width , Filter, Radius, WrapEdges);
-  MapY := BuildMappingTable(DstY, DstY + DstHeight, SrcY, SrcY + SrcHeight, Src.Height, Filter, Radius, WrapEdges);
-  ClusterX := nil;
-  ClusterY := nil;
-  SetLength(SrcPixels, Src.Height);
-  Pixels := Src.Pixels;
-  for I := 0 to Src.Height - 1 do
-  begin
-    SrcPixels[I] := PByteArray(Pixels);
-    Inc(Pixels, Src.Width);
-  end;
-  SetLength(DstPixels, Dst.Height);
-  Pixels := Dst.Pixels;
-  for I := 0 to Dst.Height - 1 do
-  begin
-    DstPixels[I] := PByteArray(Pixels);
-    Inc(Pixels, Dst.Width);
-  end;
-  FindExtremes(MapX, MinX, MaxX);
-  SetLength(LineBufferInt, MaxX - MinX + 1);
-  for J := 0 to DstHeight - 1 do
-  begin
-    ClusterY := MapY[J];
-    for X := MinX to MaxX do
-    begin
-      AccumA := 0;
-      AccumR := 0;
-      AccumG := 0;
-      AccumB := 0;
-      for Y := 0 to Length(ClusterY) - 1 do
-      begin
-        Weight := Round(256 * ClusterY[Y].Weight);
-        Speed := X * 4;
-        AccumB := AccumB + SrcPixels[ClusterY[Y].Pos][Speed] * Weight;
-        AccumG := AccumG + SrcPixels[ClusterY[Y].Pos][Speed + 1] * Weight;
-        AccumR := AccumR + SrcPixels[ClusterY[Y].Pos][Speed + 2] * Weight;
-        AccumA := AccumA + SrcPixels[ClusterY[Y].Pos][Speed + 3] * Weight;
-      end;
-      with LineBufferInt[X - MinX] do
-      begin
-        A := AccumA;
-        R := AccumR;
-        G := AccumG;
-        B := AccumB;
-      end;
-    end;
-    for I := 0 to DstWidth - 1 do
-    begin
-      ClusterX := MapX[I];
-      AccumA := 0;
-      AccumR := 0;
-      AccumG := 0;
-      AccumB := 0;
-      for X := 0 to Length(ClusterX) - 1 do
-      begin
-        Weight := Round(256 * ClusterX[X].Weight);
-        with LineBufferInt[ClusterX[X].Pos - MinX] do
-        begin
-          AccumB := AccumB + B * Weight;
-          AccumG := AccumG + G * Weight;
-          AccumR := AccumR + R * Weight;
-          AccumA := AccumA + A * Weight;
-        end;
-      end;
-      SrcColor.Blue := ClampInt(AccumB, 0, $00FF0000) shr 16;
-      SrcColor.Green := ClampInt(AccumG, 0, $00FF0000) shr 16;
-      SrcColor.Red := ClampInt(AccumR, 0, $00FF0000) shr 16;
-      SrcColor.Alpha := ClampInt(AccumA, 0, $00FF0000) shr 16;
-      PLongWord(@DstPixels[J]^[(I + DstX) * 4])^ := PLongWord(@SrcColor)^;
-    end;
-  end;
-end;
-
-function ResampleBitmap(Bitmap: IBitmap; Width, Height: Integer; Filter: TSamplingFilter; WrapEdges: Boolean = False): IBitmap;
-begin
-  InitResample;
-  Result := NewBitmap(Width, Height);
-  if Bitmap.Empty or Result.Empty then
-    Exit;
-  ResampleBitmap(Bitmap, 0, 0, Bitmap.Width, Bitmap.Height,
-    Result, 0, 0, Result.Width, Result.Height,
-    SamplingFilterFunctions[Filter], SamplingFilterRadii[Filter], WrapEdges);
-end;
-
-const
-  MaxKernelSize = 100;
-
-type
-  TKernelSize = 1..MaxKernelSize;
-
-  TKernel = record
-    Size: TKernelSize;
-    Weights: array[-MaxKernelSize..MaxKernelSize] of Single;
-  end;
-
-  PRow = ^TRow;
-  TRow = array [0..1000000] of TPixel;
-
-  PPRows = ^TPRows;
-  TPRows = array [0..1000000] of PRow;
-
-procedure MakeGaussianKernel(out K: TKernel; Radius: Double;
-  MaxData, Granularity: Double);
-var
-  Temp, Delta: Double;
-  KernelSize: TKernelSize;
-  I: Integer;
-begin
-  for I := Low(K.Weights) to High(K.Weights) do
-  begin
-    Temp := I / Radius;
-    K.Weights[I] := exp(-Temp * Temp / 2);
-  end;
-  Temp := 0;
-  for I := Low(K.Weights) to High(K.Weights) do
-    Temp := Temp + K.Weights[I];
-  for I := Low(K.Weights) to High(K.Weights) do
-    K.Weights[I] := K.Weights[I] / Temp;
-  KernelSize := MaxKernelSize;
-  Delta := Granularity / (2*MaxData);
-  Temp := 0;
-  while (Temp < Delta) and (KernelSize > 1) do
-  begin
-    Temp := Temp + 2 * K.Weights[KernelSize];
-    Dec(KernelSize);
-  end;
-  K.Size := KernelSize;
-  Temp := 0;
-  for I := -K.Size to K.Size do
-    Temp := Temp + K.Weights[I];
-  for I := -K.Size to K.Size do
-    K.Weights[I] := K.Weights[I] / Temp;
-end;
-
-function TrimInt(Lower, Upper, I: Integer): Integer;
-begin
-  if (I <= Upper) and (I >= Lower) then
-    Result := I
-  else if I > Upper then
-    Result := Upper
-  else
-    Result := Lower;
-end;
-
-function TrimReal(Lower, Upper: Integer; D: Double): Integer;
-begin
-  if (D < Upper) and (D >= Lower) then
-    Result := Trunc(D)
-  else if D > Upper then
-    Result := Upper
-  else
-    Result := Lower;
-end;
-
-procedure BlurRow(var Row: array of TPixel; K: TKernel; P: PRow);
-var
-  R, G, B, A: Double;
-  W: Double;
-  I, J: Integer;
-begin
-  for I := 0 to High(Row) do
-  begin
-    B := 0;
-    G := 0;
-    R := 0;
-    A := 0;
-    for J := - K.Size to K.Size do
-    begin
-      W := K.Weights[J];
-      with Row[TrimInt(0, High(Row), I - J)] do
-      begin
-        B := B + W * Blue;
-        G := G + W * Green;
-        R := R + W * Red;
-        A := A + W * Alpha;
-      end;
-    end;
-    with P[I] do
-    begin
-      Blue := TrimReal(0, 255, B);
-      Green := TrimReal(0, 255, G);
-      Red := TrimReal(0, 255, R);
-      Alpha := TrimReal(0, 255, A);
-    end;
-  end;
-  Move(P[0], Row[0], (High(Row) + 1) * SizeOf(TPixel));
-end;
-
-procedure BlurBitmap(Bits: PPixel; W, H: Integer; const Radius: Double);
-var
-  Row, Col: Integer;
-  Rows: PPRows;
-  K: TKernel;
-  ACol, P: PRow;
-begin
-  if Radius < 0.1 then Exit;
-  if (W < 2) or (H < 2) then Exit;
-  MakeGaussianKernel(K, Radius, 255, 1);
-  GetMem(Rows, H * SizeOf(PRow));
-  GetMem(ACol, H * SizeOf(TPixel));
-  for Row := 0 to H - 1 do
-  begin
-    Rows[Row] := Pointer(Bits);
-    Inc(Bits, W);
-  end;
-  P := AllocMem(W * SizeOf(TPixel));
-  for Row := 0 to H - 1 do
-    BlurRow(Slice(Rows[Row]^, W), K, P);
-  ReAllocMem(P, H * SizeOf(TPixel));
-  for Col := 0 to W - 1 do
-  begin
-    for Row := 0 to H - 1 do
-      ACol[Row] := Rows[Row][Col];
-    BlurRow(Slice(ACol^, H), K, P);
-    for Row := 0 to H - 1 do
-      Rows[Row][Col] := ACol[Row];
-  end;
-  FreeMem(Rows);
-  FreeMem(ACol);
-  ReAllocMem(P, 0);
-end;
-
-function BlurBitmap(Bitmap: IBitmap; const Radius: Double): IBitmap;
-var
-  I: Integer;
-begin
-  if Bitmap.Empty or (Radius < 0.1) then
-    Exit(Bitmap.Clone);
-  I := Round(Radius);
-  Result := NewBitmap(Bitmap.Width + I * 2, Bitmap.Height + I * 2);
-  DrawBitmap(Result.Surface, Bitmap, I, I);
-  BlurBitmap(Result.Pixels, Result.Width, Result.Height, Radius);
 end;
 
 procedure DrawEasing(Surface: ISurface; Font: IFont; Rect: TRectF;
@@ -2484,7 +1660,7 @@ procedure DrawEasing(Surface: ISurface; Font: IFont; Rect: TRectF;
 var
   P: IPen;
   R: TRectF;
-  C: TColorB;
+  //C: TColorB;
   X, Y: Float;
   I, J: Integer;
 begin
@@ -2530,7 +1706,7 @@ begin
   { label the axis }
   Y := Surface.TextSize(Font, 'Wg').Y;
   R.Top := R.Top - Y;
-  C := Theme.Font.Color;
+  //C := Theme.Font.Color;
   Font.Color := clGray;
   { The left axis is the delta, or change over time }
   Surface.TextOut(Font, 'delta', R, drWrap);
@@ -2539,7 +1715,7 @@ begin
   R.Height := Y;
   { The bottom axis is time }
   Surface.TextOut(Font, 'time', R, drRight);
-  Theme.Font.Color := C;
+  //Theme.Font.Color := C;
 end;
 
 type
@@ -2565,6 +1741,9 @@ begin
   BrushNames.Add('Floor Tile', @Brushes.FloorTile);
   BrushNames.Add('Snake Skin', @Brushes.SnakeSkin);
   BrushNames.Add('Pipes', @Brushes.Pipes);
+
+
+
 end;
 
 function StrToBrush(Name: string; Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
@@ -3081,7 +2260,7 @@ begin
   end;
 end;
 
-procedure TDrawControlHelper.DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Integer; Alpha: Byte = $FF);
+procedure TDrawControlHelper.DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Integer);
 var
   R: TRectI;
 begin
@@ -3089,7 +2268,7 @@ begin
     Exit;
   R := Bitmap.ClientRect;
   R.Offset(X, Y);
-  Bitmap.Surface.CopyTo(Bitmap.ClientRect, Surface, R, Alpha);
+  Bitmap.Surface.CopyTo(Bitmap.ClientRect, Surface, R);
 end;
 
 procedure TDrawControlHelper.DrawCaption(Surface: ISurface; const Caption: string; const Rect: TRectI; Enabled: Boolean = True);
@@ -3551,8 +2730,8 @@ begin
   B := NewBrush(0, 0, 0, R.Height);
   C := Control.CurrentColor;
   B.AddStop(C.Fade(0.8).Darken(0.1), 0);
-  B.AddStop(C.Fade(0.8), 0.5);
-  B.AddStop(C.Fade(0.8).Lighten(0.3), 1);
+  B.AddStop(C, 0.5);
+  B.AddStop(C.Lighten(0.8), 1);
   Surface.FillRect(B, R);
 end;
 

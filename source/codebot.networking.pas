@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified August 2019                                *)
 (*                                                      *)
 (********************************************************)
 
@@ -15,6 +15,7 @@ interface
 
 uses
   SysUtils,
+  Classes,
   Codebot.System,
   Codebot.Interop.Sockets,
   Codebot.Interop.OpenSSL;
@@ -131,6 +132,10 @@ type
     function WriteAll(var Buffer; BufferSize: LongWord): Boolean; overload;
     { Write all text to a client or remote socket }
     function WriteAll(const Text: string): Boolean; overload;
+    { Write the contents of a file to a client or remote socket }
+    function WriteFile(const FileName: string): Integer;
+    { Write a stream to a client or remote socket }
+    function WriteStream(Stream: TStream): Integer;
     { The address of socket }
     property Address: TAddressName read GetAddress;
     { When blocking is true, read an write operations wait }
@@ -156,6 +161,10 @@ type
   Transmitted is the actual number of bytes transmitted so far }
 
   TTransmitEvent = procedure(Sender: TObject; const Size, Transmitted: LargeWord) of object;
+
+{ Send data to a host using a port returning true if sucessful }
+
+function SocketSend(const Host: string; Port: Word; const Data: string): Boolean;
 
 implementation
 
@@ -302,7 +311,7 @@ end;
 
 function TSocket.Connect(const Address: TAddressName; Port: Word):  Boolean;
 var
-  Addr: TSockAddrIn;
+  Addr: TSockAddr;
   {$ifdef windows}
   Mode: LongWord;
   {$endif}
@@ -311,7 +320,7 @@ begin
   if FSecure then
     if not OpenSSLInit then
       Exit(False);
-  FAddress := Address;
+	FAddress := Address;
   FPort := Port;
   if not FAddress.Resolve then
     Exit(False);
@@ -371,7 +380,7 @@ end;
 
 function TSocket.Listen(const Address: TAddressName; Port: Word): Boolean;
 var
-  Addr: TSockAddrIn;
+  Addr: TSockAddr;
 begin
   Result := False;
   Close;
@@ -416,7 +425,7 @@ end;
 
 function TSocket.Accept(Socket: TSocket): Boolean;
 var
-  Addr: TSockAddrIn;
+  Addr: TSockAddr;
   I: Integer;
   H: TSocketHandle;
   {$ifdef windows}
@@ -487,6 +496,9 @@ end;
 
 function TSocket.Read(out Text: string; BufferSize: LongWord = $10000): Integer;
 begin
+  Text := '';
+  if BufferSize < 1 then
+    Exit;
   SetLength(Text, BufferSize);
   Result := Read(Pointer(Text)^, BufferSize);
   if Result < 1 then
@@ -557,6 +569,40 @@ begin
   Result := WriteAll(Pointer(Text)^, Length(Text));
 end;
 
+function TSocket.WriteFile(const FileName: string): Integer;
+var
+  S: TStream;
+begin
+	S := TFileStream.Create(FileName, fmOpenRead);
+  try
+		Result := WriteStream(S);
+  finally
+    S.Free;
+  end;
+end;
+
+function TSocket.WriteStream(Stream: TStream): Integer;
+const
+  BufferSize = 1024 * 16;
+var
+  Buffer: Pointer;
+  I: Integer;
+begin
+	Buffer := GetMem(BufferSize);
+  try
+    Result := 0;
+    while True do
+    begin
+		  I := Stream.Read(Buffer^, BufferSize);
+      if I < 1 then
+    	  Break;
+		  Result := Result + Write(Buffer^, I);
+    end;
+  finally
+    FreeMem(Buffer);
+  end;
+end;
+
 function TSocket.GetAddress: TAddressName;
 begin
   Result := FAddress;
@@ -574,6 +620,24 @@ end;
 function TSocket.GetConnected: Boolean;
 begin
   Result := FHandle <> INVALID_SOCKET;
+end;
+
+
+function SocketSend(const Host: string; Port: Word; const Data: string): Boolean;
+var
+  S: TSocket;
+begin
+  Result := False;
+	S := TSocket.Create;
+  try
+		if S.Connect(Host, Port) then
+    begin
+      S.Write(Data);
+      Result := True;
+    end;
+  finally
+    S.Free;
+  end;
 end;
 
 end.

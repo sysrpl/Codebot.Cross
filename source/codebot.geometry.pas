@@ -196,8 +196,14 @@ type
     procedure Scale(X, Y, Z: Float);
     procedure ScaleAt(X, Y, Z: Float; const Pivot: TVec3);
     procedure Translate(X, Y, Z: Float);
+
+    function Transform(const V: TVec2): TVec2; overload;
+    function Transform(const V: TVec3): TVec3; overload;
     function Transform(const M: TMatrix4x4): TMatrix4x4; overload;
-    function Transform(const P: TVec3): TVec3; overload;
+    procedure Perspective(FoV, AspectRatio, NearPlane, FarPlane: Float);
+    procedure Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
+    procedure LookAt(Eye, Center, Up: TVec3);
+
     case Integer of
       0: (M: array[0..3, 0..3] of Float);
       1: (M0, M1, M2, M3: array[0..3] of Float);
@@ -429,14 +435,14 @@ end;
 
 function TVec2.Angle: Float;
 const
-  Origin: TVec2 = ();
+  Origin: TVec2 = (X: 0; Y: 0);
 begin
   Result := Origin.Angle(Self);
 end;
 
 function TVec2.Angle(X, Y: Float): Float;
 begin
-  Result := Angle(Vec2(X, Y));
+  Result := Angle(Vec2(X, Y){%H-});
 end;
 
 function TVec2.Angle(const V: TVec2): Float;
@@ -1091,14 +1097,93 @@ begin
   Self := Self * T;
 end;
 
+function TMatrix4x4.Transform(const V: TVec2): TVec2;
+var
+  A: TVec3;
+begin
+  A.X := V.X;
+  A.Y := V.Y;
+  A.Z := 0;
+  A := Self * A;
+  Result.X := A.X;
+  Result.Y := A.Y;
+end;
+
+function TMatrix4x4.Transform(const V: TVec3): TVec3;
+begin
+  Result := Self * V;
+end;
+
 function TMatrix4x4.Transform(const M: TMatrix4x4): TMatrix4x4;
 begin
   Result := Self * M;
 end;
 
-function TMatrix4x4.Transform(const P: TVec3): TVec3;
+procedure TMatrix4x4.Perspective(FoV, AspectRatio, NearPlane, FarPlane: Float);
+var
+  XMax, YMax: Float;
 begin
-  Result := Self * P;
+  YMax := NearPlane * Tan(FoV * PI / 360);
+  XMax := YMax * AspectRatio;
+  Frustum(-XMax, XMax, YMax, -YMax, NearPlane, FarPlane);
+end;
+
+procedure TMatrix4x4.Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
+var
+  F1, F2, F3, F4: Float;
+begin
+  F1 := 2.0 * NearPlane;
+  F2 := Right - Left;
+  F3 := Top - Bottom;
+  F4 := FarPlane - NearPlane;
+  V[0] := F1 / F2;
+  V[1] := 0;
+  V[2] := 0;
+  V[3] := 0;
+  V[4] := 0;
+  V[5] := F1 / F3;
+  V[6] := 0;
+  V[7] := 0;
+  V[8] := (Right + Left) / F2;
+  V[9] := (Top + Bottom) / F3;
+  V[10] := (-FarPlane - NearPlane) / F4;
+  V[11] := -1;
+  V[12] := 0;
+  V[13] := 0;
+  V[14] := (-F1 * FarPlane) / F4;
+  V[15] := 0;
+end;
+
+{ from https://developer.tizen.org/community/code-snippet/native-code-snippet/set-lookat-matrix-opengl-es-2.0 }
+
+procedure TMatrix4x4.LookAt(Eye, Center, Up: TVec3);
+var
+  F, S, U: TVec3;
+begin
+  F := Center - Eye;
+  F.Normalize;
+  S := F.Cross(Up);
+  S.Normalize;
+  if (S.V[0] = 0) and (S.V[1] = 0) and (S.V[2] = 0) then
+    Exit;
+  U := S.Cross(F);
+  V[0] := S.X;
+  V[1] := U.X;
+  V[2] := -F.X;
+  V[3] := 0;
+  V[4] := S.Y;
+  V[5] := U.Y;
+  V[6] := -F.Y;
+  V[7] := 0;
+  V[8] := S.Z;
+  V[9] := U.Z;
+  V[10] := -F.Z;
+  V[11] := 0;
+  V[12] := 0;
+  V[13] := 0;
+  V[14] := 0;
+  V[15] := 1;
+  Translate(-Eye.X, -Eye.Y, -Eye.Z);
 end;
 
 class operator TQuaternion.Explicit(const A: TQuaternion): TMatrix4x4;
@@ -1254,19 +1339,19 @@ function TLine2.Intersects(const Line: TLine2): Boolean;
 const
   Sigma = 0.001;
 var
-  A, B: Single;
+	A, B: Single;
 begin
   Result := False;
-  A := (P1.X - P0.X) * (Line.P1.Y - Line.P0.Y) - (P1.Y - P0.Y) * (Line.P1.X - Line.P0.X);
-  if (Abs(A) < Sigma) then
-    Exit;
-  B := ((P0.Y - Line.P0.Y) * (Line.P1.X - Line.P0.X) - (P0.X - Line.P0.X) * (Line.P1.Y - Line.P0.Y)) / A;
-  if (B > 0.0) and (B < 1.0) then
-  begin
-    B := ((P0.Y - Line.P0.Y) * (P1.X - P0.X) - (P0.X - Line.P0.X) * (P1.Y - P0.Y)) / A;
-    if (B > 0.0) and (B < 1.0) then
-      Result := True;
-  end;
+	A := (P1.X - P0.X) * (Line.P1.Y - Line.P0.Y) - (P1.Y - P0.Y) * (Line.P1.X - Line.P0.X);
+	if (Abs(A) < Sigma) then
+		Exit;
+	B := ((P0.Y - Line.P0.Y) * (Line.P1.X - Line.P0.X) - (P0.X - Line.P0.X) * (Line.P1.Y - Line.P0.Y)) / A;
+	if (B > 0.0) and (B < 1.0) then
+	begin
+		B := ((P0.Y - Line.P0.Y) * (P1.X - P0.X) - (P0.X - Line.P0.X) * (P1.Y - P0.Y)) / A;
+		if (B > 0.0) and (B < 1.0) then
+			Result := True;
+	end;
 end;
 
 { TCurve2 }

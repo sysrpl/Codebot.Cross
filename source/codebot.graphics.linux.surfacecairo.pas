@@ -13,12 +13,11 @@ unit Codebot.Graphics.Linux.SurfaceCairo;
 
 interface
 
-{$ifdef linuxgtk}
+{$ifdef linux}
 uses
   SysUtils, Classes, Graphics, Controls,
   Codebot.System,
-  Codebot.Graphics.Types,
-  Codebot.Forms.Management;
+  Codebot.Graphics.Types;
 
 { New object routines }
 
@@ -41,7 +40,7 @@ function NewSplashCairo: ISplash;
 
 implementation
 
-{$ifdef linuxgtk}
+{$ifdef linux}
 uses
   glib2, gdk2, gtk2, gtk2def, gtk2proc, gtk2int, gdk2pixbuf, gtk2extra,
   cairo, pango, pangocairo;
@@ -60,8 +59,6 @@ type
   TCairoLineJoin = cairo_line_join_t;
   TCairoMatrix = cairo_matrix_t;
   PCairoMatrix = Pcairo_matrix_t;
-  { TODO: Research why TCairoFontOptions is not used }
-  // TCairoFontOptions = cairo_font_options_t;
   PCairoFontOptions = Pcairo_font_options_t;
   TCairoAntiAlias = cairo_antialias_t;
   TCairoFilter = cairo_filter_t;
@@ -89,7 +86,7 @@ type
 
 function gdk_pixbuf_loader_get_format(loader: PGdkPixbufLoader): PGdkPixbufFormat; cdecl; external gdkpixbuflib;
 function gdk_pixbuf_save_to_callback(pixbuf: PGdkPixbuf; save_func: GdkPixbufSaveFunc;
-  data: gpointer; _type: PGChar; error: PPGError; empty: Pointer): GBoolean; cdecl; external gdkpixbuflib;
+  data: gpointer; _type: PGChar; error: PPGError): GBoolean; cdecl; external gdkpixbuflib;
 
 { Extra cairo routines }
 
@@ -349,6 +346,9 @@ type
 { TFontCairo }
 
   TFontCairo = class(TInterfacedObject, IFont)
+  private
+    class var FDefaultFont: TFont;
+    class function GetDefaultFont: Graphics.TFont;
   private
     FDesc: PPangoFontDescription;
     FName: string;
@@ -1058,20 +1058,39 @@ end;
 
 { TFontCairo }
 
+class function TFontCairo.GetDefaultFont: Graphics.TFont;
+var
+  Items: StringArray;
+  S: string;
+  P: PChar;
+begin
+  Result := FDefaultFont;
+  if Result <> nil then
+    Exit;
+  FDefaultFont := Graphics.TFont.Create;
+  g_object_get(gtk_settings_get_default, 'gtk-font-name', [@P, nil]);
+  S := P;
+  g_free(P);
+  Items := S.Split(' ');
+  FDefaultFont.Size := StrToInt(Items.Pop);
+  FDefaultFont.Name := Items.Join(' ');
+  Result := FDefaultFont;
+end;
+
 constructor TFontCairo.Create(Font: TFont);
 begin
   inherited Create;
   FDesc := pango_font_description_new;
   if Font = nil then
-    Font := FormManager.DefaulFont;
+    Font := GetDefaultFont;
   if Font.Name <> 'default' then
     SetName(Font.Name)
   else
-    SetName(FormManager.DefaulFont.Name);
+    SetName(GetDefaultFont.Name);
   if Font.Size > 4 then
     SetSize(Font.Size)
   else
-    SetSize(FormManager.DefaulFont.Size);
+    SetSize(GetDefaultFont.Size);
   Quality := Font.Quality;
   Color := Font.Color;
   Style := Font.Style;
@@ -1479,7 +1498,7 @@ procedure TSurfaceCairo.CopyTo(const Source: TRectF; Surface: ISurface;
   const Dest: TRectF; Alpha: Byte = $FF; Quality: TResampleQuality = rqNormal);
 const
   Resamples: array[TResampleQuality] of TCairoFilter =
-    (CAIRO_FILTER_FAST, CAIRO_FILTER_GOOD, CAIRO_FILTER_BILINEAR);
+    (CAIRO_FILTER_FAST, CAIRO_FILTER_GOOD, CAIRO_FILTER_BEST);
 var
   DestSurface: TSurfaceCairo;
   CairoSurface: PCairoSurface;
@@ -1716,12 +1735,8 @@ begin
   { Ellipses }
   case Direction of
     drLeft, drUp, drRight, drDown, drCenter:
-      begin
-        pango_layout_set_height(FLayout, -1);
-        pango_layout_set_ellipsize(FLayout, PANGO_ELLIPSIZE_END);
-      end;
+      pango_layout_set_ellipsize(FLayout, PANGO_ELLIPSIZE_END);
   else
-    pango_layout_set_height(FLayout, High(Word));
     pango_layout_set_ellipsize(FLayout, PANGO_ELLIPSIZE_NONE);
   end;
   pango_cairo_update_layout(FCairo, FLayout);
@@ -1892,7 +1907,7 @@ begin
   begin
     if FDrawable = nil then
     begin
-      Widget := GTK_WIDGET(Pointer(FControl.Handle));
+      Widget := GTK_WIDGET({%H-}Pointer(FControl.Handle));
       Widget := GetFixedWidget(Widget);
       FDrawable := GetControlWindow(Widget);
     end;
@@ -2014,8 +2029,6 @@ var
   I, J: Integer;
 begin
   if Empty then
-    Exit;
-  if not SurfaceOptions.UsePremultiply then
     Exit;
   Found := False;
   A := Pointer(gdk_pixbuf_get_pixels(FBuffer));
@@ -2184,7 +2197,7 @@ procedure TBitmapCairo.LoadFromFile(const FileName: string);
 var
   B, C: PGdkPixbuf;
 begin
-  B := gdk_pixbuf_new_from_file(PAnsiChar(FileName), nil);
+  B := gdk_pixbuf_new_from_file(PChar(FileName), nil);
   if B <> nil then
   begin
     FFormat := StrToImageFormat(ExtractFileExt(FileName));
@@ -2276,12 +2289,14 @@ begin
   if not Empty then
   begin
     { For some unknow reason this WriteLn causes the IDE to realize property data }
+    WriteLn('bitmap save start');
     if not (FFormat in [fmBmp, fmJpeg, fmPng, fmTiff]) then
       FFormat := fmPng;
     S := ImageFormatToStr(FFormat);
     FlipPixels;
-    gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil, nil);
+    gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil);
     FlipPixels;
+    WriteLn('bitmap save complete');
   end;
 end;
 
@@ -2553,7 +2568,7 @@ end;
 
 function TSplashCairo.GetHandle: IntPtr;
 begin
-  Result := IntPtr(FWidget);
+  Result := {%H-}IntPtr(FWidget);
 end;
 
 procedure TSplashCairo.Move(X, Y: Integer);

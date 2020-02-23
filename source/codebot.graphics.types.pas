@@ -8,7 +8,7 @@
 
 { <include docs/codebot.graphics.types.txt> }
 unit Codebot.Graphics.Types;
-
+{$WARN 3177 off : Some fields coming after "$1" were not initialized}
 {$i codebot.inc}
 
 interface
@@ -784,8 +784,6 @@ type
     ErrorCorrection: Boolean;
     { Use gamma corrected gradients on supported back ends }
     GammaCorrection: Boolean;
-    { Use premultiplication when loading or saving images }
-    UsePremultiply: Boolean;
   end;
 
 var
@@ -794,7 +792,6 @@ var
     SoftwareBuffering: False;
     ErrorCorrection: False;
     GammaCorrection: False;
-    UsePremultiply: True;
   );
 
 implementation
@@ -1860,6 +1857,7 @@ begin
   Result.Alpha := HiByte;
 end;
 
+
 {var
   M1, M2: Float;
   H, S, L, R, G, B: Float;
@@ -2502,7 +2500,7 @@ begin
   H := H + 0.5;
   if H > 1 then
     H := H - 1;
-  Result := THSL(H);
+  Result := THSL(H)
 end;
 
 function Blend(A, B: TColorB; Percent: Float): TColorB;

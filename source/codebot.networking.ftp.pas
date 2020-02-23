@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified August 2019                                *)
 (*                                                      *)
 (********************************************************)
 
@@ -83,7 +83,6 @@ type
     FUserName: string;
     FPassword: string;
     FTransfering: Boolean;
-    FPath: string;
     FFindMask: TFileSystemAttributes;
     FFindList: StringArray;
     FFindIndex: Integer;
@@ -145,10 +144,6 @@ type
     function FilePut(const LocalFile, RemoteFile: string; Overwrite: Boolean = True): Boolean;
     { Request a file download from the remote server }
     function FileGet(const RemoteFile, LocalFile: string; Overwrite: Boolean = True): Boolean;
-    { Initiate an file upload to the remote server }
-    function StreamPut(LocalStream: TStream; const RemoteFile: string; Overwrite: Boolean = True): Boolean;
-    { Request a stream download from the remote server }
-    function StreamGet(const RemoteFile: string; LocalStream: TStream): Boolean;
     { Retrieve a text mode listing files and folders }
     function FileList(const Path: string = ''): string;
     { Initiate a structured listing files and folders with an optional attribute mask }
@@ -441,8 +436,6 @@ end;
 
 function TFtpClient.Passive(out Socket: TSocket): Boolean;
 var
-  Host: string;
-  Port: word;
   R: TResponse;
   V: IntArray;
 begin
@@ -457,17 +450,12 @@ begin
       Exit;
     Socket := TSocket.Create;
     try
-      Host := '%d.%d.%d.%d'.Format([V[0], V[1], V[2], V[3]]);
-      Port := V[4] * 256 + V[5];
-      Result := Socket.Connect(Host, Port);
+      Result := Socket.Connect('%d.%d.%d.%d'.Format([V[0], V[1], V[2], V[3]]), V[4] * 256 + V[5]);
     finally
       if not Result then
-      begin
         Socket.Free;
-        Socket := nil;
-      end;
     end;
-  end;
+  end
 end;
 
 function TFtpClient.FileModeBinary: Boolean;
@@ -528,7 +516,6 @@ begin
       FreeMem(Buffer);
       Stream.Free;
     end;
-    Recv(R);
   finally
     Socket.Free;
   end;
@@ -576,95 +563,6 @@ begin
       FreeMem(Buffer);
       Stream.Free;
     end;
-    Recv(R);
-  finally
-    Socket.Free;
-  end;
-end;
-
-function TFtpClient.StreamPut(LocalStream: TStream; const RemoteFile: string; Overwrite: Boolean = True): Boolean;
-const
-  BufferSize = 1024 * 1024;
-var
-  Socket: TSocket;
-  Buffer: Pointer;
-  SourceSize, DestSize: LargeWord;
-  Count: LongWord;
-  R: TResponse;
-begin
-  Result := False;
-  if (not Overwrite) and FileExists(RemoteFile) then
-    Exit;
-  if not FileModeBinary then
-    Exit;
-  SourceSize := LocalStream.Size;
-  DestSize := 0;
-  if Passive(Socket) then
-  try
-    Send('STOR ' + RemoteFile.Quote, R);
-    if R.IsFail(100, 299) then
-      Exit;
-    GetMem(Buffer, BufferSize);
-    FTransfering := True;
-    try
-      repeat
-        Count := LocalStream.Read(Buffer^, BufferSize);
-        if Count > 0 then
-          if Socket.WriteAll(Buffer^, Count) then
-          begin
-            DestSize := DestSize + Count;
-            DoProgress(SourceSize, DestSize);
-          end;
-      until (not FTransfering) or (Count < BufferSize);
-      Result := DestSize = SourceSize;
-    finally
-      FTransfering := False;
-      FreeMem(Buffer);
-    end;
-    Recv(R);
-  finally
-    Socket.Free;
-  end;
-end;
-
-function TFtpClient.StreamGet(const RemoteFile: string; LocalStream: TStream): Boolean;
-const
-  BufferSize = 1024 * 1024;
-var
-  Socket: TSocket;
-  Buffer: Pointer;
-  SourceSize, DestSize: LargeWord;
-  Count: LongInt;
-  R: TResponse;
-begin
-  Result := False;
-  if not FileModeBinary then
-    Exit;
-  SourceSize := FileSize(RemoteFile);
-  DestSize := 0;
-  if Passive(Socket) then
-  try
-    Send('RETR ' + RemoteFile.Quote, R);
-    if R.IsFail(100, 299) then
-      Exit;
-    GetMem(Buffer, BufferSize);
-    FTransfering := True;
-    try
-      repeat
-        Count := Socket.Read(Buffer^, BufferSize);
-        if Count > 0 then
-          if LocalStream.Write(Buffer^, Count) = Count then
-          begin
-            DestSize := DestSize + Count;
-            DoProgress(SourceSize, DestSize);
-          end;
-      until (not FTransfering) or (Count < 1);
-      Result := DestSize = SourceSize;
-    finally
-      FTransfering := False;
-      FreeMem(Buffer);
-    end;
-    Recv(R);
   finally
     Socket.Free;
   end;
@@ -703,7 +601,6 @@ begin
   S := FileList(Path).Trim;
   if S.IsEmpty then
   begin
-    FindData.Path := '';
     FindData.Name := '';
     FindData.Date := 0;
     FindData.Size := 0;
@@ -712,7 +609,6 @@ begin
   end
   else
   begin
-    FPath := Path;
     S := S.AdjustLineBreaks(tlbsCRLF);
     FFindMask := Allow;
     FFindList := S.Split(#13#10);
@@ -723,16 +619,16 @@ end;
 
 function TFtpClient.FindNext(out FindData: TRemoteFindData): Boolean;
 
-  function SafeRead(var Columns: StringArray; Index: Integer): string;
+	function SafeRead(var Columns: StringArray; Index: Integer): string;
   var
     I: Integer;
   begin
     I := Columns.Length;
     if Index < I then
-      Result := Columns[Index]
-    else
-      Result := '';
-  end;
+	    Result := Columns[Index]
+		else
+	  	Result := '';
+	end;
 
 const
   AttributeColumn = 0;
@@ -758,10 +654,10 @@ begin
   if FFindIndex < FFindList.Length then
   begin
     Columns := FFindList[FFindIndex].Words(FileColumn);
-    S := SafeRead(Columns, AttributeColumn);
+		S := SafeRead(Columns, AttributeColumn);
     if S.Length >= 10 then
     begin
-      if S[1] = 'd' then
+  		if S[1] = 'd' then
         Include(FindData.Attributes, fsaDirectory);
       if S[1] = 'l' then
         Include(FindData.Attributes, fsaLink);
@@ -771,13 +667,12 @@ begin
         Include(FindData.Attributes, fsaWrite);
       if S[10] = 'x' then
         Include(FindData.Attributes, fsaExecute);
-    end;
+		end;
     if FindData.Attributes * FFindMask = [] then
     begin
       Result := FindNext(FindData);
       Exit;
     end;
-    FindData.Path := FPath;
     FindData.Name := SafeRead(Columns, FileColumn);
     FindData.Size := StrToQWordDef(SafeRead(Columns, SizeColumn), 0);
     M := 1;
@@ -806,7 +701,7 @@ begin
     Result := True;
   end
   else
-    Result := False;
+	  Result := False;
 end;
 
 procedure TFtpClient.SetConnected(Value: Boolean);

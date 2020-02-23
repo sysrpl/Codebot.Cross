@@ -468,9 +468,12 @@ begin
     Event(TThreadedTimer(InternalThreadedTimer));
 end;
 
+const
+  TimerRate = 70;
+
 procedure TAnimationThread.Execute;
 const
-  Delay = 1 / 30;
+  Delay = 1 / TimerRate;
 var
   A, B: Double;
 begin

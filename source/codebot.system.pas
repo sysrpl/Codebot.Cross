@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified July 2017                                  *)
+(*  Modified September 2019                             *)
 (*                                                      *)
 (********************************************************)
 
@@ -17,7 +17,7 @@ uses
   { Codebot core unit }
   Codebot.Core,
   { Free pascal units }
-  SysUtils, Classes, Process, FileUtil;
+  SysUtils, Classes;
 
 {$region types}
 type
@@ -57,16 +57,17 @@ type
   end;
 {$endregion}
 
+type
+  TArray<T> = array of T;
+
 {$region system}
-procedure FillZero(out Buffer; Size: UIntPtr); inline;
+procedure FillZero(out Buffer; Size: UIntPtr);
 {$endregion}
 
 {$region generic containers}
 { TArray<T> is a shortcut to a typed dynamic array }
 
 type
-  TArray<T> = array of T;
-
 { TCompare\<T\> is used to compare two items }
   TCompare<T> = function(constref A, B: T): Integer;
 { TConvert\<Source, Target\> is used to convert from one type to another }
@@ -100,7 +101,6 @@ type
     function GetCurrent: T;
     function MoveNext: Boolean;
     procedure Reset;
-    property Current: T read GetCurrent;
   end;
 {doc on}
 
@@ -113,14 +113,12 @@ type
   <link Overview.Codebot.System.TArrayList, TArrayList\<T\> members> }
 
   TArrayList<T> = record
-  public type
+  public
     {doc ignore}
-    TArrayListEnumerator = class(TArrayEnumerator<T>) end;
-    TCompareFunc = TCompare<T>;
+    type TArrayListEnumerator = class(TArrayEnumerator<T>) end;
     { Get the enumerator for the list }
     function GetEnumerator: IEnumerator<T>;
   private
-    function CompareExists: Boolean;
     procedure QuickSort(Order: TSortingOrder; Compare: TCompare<T>; L, R: Integer);
     function GetIsEmpty: Boolean;
     function GetFirst: T;
@@ -130,7 +128,7 @@ type
     function GetLength: Integer;
     procedure SetLength(Value: Integer);
     function GetData: Pointer;
-    function GetItem(Index: Integer): T;
+     function GetItem(Index: Integer): T;
     procedure SetItem(Index: Integer; const Value: T);
   public
     class var DefaultCompare: TCompare<T>;
@@ -176,9 +174,7 @@ type
     { Sort the items using a comparer }
     procedure Sort(Order: TSortingOrder = soAscend; Comparer: TCompare<T> = nil);
     { Attempt to find the item using DefaultCompare }
-    function IndexOf(const Item: T): Integer; overload;
-    { Attempt to find the item using a supplied comparer }
-    function IndexOf(const Item: T; Comparer: TCompare<T>): Integer; overload;
+    function IndexOf(const Item: T): Integer;
     { Join a the array into a string using a separator }
     function Join(const Separator: string; Convert: TConvertString<T> = nil): string;
     { Returns true if ther are no items in the list }
@@ -195,96 +191,23 @@ type
     property Item[Index: Integer]: T read GetItem write SetItem; default;
   end;
 
-{ TMap\<K, V\> is a array like simple dictionary
-  See also
-  <link Overview.Codebot.System.TMap, TMap\<K, V\> members> }
-
-  TMap<K, V> = record
-  private
-    FKeys: TArrayList<K>;
-    FValues: TArrayList<V>;
-    function GetItem(const Key: K): V;
-    procedure SetItem(const Key: K; const Value: V);
-  public
-    { Get or set and item using a key }
-    property Item[const Key: K]: V read GetItem write SetItem;
-  end;
-
-{ TBaseGrowList }
-
-  TBaseList = class
-  public
-    constructor Create(N: Integer = 0); virtual;
-  end;
-
-  TBaseListClass = class of TBaseList;
-
-{ TGrowList\<T\> is a class for incrementally adding large amounts of growing data
-  See also
-  <link Overview.Codebot.System.TGrowList\<T\>, TGrowList\<T\> members> }
-
-  TGrowList<T> = class(TBaseList)
-  private
-    FBuffer: TArrayList<T>;
-    FCount: Integer;
-    FLength: Integer;
-    procedure Grow(N: Integer);
-    function GetData(Index: Integer): Pointer;
-    function GetItem(Index: Integer): T;
-    procedure SetItem(Index: Integer; Value: T);
-  protected
-    procedure Added(N: Integer); virtual;
-  public
-    { Create a new dynamic buffer optionally allocating room for a N number
-      of future items }
-    constructor Create(N: Integer = 0); override;
-    { Remove any extra data allocated by the previous grow }
-    procedure Pack;
-    { Create a copy of the list }
-    function Clone: TObject; virtual;
-    { Add a range of items to the list }
-    procedure AddRange(const Range: array of T);
-    { Add a single item to the list }
-    procedure AddItem(const Item: T);
-    { Clear the buffer optionally allocating room for a N number
-      of future items }
-    procedure Clear(N: Integer = 0);
-    { Pointer to the data at a specified index }
-    property Data[Index: Integer]: Pointer read GetData; default;
-    { Item at specified index }
-    property Item[Index: Integer]: T read GetItem write SetItem;
-    { The number of items in the list }
-    property Count: Integer read FCount;
-  end;
-
 {doc off}
   StringArray = TArrayList<string>;
-  WordArray = TArrayList<Word>;
   IntArray = TArrayList<Integer>;
   Int64Array = TArrayList<Int64>;
   FloatArray = TArrayList<Float>;
   BoolArray = TArrayList<Boolean>;
-  PointerArray = TArrayList<Pointer>;
-  ObjectArray = TArrayList<TObject>;
-  InterfaceArray = TArrayList<IInterface>;
 
 function DefaultStringCompare(constref A, B: string): Integer;
 function DefaultStringConvertString(constref Item: string): string;
-function DefaultWordCompare(constref A, B: Word): Integer;
-function DefaultWordConvertString(constref Item: Word): string;
 function DefaultIntCompare(constref A, B: Integer): Integer;
 function DefaultIntConvertString(constref Item: Integer): string;
 function DefaultInt64Compare(constref A, B: Int64): Integer;
 function DefaultInt64ConvertString(constref Item: Int64): string;
 function DefaultFloatCompare(constref A, B: Float): Integer;
 function DefaultFloatConvertString(constref Item: Float): string;
-function DefaultObjectCompare(constref A, B: TObject): Integer;
-function DefaultInterfaceCompare(constref A, B: IInterface): Integer;
-function DefaultCompare8(constref A, B: Byte): Integer;
-function DefaultCompare16(constref A, B: Word): Integer;
-function DefaultCompare32(constref A, B: LongWord): Integer;
-function DefaultCompare64(constref A, B: LargeWord): Integer;
 {doc on}
+
 {$endregion}
 
 {$region math routines}
@@ -426,9 +349,7 @@ function StrOf(C: Char; Len: Integer): string;
 { Returns a string made to fit a given length padded on the left with a character [group string] }
 function StrPadLeft(const S: string; C: Char; Len: Integer): string;
 { Returns a string made to fit a given length padded on the right with a character [group string] }
-function StrPadRight(const S: string; C: Char; Len: Integer): string; overload;
-{ Returns a string made to fit a given length padded on the right zeros [group string] }
-function StrPadRight(const I: Integer; Len: Integer): string; overload;
+function StrPadRight(const S: string; C: Char; Len: Integer): string;
 { Returns a string surrounded by quotes if it contains whitespace [group string] }
 function StrQuote(const S: string): string;
 { Returns true if a string contains only whitespace characters [group string] }
@@ -464,9 +385,7 @@ function SwitchIndex(const Switch: string): Integer;
   <link Codebot.System.SwitchIndex, SwitchIndex function> [group string] }
 function SwitchValue(const Switch: string): string;
 { Convert an integer to a string [group string] }
-function IntToStr(Value: Int64): string;
-{ Convert an integer to a byte storage string [group string] }
-function IntToStorage(Bytes: Int64): string;
+function IntToStr(Value: Integer): string;
 { Convert a string to an integer. Can throw an EConvertError exception. [group string] }
 function StrToInt(const S: string): Integer;
 { Convert a string an integer. Returns a default value if conversion cannot be done. [group string] }
@@ -635,6 +554,10 @@ type
     procedure AddFormat(const S: string; const Args: array of const);
     function Contains(const S: string; IgnoreCase: Boolean = False): Boolean;
   end;
+
+{ Returns the current date and time }
+
+function Now: TDateTime;
 {$endregion}
 
 {$region file management routines}
@@ -643,7 +566,7 @@ type
 { Delete a file }
 function FileDelete(const FileName: string): Boolean;
 { Copy a file optionally preserving file time }
-function FileCopy(const SourceName, DestName: string; PreserveTime: Boolean = False): Boolean;
+// function FileCopy(const SourceName, DestName: string; PreserveTime: Boolean = False): Boolean;
 { Rename a file }
 function FileRename(const OldName, NewName: String): Boolean;
 { Determine if a file exists }
@@ -692,14 +615,6 @@ function PathExpand(const Path: string): string;
 function PathIncludeDelimiter(const Path: string): string;
 { Exclude the end delimiter for a path }
 function PathExcludeDelimiter(const Path: string): string;
-{ Combine a uri }
-function UriCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
-{ Include a slash at the end of a uri }
-function UriIncludeDelimiter(const Uri: string): string;
-{ Exclude a slash from the end of a uri }
-function UriExcludeDelimiter(const Uri: string): string;
-{ Exclude a path element from a uri }
-function UriExtractPath(const Uri: string): string;
 { Returns the location of the application configuration file }
 function ConfigAppFile(Global: Boolean; CreateDir: Boolean = False): string;
 { Returns the location of the application configuration directory }
@@ -721,6 +636,10 @@ const
 function FindOpen(const Path: string; Attr: Longint; out Search: TSearchRec): LongInt;
 { Find file system items from a path outputting to a TStrings object }
 procedure FindFiles(const Path: string; out FileSearch: TStrings; Attributes: Integer = 0); overload;
+
+{ TNamedValues\<T\> is a simple case insensitive string based dictionary
+  See also
+  <link Overview.Codebot.System.TNamedValues, TNamedValues\<T\> members> }
 
 type
   TFileSearchItem = record
@@ -778,13 +697,15 @@ type
     procedure Delete(Index: Integer);
     { Removes all named values setting the count of the dictionary to 0 }
     procedure Clear;
+    { Returns true if a named key is in the dictionary }
+    function HasName(const Name: string): Boolean;
     { The number of key value pairs in the dictionary }
     property Count: Integer read GetCount;
-    { Returns true if ther are no named values in the dictionary }
+    { Returns true if there are no named values in the dictionary }
     property Empty: Boolean read GetEmpty;
     { Names indexed by an integer }
     property Names[Index: Integer]: string read GetName;
-    { Values indexed by a name }
+    { Values indexed by a named key }
     property Values[Name: string]: T read GetValue; default;
     { Values indexed by an integer }
     property ValueByIndex[Index: Integer]: T read GetValueByIndex;
@@ -802,8 +723,8 @@ type
 
 { INamedValues<T> is a reference type for TNamedValues<T> }
 
-  INamedValues<T> = interface(IEnumerable<T>)
-    ['{D228ADD8-4C4E-4C6C-A6F6-FA17FC307253}']
+	INamedValues<T> = interface(IEnumerable<T>)
+  	['{D228ADD8-4C4E-4C6C-A6F6-FA17FC307253}']
     function GetCount: Integer;
     function GetEmpty: Boolean;
     function GetName(Index: Integer): string;
@@ -828,13 +749,13 @@ type
 
   INamedStrings = interface(INamedValues<string>)
     ['{C03EF776-46AC-4757-8654-F31EC34E67A7}']
-  end;
+	end;
 
 { TNamedValuesIntf<T> exposes INamedValues<T> }
 
   TNamedValuesIntf<T> = class(TInterfacedObject, IEnumerable<T>, INamedValues<T>)
   private
-    FData: TNamedValues<T>;
+		FData: TNamedValues<T>;
   public
     { IEnumerable<T> }
     function GetEnumerator: IEnumerator<string>;
@@ -848,12 +769,12 @@ type
     procedure Remove(const Name: string);
     procedure Delete(Index: Integer);
     procedure Clear;
-  end;
+	end;
 
 { TNamedStringsIntf exposes INamedStrings }
 
   TNamedStringsIntf = class(TNamedValuesIntf<string>, INamedStrings)
-  end;
+	end;
 
 { IDelegate\<T\> allows event subscribers to add or remove their event handlers
   See also
@@ -1114,8 +1035,19 @@ type
     property Terminated;
   end;
 
-{ Execute a process, wait for it to terminate, and return its output }
-function ProcessExecute(const Command: string; const Arguments: string = ''): string;
+{ TThreadExecuteProc is the callback invoked when a TSimpleThread is created }
+
+  TThreadExecuteProc = procedure(Thread: TSimpleThread);
+
+{ Execute a procedure inside a simple thread }
+
+procedure ThreadExecute(ThreadProc: TThreadExecuteProc); overload;
+procedure ThreadExecute(Proc: TProcedure); overload;
+
+{ Sleep for a given number of milliseconds }
+
+procedure Sleep(Milliseconds: Cardinal);
+
 {$endregion}
 
 {$region waiting routines}
@@ -1692,34 +1624,32 @@ end;
 
 function StrFindCount(const S, SubStr: string; IgnoreCase: Boolean = False): Integer;
 var
-  Start, Index, Len: Integer;
+  Start, Index: Integer;
 begin
   Result := 0;
   Start := 1;
-  Len := Length(SubStr);
   repeat
     Index := StrFind(S, SubStr, Start, IgnoreCase);
     if Index > 0 then
     begin
       Inc(Result);
-      Start := Index + Len;
+      Start := Index + Length(SubStr);
     end;
   until Index = 0;
 end;
 
 function StrFindIndex(const S, SubStr: string; IgnoreCase: Boolean = False): IntArray;
 var
-  Start, Index, Len: Integer;
+  Start, Index: Integer;
 begin
   Result.Length := StrFindCount(S, SubStr, IgnoreCase);
   Start := 1;
   Index := 0;
-  Len := Length(SubStr);
   while Index < Result.Length do
   begin
     Start := StrFind(S, SubStr, Start, IgnoreCase);
     Result[Index] := Start;
-    Inc(Start, Len);
+    Inc(Start, Length(SubStr));
     Inc(Index);
   end;
 end;
@@ -1748,7 +1678,7 @@ begin
     begin
       Inc(OldIndex, OldPattern.Length);
       for I := 0 to NewPattern.Length - 1 do
-        Result[NewIndex + I] := NewPattern[I + 1];
+      	Result[NewIndex + I] := NewPattern[I + 1];
       Inc(NewIndex, NewPattern.Length);
       Inc(FindIndex);
     end
@@ -1976,6 +1906,7 @@ var
 begin
   if Len < 1 then
     Exit;
+  Result := '';
   SetLength(Result, Len);
   for I := 1 to Len do
     Result[I] := C;
@@ -2011,12 +1942,6 @@ begin
     Exit;
   end;
   Result := StrOf(C,  Len - I) + S;
-end;
-
-function StrPadRight(const I: Integer; Len: Integer): string;
-begin
-  Result := IntToStr(I);
-  Result := StrPadRight(Result, '0', Len);
 end;
 
 function StrQuote(const S: string): string;
@@ -2107,7 +2032,7 @@ var
   DestLen: Integer;
   I, J, L: Longint;
 begin
-  Source := Pointer(S);
+  Source:=Pointer(S);
   L := Length(S);
   DestLen := L;
   I := 1;
@@ -2118,12 +2043,12 @@ begin
         if Style = tlbsCRLF then Inc(DestLen);
       #13:
         if Style = tlbsCRLF then
-          if (I < L) and (S[I + 1] = #10) then
-            Inc(I)
+          if (I < L) and (S[I+1] = #10) then
+	          Inc(I)
           else
-            Inc(DestLen)
+  	        Inc(DestLen)
           else if (I < L) and (S[I + 1] = #10) then
-            Dec(DestLen);
+    	      Dec(DestLen);
     end;
     Inc(I);
   end;
@@ -2140,10 +2065,10 @@ begin
       case Source[I] of
         #10:
           begin
-            if Style = tlbsCRLF then
+            if Style=tlbsCRLF then
             begin
-              Dest[J] := #13;
-              Inc(J);
+             Dest[J] := #13;
+             Inc(J);
             end;
             Dest[J] := #10;
             Inc(J);
@@ -2159,7 +2084,7 @@ begin
              Dest[J] := #10;
              Inc(J);
              Inc(I);
-             if Source[I] = #10 then
+             if Source[I]=#10 then
                Inc(I);
           end;
       else
@@ -2169,6 +2094,54 @@ begin
       end;
     end;
 end;
+
+
+{var
+  Line: string;
+  I, J, K: Integer;
+begin
+  if Length(S) < 1 then
+    Exit('');
+  WriteLn(S);
+  I := StrFindCount(S, #10) + StrFindCount(S, #13);
+  WriteLn(I);
+  SetLength(Result, Length(S) + I * 2);
+  Line := LineBreakStyles[Style];
+  I := 1;
+  J := 1;
+  K := Length(S) + 1;
+  while (I < K) and (S[I] > #0) do
+  begin
+    if ((S[I] = #10) and (S[I + 1] = #13)) or ((S[I] = #13) and (S[I + 1] = #10)) then
+    begin
+      Result[J] := Line[1];
+      Inc(J);
+      if Style = tlbsCRLF then
+      begin
+        Result[J] := Line[2];
+        Inc(J);
+      end;
+      Inc(I);
+    end
+    else if (S[I] = #10) or (S[I] = #13) then
+    begin
+      Result[J] := Line[1];
+      Inc(J);
+      if Style = tlbsCRLF then
+      begin
+        Result[J] := Line[2];
+        Inc(J);
+      end;
+    end
+    else
+    begin
+      Result[J] := S[I];
+      Inc(J);
+    end;
+    Inc(I);
+  end;
+  SetLength(Result, J - 1);
+end;}
 
 function StrAdjustLineBreaks(const S: string): string;
 begin
@@ -2230,73 +2203,9 @@ begin
   Result := '';
 end;
 
-function IntToStr(Value: Int64): string;
-const
-  Digits: PChar = '0123456789';
-var
-  P: PChar;
-  I, J: Int64;
+function IntToStr(Value: Integer): string;
 begin
-  if Value < 0 then
-    I := -Value
-  else
-    I := Value;
-  J := 0;
-  while I > 0 do
-  begin
-    I := I div 10;
-    Inc(J);
-  end;
-  if J = 0 then
-    Exit('0');
-  if Value < 0 then
-  begin
-    SetLength(Result, J + 1);
-    Result[1] := '-'
-  end
-  else
-    SetLength(Result, J);
-  P := @Result[Length(Result)];
-  if Value < 0 then
-    I := -Value
-  else
-    I := Value;
-  while J > 0 do
-  begin
-    P^ := Digits[I mod 10];
-    I := I div 10;
-    Dec(P);
-    Dec(J);
-  end;
-end;
-
-function IntToStorage(Bytes: Int64): string;
-var
-  B, I: Int64;
-  D: Double;
-begin
-  if Bytes <= 0 then
-    Exit('0 bytes');
-  Result := 'Unknown';
-  B := 1024;
-  I := 0;
-  while Bytes > B do
-  begin
-    B := B * 1024;
-    Inc(I);
-    if I > 5 then
-      Exit;
-  end;
-  B := B div 1024;
-  D := Round((Bytes * 10) / B) / 10;
-  case I of
-    0: Result := IntToStr(Bytes) + ' bytes';
-    1: Result := FloatToStr(D) + ' KB';
-    2: Result := FloatToStr(D) + ' MB';
-    3: Result := FloatToStr(D) + ' GB';
-    4: Result := FloatToStr(D) + ' TB';
-    5: Result := FloatToStr(D) + ' PB';
-  end;
+  Str(Value, Result);
 end;
 
 function StrToInt(const S: string): Integer;
@@ -2531,6 +2440,7 @@ var
 begin
   if MaxColumns < 1 then
     MaxColumns := High(Integer);
+  W := '';
   C := 0;
   for I := 1 to Length do
   begin
@@ -2699,6 +2609,8 @@ begin
     Result := FormatDateTime('ddd, d mmm yyyy hh:nn:ss', Self) + ' GMT'
   else if Format = 'UTC' then
     Result := FormatDateTime('ddd, d mmm yyyy hh:nn:ss', Self) + ' UTC'
+  else if Format <> '' then
+	  Result := FormatDateTime(Format, Self)
   else
     Result := FormatDateTime('yyyy-mm-dd hh:nn:ss', Self);
 end;
@@ -2734,6 +2646,11 @@ begin
   Result := D;
 end;
 
+function Now: TDateTime;
+begin
+  Result := SysUtils.Now;
+end;
+
 { TStringsHelper }
 
 procedure TStringsHelper.AddLine;
@@ -2759,11 +2676,11 @@ begin
   Result := DeleteFile(FileName);
 end;
 
-function FileCopy(const SourceName, DestName: string;
+{function FileCopy(const SourceName, DestName: string;
   PreserveTime: Boolean = False): Boolean;
 begin
   Result := CopyFile(SourceName, DestName, PreserveTime);
-end;
+end;}
 
 function FileRename(const OldName, NewName: String): Boolean;
 begin
@@ -2772,12 +2689,36 @@ end;
 
 function FileExists(const FileName: string): Boolean;
 begin
-  Result := SysUtils.FileExists(FileName);
+  if DirExists(FileName) then
+    Result := False
+  else
+    Result := SysUtils.FileExists(FileName);
 end;
 
 function FileSize(const FileName: string): LargeWord;
+var
+  F: file of Byte;
 begin
-  Result := FileUtil.FileSize(FileName);
+  Result := 0;
+  if (FileExists(FileName)) then
+  begin
+    try
+      {$I-}
+      AssignFile(F, FileName);
+      Reset(F);
+      {$I+}
+      if (IOResult = 0) then
+      begin
+        Result := System.FileSize(F);
+      end
+      else
+      begin
+        Result := 0;
+      end;
+    finally
+      {$I-}CloseFile(F);{$I+}
+    end;
+  end;
 end;
 
 function FileDate(const FileName: string): TDateTime;
@@ -2914,7 +2855,9 @@ end;
 
 function DirDelete(const Dir: string; OnlyContents: Boolean = False): Boolean;
 begin
-  Result := DeleteDirectory(Dir, OnlyContents);
+  Result := RemoveDir(Dir);
+  if OnlyContents then
+     ForceDirectories(Dir);
 end;
 
 function DirExists(const Dir: string): Boolean;
@@ -2939,10 +2882,10 @@ end;
 
 function PathCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
 begin
-  if IncludeDelimiter then
-    Result := PathIncludeDelimiter(A) + PathIncludeDelimiter(B)
+	if IncludeDelimiter then
+	  Result := PathIncludeDelimiter(A) + PathIncludeDelimiter(B)
   else
-    Result := PathIncludeDelimiter(A) + PathExcludeDelimiter(B);
+	  Result := PathIncludeDelimiter(A) + PathExcludeDelimiter(B);
   Result := PathAdjustDelimiters(Result);
 end;
 
@@ -2961,48 +2904,10 @@ begin
   Result := ExcludeTrailingPathDelimiter(Path);
 end;
 
-function UriCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
-begin
-  if (Length(B) > 0) and (B[1] <> '/') then
-    Result := UriIncludeDelimiter(A) + B
-  else
-    Result := A + B;
-  if IncludeDelimiter then
-    Result := UriIncludeDelimiter(Result);
-end;
-
-function UriIncludeDelimiter(const Uri: string): string;
-begin
-  Result := Uri;
-  if Result = '' then
-    Exit('/');
-  if Result[Length(Result)] <> '/' then
-    Result := Result + '/';
-end;
-
-function UriExcludeDelimiter(const Uri: string): string;
-begin
-  Result := Uri;
-  if Result = '' then
-    Exit;
-  if Result[Length(Result)] = '/' then
-    SetLength(Result, Length(Result) - 1);
-end;
-
-function UriExtractPath(const Uri: string): string;
-var
-  S: string;
-begin
-  S := StrLastOf(Uri, '/');
-  if S = '' then
-    Result := ''
-  else
-    Result := StrCopy(Uri, 1, Length(Uri) - Length(S) - 1);
-end;
-
 function ConfigAppFile(Global: Boolean; CreateDir: Boolean = False): string;
 begin
-  Result := GetAppConfigFile(Global, CreateDir);
+  Result := ConfigAppDir(Global, CreateDir);
+  Result := PathCombine(Result, 'settings.cfg');
 end;
 
 function ConfigAppDir(Global: Boolean; CreateDir: Boolean = False): string;
@@ -3199,10 +3104,12 @@ end;
 
 class function TArrayList<T>.ArrayOf(const Items: array of T): TArrayList<T>;
 var
-  I: T;
+  I: Integer;
 begin
-  for I in Items do
-    Result.Push(I);
+  Result.Items := nil;
+  System.SetLength(Result.Items, System.Length(Items));
+  for I := 0 to System.Length(Items) - 1 do
+    Result.Items[I] := Items[I];
 end;
 
 procedure TArrayList<T>.Copy(out List: TArrayList<T>; N: Integer);
@@ -3322,7 +3229,7 @@ begin
     Result := Pop
   else
   begin
-    I := System.Random(I);
+    I := Random(I);
     Result := Items[I];
     Delete(I);
   end;
@@ -3333,13 +3240,14 @@ var
   I, J: Integer;
 begin
   J := System.Length(Items);
+	Result.Items := nil;
   System.SetLength(Result.Items, J);
   J := 0;
   for I := 0 to System.Length(Items) - 1 do
     if Func(Items[I]) then
     begin
-   Result.Items[J] := Items[I];
-   Inc(J);
+      Result.Items[J] := Items[I];
+      Inc(J);
     end;
   System.SetLength(Result.Items, J);
 end;
@@ -3350,7 +3258,7 @@ var
 begin
   for I := 0 to System.Length(Items) - 1 do
     if Func(Items[I]) then
-   Exit(Items[I]);
+      Exit(Items[I]);
   Result := Default(T);
 end;
 
@@ -3369,221 +3277,31 @@ begin
   Length := 0;
 end;
 
-{ TMap<K, V> }
-
-function TMap<K, V>.GetItem(const Key: K): V;
-var
-  I: Integer;
-begin
-  I := FKeys.IndexOf(Key);
-  if I > -1 then
-    Result := FValues.Items[I]
-  else
-    Result := Default(V);
-end;
-
-procedure TMap<K, V>.SetItem(const Key: K; const Value: V);
-var
-  I: Integer;
-begin
-  I := FKeys.IndexOf(Key);
-  if I > -1 then
-    FValues.Items[I] := Value
-  else
-  begin
-    FKeys.Push(Key);
-    FValues.Push(Value);
-  end;
-end;
-
-constructor TBaseList.Create(N: Integer = 0);
-begin
-  inherited Create;
-end;
-
-{ TGrowList<T> }
-
-constructor TGrowList<T>.Create(N: Integer = 0);
-begin
-  inherited Create(N);
-  Clear(N);
-end;
-
-procedure TGrowList<T>.Pack;
-begin
-  if FCount < FLength then
-  begin
-    FLength := FCount;
-    FBuffer.Length := FLength;
-  end;
-end;
-
-function TGrowList<T>.Clone: TObject;
-var
-  Copy: TGrowList<T>;
-begin
-  Copy := TBaseListClass(ClassType).Create as TGrowList<T>;
-  if FCount = 0 then
-    Exit(Copy);
-  Copy.FCount := FCount;
-  Copy.FLength := FCount;
-  FBuffer.CopyFast(Copy.FBuffer, FCount);
-  Result := Copy;
-end;
-
-procedure TGrowList<T>.Added(N: Integer);
-begin
-end;
-
-procedure TGrowList<T>.Grow(N: Integer);
-const
-  MaxGrowSize = 50000;
-var
-  C: Integer;
-begin
-  if N < 1 then
-    Exit;
-  if N < 16 then
-    N := 16;
-  if N + FCount > FLength then
-    if FLength = 0 then
-    begin
-      FLength := N;
-      FBuffer.Length := N;
-    end
-    else
-    begin
-      if FLength > MaxGrowSize then
-      begin
-        if N < MaxGrowSize then
-        C := MaxGrowSize
-        else
-        C := N;
-        C := FLength + C;
-      end
-      else
-      begin
-        C := FLength + MaxGrowSize;
-        C := FLength * 2;
-        FLength := FLength + N;
-        while C < FLength do
-          C := C * 2;
-      end;
-     FLength := C;
-     FBuffer.Length := C;
-    end;
-end;
-
-procedure TGrowList<T>.Clear(N: Integer = 0);
-begin
-  FCount := 0;
-  if N = 0 then
-  begin
-    FLength := 0;
-    FBuffer.Length := 0
-  end
-  else if N > FBuffer.Length then
-    Grow(N - FBuffer.Length);
-  Added(0);
-end;
-
-procedure TGrowList<T>.AddRange(const Range: array of T);
-var
-  I, J: Integer;
-begin
-  I := Length(Range);
-  if I < 1 then
-    Exit;
-  Grow(I);
-  for J := 0 to I - 1 do
-    FBuffer.Items[FCount + J] := Range[J];
-  Inc(FCount, I);
-  Added(I);
-end;
-
-procedure TGrowList<T>.AddItem(const Item: T);
-begin
-  Grow(1);
-  FBuffer.Items[FCount] := Item;
-  Inc(FCount);
-  Added(1);
-end;
-
-function TGrowList<T>.GetData(Index: Integer): Pointer;
-begin
-  Result := @FBuffer.Items[Index];
-end;
-
-function TGrowList<T>.GetItem(Index: Integer): T;
-begin
-  Result := FBuffer.Items[Index];
-end;
-
-procedure TGrowList<T>.SetItem(Index: Integer; Value: T);
-begin
-  FBuffer.Items[Index] := Value;
-end;
-
-{ Compare functions }
-
-function DefaultCompare8(constref A, B: Byte): Integer;
-begin
-  Result := B - A;
-end;
-
-function DefaultCompare16(constref A, B: Word): Integer;
-begin
-  Result := B - A;
-end;
-
-function DefaultCompare32(constref A, B: LongWord): Integer;
-begin
-  Result := B - A;
-end;
-
-function DefaultCompare64(constref A, B: LargeWord): Integer;
-begin
-  Result := B - A;
-end;
-
-function TArrayList<T>.CompareExists: Boolean;
-begin
-  if Assigned(DefaultCompare) then
-    Exit(True);
-  case SizeOf(T) of
-    8: DefaultCompare := TCompareFunc(DefaultCompare8);
-    16: DefaultCompare := TCompareFunc(DefaultCompare16);
-    32: DefaultCompare := TCompareFunc(DefaultCompare32);
-    64: DefaultCompare := TCompareFunc(DefaultCompare64);
-  end;
-  Result := Assigned(DefaultCompare);
-end;
-
 procedure TArrayList<T>.QuickSort(Order: TSortingOrder; Compare: TCompare<T>; L, R: Integer);
 var
   F, I, J, P: Integer;
 begin
   repeat
     if Order = soDescend then
-   F := -1
+      F := -1
     else
-   F := 1;
+      F := 1;
     I := L;
     J := R;
     P := (L + R) shr 1;
     repeat
-   while Compare(Items[I], Items[P]) * F < 0 do Inc(I);
-   while Compare(Items[J], Items[P]) * F > 0 do Dec(J);
-   if I <= J then
-   begin
-  Exchange(I, J);
-  if P = I then
-    P := J
-  else if P = J then
-    P := I;
-  Inc(I);
-  Dec(J);
-   end;
+      while Compare(Items[I], Items[P]) * F < 0 do Inc(I);
+      while Compare(Items[J], Items[P]) * F > 0 do Dec(J);
+      if I <= J then
+      begin
+        Exchange(I, J);
+        if P = I then
+          P := J
+        else if P = J then
+          P := I;
+        Inc(I);
+        Dec(J);
+      end;
     until I > J;
     if L < J then QuickSort(Order, Compare, L, J);
     L := I;
@@ -3601,7 +3319,7 @@ begin
     Exit;
   if Assigned(Comparer) then
     QuickSort(Order, Comparer, 0, I - 1)
-  else if CompareExists then
+  else if Assigned(DefaultCompare) then
     QuickSort(Order, DefaultCompare, 0, I - 1);
 end;
 
@@ -3611,22 +3329,10 @@ var
 begin
   Result := -1;
   I := Length;
-  if (I > 0) and CompareExists then
+  if (I > 0) and Assigned(DefaultCompare) then
     for I := Lo to Hi do
       if DefaultCompare(Item, Items[I]) = 0 then
-  Exit(I);
-end;
-
-function TArrayList<T>.IndexOf(const Item: T; Comparer: TCompare<T>): Integer;
-var
-  I: Integer;
-begin
-  Result := -1;
-  I := Length;
-  if I > 0 then
-    for I := Lo to Hi do
-   if Comparer(Item, Items[I]) = 0 then
-  Exit(I);
+        Exit(I);
 end;
 
 function TArrayList<T>.Join(const Separator: string; Convert: TConvertString<T> = nil): string;
@@ -3640,13 +3346,13 @@ begin
   begin
     Result := Convert(First);
     for I := Low(Items) + 1 to High(Items) do
-   Result := Result + Separator + Convert(Items[I]);
+      Result := Result + Separator + Convert(Items[I]);
   end
   else if Assigned(DefaultConvertString) then
   begin
     Result := DefaultConvertString(First);
     for I := Low(Items) + 1 to High(Items) do
-   Result := Result + Separator + DefaultConvertString(Items[I]);
+      Result := Result + Separator + DefaultConvertString(Items[I]);
   end;
 end;
 
@@ -3657,30 +3363,22 @@ end;
 
 function TArrayList<T>.GetFirst: T;
 begin
-  if Length > 0 then
-    Result := Items[0]
-  else
-    Result := Default(T);
+  Result := Items[0];
 end;
 
 procedure TArrayList<T>.SetFirst(const Value: T);
 begin
-  if Length > 0 then
-    Items[0] := Value;
+  Items[0] := Value;
 end;
 
 function TArrayList<T>.GetLast: T;
 begin
-  if Length > 0 then
-    Result := Items[Length - 1]
-  else
-    Result := Default(T);
+  Result := Items[Length - 1];
 end;
 
 procedure TArrayList<T>.SetLast(const Value: T);
 begin
-  if Length > 0 then
-    Items[Length - 1] := Value;
+  Items[Length - 1] := Value;
 end;
 
 function TArrayList<T>.GetLength: Integer;
@@ -3712,73 +3410,6 @@ class function TArrayList<T>.Convert: TArrayList<T>;
 begin
   Result.Length := 0;
 end;
-
-function DefaultStringCompare(constref A, B: string): Integer;
-begin
-  Result := StrCompare(A, B);
-end;
-
-function DefaultStringConvertString(constref Item: string): string;
-begin
-  Result := Item;
-end;
-
-function DefaultWordCompare(constref A, B: Word): Integer;
-begin
-  Result := B - A;
-end;
-
-function DefaultWordConvertString(constref Item: Word): string;
-begin
-  Result := IntToStr(Item);
-end;
-
-function DefaultIntCompare(constref A, B: Integer): Integer;
-begin
-  Result := B - A;
-end;
-
-function DefaultIntConvertString(constref Item: Integer): string;
-begin
-  Result := IntToStr(Item);
-end;
-
-function DefaultInt64Compare(constref A, B: Int64): Integer;
-begin
-  Result := B - A;
-end;
-
-function DefaultInt64ConvertString(constref Item: Int64): string;
-begin
-  Result := IntToStr(Item);
-end;
-
-function DefaultFloatCompare(constref A, B: Float): Integer;
-begin
-  if A < B then
-    Result := -1
-  else if A > B then
-    Result := 1
-  else
-    Result := 0;
-end;
-
-function DefaultFloatConvertString(constref Item: Float): string;
-begin
-  Result := FloatToStr(Item);
-end;
-
-function DefaultObjectCompare(constref A, B: TObject): Integer;
-begin
-  Result := IntPtr(A) - IntPtr(B);
-end;
-
-function DefaultInterfaceCompare(constref A, B: IInterface): Integer;
-begin
-  Result := IntPtr(A) - IntPtr(B);
-end;
-
-{$endregion}
 
 { TNamedValues<T> }
 
@@ -3834,6 +3465,20 @@ procedure TNamedValues<T>.Clear;
 begin
   FNames.Clear;
   FValues.Clear;
+end;
+
+function TNamedValues<T>.HasName(const Name: string): Boolean;
+var
+  S: string;
+  I: Integer;
+begin
+	Result := False;
+  if Name = '' then
+    Exit;
+  S := Name.ToUpper;
+  for I := FNames.Lo to FNames.Hi do
+    if S = FNames[I].ToUpper then
+    	Exit(True);
 end;
 
 function TNamedValues<T>.GetCount: Integer;
@@ -4210,14 +3855,14 @@ procedure ThreadsInit;
 var
   M: TThreadManager;
 begin
-  GetThreadManager(M{%H-});
+  M.AllocateThreadVars := nil;
+  FillChar(M, SizeOf(M), 0);
+  GetThreadManager(M);
   SemaphoreInit := @M.InitCriticalSection;
   SemaphoreDestroy := @M.DoneCriticalSection;
   SemaphoreWait := @M.EnterCriticalSection;
   SemaphoreLeave := @M.LeaveCriticalSection;
 end;
-
-{ TODO: Remove TMuxtex and use RTL critical sections only }
 
 { TMutexObject }
 
@@ -4225,6 +3870,7 @@ type
   TMutexObject = class(TInterfacedObject, IMutex)
   private
     FSemaphore: Pointer;
+    FLock: LongInt;
   public
     constructor Create;
     destructor Destroy; override;
@@ -4262,13 +3908,13 @@ end;
 function TMutexObject.Lock: LongInt;
 begin
   SemaphoreWait(FSemaphore);
-  Result := 0;
+  Result := InterlockedIncrement(FLock);
 end;
 
 function TMutexObject.Unlock: LongInt;
 begin
+  Result := InterlockedDecrement(FLock);
   SemaphoreLeave(FSemaphore);
-  Result := 0;
 end;
 
 constructor TEventObject.Create;
@@ -4339,7 +3985,7 @@ end;
 
 procedure TSimpleThread.SetStatus(const Value: string);
 begin
-  if Handle = GetCurrentThreadId then
+  if (Value <> FTempStatus) and (Handle = GetCurrentThreadId) then
   begin
     FTempStatus := Value;
     if Assigned(FOnStatus) then
@@ -4347,34 +3993,53 @@ begin
   end;
 end;
 
-function ProcessExecute(const Command: string; const Arguments: string = ''): string;
-const
-  BUFFER_SIZE = 2048;
-var
-  Process: TProcess;
-  Stream: TStringStream;
-  BytesRead: LongInt;
-  Buffer: array[0..BUFFER_SIZE - 1] of Byte;
-begin
-  Process := TProcess.Create(nil);
-  Stream := TStringStream.Create;
-  try
-    Process.Executable := Command;
-    if Arguments <> '' then
-      Process.Parameters.Text := Arguments;
-    Process.Options := [poUsePipes];
-    Process.Execute;
-    repeat
-      BytesRead := Process.Output.Read(Buffer{%H-}, BUFFER_SIZE);
-      Stream.Write(Buffer, BytesRead)
-    until BytesRead = 0;
-    Process.Terminate(0);
-    Process.WaitOnExit;
-    Result := Stream.DataString;
-  finally
-    Stream.Free;
-    Process.Free;
+{ TThreadContainer }
+
+type
+  TThreadContainer = class
+	private
+    FThreadProc: TThreadExecuteProc;
+    FProc: TProcedure;
+    procedure Execute(Thread: TSimpleThread);
+	public
+    constructor Create(ThreadProc: TThreadExecuteProc; Proc: TProcedure);
+    procedure Run;
   end;
+
+constructor TThreadContainer.Create(ThreadProc: TThreadExecuteProc; Proc: TProcedure);
+begin
+	inherited Create;
+  FThreadProc := ThreadProc;
+  FProc := Proc;
+end;
+
+procedure TThreadContainer.Execute(Thread: TSimpleThread);
+begin
+  if Assigned(FThreadProc) then
+		FThreadProc(Thread)
+  else
+		FProc;
+  Free;
+end;
+
+procedure TThreadContainer.Run;
+begin
+	TSimpleThread.Create(Execute);
+end;
+
+procedure ThreadExecute(ThreadProc: TThreadExecuteProc);
+begin
+	TThreadContainer.Create(ThreadProc, nil).Run;
+end;
+
+procedure ThreadExecute(Proc: TProcedure);
+begin
+	TThreadContainer.Create(nil, Proc).Run;
+end;
+
+procedure Sleep(Milliseconds: Cardinal);
+begin
+  SysUtils.Sleep(Milliseconds);
 end;
 
 {$endregion}
@@ -4387,12 +4052,55 @@ begin
 end;
 {$endregion}
 
+function DefaultStringCompare(constref A, B: string): Integer;
+begin
+  Result := StrCompare(A, B);
+end;
+
+function DefaultStringConvertString(constref Item: string): string;
+begin
+  Result := Item;
+end;
+
+function DefaultIntCompare(constref A, B: Integer): Integer;
+begin
+  Result := B - A;
+end;
+
+function DefaultIntConvertString(constref Item: Integer): string;
+begin
+  Result := IntToStr(Item);
+end;
+
+function DefaultInt64Compare(constref A, B: Int64): Integer;
+begin
+  Result := B - A;
+end;
+
+function DefaultInt64ConvertString(constref Item: Int64): string;
+begin
+  Result := IntToStr(Item);
+end;
+
+function DefaultFloatCompare(constref A, B: Float): Integer;
+begin
+  if A < B then
+    Result := -1
+  else if A > B then
+    Result := 1
+  else
+    Result := 0;
+end;
+
+function DefaultFloatConvertString(constref Item: Float): string;
+begin
+  Result := FloatToStr(Item);
+end;
+
 initialization
   @LibraryExceptproc := @LibraryExcept;
   StringArray.DefaultCompare := DefaultStringCompare;
   StringArray.DefaultConvertString := DefaultStringConvertString;
-  WordArray.DefaultCompare := DefaultWordCompare;
-  WordArray.DefaultConvertString := DefaultWordConvertString;
   IntArray.DefaultCompare := DefaultIntCompare;
   IntArray.DefaultConvertString := DefaultIntConvertString;
   Int64Array.DefaultCompare := DefaultInt64Compare;
@@ -4400,4 +4108,6 @@ initialization
   FloatArray.DefaultCompare := DefaultFloatCompare;
   FloatArray.DefaultConvertString := DefaultFloatConvertString;
 end.
+
+
 

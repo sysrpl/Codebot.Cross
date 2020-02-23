@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified September 2013                             *)
+(*  Modified August 2019                                *)
 (*                                                      *)
 (********************************************************)
 
@@ -74,11 +74,21 @@ type
         sin_zero: array[0..7] of AnsiChar);
       1: (
         sa_family: Word;
-        sa_data: array[0..13] of AnsiChar)
+        sa_data: array[0..13] of AnsiChar);
   end;
 
   PSockAddr = ^TSockAddr;
   TSockAddr = TSockAddrIn;
+
+	{$ifdef unix}
+	TUnixAddrIn = packed record
+    family: Word;
+    path: array[0..107] of AnsiChar;
+  end;
+
+  PUnixAddr = ^TUnixAddr;
+  TUnixAddr = TUnixAddrIn;
+  {$endif}
 
   PHostEnt = ^THostEnt;
   THostEnt = record
@@ -478,7 +488,7 @@ function fcntl(s: TSocketHandle; cmd, arg: LongInt): LongInt; apicall; libsocket
 
 function socket(af, struct, protocol: LongInt): TSocketHandle; apicall; libsocket;
 function shutdown(s: TSocketHandle; how: LongInt): LongInt; apicall; libsocket;
-function connect(s: TSocketHandle; addr: PSockAddr; namelen: LongInt): TSocketHandle; apicall; libsocket;
+function connect(s: TSocketHandle; addr: PSockAddr; namelen: LongInt): TSocketHandle; apicall; libsocket; overload;
 function bind(s: TSocketHandle; addr: PSockAddr; namelen: LongInt): LongInt; apicall; libsocket;
 function listen(s: TSocketHandle; backlog: LongInt): LongInt; apicall; libsocket;
 function accept(s: TSocketHandle; addr: PSockAddr; var addrlen: LongInt): TSocketHandle; apicall; libsocket;

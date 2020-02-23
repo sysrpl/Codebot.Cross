@@ -1,9 +1,8 @@
 object ClockWidget: TClockWidget
-  Left = 581
+  Left = 750
   Height = 234
-  Top = 333
+  Top = 375
   Width = 278
-  BorderStyle = bsNone
   ClientHeight = 234
   ClientWidth = 278
   OnClick = FormClick
@@ -21,8 +20,8 @@ object ClockWidget: TClockWidget
     OnClick = CloseButtonClick
   end
   object Images: TImageStrip
-    Left = 16
-    Top = 8
+    Left = 208
+    Top = 79
     Data = {
       89504E470D0A1A0A0000000D4948445200000020000000200806000000737A7A
       F40000000473424954080808087C086488000006AE49444154588595574D681C
