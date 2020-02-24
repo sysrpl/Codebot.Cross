@@ -5,7 +5,7 @@ unit Codebot.Render.Contexts;
 interface
 
 uses
-  SysUtils, GLES20,
+  SysUtils,
   Codebot.System,
   Codebot.Geometry;
 
@@ -193,7 +193,11 @@ function Ctx: TContext;
 
 implementation
 
+uses
+  Codebot.GLES;
+
 resourcestring
+  SNoOpenGL = 'The OpenGL library could not be loaded';
   SNoContext = 'No context is available';
   SAssetNotFound = 'Cannot locate asset with name ''%s''';
   SNoCollection = 'Cannot set name of type ''%s'' without a parent collection';
@@ -300,6 +304,8 @@ end;
 constructor TContext.Create;
 begin
   inherited Create;
+  if not LoadOpenGLES then
+    raise EContextError.Create(SNoOpenGL);
   InternalContext := Self;
   FAssetFolder := 'assets';
   FModelviewCurrent.Identity;

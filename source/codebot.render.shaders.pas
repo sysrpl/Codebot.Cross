@@ -5,7 +5,7 @@ unit Codebot.Render.Shaders;
 interface
 
 uses
-  SysUtils, GLES20,
+  SysUtils,
   Codebot.System,
   Codebot.Render.Contexts;
 
@@ -116,6 +116,9 @@ type
   end;
 
 implementation
+
+uses
+  Codebot.GLES;
 
 { TShaderObject }
 
