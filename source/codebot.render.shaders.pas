@@ -242,7 +242,7 @@ end;
 
 procedure TShaderProgram.Pop;
 begin
-  if Valid and (Ctx.GetProgram <> FHandle) then
+  if Valid then
     Ctx.PopProgram;
 end;
 
@@ -253,7 +253,7 @@ end;
 
 procedure TShaderProgram.SetActive(Value: boolean);
 begin
-  if Valid then
+  if Value <> GetActive then
     if Value then
       Push
     else
@@ -267,28 +267,11 @@ begin
 end;
 
 procedure TShaderProgram.Attach(Source: TShaderSource);
-var
-  Lines: StringArray;
-  Line, Name: string;
-  I: Integer;
 begin
   if FLinked then
     Exit;
   if Source.Valid then
   begin
-    if Source is TVertexShader then
-    begin
-      Lines := Source.Source.Lines;
-      I := 0;
-      for Line in Lines do
-        if Line.BeginsWith('attribute') then
-        begin
-          Name := Line.Trim.Split(' ').Last;
-          Name := Name.Replace(';', '');
-          glBindAttribLocation(FHandle, I, PChar(Name));
-          Inc(I);
-        end;
-    end;
     Inc(FAttachCount);
     glAttachShader(FHandle, Source.FHandle);
   end
