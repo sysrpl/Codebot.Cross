@@ -9,8 +9,8 @@ interface
 
 uses
   Codebot.Render.Contexts, Codebot.Render.Shaders, Codebot.Render.Scenes, 
-  Codebot.Render.Scenes.Controller, Codebot.Render.Buffers, Codebot.GLES, 
-  LazarusPackageIntf;
+  Codebot.Render.Scenes.Controller, Codebot.Render.Buffers, 
+  Codebot.Render.Textures, Codebot.GLES, LazarusPackageIntf;
 
 implementation
 
