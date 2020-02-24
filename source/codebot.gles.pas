@@ -11,7 +11,6 @@ unit Codebot.GLES;
 interface
 
 type
-  GLVULKANPROCNV = pointer;
   GLbitfield = uint32;
   GLboolean = byte;
   GLbyte = int8;
@@ -21,8 +20,6 @@ type
   GLclampf = single;
   GLclampx = int32;
   GLdouble = double;
-  GLeglClientBufferEXT = pointer;
-  GLeglImageOES = pointer;
   GLenum = uint32;
   GLfixed = int32;
   GLfloat = single;
@@ -47,8 +44,6 @@ type
   GLushort = uint16;
   GLvdpauSurfaceNV = int32;
   GLvoid = pointer;
-  _cl_context = pointer;
-  _cl_event = pointer;
 
   PGLbitfield = ^uint32;
   PGLboolean = ^byte;
@@ -553,12 +548,6 @@ implementation
 var
   Loaded: Boolean;
   LoadedSuccess: Boolean;
-  LibHandle: TLibHandle;
-
-function Load(const ProcName: string): Pointer;
-begin
-  Result := GetProcAddress(LibHandle, ProcName);
-end;
 
 function LoadOpenGLES: Boolean;
 const
@@ -568,8 +557,16 @@ const
   {$elseif defined(darwin)}
   '/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib'
   {$else}
-  'libGL.so';
+  'libGL.so.1';
   {$endif}
+var
+  LibHandle: TLibHandle;
+
+  function Load(const ProcName: string; out Proc: Pointer): Boolean;
+  begin
+    Proc := GetProcAddress(LibHandle, ProcName);
+    Result := Proc <> nil;
+  end;
 
 begin
   Result := LoadedSuccess;
@@ -579,149 +576,148 @@ begin
   LibHandle := LoadLibrary(LibName);
   if LibHandle = 0 then
     Exit;
-  @glActiveTexture := Load('glActiveTexture'); if @glActiveTexture = nil then Exit;
-  @glAttachShader := Load('glAttachShader'); if @glAttachShader = nil then Exit;
-  @glBindAttribLocation := Load('glBindAttribLocation'); if @glBindAttribLocation = nil then Exit;
-  @glBindBuffer := Load('glBindBuffer'); if @glBindBuffer = nil then Exit;
-  @glBindFramebuffer := Load('glBindFramebuffer'); if @glBindFramebuffer = nil then Exit;
-  @glBindRenderbuffer := Load('glBindRenderbuffer'); if @glBindRenderbuffer = nil then Exit;
-  @glBindTexture := Load('glBindTexture'); if @glBindTexture = nil then Exit;
-  @glBlendColor := Load('glBlendColor'); if @glBlendColor = nil then Exit;
-  @glBlendEquation := Load('glBlendEquation'); if @glBlendEquation = nil then Exit;
-  @glBlendEquationSeparate := Load('glBlendEquationSeparate'); if @glBlendEquationSeparate = nil then Exit;
-  @glBlendFunc := Load('glBlendFunc'); if @glBlendFunc = nil then Exit;
-  @glBlendFuncSeparate := Load('glBlendFuncSeparate'); if @glBlendFuncSeparate = nil then Exit;
-  @glBufferData := Load('glBufferData'); if @glBufferData = nil then Exit;
-  @glBufferSubData := Load('glBufferSubData'); if @glBufferSubData = nil then Exit;
-  @glCheckFramebufferStatus := Load('glCheckFramebufferStatus'); if @glCheckFramebufferStatus = nil then Exit;
-  @glClear := Load('glClear'); if @glClear = nil then Exit;
-  @glClearColor := Load('glClearColor'); if @glClearColor = nil then Exit;
-  @glClearDepthf := Load('glClearDepthf'); if @glClearDepthf = nil then Exit;
-  @glClearStencil := Load('glClearStencil'); if @glClearStencil = nil then Exit;
-  @glColorMask := Load('glColorMask'); if @glColorMask = nil then Exit;
-  @glCompileShader := Load('glCompileShader'); if @glCompileShader = nil then Exit;
-  @glCompressedTexImage2D := Load('glCompressedTexImage2D'); if @glCompressedTexImage2D = nil then Exit;
-  @glCompressedTexSubImage2D := Load('glCompressedTexSubImage2D'); if @glCompressedTexSubImage2D = nil then Exit;
-  @glCopyTexImage2D := Load('glCopyTexImage2D'); if @glCopyTexImage2D = nil then Exit;
-  @glCopyTexSubImage2D := Load('glCopyTexSubImage2D'); if @glCopyTexSubImage2D = nil then Exit;
-  @glCreateProgram := Load('glCreateProgram'); if @glCreateProgram = nil then Exit;
-  @glCreateShader := Load('glCreateShader'); if @glCreateShader = nil then Exit;
-  @glCullFace := Load('glCullFace'); if @glCullFace = nil then Exit;
-  @glDeleteBuffers := Load('glDeleteBuffers'); if @glDeleteBuffers = nil then Exit;
-  @glDeleteFramebuffers := Load('glDeleteFramebuffers'); if @glDeleteFramebuffers = nil then Exit;
-  @glDeleteProgram := Load('glDeleteProgram'); if @glDeleteProgram = nil then Exit;
-  @glDeleteRenderbuffers := Load('glDeleteRenderbuffers'); if @glDeleteRenderbuffers = nil then Exit;
-  @glDeleteShader := Load('glDeleteShader'); if @glDeleteShader = nil then Exit;
-  @glDeleteTextures := Load('glDeleteTextures'); if @glDeleteTextures = nil then Exit;
-  @glDepthFunc := Load('glDepthFunc'); if @glDepthFunc = nil then Exit;
-  @glDepthMask := Load('glDepthMask'); if @glDepthMask = nil then Exit;
-  @glDepthRangef := Load('glDepthRangef'); if @glDepthRangef = nil then Exit;
-  @glDetachShader := Load('glDetachShader'); if @glDetachShader = nil then Exit;
-  @glDisable := Load('glDisable'); if @glDisable = nil then Exit;
-  @glDisableVertexAttribArray := Load('glDisableVertexAttribArray'); if @glDisableVertexAttribArray = nil then Exit;
-  @glDrawArrays := Load('glDrawArrays'); if @glDrawArrays = nil then Exit;
-  @glDrawElements := Load('glDrawElements'); if @glDrawElements = nil then Exit;
-  @glEnable := Load('glEnable'); if @glEnable = nil then Exit;
-  @glEnableVertexAttribArray := Load('glEnableVertexAttribArray'); if @glEnableVertexAttribArray = nil then Exit;
-  @glFinish := Load('glFinish'); if @glFinish = nil then Exit;
-  @glFlush := Load('glFlush'); if @glFlush = nil then Exit;
-  @glFramebufferRenderbuffer := Load('glFramebufferRenderbuffer'); if @glFramebufferRenderbuffer = nil then Exit;
-  @glFramebufferTexture2D := Load('glFramebufferTexture2D'); if @glFramebufferTexture2D = nil then Exit;
-  @glFrontFace := Load('glFrontFace'); if @glFrontFace = nil then Exit;
-  @glGenBuffers := Load('glGenBuffers'); if @glGenBuffers = nil then Exit;
-  @glGenerateMipmap := Load('glGenerateMipmap'); if @glGenerateMipmap = nil then Exit;
-  @glGenFramebuffers := Load('glGenFramebuffers'); if @glGenFramebuffers = nil then Exit;
-  @glGenRenderbuffers := Load('glGenRenderbuffers'); if @glGenRenderbuffers = nil then Exit;
-  @glGenTextures := Load('glGenTextures'); if @glGenTextures = nil then Exit;
-  @glGetActiveAttrib := Load('glGetActiveAttrib'); if @glGetActiveAttrib = nil then Exit;
-  @glGetActiveUniform := Load('glGetActiveUniform'); if @glGetActiveUniform = nil then Exit;
-  @glGetAttachedShaders := Load('glGetAttachedShaders'); if @glGetAttachedShaders = nil then Exit;
-  @glGetAttribLocation := Load('glGetAttribLocation'); if @glGetAttribLocation = nil then Exit;
-  @glGetBooleanv := Load('glGetBooleanv'); if @glGetBooleanv = nil then Exit;
-  @glGetBufferParameteriv := Load('glGetBufferParameteriv'); if @glGetBufferParameteriv = nil then Exit;
-  @glGetError := Load('glGetError'); if @glGetError = nil then Exit;
-  @glGetFloatv := Load('glGetFloatv'); if @glGetFloatv = nil then Exit;
-  @glGetFramebufferAttachmentParameteriv := Load('glGetFramebufferAttachmentParameteriv'); if @glGetFramebufferAttachmentParameteriv = nil then Exit;
-  @glGetIntegerv := Load('glGetIntegerv'); if @glGetIntegerv = nil then Exit;
-  @glGetProgramiv := Load('glGetProgramiv'); if @glGetProgramiv = nil then Exit;
-  @glGetProgramInfoLog := Load('glGetProgramInfoLog'); if @glGetProgramInfoLog = nil then Exit;
-  @glGetRenderbufferParameteriv := Load('glGetRenderbufferParameteriv'); if @glGetRenderbufferParameteriv = nil then Exit;
-  @glGetShaderiv := Load('glGetShaderiv'); if @glGetShaderiv = nil then Exit;
-  @glGetShaderInfoLog := Load('glGetShaderInfoLog'); if @glGetShaderInfoLog = nil then Exit;
-  @glGetShaderPrecisionFormat := Load('glGetShaderPrecisionFormat'); if @glGetShaderPrecisionFormat = nil then Exit;
-  @glGetShaderSource := Load('glGetShaderSource'); if @glGetShaderSource = nil then Exit;
-  @glGetString := Load('glGetString'); if @glGetString = nil then Exit;
-  @glGetTexParameterfv := Load('glGetTexParameterfv'); if @glGetTexParameterfv = nil then Exit;
-  @glGetTexParameteriv := Load('glGetTexParameteriv'); if @glGetTexParameteriv = nil then Exit;
-  @glGetUniformfv := Load('glGetUniformfv'); if @glGetUniformfv = nil then Exit;
-  @glGetUniformiv := Load('glGetUniformiv'); if @glGetUniformiv = nil then Exit;
-  @glGetUniformLocation := Load('glGetUniformLocation'); if @glGetUniformLocation = nil then Exit;
-  @glGetVertexAttribfv := Load('glGetVertexAttribfv'); if @glGetVertexAttribfv = nil then Exit;
-  @glGetVertexAttribiv := Load('glGetVertexAttribiv'); if @glGetVertexAttribiv = nil then Exit;
-  @glGetVertexAttribPointerv := Load('glGetVertexAttribPointerv'); if @glGetVertexAttribPointerv = nil then Exit;
-  @glHint := Load('glHint'); if @glHint = nil then Exit;
-  @glIsBuffer := Load('glIsBuffer'); if @glIsBuffer = nil then Exit;
-  @glIsEnabled := Load('glIsEnabled'); if @glIsEnabled = nil then Exit;
-  @glIsFramebuffer := Load('glIsFramebuffer'); if @glIsFramebuffer = nil then Exit;
-  @glIsProgram := Load('glIsProgram'); if @glIsProgram = nil then Exit;
-  @glIsRenderbuffer := Load('glIsRenderbuffer'); if @glIsRenderbuffer = nil then Exit;
-  @glIsShader := Load('glIsShader'); if @glIsShader = nil then Exit;
-  @glIsTexture := Load('glIsTexture'); if @glIsTexture = nil then Exit;
-  @glLineWidth := Load('glLineWidth'); if @glLineWidth = nil then Exit;
-  @glLinkProgram := Load('glLinkProgram'); if @glLinkProgram = nil then Exit;
-  @glPixelStorei := Load('glPixelStorei'); if @glPixelStorei = nil then Exit;
-  @glPolygonOffset := Load('glPolygonOffset'); if @glPolygonOffset = nil then Exit;
-  @glReadPixels := Load('glReadPixels'); if @glReadPixels = nil then Exit;
-  @glReleaseShaderCompiler := Load('glReleaseShaderCompiler'); if @glReleaseShaderCompiler = nil then Exit;
-  @glRenderbufferStorage := Load('glRenderbufferStorage'); if @glRenderbufferStorage = nil then Exit;
-  @glSampleCoverage := Load('glSampleCoverage'); if @glSampleCoverage = nil then Exit;
-  @glScissor := Load('glScissor'); if @glScissor = nil then Exit;
-  @glShaderBinary := Load('glShaderBinary'); if @glShaderBinary = nil then Exit;
-  @glShaderSource := Load('glShaderSource'); if @glShaderSource = nil then Exit;
-  @glStencilFunc := Load('glStencilFunc'); if @glStencilFunc = nil then Exit;
-  @glStencilFuncSeparate := Load('glStencilFuncSeparate'); if @glStencilFuncSeparate = nil then Exit;
-  @glStencilMask := Load('glStencilMask'); if @glStencilMask = nil then Exit;
-  @glStencilMaskSeparate := Load('glStencilMaskSeparate'); if @glStencilMaskSeparate = nil then Exit;
-  @glStencilOp := Load('glStencilOp'); if @glStencilOp = nil then Exit;
-  @glStencilOpSeparate := Load('glStencilOpSeparate'); if @glStencilOpSeparate = nil then Exit;
-  @glTexImage2D := Load('glTexImage2D'); if @glTexImage2D = nil then Exit;
-  @glTexParameterf := Load('glTexParameterf'); if @glTexParameterf = nil then Exit;
-  @glTexParameterfv := Load('glTexParameterfv'); if @glTexParameterfv = nil then Exit;
-  @glTexParameteri := Load('glTexParameteri'); if @glTexParameteri = nil then Exit;
-  @glTexParameteriv := Load('glTexParameteriv'); if @glTexParameteriv = nil then Exit;
-  @glTexSubImage2D := Load('glTexSubImage2D'); if @glTexSubImage2D = nil then Exit;
-  @glUniform1f := Load('glUniform1f'); if @glUniform1f = nil then Exit;
-  @glUniform1fv := Load('glUniform1fv'); if @glUniform1fv = nil then Exit;
-  @glUniform1i := Load('glUniform1i'); if @glUniform1i = nil then Exit;
-  @glUniform1iv := Load('glUniform1iv'); if @glUniform1iv = nil then Exit;
-  @glUniform2f := Load('glUniform2f'); if @glUniform2f = nil then Exit;
-  @glUniform2fv := Load('glUniform2fv'); if @glUniform2fv = nil then Exit;
-  @glUniform2i := Load('glUniform2i'); if @glUniform2i = nil then Exit;
-  @glUniform2iv := Load('glUniform2iv'); if @glUniform2iv = nil then Exit;
-  @glUniform3f := Load('glUniform3f'); if @glUniform3f = nil then Exit;
-  @glUniform3fv := Load('glUniform3fv'); if @glUniform3fv = nil then Exit;
-  @glUniform3i := Load('glUniform3i'); if @glUniform3i = nil then Exit;
-  @glUniform3iv := Load('glUniform3iv'); if @glUniform3iv = nil then Exit;
-  @glUniform4f := Load('glUniform4f'); if @glUniform4f = nil then Exit;
-  @glUniform4fv := Load('glUniform4fv'); if @glUniform4fv = nil then Exit;
-  @glUniform4i := Load('glUniform4i'); if @glUniform4i = nil then Exit;
-  @glUniform4iv := Load('glUniform4iv'); if @glUniform4iv = nil then Exit;
-  @glUniformMatrix2fv := Load('glUniformMatrix2fv'); if @glUniformMatrix2fv = nil then Exit;
-  @glUniformMatrix3fv := Load('glUniformMatrix3fv'); if @glUniformMatrix3fv = nil then Exit;
-  @glUniformMatrix4fv := Load('glUniformMatrix4fv'); if @glUniformMatrix4fv = nil then Exit;
-  @glUseProgram := Load('glUseProgram'); if @glUseProgram = nil then Exit;
-  @glValidateProgram := Load('glValidateProgram'); if @glValidateProgram = nil then Exit;
-  @glVertexAttrib1f := Load('glVertexAttrib1f'); if @glVertexAttrib1f = nil then Exit;
-  @glVertexAttrib1fv := Load('glVertexAttrib1fv'); if @glVertexAttrib1fv = nil then Exit;
-  @glVertexAttrib2f := Load('glVertexAttrib2f'); if @glVertexAttrib2f = nil then Exit;
-  @glVertexAttrib2fv := Load('glVertexAttrib2fv'); if @glVertexAttrib2fv = nil then Exit;
-  @glVertexAttrib3f := Load('glVertexAttrib3f'); if @glVertexAttrib3f = nil then Exit;
-  @glVertexAttrib3fv := Load('glVertexAttrib3fv'); if @glVertexAttrib3fv = nil then Exit;
-  @glVertexAttrib4f := Load('glVertexAttrib4f'); if @glVertexAttrib4f = nil then Exit;
-  @glVertexAttrib4fv := Load('glVertexAttrib4fv'); if @glVertexAttrib4fv = nil then Exit;
-  @glVertexAttribPointer := Load('glVertexAttribPointer'); if @glVertexAttribPointer = nil then Exit;
-  @glViewport := Load('glViewport'); if @glViewport = nil then Exit;
-  LoadedSuccess := True;
+  LoadedSuccess := Load('glActiveTexture', @glActiveTexture) and
+    Load('glAttachShader', @glAttachShader) and
+    Load('glBindAttribLocation', @glBindAttribLocation) and
+    Load('glBindBuffer', @glBindBuffer) and
+    Load('glBindFramebuffer', @glBindFramebuffer) and
+    Load('glBindRenderbuffer', @glBindRenderbuffer) and
+    Load('glBindTexture', @glBindTexture) and
+    Load('glBlendColor', @glBlendColor) and
+    Load('glBlendEquation', @glBlendEquation) and
+    Load('glBlendEquationSeparate', @glBlendEquationSeparate) and
+    Load('glBlendFunc', @glBlendFunc) and
+    Load('glBlendFuncSeparate', @glBlendFuncSeparate) and
+    Load('glBufferData', @glBufferData) and
+    Load('glBufferSubData', @glBufferSubData) and
+    Load('glCheckFramebufferStatus', @glCheckFramebufferStatus) and
+    Load('glClear', @glClear) and
+    Load('glClearColor', @glClearColor) and
+    Load('glClearDepthf', @glClearDepthf) and
+    Load('glClearStencil', @glClearStencil) and
+    Load('glColorMask', @glColorMask) and
+    Load('glCompileShader', @glCompileShader) and
+    Load('glCompressedTexImage2D', @glCompressedTexImage2D) and
+    Load('glCompressedTexSubImage2D', @glCompressedTexSubImage2D) and
+    Load('glCopyTexImage2D', @glCopyTexImage2D) and
+    Load('glCopyTexSubImage2D', @glCopyTexSubImage2D) and
+    Load('glCreateProgram', @glCreateProgram) and
+    Load('glCreateShader', @glCreateShader) and
+    Load('glCullFace', @glCullFace) and
+    Load('glDeleteBuffers', @glDeleteBuffers) and
+    Load('glDeleteFramebuffers', @glDeleteFramebuffers) and
+    Load('glDeleteProgram', @glDeleteProgram) and
+    Load('glDeleteRenderbuffers', @glDeleteRenderbuffers) and
+    Load('glDeleteShader', @glDeleteShader) and
+    Load('glDeleteTextures', @glDeleteTextures) and
+    Load('glDepthFunc', @glDepthFunc) and
+    Load('glDepthMask', @glDepthMask) and
+    Load('glDepthRangef', @glDepthRangef) and
+    Load('glDetachShader', @glDetachShader) and
+    Load('glDisable', @glDisable) and
+    Load('glDisableVertexAttribArray', @glDisableVertexAttribArray) and
+    Load('glDrawArrays', @glDrawArrays) and
+    Load('glDrawElements', @glDrawElements) and
+    Load('glEnable', @glEnable) and
+    Load('glEnableVertexAttribArray', @glEnableVertexAttribArray) and
+    Load('glFinish', @glFinish) and
+    Load('glFlush', @glFlush) and
+    Load('glFramebufferRenderbuffer', @glFramebufferRenderbuffer) and
+    Load('glFramebufferTexture2D', @glFramebufferTexture2D) and
+    Load('glFrontFace', @glFrontFace) and
+    Load('glGenBuffers', @glGenBuffers) and
+    Load('glGenerateMipmap', @glGenerateMipmap) and
+    Load('glGenFramebuffers', @glGenFramebuffers) and
+    Load('glGenRenderbuffers', @glGenRenderbuffers) and
+    Load('glGenTextures', @glGenTextures) and
+    Load('glGetActiveAttrib', @glGetActiveAttrib) and
+    Load('glGetActiveUniform', @glGetActiveUniform) and
+    Load('glGetAttachedShaders', @glGetAttachedShaders) and
+    Load('glGetAttribLocation', @glGetAttribLocation) and
+    Load('glGetBooleanv', @glGetBooleanv) and
+    Load('glGetBufferParameteriv', @glGetBufferParameteriv) and
+    Load('glGetError', @glGetError) and
+    Load('glGetFloatv', @glGetFloatv) and
+    Load('glGetFramebufferAttachmentParameteriv', @glGetFramebufferAttachmentParameteriv) and
+    Load('glGetIntegerv', @glGetIntegerv) and
+    Load('glGetProgramiv', @glGetProgramiv) and
+    Load('glGetProgramInfoLog', @glGetProgramInfoLog) and
+    Load('glGetRenderbufferParameteriv', @glGetRenderbufferParameteriv) and
+    Load('glGetShaderiv', @glGetShaderiv) and
+    Load('glGetShaderInfoLog', @glGetShaderInfoLog) and
+    Load('glGetShaderPrecisionFormat', @glGetShaderPrecisionFormat) and
+    Load('glGetShaderSource', @glGetShaderSource) and
+    Load('glGetString', @glGetString) and
+    Load('glGetTexParameterfv', @glGetTexParameterfv) and
+    Load('glGetTexParameteriv', @glGetTexParameteriv) and
+    Load('glGetUniformfv', @glGetUniformfv) and
+    Load('glGetUniformiv', @glGetUniformiv) and
+    Load('glGetUniformLocation', @glGetUniformLocation) and
+    Load('glGetVertexAttribfv', @glGetVertexAttribfv) and
+    Load('glGetVertexAttribiv', @glGetVertexAttribiv) and
+    Load('glGetVertexAttribPointerv', @glGetVertexAttribPointerv) and
+    Load('glHint', @glHint) and
+    Load('glIsBuffer', @glIsBuffer) and
+    Load('glIsEnabled', @glIsEnabled) and
+    Load('glIsFramebuffer', @glIsFramebuffer) and
+    Load('glIsProgram', @glIsProgram) and
+    Load('glIsRenderbuffer', @glIsRenderbuffer) and
+    Load('glIsShader', @glIsShader) and
+    Load('glIsTexture', @glIsTexture) and
+    Load('glLineWidth', @glLineWidth) and
+    Load('glLinkProgram', @glLinkProgram) and
+    Load('glPixelStorei', @glPixelStorei) and
+    Load('glPolygonOffset', @glPolygonOffset) and
+    Load('glReadPixels', @glReadPixels) and
+    Load('glReleaseShaderCompiler', @glReleaseShaderCompiler) and
+    Load('glRenderbufferStorage', @glRenderbufferStorage) and
+    Load('glSampleCoverage', @glSampleCoverage) and
+    Load('glScissor', @glScissor) and
+    Load('glShaderBinary', @glShaderBinary) and
+    Load('glShaderSource', @glShaderSource) and
+    Load('glStencilFunc', @glStencilFunc) and
+    Load('glStencilFuncSeparate', @glStencilFuncSeparate) and
+    Load('glStencilMask', @glStencilMask) and
+    Load('glStencilMaskSeparate', @glStencilMaskSeparate) and
+    Load('glStencilOp', @glStencilOp) and
+    Load('glStencilOpSeparate', @glStencilOpSeparate) and
+    Load('glTexImage2D', @glTexImage2D) and
+    Load('glTexParameterf', @glTexParameterf) and
+    Load('glTexParameterfv', @glTexParameterfv) and
+    Load('glTexParameteri', @glTexParameteri) and
+    Load('glTexParameteriv', @glTexParameteriv) and
+    Load('glTexSubImage2D', @glTexSubImage2D) and
+    Load('glUniform1f', @glUniform1f) and
+    Load('glUniform1fv', @glUniform1fv) and
+    Load('glUniform1i', @glUniform1i) and
+    Load('glUniform1iv', @glUniform1iv) and
+    Load('glUniform2f', @glUniform2f) and
+    Load('glUniform2fv', @glUniform2fv) and
+    Load('glUniform2i', @glUniform2i) and
+    Load('glUniform2iv', @glUniform2iv) and
+    Load('glUniform3f', @glUniform3f) and
+    Load('glUniform3fv', @glUniform3fv) and
+    Load('glUniform3i', @glUniform3i) and
+    Load('glUniform3iv', @glUniform3iv) and
+    Load('glUniform4f', @glUniform4f) and
+    Load('glUniform4fv', @glUniform4fv) and
+    Load('glUniform4i', @glUniform4i) and
+    Load('glUniform4iv', @glUniform4iv) and
+    Load('glUniformMatrix2fv', @glUniformMatrix2fv) and
+    Load('glUniformMatrix3fv', @glUniformMatrix3fv) and
+    Load('glUniformMatrix4fv', @glUniformMatrix4fv) and
+    Load('glUseProgram', @glUseProgram) and
+    Load('glValidateProgram', @glValidateProgram) and
+    Load('glVertexAttrib1f', @glVertexAttrib1f) and
+    Load('glVertexAttrib1fv', @glVertexAttrib1fv) and
+    Load('glVertexAttrib2f', @glVertexAttrib2f) and
+    Load('glVertexAttrib2fv', @glVertexAttrib2fv) and
+    Load('glVertexAttrib3f', @glVertexAttrib3f) and
+    Load('glVertexAttrib3fv', @glVertexAttrib3fv) and
+    Load('glVertexAttrib4f', @glVertexAttrib4f) and
+    Load('glVertexAttrib4fv', @glVertexAttrib4fv) and
+    Load('glVertexAttribPointer', @glVertexAttribPointer) and
+    Load('glViewport', @glViewport);
   Result := LoadedSuccess;
 end;
 

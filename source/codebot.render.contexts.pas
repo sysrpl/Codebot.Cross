@@ -148,8 +148,6 @@ type
     procedure SetTextureSlot(Slot: Integer);
     { Retrieve the number of the active texture unit }
     function GetTextureSlot: Integer;
-    { Bind the texture to the active texture unit }
-    procedure SetTexture(Texture: Integer);
     { Retrieve the texture bound to the active texture unit }
     function GetTexture: Integer;
     { Add the texture to the stack and bind it to a unit }
@@ -372,7 +370,6 @@ procedure TContext.SetViewport(X, Y, W, H: Integer);
 begin
   glViewport(X, Y, W, H);
 end;
-
 {$endregion}
 
 {$region assets and collections}
@@ -412,9 +409,7 @@ begin
       C := C.FNextCollection;
   Result := nil;
 end;
-
 {$endregion}
-
 
 {$region program shader stack}
 function TContext.GetProgram: Integer;
@@ -608,7 +603,6 @@ begin
   if GetUniform(Name, L) then
     glUniformMatrix4fv(L, 1, GL_FALSE, @M);
 end;
-
 {$endregion}
 
 {$region textures}
@@ -625,11 +619,6 @@ end;
 function TContext.GetTexture: Integer;
 begin
   glGetIntegerv(GL_TEXTURE_BINDING_2D, @Result);
-end;
-
-procedure TContext.SetTexture(Texture: Integer);
-begin
-  glBindTexture(GL_TEXTURE_2D, Texture);
 end;
 
 procedure TContext.PushTexture(Texture: Integer; Slot: Integer = 0);
@@ -654,7 +643,6 @@ begin
   glActiveTexture(GL_TEXTURE0 + Item.Slot);
   glBindTexture(GL_TEXTURE_2D, Item.Texture);
 end;
-
 {$endregion}
 
 {$region matrix stacks}
