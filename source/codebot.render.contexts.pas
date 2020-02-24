@@ -5,8 +5,10 @@ unit Codebot.Render.Contexts;
 interface
 
 uses
-  SysUtils,
+  SysUtils, Classes,
   Codebot.System,
+  Codebot.Graphics,
+  Codebot.Graphics.Types,
   Codebot.Geometry;
 
 type
@@ -68,11 +70,14 @@ type
     end;
     TTextureStack = TArrayList<TTextureItem>;
     TMatrixStack = TArrayList<TMatrix4x4>;
+    TViewportStack = TArrayList<TRectI>;
   private var
     FAssetFolder: string;
     FProgramStack: IntArray;
     FProgramCount: IntArray;
     FProgramChange: Boolean;
+    FViewport: TRectI;
+    FViewportStack: TViewportStack;
     FCollection: TContextCollection;
     FTextureStack: TTextureStack;
     FModelviewStack: TMatrixStack;
@@ -94,8 +99,22 @@ type
     procedure SetClearColor(R, G, B, A: Float);
     { Clear the color and depth buffer bits }
     procedure Clear;
-    { Set viewport place and size }
+    {$endregion}
+    {$region viewports}
+    { Get the current viewport }
+    function GetViewport: TRectI;
+    { Set the current viewport erasing the viewport stack }
     procedure SetViewport(X, Y, W, H: Integer);
+    { Set the current viewport and pushing the prior one to the stack }
+    procedure PushViewport(X, Y, W, H: Integer);
+    { Restore the prior viewport from the stack }
+    procedure PopViewport;
+    { Save the current viewport contents to a bitmap }
+    procedure SaveToBitmap(Bitmap: IBitmap);
+    { Save the current viewport contents to a bitmap stream }
+    procedure SaveToStream(Stream: TStream);
+    { Save the current viewport contents to a bitmap file }
+    procedure SaveToFile(const FileName: string);
     {$endregion}
     {$region assets and collections}
     { Search upwards for an asset returning the valid filename or raise
@@ -366,10 +385,66 @@ begin
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 end;
 
+function TContext.GetViewport: TRectI;
+begin
+  Result := FViewport;
+end;
+
 procedure TContext.SetViewport(X, Y, W, H: Integer);
 begin
+  FViewport := TRectI.Create(X, Y, W, H);
   glViewport(X, Y, W, H);
 end;
+
+procedure TContext.PushViewport(X, Y, W, H: Integer);
+begin
+  FViewportStack.Push(FViewport);
+  FViewport := TRectI.Create(X, Y, W, H);
+  glViewport(X, Y, W, H);
+end;
+
+procedure TContext.PopViewport;
+begin
+  if FViewportStack.Length < 1 then
+    Exit;
+  FViewport := FViewportStack.Pop;
+  glViewport(FViewport.X, FViewport.Y, FViewport.Width, FViewport.Height);
+end;
+
+procedure TContext.SaveToBitmap(Bitmap: IBitmap);
+begin
+  Bitmap.SetSize(FViewport.Width, FViewport.Height);
+  glReadPixels(FViewport.X, FViewport.Y, FViewport.Width, FViewport.Height,
+    GL_UNSIGNED_BYTE, GL_RGBA, Bitmap.Pixels);
+end;
+
+procedure TContext.SaveToStream(Stream: TStream);
+var
+  B: IBitmap;
+  F: Boolean;
+begin
+  B := NewBitmap;
+  SaveToBitmap(B);
+  B.Format := fmPng;
+  F := SurfaceOptions.AllowPixelFlip;
+  SurfaceOptions.AllowPixelFlip := False;
+  B.SaveToStream(Stream);
+  SurfaceOptions.AllowPixelFlip := F;
+end;
+
+procedure TContext.SaveToFile(const FileName: string);
+var
+  B: IBitmap;
+  F: Boolean;
+begin
+  B := NewBitmap;
+  SaveToBitmap(B);
+  F := SurfaceOptions.AllowPixelFlip;
+  SurfaceOptions.AllowPixelFlip := False;
+  B.SaveToFile(FileName);
+  SurfaceOptions.AllowPixelFlip := F;
+end;
+
 {$endregion}
 
 {$region assets and collections}

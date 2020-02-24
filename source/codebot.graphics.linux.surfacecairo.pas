@@ -2009,6 +2009,8 @@ begin
   if Empty then
     Exit;
   Flush;
+  if not SurfaceOptions.AllowPixelFlip then
+    Exit;
   P := Pixels;
   I := Width * Height;
   while I > 0 do

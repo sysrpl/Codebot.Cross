@@ -101,9 +101,13 @@ end;
 procedure TTexture.LoadFromStream(Stream: TStream);
 var
   B: IBitmap;
+  F: Boolean;
 begin
   B := NewBitmap;
+  F := SurfaceOptions.AllowPixelFlip;
+  SurfaceOptions.AllowPixelFlip := False;
   B.LoadFromStream(Stream);
+  SurfaceOptions.AllowPixelFlip := F;
   FWidth := B.Width;
   FHeight := B.Height;
   Push;
