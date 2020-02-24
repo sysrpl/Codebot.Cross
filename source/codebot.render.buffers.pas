@@ -5,7 +5,6 @@ unit Codebot.Render.Buffers;
 interface
 
 uses
-  GLES20,
   Codebot.System,
   Codebot.Geometry,
   Codebot.Render.Contexts;
@@ -289,6 +288,9 @@ type
 {$endregion}
 
 implementation
+
+uses
+  Codebot.GLES;
 
 {$region texture buffer}
 { TTextureBuffer }
