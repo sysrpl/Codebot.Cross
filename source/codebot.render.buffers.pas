@@ -28,8 +28,7 @@ type
     procedure Resize(Width, Height: Integer);
     { Start recording to a texture }
     procedure StartRecording;
-    { Stop recording leaving texture with the rendered pixels. The user must
-      restore the viewport }
+    { Stop recording leaving texture with the rendered pixels }
     procedure StopRecording;
     { Texture is the location where the render is recorded }
     property Texture: Integer read FTexture;
@@ -349,17 +348,18 @@ begin
   inherited Destroy;
 end;
 
-procedure TTextureBuffer.StopRecording;
-begin
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  Ctx.Identity;
-end;
-
 procedure TTextureBuffer.StartRecording;
 begin
   glBindFramebuffer(GL_FRAMEBUFFER, FFrameBuffer);
-  glViewport(0, 0, FWidth, FHeight);
+  Ctx.PushViewport(0, 0, FWidth, FHeight);
   Ctx.Clear;
+  Ctx.Identity;
+end;
+
+procedure TTextureBuffer.StopRecording;
+begin
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  Ctx.PopViewport;
   Ctx.Identity;
 end;
 {$endregion}
