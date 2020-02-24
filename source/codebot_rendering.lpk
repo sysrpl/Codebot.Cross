@@ -36,8 +36,12 @@
         <UnitName Value="Codebot.Render.Buffers"/>
       </Item>
       <Item>
+        <Filename Value="codebot.render.textures.pas"/>
+        <UnitName Value="codebot.render.textures"/>
+      </Item>
+      <Item>
         <Filename Value="codebot.gles.pas"/>
-        <UnitName Value="codebot.gles"/>
+        <UnitName Value="Codebot.GLES"/>
       </Item>
     </Files>
     <RequiredPkgs>

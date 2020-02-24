@@ -5,7 +5,6 @@ unit Codebot.Render.Shaders;
 interface
 
 uses
-  SysUtils,
   Codebot.System,
   Codebot.Render.Contexts;
 

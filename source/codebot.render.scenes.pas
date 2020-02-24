@@ -64,9 +64,6 @@ type
   TSceneClass = class of TScene;
 
 const
-  //GL_CLAMP_TO_EDGE                      = $812F;
-  //GL_CLAMP_TO_BORDER                    = $812D;
-
   VK_LBUTTON    = 1;
   VK_RBUTTON    = 2;
   VK_CANCEL     = 3;

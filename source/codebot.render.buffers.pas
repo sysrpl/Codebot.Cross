@@ -28,7 +28,8 @@ type
     procedure Resize(Width, Height: Integer);
     { Start recording to a texture }
     procedure StartRecording;
-    { Stop recording leaving texture with the rendered pixels }
+    { Stop recording leaving texture with the rendered pixels. The user must
+      restore the viewport }
     procedure StopRecording;
     { Texture is the location where the render is recorded }
     property Texture: Integer read FTexture;
@@ -127,10 +128,13 @@ type
     function CountAttributes: Integer; virtual; abstract;
     procedure BindAttributes(var Vertex: T); virtual; abstract;
   public
+    Vertex: T;
     { Create a new data buffer optionally allocating room for a N number
       of future vertices }
     constructor Create(N: Integer = 0); override;
     destructor Destroy; override;
+    { Adds the Vertex field above to the buffer }
+    procedure Add; overload;
     { Clone additional drawing information }
     function Clone: TObject; override;
     { Begin buffering new vertex data using a specified mode }
@@ -508,6 +512,11 @@ destructor TDrawingBuffer<T>.Destroy;
 begin
   inherited Destroy;
   ResetLast;
+end;
+
+procedure TDrawingBuffer<T>.Add;
+begin
+  AddItem(Vertex);
 end;
 
 function TDrawingBuffer<T>.Clone: TObject;
