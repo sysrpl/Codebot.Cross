@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified August 2019                                *)
+(*  Modified February 2020                              *)
 (*                                                      *)
 (********************************************************)
 
@@ -18,6 +18,28 @@ uses
   SysUtils, Classes,
   { Codebot units }
   Codebot.System;
+
+{$region unicode utf8 conversion related routines}
+{ The following are some examples of unicode utf8 characters
+
+  Unicode number: U+00A2
+  ¢ = 11000010 10100010
+
+  Unicode number: U+03A3
+  Σ = 11001110 10100011
+
+  Unicode number: U+20AC
+  € = 11100010 10000010 10101100 }
+
+{ Seek to the next character and return the count of utf8  bytes [group unicode] }
+function UnicodeParse(var P: PChar): LongWord;
+{ Seek to the next character and return the utf8 character code [group unicode] }
+function UnicodeToChar(var P: PChar): LongWord;
+{ Return the number of utf8 characters in a string [group unicode] }
+function UnicodeLength(S: string): Integer;
+{ Covert a utf8 character code to a string [group unicode] }
+function UnicodeToStr(C: LongWord): string;
+{$endregion}
 
 {$region encoding}
 { The encoding methods can be hexadecimal or base64 [group encoding] }
@@ -117,6 +139,79 @@ function Base64Decode(const S: string): TBuffer;
 {$endregion}
 
 implementation
+
+{$region unicode utf8 conversion related routines}
+function UnicodeParse(var P: PChar): LongWord;
+begin
+  if (P = nil) or (P^ = #0) then
+    Exit(0);
+  case Byte(P^) and $F0 of
+    $C0: Result := 2;
+    $E0: Result := 3;
+    $F0: Result := 4;
+  else
+    Result := 1;
+  end;
+  Inc(P, Result);
+end;
+
+function UnicodeToChar(var P: PChar): LongWord;
+begin
+  if (P = nil) or (P^ = #0) then
+    Exit(0);
+  case Byte(P^) and $F0 of
+    $C0:
+      begin
+        Result := ((Byte(P[0]) and $1F) shl 6) or (Byte(P[1]) and $3F);
+        Inc(P, 2);
+      end;
+    $E0:
+      begin
+        Result := ((Byte(P[0]) and $F) shl 12) or ((Byte(P[1]) and $3F) shl 6) or
+          (Byte(P[2]) and $3F);
+        Inc(P, 3);
+      end;
+    $F0:
+      begin
+        Result := ((Byte(P[1]) and $7) shl 18) or ((Byte(P[1]) and $3F) shl 12) or
+          ((Byte(P[2]) and $3F) shl 6) or (Byte(P[3]) and $3F);
+        Inc(P, 4);
+      end;
+  else
+    Result := Byte(P^);
+    Inc(P);
+  end;
+end;
+
+function UnicodeLength(S: string): Integer;
+var
+  P: PChar;
+begin
+  Result := 0;
+  P := PChar(S);
+  while UnicodeParse(P) > 0 do
+    Inc(Result);
+end;
+
+function UnicodeToStr(C: LongWord): string;
+begin
+  if C = 0 then
+    Result := #0
+  else if C < $80 then
+    Result := Chr(C)
+  else if C < $800 then
+    Result := Chr((C shr $6) + $C0) + Chr((C and $3F) + $80)
+  else if C < $10000 then
+    Result := Chr((C shr $C) + $E0) + Chr(((C shr $6) and
+      $3F) + $80) + Chr((C and $3F) + $80)
+  else if C < $200000 then
+    Result := Chr((C shr $12) + $F0) + Chr(((C shr $C) and
+      $3F) + $80) + Chr(((C shr $6) and $3F) + $80) +
+      Chr((C and $3F) + $80)
+  else
+    Result := '';
+end;
+{$endregion}
 
 {$region encoding}
 { TBufferObject }

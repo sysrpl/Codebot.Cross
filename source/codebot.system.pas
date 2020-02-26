@@ -384,6 +384,8 @@ function SwitchIndex(const Switch: string): Integer;
   <link Codebot.System.SwitchExists, SwitchExists function>
   <link Codebot.System.SwitchIndex, SwitchIndex function> [group string] }
 function SwitchValue(const Switch: string): string;
+{ Convert an string to a binary format eg: ¢ = 11000010 10100010 [group string] }
+function StrToBin(S: string): string;
 { Convert an integer to a string [group string] }
 function IntToStr(Value: Integer): string;
 { Convert a string to an integer. Can throw an EConvertError exception. [group string] }
@@ -2201,6 +2203,27 @@ begin
       F := True;
   end;
   Result := '';
+end;
+
+function StrToBin(S: string): string;
+var
+  B: Byte;
+  I, J: Integer;
+begin
+  Result := '';
+  for I := Length(S) downto 1 do
+  begin
+    B := Byte(S[I]);
+    for J := 1 to 8 do
+    begin
+      if B and 1 = 1 then
+        Result := '1' + Result
+      else
+        Result := '0' + Result;
+      B := B shr 1;
+    end;
+    Result := ' ' + Result;
+  end;
 end;
 
 function IntToStr(Value: Integer): string;
