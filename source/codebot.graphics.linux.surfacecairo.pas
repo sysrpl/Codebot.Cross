@@ -514,6 +514,10 @@ type
     procedure FlipPixels;
     procedure Premultiply;
     procedure SetBuffer(Value: PGdkPixbuf);
+    function GetDirty: Boolean;
+    procedure SetDirty(Value: Boolean);
+  protected
+    property Dirty: Boolean read GetDirty write SetDirty;
   public
     constructor Create(B: PGdkPixbuf = nil);
     destructor Destroy; override;
@@ -1944,6 +1948,7 @@ constructor TBitmapSurfaceCairo.Create(Bitmap: TBitmapCairo);
 begin
   inherited Create;
   FBitmap := Bitmap;
+  FDirty := True;
 end;
 
 function TBitmapSurfaceCairo.HandleAvailable: Boolean;
@@ -1962,12 +1967,13 @@ begin
         W, H, W * SizeOf(TColorB));
       FCairo := cairo_create(S);
       cairo_surface_destroy(S);
-       FDirty := False;
+      FDirty := False;
     end;
   if FCairo = nil then
     FDirty := False;
-  if FDirty then
+  if FDirty and (FBitmap <> nil) and (not FBitmap.Empty) then
   begin
+    FBitmap.FlipPixels;
     S := cairo_get_target(FCairo);
     cairo_surface_mark_dirty(S);
     FDirty := False;
@@ -2009,8 +2015,7 @@ begin
   if Empty then
     Exit;
   Flush;
-  if not SurfaceOptions.AllowPixelFlip then
-    Exit;
+  Dirty := True;
   P := Pixels;
   I := Width * Height;
   while I > 0 do
@@ -2069,6 +2074,21 @@ begin
   FBuffer := Value;
   if FSurfaceCairo <> nil then
     FSurfaceCairo.HandleRelease;
+  Dirty := True;
+end;
+
+function TBitmapCairo.GetDirty: Boolean;
+begin
+  if FSurfaceCairo = nil then
+    Result := True
+  else
+    Result := FSurfaceCairo.FDirty;
+end;
+
+procedure TBitmapCairo.SetDirty(Value: Boolean);
+begin
+  if FSurfaceCairo <> nil then
+    FSurfaceCairo.FDirty := Value;
 end;
 
 function TBitmapCairo.Clone: IBitmap;
@@ -2076,7 +2096,11 @@ begin
   if FBuffer = nil then
     Result := TBitmapCairo.Create
   else
+  begin
+    if not Dirty then
+      FlipPixels;
     Result := TBitmapCairo.Create(gdk_pixbuf_copy(FBuffer));
+  end;
   (Result as TBitmapCairo).FFormat := FFormat;
 end;
 
@@ -2133,9 +2157,9 @@ begin
   else
   begin
     Flush;
+    if not Dirty then
+      FlipPixels;
     Result := Pointer(gdk_pixbuf_get_pixels(FBuffer));
-    if FSurfaceCairo <> nil then
-      FSurfaceCairo.FDirty := True;
   end;
 end;
 
@@ -2154,6 +2178,8 @@ begin
   if Empty then
     Exit(nil);
   Flush;
+  if not Dirty then
+    FlipPixels;
   B := gdk_pixbuf_scale_simple(FBuffer, Width, Height, Sampling[Quality]);
   if B = nil then
     Exit(nil);
@@ -2211,8 +2237,8 @@ begin
       g_object_unref(B);
       SetBuffer(C);
     end;
-    FlipPixels;
     Premultiply;
+    Dirty := True;
   end;
 end;
 
@@ -2251,8 +2277,8 @@ begin
       F := gdk_pixbuf_loader_get_format(Loader);
       if F <> nil then
         FFormat := StrToImageFormat(F.name);
-      FlipPixels;
       Premultiply;
+      Dirty := True;
     end;
   finally
     FreeMem(Data);
@@ -2269,9 +2295,9 @@ begin
     S := ExtractFileExt(FileName);
     FFormat := StrToImageFormat(S);
     S := ImageFormatToStr(FFormat);
-    FlipPixels;
+    if not Dirty then
+      FlipPixels;
     gdk_pixbuf_save(FBuffer, PChar(FileName), PChar(S), nil);
-    FlipPixels;
   end;
 end;
 
@@ -2295,9 +2321,9 @@ begin
     if not (FFormat in [fmBmp, fmJpeg, fmPng, fmTiff]) then
       FFormat := fmPng;
     S := ImageFormatToStr(FFormat);
-    FlipPixels;
+    if not Dirty then
+      FlipPixels;
     gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil);
-    FlipPixels;
     WriteLn('bitmap save complete');
   end;
 end;

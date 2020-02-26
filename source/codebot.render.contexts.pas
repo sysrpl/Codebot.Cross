@@ -17,19 +17,19 @@ type
   EContextCollectionError = class(EContextError);
   TContextCollection = class;
 
-{ TContextItem provides a way to manmge the lifetime of objects such as shaders,
-  textures, and vertex buffers. When an item has a name it is managed by an
-  associated collection. If there is no name then you must manage the lifetime
-  of the item. }
+{ TContextManagedObject provides a way to manage the lifetime of objects such as shaders,
+  textures, and vertex buffers. If no collection is given to the constructor create then
+  the object will be maintained by Ctx.Objects. }
 
-  TContextItem = class
+  TContextManagedObject = class
   private
     FName: string;
     FCollection: TContextCollection;
-    FNext: TContextItem;
+    FNext: TContextManagedObject;
     procedure SetName(const Value: string);
   public
-    { Create a new item optionally managing its lifetime with a collection and name }
+    { Create a new item managing its lifetime with a collection and name. If no
+      collection is given it will be maintained by Ctx.Objects. }
     constructor Create(Collection: TContextCollection; const Name: string = '');
     { Destroy automatically removes the item from its collection }
     destructor Destroy; override;
@@ -38,7 +38,7 @@ type
   end;
 
 { Other units may define TContextCollection extensions to provide managed
-  access to objects such as shaders, textures, vertex buffers, and so on.
+  access to objects such as shaders, textures, effects, and so on.
 
   Class helpers can add to a context using functions such as:
 
@@ -49,15 +49,24 @@ type
   private
     FName: string;
     FNextCollection: TContextCollection;
-    FNext: TContextItem;
+    FNext: TContextManagedObject;
   protected
-    function GetItem(const Name: string): TContextItem;
+    function GetObject(const Name: string): TContextManagedObject;
+    property Objects[AName: string]: TContextManagedObject read GetObject;
   public
     { Collection name must not be blank and must be unique }
     constructor Create(const Name: string);
     destructor Destroy; override;
     { The read only name of the collection }
     property Name: string read FName;
+  end;
+
+{ TManagedObjectCollection is used by a context as the default collection for
+  managed objects which are created without a collection }
+
+  TManagedObjectCollection = class(TContextCollection)
+  public
+    property Objects; default;
   end;
 
 { The TContext class provides an interface to all rendering in this library }
@@ -79,6 +88,7 @@ type
     FViewport: TRectI;
     FViewportStack: TViewportStack;
     FCollection: TContextCollection;
+    FObjects: TManagedObjectCollection;
     FTextureStack: TTextureStack;
     FModelviewStack: TMatrixStack;
     FModelviewCurrent: TMatrix4x4;
@@ -124,6 +134,8 @@ type
     procedure SetAssetFolder(const Folder: string);
     { Returns a collection by name }
     function GetCollection(const Name: string): TContextCollection;
+    { Objects refers to managed objects without a specialized collection  }
+    function Objects: TManagedObjectCollection;
     {$endregion}
     {$region shader program stack}
     { Returns the current program }
@@ -217,7 +229,6 @@ resourcestring
   SNoOpenGL = 'The OpenGL library could not be loaded';
   SNoContext = 'No context is available';
   SAssetNotFound = 'Cannot locate asset with name ''%s''';
-  SNoCollection = 'Cannot set name of type ''%s'' without a parent collection';
   SNoCollectionName = 'Cannot add unnammed collections';
   SDuplicateCollectionName = 'An collection or item with name ''%s'' already exist';
 
@@ -231,51 +242,51 @@ begin
   Result := TContext(InternalContext);
 end;
 
-{ TContextItem }
+{ TContextManagedObject }
 
-constructor TContextItem.Create(Collection: TContextCollection; const Name: string = '');
+constructor TContextManagedObject.Create(Collection: TContextCollection; const Name: string = '');
 begin
   inherited Create;
+  if Collection = nil then
+    Collection := Ctx.Objects;
   FCollection := Collection;
   SetName(Name);
 end;
 
-destructor TContextItem.Destroy;
+destructor TContextManagedObject.Destroy;
 var
-  C, N: TContextItem;
+  C, N: TContextManagedObject;
 begin
-  if FName <> '' then
+  C := FCollection.FNext;
+  if C = nil then
+    Exit;
+  N := nil;
+  while C <> Self do
   begin
-    C := FCollection.FNext;
-    N := nil;
-    while C <> Self do
-    begin
-      N := C;
-      C := N.FNext;
-    end;
-    if N = nil then
-      FCollection.FNext := FNext
-    else
-      N.FNext := FNext;
+    N := C;
+    C := N.FNext;
   end;
+  if N = nil then
+    FCollection.FNext := FNext
+  else
+    N.FNext := FNext;
   inherited Destroy;
 end;
 
-procedure TContextItem.SetName(const Value: string);
+procedure TContextManagedObject.SetName(const Value: string);
 var
-  C: TContextItem;
+  C: TContextManagedObject;
 begin
   if Value = FName then
     Exit;
-  if FCollection = nil then
-    raise EContextCollectionError.CreateFmt(SNoCollection, [ClassName]);
   C := FCollection.FNext;
-  while C <> nil do
-  begin
-    if (C <> Self) and (C.FName = Value) then
-      raise EContextCollectionError.CreateFmt(SDuplicateCollectionName, [Name]);
-    C := C.FNext;
-  end;
+  if Value <> '' then
+    while C <> nil do
+    begin
+      if (C <> Self) and (C.FName = Value) then
+        raise EContextCollectionError.CreateFmt(SDuplicateCollectionName, [Name]);
+      C := C.FNext;
+    end;
   FName := Value;
 end;
 
@@ -290,23 +301,25 @@ end;
 
 destructor TContextCollection.Destroy;
 var
-  C, N: TContextItem;
+  C, N: TContextManagedObject;
 begin
   C := FNext;
+  FNext := nil;
   while C <> nil do
   begin
     N := C.FNext;
-    C.FName := '';
     C.Free;
     C := N;
   end;
   inherited Destroy;
 end;
 
-function TContextCollection.GetItem(const Name: string): TContextItem;
+function TContextCollection.GetObject(const Name: string): TContextManagedObject;
 var
-  C: TContextItem;
+  C: TContextManagedObject;
 begin
+  if Name = '' then
+    Exit(nil);
   C := FNext;
   while C <> nil do
     if C.Name = Name then
@@ -421,30 +434,21 @@ end;
 procedure TContext.SaveToStream(Stream: TStream);
 var
   B: IBitmap;
-  F: Boolean;
 begin
   B := NewBitmap;
   SaveToBitmap(B);
   B.Format := fmPng;
-  F := SurfaceOptions.AllowPixelFlip;
-  SurfaceOptions.AllowPixelFlip := False;
   B.SaveToStream(Stream);
-  SurfaceOptions.AllowPixelFlip := F;
 end;
 
 procedure TContext.SaveToFile(const FileName: string);
 var
   B: IBitmap;
-  F: Boolean;
 begin
   B := NewBitmap;
   SaveToBitmap(B);
-  F := SurfaceOptions.AllowPixelFlip;
-  SurfaceOptions.AllowPixelFlip := False;
   B.SaveToFile(FileName);
-  SurfaceOptions.AllowPixelFlip := F;
 end;
-
 {$endregion}
 
 {$region assets and collections}
@@ -484,6 +488,17 @@ begin
       C := C.FNextCollection;
   Result := nil;
 end;
+
+const
+  SManagedObjectCollection = 'objects';
+
+function TContext.Objects: TManagedObjectCollection;
+begin
+  if FObjects = nil then
+    FObjects := TManagedObjectCollection.Create(SManagedObjectCollection);
+  REsult := FObjects;
+end;
+
 {$endregion}
 
 {$region program shader stack}

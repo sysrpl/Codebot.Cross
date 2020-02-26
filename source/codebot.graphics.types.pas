@@ -778,8 +778,6 @@ type
     HardwareRendering: Boolean;
     { Use double buffering if hardware rendering is not supported }
     SoftwareBuffering: Boolean;
-    { Allow bitmaps to flip pixels on certain platforms }
-    AllowPixelFlip: Boolean;
     { Correct small render errors with possible degraded performance or loss of
       features. Enabling this causes text to fill the current path immediately,
       which in Windows has the effect of nicer text when unscaled or rotated. }
@@ -792,7 +790,6 @@ var
   SurfaceOptions: TSurfaceOptions = (
     HardwareRendering: True;
     SoftwareBuffering: False;
-    AllowPixelFlip: True;
     ErrorCorrection: False;
     GammaCorrection: False;
   );

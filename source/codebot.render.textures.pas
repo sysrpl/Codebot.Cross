@@ -15,7 +15,7 @@ uses
 type
   TTexFilter = (tfNearest, tfLinear);
 
-  TTexture = class(TContextItem)
+  TTexture = class(TContextManagedObject)
   private
     FHandle: Integer;
     FWidth: Integer;
@@ -32,6 +32,8 @@ type
   public
     constructor Create;
     destructor Destroy; override;
+    { Generate mipmaps for the texture }
+    procedure GenerateMipmaps;
     { Load a texture from a stream }
     procedure LoadFromStream(Stream: TStream);
     { Load a texture from a file }
@@ -59,8 +61,7 @@ type
   end;
 
 { TTextureCollection holds a collection of textures by name. If you create a
-  texture without a name, then it will not be found and you are responsible for
-  its lifetime. }
+  texture without a name, then its life will still be managed by this collection. }
 
   TTextureCollection = class(TContextCollection)
   private
@@ -98,16 +99,19 @@ begin
   inherited Destroy;
 end;
 
+procedure TTexture.GenerateMipmaps;
+begin
+  Push;
+  glGenerateMipmap(GL_TEXTURE_2D);
+  Pop;
+end;
+
 procedure TTexture.LoadFromStream(Stream: TStream);
 var
   B: IBitmap;
-  F: Boolean;
 begin
   B := NewBitmap;
-  F := SurfaceOptions.AllowPixelFlip;
-  SurfaceOptions.AllowPixelFlip := False;
   B.LoadFromStream(Stream);
-  SurfaceOptions.AllowPixelFlip := F;
   FWidth := B.Width;
   FHeight := B.Height;
   Push;
@@ -244,9 +248,9 @@ end;
 
 function TTextureCollection.GetTexture(const AName: string): TTexture;
 var
-  Item: TContextItem;
+  Item: TContextManagedObject;
 begin
-  Item := GetItem(Name);
+  Item := GetObject(Name);
   if Item <> nil then
     Result := TTexture(Item)
   else
