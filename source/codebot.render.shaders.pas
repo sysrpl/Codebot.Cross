@@ -11,7 +11,7 @@ uses
 { TShaderObject }
 
 type
-  TShaderObject = class(TContextItem)
+  TShaderObject = class(TContextManagedObject)
   private
     FHandle: Integer;
     FValid: Boolean;
@@ -91,8 +91,7 @@ type
   end;
 
 { TShaderCollection holds a collection of shaders by name. If you create a
-  shader without a name, then it will not be found and you are responsible for
-  its lifetime. }
+  shader without a name, then its life will still be managed by this collection. }
 
   TShaderCollection = class(TContextCollection)
   private
@@ -325,9 +324,9 @@ end;
 
 function TShaderCollection.GetShader(const AName: string): TShaderObject;
 var
-  Item: TContextItem;
+  Item: TContextManagedObject;
 begin
-  Item := GetItem(Name);
+  Item := GetObject(Name);
   if Item <> nil then
     Result := TShaderObject(Item)
   else
@@ -336,7 +335,7 @@ end;
 
 function TShaderCollection.GetShaderProgram(const AName: string): TShaderProgram;
 var
-  Item: TContextItem;
+  Item: TContextManagedObject;
 begin
   Item := GetShader(Name);
   if (Item <> nil) and (Item is TShaderProgram) then

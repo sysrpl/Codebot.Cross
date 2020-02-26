@@ -37,11 +37,15 @@
       </Item>
       <Item>
         <Filename Value="codebot.render.textures.pas"/>
-        <UnitName Value="codebot.render.textures"/>
+        <UnitName Value="Codebot.Render.Textures"/>
       </Item>
       <Item>
         <Filename Value="codebot.gles.pas"/>
         <UnitName Value="Codebot.GLES"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.render.fonts.pas"/>
+        <UnitName Value="codebot.render.fonts"/>
       </Item>
     </Files>
     <RequiredPkgs>

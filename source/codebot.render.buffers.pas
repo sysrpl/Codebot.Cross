@@ -13,7 +13,7 @@ uses
 { TTextureBuffer is used to render to a texture }
 
 type
-  TTextureBuffer = class(TContextItem)
+  TTextureBuffer = class(TContextManagedObject)
   private
     FFrameBuffer: Integer;
     FDepthBuffer: Integer;
@@ -42,7 +42,7 @@ type
 {$region vertex buffers}
 { TBaseBuffer is the base class for both static and dynamic buffers }
 
-  TBaseBuffer = class(TContextItem)
+  TBaseBuffer = class(TContextManagedObject)
   private
     class var LastBuffer: TObject;
     class var LastAttribArrayCount: Integer;
@@ -253,43 +253,6 @@ type
   end;
 {$endregion}
 
-{$region buffer extensions}
-{ TTextureBufferCollection holds a collection of texture buffers by name. If you
-  create a texture buffer without a name, then it will not be found and you are
-  responsible for its lifetime. }
-
-  TTextureBufferCollection = class(TContextCollection)
-  private
-    function GetBuffer(const AName: string): TTextureBuffer;
-  public
-    constructor Create;
-    { Return a texture buffer by name or nil if not found }
-    property Buffer[AName: string]: TTextureBuffer read GetBuffer; default;
-  end;
-
-{ TVertexBufferCollection holds a collection of vertex buffers by name. If you
-  create a vertex buffer without a name, then it will not be found and you are
-  responsible for its lifetime. }
-
-  TVertexBufferCollection = class(TContextCollection)
-  private
-    function GetBuffer(const AName: string): TBaseBuffer;
-  public
-    constructor Create;
-    { Return a texture buffer by name or nil if not found }
-    property Buffer[AName: string]: TBaseBuffer read GetBuffer; default;
-  end;
-
-{ TBufferExtension }
-
-  TBufferExtension = class helper for TContext
-  public
-    { Returns the texture buffer collection for the current context }
-    function TextureBuffers: TTextureBufferCollection;
-    function VertexBuffers: TVertexBufferCollection;
-  end;
-{$endregion}
-
 implementation
 
 uses
@@ -300,7 +263,7 @@ uses
 
 constructor TTextureBuffer.Create(Width, Height: Integer);
 begin
-  inherited Create(Ctx.TextureBuffers);
+  inherited Create(nil);
   glGenFramebuffers(1, @FFrameBuffer);
   glGenRenderbuffers(1, @FDepthBuffer);
   glGenTextures(1, @FTexture);
@@ -369,7 +332,7 @@ end;
 
 constructor TBaseBuffer.Create(N: Integer = 0);
 begin
-  inherited Create(Ctx.VertexBuffers);
+  inherited Create(nil);
 end;
 
 procedure TBaseBuffer.ResetLast;
@@ -871,54 +834,6 @@ begin
   Item.Color := Vec4(R, G, B, A);
   AddItem(Item);
   Result := Self;
-end;
-{$endregion}
-
-{$region buffer extensions}
-{ TTextureBufferCollection }
-
-const
-  STextureBufferCollection = 'texbuffers';
-
-constructor TTextureBufferCollection.Create;
-begin
-  inherited Create(STextureBufferCollection);
-end;
-
-function TTextureBufferCollection.GetBuffer(const AName: string): TTextureBuffer;
-begin
-  Result := TTextureBuffer(GetItem(AName));
-end;
-
-{ TVertexBufferCollection }
-
-const
-  SVertexBufferCollection = 'vertbuffers';
-
-constructor TVertexBufferCollection.Create;
-begin
-  inherited Create(SVertexBufferCollection);
-end;
-
-function TVertexBufferCollection.GetBuffer(const AName: string): TBaseBuffer;
-begin
-  Result := TBaseBuffer(GetItem(AName));
-end;
-
-{ TBufferExtension }
-
-function TBufferExtension.TextureBuffers: TTextureBufferCollection;
-begin
-  Result := TTextureBufferCollection(GetCollection(STextureBufferCollection));
-  if Result = nil then
-    Result := TTextureBufferCollection.Create;
-end;
-
-function TBufferExtension.VertexBuffers: TVertexBufferCollection;
-begin
-  Result := TVertexBufferCollection(GetCollection(STextureBufferCollection));
-  if Result = nil then
-    Result := TVertexBufferCollection.Create;
 end;
 {$endregion}
 
