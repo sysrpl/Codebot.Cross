@@ -1,12 +1,14 @@
 unit Codebot.Render.Textures;
 
-{$mode delphi}
+{$i codebot.inc}
 
 interface
 
 uses
   SysUtils, Classes,
   Codebot.System,
+  Codebot.Graphics,
+  Codebot.Graphics.Types,
   Codebot.Geometry,
   Codebot.Render.Contexts;
 
@@ -34,6 +36,8 @@ type
     destructor Destroy; override;
     { Generate mipmaps for the texture }
     procedure GenerateMipmaps;
+    { Load a texture from a bitmap }
+    procedure LoadFromBitmap(Bitmap: IBitmap);
     { Load a texture from a stream }
     procedure LoadFromStream(Stream: TStream);
     { Load a texture from a file }
@@ -68,8 +72,8 @@ type
     function GetTexture(const AName: string): TTexture;
   public
     constructor Create;
-    { Return a texture by name or nil if not found }
-    property Texture[AName: string]: TTexture read GetTexture;
+    { Return a texture by name or locate and create the texture from an asset }
+    property Texture[AName: string]: TTexture read GetTexture; default;
   end;
 
 { TTextureExtension adds the function Textures to the current context }
@@ -83,9 +87,7 @@ type
 implementation
 
 uses
-  Codebot.GLES,
-  Codebot.Graphics,
-  Codebot.Graphics.Types;
+  Codebot.GLES;
 
 constructor TTexture.Create;
 begin
@@ -106,14 +108,10 @@ begin
   Pop;
 end;
 
-procedure TTexture.LoadFromStream(Stream: TStream);
-var
-  B: IBitmap;
+procedure TTexture.LoadFromBitmap(Bitmap: IBitmap);
 begin
-  B := NewBitmap;
-  B.LoadFromStream(Stream);
-  FWidth := B.Width;
-  FHeight := B.Height;
+  FWidth := Bitmap.Width;
+  FHeight := Bitmap.Height;
   Push;
   if FMagFilter = tfLinear then
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
@@ -134,20 +132,26 @@ begin
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   end;
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA,
-    GL_UNSIGNED_BYTE, B.Pixels);
+    GL_UNSIGNED_BYTE, Bitmap.Pixels);
   Pop;
+end;
+
+procedure TTexture.LoadFromStream(Stream: TStream);
+var
+  B: IBitmap;
+begin
+  B := NewBitmap;
+  B.LoadFromStream(Stream);
+  LoadFromBitmap(B);
 end;
 
 procedure TTexture.LoadFromFile(const FileName: string);
 var
-  S: TStream;
+  B: IBitmap;
 begin
-  S := TFileStream.Create(FileName, fmOpenRead);
-  try
-    LoadFromStream(S);
-  finally
-    S.Free;
-  end;
+  B := NewBitmap;
+  B.LoadFromFile(FileName);
+  LoadFromBitmap(B);
 end;
 
 procedure TTexture.Coord(X, Y: Integer; out V: TVec2);
@@ -249,12 +253,20 @@ end;
 function TTextureCollection.GetTexture(const AName: string): TTexture;
 var
   Item: TContextManagedObject;
+  S: string;
 begin
   Item := GetObject(Name);
   if Item <> nil then
     Result := TTexture(Item)
   else
     Result := nil;
+  if Result = nil then
+  begin
+    S := Ctx.GetAssetFile(PathCombine('textures', AName));
+    Result := TTexture.Create;
+    Result.Name := AName;
+    Result.LoadFromFile(S);
+  end;
 end;
 
 { TTextureExtension }

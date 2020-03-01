@@ -1,6 +1,6 @@
 unit Codebot.Render.Scenes.Controller;
 
-{$mode delphi}
+{$i codebot.inc}
 
 interface
 
@@ -81,7 +81,7 @@ begin
     Exit;
   FControl := Control;
   FControl.MakeCurrent;
-  FScene := SceneClass.Create;
+  FScene := SceneClass.Create(Control.ClientWidth, Control.ClientHeight);
   FControl.ReleaseContext;
   FOnKeyUp := FControl.OnKeyUp;
   FOnMouseDown := FControl.OnMouseDown;

@@ -6,6 +6,7 @@
 {$endif}
 
 {$mode delphi}
+{$modeswitch multihelpers}
 
 {$z4}
 {$macro on}

@@ -1,6 +1,6 @@
 unit Codebot.Render.Scenes;
 
-{$mode delphi}
+{$i codebot.inc}
 
 interface
 
@@ -30,7 +30,7 @@ type
     { Resize sets the viewport but you might use it to change the perspective matrix }
     procedure Resize; virtual;
   public
-    constructor Create; virtual;
+    constructor Create(Width, Height: Integer); virtual;
     destructor Destroy; override;
     { Name of the scene }
     function Name: string; virtual;
@@ -194,13 +194,17 @@ implementation
 
 { TScene }
 
-constructor TScene.Create;
+constructor TScene.Create(Width, Height: Integer);
 begin
   inherited Create;
   FAnimated := True;
+  FWidth := Width;
+  FHeight := Height;
   FContext := TContext.Create;
   FContext.MakeCurrent(True);
+  FContext.SetViewport(0, 0, Width, Height);
   Initialize;
+  Resize;
   FContext.MakeCurrent(False);
 end;
 
@@ -276,6 +280,7 @@ end;
 procedure TScene.Render;
 begin
   FContext.Clear;
+  FContext.Identity;
 end;
 
 function TScene.GetTime: Double;

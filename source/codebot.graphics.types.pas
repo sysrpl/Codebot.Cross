@@ -1,8 +1,8 @@
 (********************************************************)
 (*                                                      *)
-(*  Codebot.Cross Pascal Library                        *)
+(*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified February 2020                              *)
 (*                                                      *)
 (********************************************************)
 

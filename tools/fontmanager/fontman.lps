@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="fontman.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="32"/>
+      </Unit>
+      <Unit>
+        <Filename Value="main.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="Main"/>
+        <UsageCount Value="32"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="fonttools.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="FontTools"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <CursorPos X="9" Y="153"/>
+        <UsageCount Value="32"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../../../fpc/packages/fcl-image/src/freetypeh.pp"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="9"/>
+      </Unit>
+      <Unit>
+        <Filename Value="../../source/codebot.graphics.types.pas"/>
+        <UnitName Value="Codebot.Graphics.Types"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="104"/>
+        <CursorPos X="3" Y="124"/>
+        <UsageCount Value="16"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="7">
+      <Position>
+        <Filename Value="fonttools.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="fonttools.pas"/>
+        <Caret Line="290" TopLine="251"/>
+      </Position>
+      <Position>
+        <Filename Value="fonttools.pas"/>
+        <Caret Line="8" Column="32"/>
+      </Position>
+      <Position>
+        <Filename Value="fonttools.pas"/>
+        <Caret Line="28" Column="23" TopLine="13"/>
+      </Position>
+      <Position>
+        <Filename Value="fonttools.pas"/>
+        <Caret Line="273" Column="29" TopLine="247"/>
+      </Position>
+      <Position>
+        <Filename Value="fonttools.pas"/>
+        <Caret Line="49" Column="17" TopLine="22"/>
+      </Position>
+      <Position>
+        <Filename Value="fonttools.pas"/>
+        <Caret Line="19" Column="31"/>
+      </Position>
+      <Position>
+        <Filename Value="fonttools.pas"/>
+        <Caret Line="314" Column="41" TopLine="243"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

@@ -84,40 +84,49 @@ type
   See also
   <link Overview.Codebot.Geometry.TVec3, TVec3 members> }
 
-  TVec3 = record
-  public
-    {doc off}
-    class operator Negative(const A: TVec3): TVec3; inline;
-    class operator Equal(const A, B: TVec3): Boolean; inline;
-    class operator NotEqual(const A, B: TVec3): Boolean; inline;
-    class operator Add(const A, B: TVec3): TVec3; inline;
-    class operator Subtract(const A, B: TVec3): TVec3; inline;
-    class operator Multiply(const A, B: TVec3): TVec3; inline;
-    class operator Divide(const A, B: TVec3): TVec3; inline;
-    function Equals(const Value: TVec3): Boolean; inline;
-    function Cross(const V: TVec3): TVec3;
-    function Dot(const V: TVec3): Float;
-    function Distance: Float;
-    procedure Normalize;
-    {doc on}
-  public
-    case Integer of
-      0: (X, Y, Z: Float);
-      1: (R, G, B: Float);
-      2: (Red, Green, Blue: Float);
-      3: (Heading, Pitch, Roll: Float);
-      4: (Hue, Saturation, Lightness: Float);
-      5: (Vec1: TVec1);
-      6: (Vec2: TVec2);
-      7: (V: array[0..2] of Float);
-  end;
-  {doc ignore}
-  PVec3 = ^TVec3;
-  {doc ignore}
-  TVec3Array = TArray<TVec3>;
-  { TDirection represents a heading, pitch, and roll }
-  TDirection = TVec3;
+  { TVec3 is a three component vector
+    See also
+    <link Overview.Bare.Geometry.TVec3, TVec3 members> }
 
+    TVec3 = record
+    public
+      {doc off}
+      class operator Negative(const A: TVec3): TVec3; inline;
+      class operator Equal(const A, B: TVec3): Boolean; inline;
+      class operator NotEqual(const A, B: TVec3): Boolean; inline;
+      class operator Add(const A, B: TVec3): TVec3; inline;
+      class operator Subtract(const A, B: TVec3): TVec3; inline;
+      class operator Multiply(const A, B: TVec3): TVec3; overload; inline;
+      class operator Multiply(const A: TVec3; B: Float): TVec3; overload; inline;
+      class operator Divide(const A, B: TVec3): TVec3; overload; inline;
+      class operator Divide(const A: TVec3; B: Float): TVec3; overload; inline;
+      function Equals(const Value: TVec3): Boolean; inline;
+      function Angle: TVec2;
+      function Blend(const V: TVec3; Percent: Float): TVec3;
+      function Cross(const V: TVec3): TVec3;
+      function Dot(const V: TVec3): Float;
+      function Distance: Float; overload;
+      function Distance(X, Y, Z: Float): Float; overload;
+      function Distance(const V: TVec3): Float; overload;
+      procedure Normalize;
+      {doc on}
+    public
+      case Integer of
+        0: (X, Y, Z: Float);
+        1: (R, G, B: Float);
+        2: (Red, Green, Blue: Float);
+        3: (Pitch, Heading, Roll: Float);
+        4: (Hue, Saturation, Lightness: Float);
+        5: (V1: TVec1);
+        6: (V2: TVec2);
+        7: (V: array[0..2] of Float);
+    end;
+    {doc ignore}
+    PVec3 = ^TVec3;
+    {doc ignore}
+    TVec3Array = TArray<TVec3>;
+    { TDirection represents a heading, pitch, and roll }
+    TDirection = TVec3;
 
 { TVec4 is a four component vector
   See also
@@ -320,7 +329,7 @@ function Bezier2(const P0, P1, P2, P3: TVec2): TBezier2;
 
 const
   StockDirection: TDirection = (
-    Heading: 0; Pitch: 0; Roll: 0);
+    Pitch: 0; Heading: 0; Roll: 0);
   StockMatrix: TMatrix = (M: (
     (1, 0, 0, 0),
     (0, 1, 0, 0),
@@ -600,6 +609,13 @@ begin
   Result.Z := A.Z * B.Z;
 end;
 
+class operator TVec3.Multiply(const A: TVec3; B: Float): TVec3;
+begin
+  Result.X := A.X * B;
+  Result.Y := A.Y * B;
+  Result.Z := A.Z * B;
+end;
+
 class operator TVec3.Divide(const A, B: TVec3): TVec3;
 begin
   Result.X := A.X / B.X;
@@ -607,9 +623,29 @@ begin
   Result.Z := A.Z / B.Z;
 end;
 
+class operator TVec3.Divide(const A: TVec3; B: Float): TVec3;
+begin
+  Result.X := A.X / B;
+  Result.Y := A.Y / B;
+  Result.Z := A.Z / B;
+end;
+
 function TVec3.Equals(const Value: TVec3): Boolean;
 begin
   Result := Self = Value;
+end;
+
+function TVec3.Angle: TVec2;
+begin
+  Result.X := Vec2(X, Z).Angle;
+  Result.Y := Vec2(Z, Y).Angle;
+end;
+
+function TVec3.Blend(const V: TVec3; Percent: Float): TVec3;
+begin
+  Result.X := X * (1 - Percent) + V.X * Percent;
+  Result.Y := Y * (1 - Percent) + V.Y * Percent;
+  Result.Z := Z * (1 - Percent) + V.Z * Percent;
 end;
 
 function TVec3.Cross(const V: TVec3): TVec3;
@@ -626,14 +662,24 @@ end;
 
 function TVec3.Distance: Float;
 begin
-  Result := Sqrt(X * X + Y * Y + Z + Z);
+  Result := Sqrt(X * X + Y * Y + Z * Z);
+end;
+
+function TVec3.Distance(X, Y, Z: Float): Float;
+begin
+  Result := (Self - Vec3(X, Y, Z)).Distance;
+end;
+
+function TVec3.Distance(const V: TVec3): Float;
+begin
+  Result := (Self - V).Distance;
 end;
 
 procedure TVec3.Normalize;
 var
   D: Float;
 begin
-  D := Sqrt(X * X + Y * Y + Z + Z);
+  D := Sqrt(X * X + Y * Y + Z * Z);
   if D > 0 then
   begin
     D := 1 / D;
