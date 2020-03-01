@@ -45,7 +45,11 @@
       </Item>
       <Item>
         <Filename Value="codebot.render.fonts.pas"/>
-        <UnitName Value="codebot.render.fonts"/>
+        <UnitName Value="Codebot.Render.Fonts"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.render.world.pas"/>
+        <UnitName Value="codebot.render.world"/>
       </Item>
     </Files>
     <RequiredPkgs>

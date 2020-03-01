@@ -1,6 +1,6 @@
 unit Codebot.Render.Contexts;
 
-{$mode delphi}
+{$i codebot.inc}
 
 interface
 
@@ -21,12 +21,16 @@ type
   textures, and vertex buffers. If no collection is given to the constructor create then
   the object will be maintained by Ctx.Objects. }
 
-  TContextManagedObject = class
+  TContextManagedObject = class(IInterface)
   private
     FName: string;
     FCollection: TContextCollection;
     FNext: TContextManagedObject;
     procedure SetName(const Value: string);
+  protected
+    function QueryInterface(constref Iid: TGuid; out Obj): LongInt; apicall;
+    function _AddRef: LongInt; apicall;
+    function _Release: LongInt; apicall;
   public
     { Create a new item managing its lifetime with a collection and name. If no
       collection is given it will be maintained by Ctx.Objects. }
@@ -77,13 +81,21 @@ type
       Texture: Integer;
       Slot: Integer;
     end;
-    TTextureStack = TArrayList<TTextureItem>;
-    TMatrixStack = TArrayList<TMatrix4x4>;
-    TViewportStack = TArrayList<TRectI>;
+    TTextureStack = TStack<TTextureItem>;
+    TMatrixStack = TStack<TMatrix>;
+    TViewportStack = TStack<TRectI>;
+    TBoolStack = TStack<Boolean>;
+    TIntStack = TStack<Integer>;
   private var
     FAssetFolder: string;
-    FProgramStack: IntArray;
-    FProgramCount: IntArray;
+    FCull: Boolean;
+    FCullStack: TBoolStack;
+    FDepthTest: Boolean;
+    FDepthTestStack: TBoolStack;
+    FDepthWriting: Boolean;
+    FDepthWritingStack: TBoolStack;
+    FProgramStack: TIntStack;
+    FProgramCount: TIntStack;
     FProgramChange: Boolean;
     FViewport: TRectI;
     FViewportStack: TViewportStack;
@@ -91,10 +103,11 @@ type
     FObjects: TManagedObjectCollection;
     FTextureStack: TTextureStack;
     FModelviewStack: TMatrixStack;
-    FModelviewCurrent: TMatrix4x4;
+    FModelviewCurrent: TMatrix;
     FProjectionStack: TMatrixStack;
-    FProjectionCurrent: TMatrix4x4;
+    FProjectionCurrent: TMatrix;
     FMatrixChange: Boolean;
+    FWorld: TContextManagedObject;
   private
     { Add a collection or raise an EContextCollectionError exeption if the
       name is blank or already exists }
@@ -102,13 +115,25 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    {$region general context methods}
+    {$region general context methods and rendering options}
     { Make the context current or not current }
     procedure MakeCurrent(Current: Boolean);
     { Set the color to use when cleared }
     procedure SetClearColor(R, G, B, A: Float);
     { Clear the color and depth buffer bits }
     procedure Clear;
+    { Change rendering ability to remove back facing polygons (default to true) }
+    procedure PushCulling(Cull: Boolean);
+    { Restore previous setting to remove back facing polygons }
+    procedure PopCulling;
+    { Change rendering ability to bypass depth buffer testing (default to true) }
+    procedure PushDepthTesting(DepthTest: Boolean);
+    { Restore previous setting to depth buffer testing }
+    procedure PopDepthTesting;
+    { Change rendering ability to write to the depth buffer (default to true) }
+    procedure PushDepthWriting(DepthWriting: Boolean);
+    { Restore previous ability to write to the depth buffer }
+    procedure PopDepthWriting;
     {$endregion}
     {$region viewports}
     { Get the current viewport }
@@ -119,6 +144,10 @@ type
     procedure PushViewport(X, Y, W, H: Integer);
     { Restore the prior viewport from the stack }
     procedure PopViewport;
+    { Get the world for this context }
+    function GetWorld: TContextManagedObject;
+    { Set the world for this context }
+    procedure SetWorld(Value: TContextManagedObject);
     { Save the current viewport contents to a bitmap }
     procedure SaveToBitmap(Bitmap: IBitmap);
     { Save the current viewport contents to a bitmap stream }
@@ -171,8 +200,8 @@ type
     procedure SetUniform(const Name: string; const V: TVec3); overload;
     procedure SetUniform(Location: Integer; const V: TVec4); overload;
     procedure SetUniform(const Name: string; const V: TVec4); overload;
-    procedure SetUniform(Location: Integer; const M: TMatrix4x4); overload;
-    procedure SetUniform(const Name: string; const M: TMatrix4x4); overload;
+    procedure SetUniform(Location: Integer; const M: TMatrix); overload;
+    procedure SetUniform(const Name: string; const M: TMatrix); overload;
     {$endregion}
     {$region texture stacks}
     { Activate a texture unit (slot to avoid reserved word) which can be any number 0-9 }
@@ -187,26 +216,32 @@ type
     procedure PopTexture;
     {$endregion}
     {$region matrix stacks}
+    { Replaces the current modelview matrix }
+    procedure SetModelview(constref M: TMatrix);
     { Returns the current modelview matrix }
-    function GetModelview: TMatrix4x4;
+    function GetModelview: TMatrix;
     { Adds a new modelview matrix on to the stack }
-    procedure PushModelview(const M: TMatrix4x4);
+    procedure PushModelview(const M: TMatrix);
     { Removes the most recent modelview matrix from the stack }
     procedure PopModelview;
     { Replaces the current model view matrix with a look at matrix }
     procedure LookAt(Eye, Center, Up: TVec3);
     { Replaces the current model view matrix with an identity matrix }
     procedure Identity;
+    { Transform the current model view matrix with a matrix }
+    procedure Transform(constref T: TMatrix);
     { Translate the current model view matrix }
     procedure Translate(X, Y, Z: Float);
     { Rotate the current model view matrix }
     procedure Rotate(X, Y, Z: Float; Order: TRotationOrder = roZXY);
     { Scale the current model view matrix }
     procedure Scale(X, Y, Z: Float);
+    { Replace the current projection matrix }
+    procedure SetProjection(constref M: TMatrix);
     { Returns the current projection matrix }
-    function GetProjection: TMatrix4x4;
+    function GetProjection: TMatrix;
     { Adds a new projection matrix to the stack }
-    procedure PushProjection(const M: TMatrix4x4);
+    procedure PushProjection(const M: TMatrix);
     { Removes the most recent projection matrix from the stack }
     procedure PopProjection;
     { Replaces the current pespective matrix with a perspective matrix }
@@ -220,17 +255,19 @@ type
 
 function Ctx: TContext;
 
-implementation
-
-uses
-  Codebot.GLES;
-
 resourcestring
   SNoOpenGL = 'The OpenGL library could not be loaded';
   SNoContext = 'No context is available';
   SAssetNotFound = 'Cannot locate asset with name ''%s''';
+  SAssetNotUnderstood = 'Cannot understand asset with name ''%s''';
   SNoCollectionName = 'Cannot add unnammed collections';
   SDuplicateCollectionName = 'An collection or item with name ''%s'' already exist';
+
+
+implementation
+
+uses
+  Codebot.GLES;
 
 var
   InternalContext: TObject;
@@ -243,6 +280,24 @@ begin
 end;
 
 { TContextManagedObject }
+
+function TContextManagedObject.QueryInterface(constref Iid: TGuid; out Obj): LongInt;
+begin
+  if GetInterface(Iid, Obj) then
+    Result := S_OK
+  else
+    Result := LongInt(E_NOINTERFACE);
+end;
+
+function TContextManagedObject._AddRef: LongInt;
+begin
+  Result := 1;
+end;
+
+function TContextManagedObject._Release: LongInt;
+begin
+  Result := 1;
+end;
 
 constructor TContextManagedObject.Create(Collection: TContextCollection; const Name: string = '');
 begin
@@ -332,15 +387,35 @@ end;
 { TContext }
 
 constructor TContext.Create;
+const
+  StackSize = 100;
 begin
   inherited Create;
   if not LoadOpenGLES then
     raise EContextError.Create(SNoOpenGL);
   InternalContext := Self;
   FAssetFolder := 'assets';
-  FModelviewCurrent.Identity;
   FProjectionCurrent.Identity;
+  FModelviewCurrent.Identity;
   FMatrixChange := True;
+  glEnable(GL_BLEND);
+  FCull := True;
+  glEnable(GL_CULL_FACE);
+  FDepthTest := True;
+  glEnable(GL_DEPTH_TEST);
+  FDepthWriting := True;
+  glDepthMask(GL_TRUE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  FCullStack := TBoolStack.Create(StackSize);
+  FDepthTestStack := TBoolStack.Create(StackSize);
+  FDepthWritingStack := TBoolStack.Create(StackSize);
+  FProgramStack := TIntStack.Create(StackSize);
+  FProgramCount := TIntStack.Create(StackSize);
+  FViewportStack := TViewportStack.Create(StackSize);
+  FTextureStack := TTextureStack.Create(StackSize);
+  FModelviewStack := TMatrixStack.Create(StackSize);
+  FProjectionStack := TMatrixStack.Create(StackSize);
 end;
 
 destructor TContext.Destroy;
@@ -398,6 +473,69 @@ begin
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 end;
 
+procedure TContext.PushCulling(Cull: Boolean);
+begin
+  FCullStack.Push(FCull);
+  FCull := Cull;
+  if FCull then
+    glEnable(GL_CULL_FACE)
+  else
+    glDisable(GL_CULL_FACE);
+end;
+
+procedure TContext.PopCulling;
+begin
+  if FCullStack.Index < 0 then
+    Exit;
+  FCull := FCullStack.Pop;
+  if FCull then
+    glEnable(GL_CULL_FACE)
+  else
+    glDisable(GL_CULL_FACE);
+end;
+
+procedure TContext.PushDepthTesting(DepthTest: Boolean);
+begin
+  FDepthTestStack.Push(FDepthTest);
+  FDepthTest := DepthTest;
+  if FDepthTest then
+    glEnable(GL_DEPTH_TEST)
+  else
+    glDisable(GL_DEPTH_TEST);
+end;
+
+procedure TContext.PopDepthTesting;
+begin
+  if FDepthTestStack.Index < 0 then
+    Exit;
+  FDepthTest := FDepthTestStack.Pop;
+  if FDepthTest then
+    glEnable(GL_DEPTH_TEST)
+  else
+    glDisable(GL_DEPTH_TEST);
+end;
+
+procedure TContext.PushDepthWriting(DepthWriting: Boolean);
+begin
+  FDepthWritingStack.Push(FDepthWriting);
+  FDepthWriting := DepthWriting;
+  if FDepthWriting then
+    glDepthMask(GL_TRUE)
+  else
+    glDepthMask(GL_FALSE);
+end;
+
+procedure TContext.PopDepthWriting;
+begin
+  if FDepthWritingStack.Index < 0 then
+    Exit;
+  FDepthWriting := FDepthWritingStack.Pop;
+  if FDepthWriting then
+    glDepthMask(GL_TRUE)
+  else
+    glDepthMask(GL_FALSE);
+end;
+
 function TContext.GetViewport: TRectI;
 begin
   Result := FViewport;
@@ -418,10 +556,20 @@ end;
 
 procedure TContext.PopViewport;
 begin
-  if FViewportStack.Length < 1 then
+  if FViewportStack.Index < 0 then
     Exit;
   FViewport := FViewportStack.Pop;
   glViewport(FViewport.X, FViewport.Y, FViewport.Width, FViewport.Height);
+end;
+
+function TContext.GetWorld: TContextManagedObject;
+begin
+  Result := FWorld;
+end;
+
+procedure TContext.SetWorld(Value: TContextManagedObject);
+begin
+  FWorld := Value;
 end;
 
 procedure TContext.SaveToBitmap(Bitmap: IBitmap);
@@ -681,12 +829,12 @@ begin
   SetUniform(Name, V.X, V.Y, V.Z, V.W);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const M: TMatrix4x4); overload;
+procedure TContext.SetUniform(Location: Integer; const M: TMatrix); overload;
 begin
   glUniformMatrix4fv(Location, 1, GL_FALSE, @M);
 end;
 
-procedure TContext.SetUniform(const Name: string; const M: TMatrix4x4); overload;
+procedure TContext.SetUniform(const Name: string; const M: TMatrix); overload;
 var
   L: Integer;
 begin
@@ -726,22 +874,27 @@ procedure TContext.PopTexture;
 var
   Item: TTextureItem;
 begin
-  FTextureStack.Pop;
   if FTextureStack.IsEmpty then
     Exit;
-  Item := FTextureStack.Last;
+  Item := FTextureStack.Pop;
   glActiveTexture(GL_TEXTURE0 + Item.Slot);
   glBindTexture(GL_TEXTURE_2D, Item.Texture);
 end;
 {$endregion}
 
 {$region matrix stacks}
-function TContext.GetModelview: TMatrix4x4;
+procedure TContext.SetModelview(constref M: TMatrix);
+begin
+  FModelviewCurrent := M;
+  FMatrixChange := True;
+end;
+
+function TContext.GetModelview: TMatrix;
 begin
   Result := FModelviewCurrent;
 end;
 
-procedure TContext.PushModelview(const M: TMatrix4x4);
+procedure TContext.PushModelview(const M: TMatrix);
 begin
   FModelviewCurrent := M;
   FModelviewStack.Push(M);
@@ -750,6 +903,8 @@ end;
 
 procedure TContext.PopModelview;
 begin
+  if FModelviewStack.IsEmpty then
+    Exit;
   FModelviewStack.Pop;
   FMatrixChange := True;
 end;
@@ -757,44 +912,51 @@ end;
 procedure TContext.LookAt(Eye, Center, Up: TVec3);
 begin
   FModelviewCurrent.LookAt(Eye, Center, Up);
-  FModelviewStack.Last := FModelviewCurrent;
   FMatrixChange := True;
 end;
 
 procedure TContext.Identity;
 begin
   FModelviewCurrent.Identity;
-  FModelviewStack.Last := FModelviewCurrent;
+  FMatrixChange := True;
+end;
+
+procedure TContext.Transform(constref T: TMatrix);
+begin
+  FModelviewCurrent := FModelviewCurrent * T;
   FMatrixChange := True;
 end;
 
 procedure TContext.Translate(X, Y, Z: Float);
 begin
   FModelviewCurrent.Translate(X, Y, Z);
-  FModelviewStack.Last := FModelviewCurrent;
   FMatrixChange := True;
 end;
 
 procedure TContext.Rotate(X, Y, Z: Float; Order: TRotationOrder = roZXY);
 begin
   FModelviewCurrent.Rotate(X, Y, Z, Order);
-  FModelviewStack.Last := FModelviewCurrent;
   FMatrixChange := True;
 end;
 
 procedure TContext.Scale(X, Y, Z: Float);
 begin
   FModelviewCurrent.Scale(X, Y, Z);
-  FModelviewStack.Last := FModelviewCurrent;
   FMatrixChange := True;
 end;
 
-function TContext.GetProjection: TMatrix4x4;
+procedure TContext.SetProjection(constref M: TMatrix);
+begin
+  FProjectionCurrent := M;
+  FMatrixChange := True;
+end;
+
+function TContext.GetProjection: TMatrix;
 begin
   Result := FProjectionCurrent;
 end;
 
-procedure TContext.PushProjection(const M: TMatrix4x4);
+procedure TContext.PushProjection(const M: TMatrix);
 begin
   FProjectionCurrent := M;
   FProjectionStack.Push(M);
@@ -803,29 +965,30 @@ end;
 
 procedure TContext.PopProjection;
 begin
-  FProjectionStack.Pop;
+  if FProjectionStack.IsEmpty then
+    Exit;
+  FProjectionCurrent := FProjectionStack.Pop;
   FMatrixChange := True;
 end;
 
 procedure TContext.Perspective(FoV, AspectRatio, NearPlane, FarPlane: Float);
 begin
   FProjectionCurrent.Perspective(FoV, AspectRatio, NearPlane, FarPlane);
-  FProjectionStack.Last := FProjectionCurrent;
   FMatrixChange := True;
 end;
 
 procedure TContext.Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
 begin
   FProjectionCurrent.Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane);
-  FProjectionStack.Last := FProjectionCurrent;
+  FMatrixChange := True;
 end;
 
 procedure TContext.SetProgramMatrix;
 begin
   if FProgramChange or FMatrixChange then
   begin
-    SetUniform('modelview', FModelviewCurrent);
     SetUniform('projection', FProjectionCurrent);
+    SetUniform('modelview', FModelviewCurrent);
     FProgramChange := False;
     FMatrixChange := False;
   end;

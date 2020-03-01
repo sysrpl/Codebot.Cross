@@ -1,6 +1,6 @@
 unit Codebot.Render.Fonts;
 
-{$mode delphi}
+{$i codebot.inc}
 
 interface
 

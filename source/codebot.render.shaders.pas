@@ -1,6 +1,6 @@
 unit Codebot.Render.Shaders;
 
-{$mode delphi}
+{$i codebot.inc}
 
 interface
 
@@ -95,14 +95,14 @@ type
 
   TShaderCollection = class(TContextCollection)
   private
-    function GetShader(const AName: string): TShaderObject;
-    function GetShaderProgram(const AName: string): TShaderProgram;
+    function GetSource(const AName: string): TShaderSource;
+    function GetProg(const AName: string): TShaderProgram;
   public
     constructor Create;
-    { Return a shader object by name or nil if not found }
-    property Shader[AName: string]: TShaderObject read GetShader;
-    { Return a shader program by name or nil if not found }
-    property ShaderProgram[AName: string]: TShaderProgram read GetShaderProgram; default;
+    { Return a shader source object by name or locate and create the shader from an asset }
+    property Source[AName: string]: TShaderSource read GetSource;
+    { Return a shader program by name or locate and create the program from an asset }
+    property Prog[AName: string]: TShaderProgram read GetProg; default;
   end;
 
 { TShaderExtension adds the function Shaders to the current context }
@@ -322,26 +322,46 @@ begin
   inherited Create(SShaderCollection);
 end;
 
-function TShaderCollection.GetShader(const AName: string): TShaderObject;
+function TShaderCollection.GetSource(const AName: string): TShaderSource;
 var
   Item: TContextManagedObject;
+  S: string;
 begin
   Item := GetObject(Name);
   if Item <> nil then
-    Result := TShaderObject(Item)
+    Result := TShaderSource(Item)
   else
     Result := nil;
+  if Result = nil then
+  begin
+    S := Ctx.GetAssetFile(PathCombine('shaders', AName));
+    if AName.EndsWith('.vert') then
+      Result := TVertexShader.Create
+    else if AName.EndsWith('.frag') then
+      Result := TFragmentShader.Create
+    else
+      raise EContextAssetError.Create(SAssetNotUnderstood);
+    Result.Compile(FileReadStr(S));
+    Result.Name := AName;
+  end;
 end;
 
-function TShaderCollection.GetShaderProgram(const AName: string): TShaderProgram;
+function TShaderCollection.GetProg(const AName: string): TShaderProgram;
 var
   Item: TContextManagedObject;
+  S: string;
 begin
-  Item := GetShader(Name);
+  Item := GetObject(Name);
   if (Item <> nil) and (Item is TShaderProgram) then
     Result := TShaderProgram(Item)
   else
     Result := nil;
+  if Result = nil then
+  begin
+    S := Ctx.GetAssetFile(PathCombine('shaders', AName));
+    Result := TShaderProgram.CreateFromFile(S);
+    Result.Name := AName;
+  end;
 end;
 
 { TShaderExtension }

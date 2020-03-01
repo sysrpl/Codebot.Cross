@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified September 2019                             *)
+(*  Modified February 2020                              *)
 (*                                                      *)
 (********************************************************)
 
@@ -208,6 +208,43 @@ function DefaultFloatCompare(constref A, B: Float): Integer;
 function DefaultFloatConvertString(constref Item: Float): string;
 {doc on}
 
+resourcestring
+  SStackSize = 'Cannot create a stack of size less than 1';
+  SStackPush = 'Stack push would overflow';
+  SStackPop = 'Stack pop would underflow';
+  SStackEmpty = 'Stack does not contain any items';
+
+type
+  EStackError = class(Exception);
+
+{ TStack<T> }
+
+  TStack<T> = record
+  private
+    FItems: TArray<T>;
+    FSize: Integer;
+    FIndex: Integer;
+    function GetIsEmpty: Boolean;
+    function GetFirst: T;
+    procedure SetFirst(const Value: T);
+    function GetLast: T;
+    procedure SetLast(const Value: T);
+  public
+    { Create a stack with room for size items }
+    class function Create(Size: Integer): TStack<T>; static;
+    { Push a new item on the stack }
+    procedure Push(const Value: T);
+    { Pop an item from the stack }
+    function Pop: T;
+    { IsEmpty is true if index is less than zero }
+    property IsEmpty: Boolean read GetIsEmpty;
+    { Index is the current item on the stack }
+    property Index: Integer read FIndex;
+    { The item with index of zero on the stack }
+    property First: T read GetFirst write SetFirst;
+    { The item with index of index on the stack }
+    property Last: T read GetLast write SetLast;
+  end;
 {$endregion}
 
 {$region math routines}
@@ -3386,7 +3423,7 @@ end;
 
 function TArrayList<T>.GetFirst: T;
 begin
-  Result := Items[0];
+  Result := Items[0]
 end;
 
 procedure TArrayList<T>.SetFirst(const Value: T);
@@ -3396,7 +3433,7 @@ end;
 
 function TArrayList<T>.GetLast: T;
 begin
-  Result := Items[Length - 1];
+  Result := Items[Length - 1]
 end;
 
 procedure TArrayList<T>.SetLast(const Value: T);
@@ -3432,6 +3469,67 @@ end;
 class function TArrayList<T>.Convert: TArrayList<T>;
 begin
   Result.Length := 0;
+end;
+
+{ TStack<T> }
+
+class function TStack<T>.Create(Size: Integer): TStack<T>;
+begin
+  if Size < 1 then
+    raise EStackError.Create(SStackSize);
+  Result.FItems := nil;
+  SetLength(Result.FItems, Size);
+  Result.FSize := Size;
+  Result.FIndex := -1;
+end;
+
+procedure TStack<T>.Push(const Value: T);
+begin
+  if FIndex + 1 = FSize then
+    raise EStackError.Create(SStackPush);
+  Inc(FIndex);
+  FItems[FIndex] := Value
+end;
+
+function TStack<T>.Pop: T;
+begin
+  if FIndex < 0 then
+    raise EStackError.Create(SStackPop);
+  Result := FItems[FIndex];
+  Dec(FIndex);
+end;
+
+function TStack<T>.GetIsEmpty: Boolean;
+begin
+  Result := FIndex < 0;
+end;
+
+function TStack<T>.GetFirst: T;
+begin
+  if FIndex < 0 then
+    raise EStackError.Create(SStackEmpty);
+  Result := FItems[0];
+end;
+
+procedure TStack<T>.SetFirst(const Value: T);
+begin
+  if FIndex < 0 then
+    raise EStackError.Create(SStackEmpty);
+  FItems[0] := Value;
+end;
+
+function TStack<T>.GetLast: T;
+begin
+  if FIndex < 0 then
+    raise EStackError.Create(SStackEmpty);
+  Result := FItems[FIndex];
+end;
+
+procedure TStack<T>.SetLast(const Value: T);
+begin
+  if FIndex < 0 then
+    raise EStackError.Create(SStackEmpty);
+  FItems[FIndex] := Value;
 end;
 
 { TNamedValues<T> }

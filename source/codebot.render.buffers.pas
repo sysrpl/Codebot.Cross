@@ -1,6 +1,6 @@
 unit Codebot.Render.Buffers;
 
-{$mode delphi}
+{$i codebot.inc}
 
 interface
 
@@ -118,6 +118,7 @@ type
   private var
     FMark: TBufferMark;
     FMarkers: TBufferMarkers;
+    FProg: Integer;
   private
     function GetMarkCount: Integer;
     procedure DrawQuads(Start: Integer; Length: Integer);
@@ -127,21 +128,24 @@ type
     function CountAttributes: Integer; virtual; abstract;
     procedure BindAttributes(var Vertex: T); virtual; abstract;
   public
-    Vertex: T;
     { Create a new data buffer optionally allocating room for a N number
       of future vertices }
     constructor Create(N: Integer = 0); override;
     destructor Destroy; override;
-    { Adds the Vertex field above to the buffer }
-    procedure Add; overload;
+    { Set the shader program associated with draw commands }
+    procedure SetProgram(Prog: Integer); overload;
+    { Set the shader program by name associated with draw commands }
+    procedure SetProgram(const ProgName: string); overload;
+    { Adds the V T field above to the buffer }
+    procedure Add(constref V: T); overload;
     { Clone additional drawing information }
     function Clone: TObject; override;
     { Begin buffering new vertex data using a specified mode }
-    procedure BeginBuffer(Mode: TVertMode);
+    procedure BeginBuffer(Mode: TVertMode; Count: Integer = 0);
     { Delineate a new vertex mode type without drawing }
     procedure MarkBuffer(Mode: TVertMode);
     { End buffering and draw everything }
-    procedure EndBuffer;
+    procedure EndBuffer(DrawBuffer: Boolean = False);
     { Draw everything }
     procedure Draw; overload;
     { Draw items at the marked index }
@@ -153,7 +157,6 @@ type
     { The number of delineated sections in the buffer }
     property MarkCount: Integer read GetMarkCount;
   end;
-
 {$endregion}
 
 {$region vertex types}
@@ -256,6 +259,7 @@ type
 implementation
 
 uses
+  Codebot.Render.Shaders,
   Codebot.GLES;
 
 {$region texture buffer}
@@ -477,9 +481,19 @@ begin
   ResetLast;
 end;
 
-procedure TDrawingBuffer<T>.Add;
+procedure TDrawingBuffer<T>.SetProgram(Prog: Integer);
 begin
-  AddItem(Vertex);
+  FProg := Prog;
+end;
+
+procedure TDrawingBuffer<T>.SetProgram(const ProgName: string);
+begin
+  FProg := Ctx.Shaders.Prog[ProgName].Handle;
+end;
+
+procedure TDrawingBuffer<T>.Add(constref V: T);
+begin
+  AddItem(V);
 end;
 
 function TDrawingBuffer<T>.Clone: TObject;
@@ -519,9 +533,9 @@ begin
     Inc(FMark.Length, N);
 end;
 
-procedure TDrawingBuffer<T>.BeginBuffer(Mode: TVertMode);
+procedure TDrawingBuffer<T>.BeginBuffer(Mode: TVertMode; Count: Integer = 0);
 begin
-  Clear;
+  Clear(Count);
   FMark.Mode := Mode;
 end;
 
@@ -536,11 +550,12 @@ begin
   FMark.Mode := Mode;
 end;
 
-procedure TDrawingBuffer<T>.EndBuffer;
+procedure TDrawingBuffer<T>.EndBuffer(DrawBuffer: Boolean = False);
 begin
   if FMark.Length > 0 then
     MarkBuffer(FMark.Mode);
-  Draw;
+  if DrawBuffer then
+    Draw;
 end;
 
 procedure TDrawingBuffer<T>.DrawQuads(Start: Integer; Length: Integer);
@@ -602,6 +617,7 @@ end;
 procedure TDrawingBuffer<T>.Draw(Mode: TVertMode; Start: Integer; Length: Integer = 0);
 var
   I, J: Integer;
+  S: string;
 begin
   if Start < 0 then
     Exit;
@@ -627,13 +643,22 @@ begin
       glEnableVertexAttribArray(J);
     BindAttributes(FBuffer.Items[0]);
   end;
+  if FProg = 0 then
+  begin
+    S := ClassName;
+    S := S.ToLower.Copy(2);
+    FProg := Ctx.Shaders[S].Handle;
+  end;
+  Ctx.PushProgram(FProg);
   Ctx.SetProgramMatrix;
   glDrawArrays(GLenum(Mode), Start, Length);
+  Ctx.PopProgram;
 end;
 
 procedure TDrawingBuffer<T>.Draw(Mode: TVertMode; Indices: WordArray);
 var
   I, J: Integer;
+  S: string;
 begin
   if FCount < 0 then
     Exit;
@@ -650,10 +675,18 @@ begin
       glEnableVertexAttribArray(J);
     BindAttributes(FBuffer.Items[0]);
   end;
+  if FProg = 0 then
+  begin
+    S := ClassName;
+    S := S.ToLower.Copy(2);
+    FProg := Ctx.Shaders[S].Handle;
+  end;
+  Ctx.PushProgram(FProg);
   Ctx.SetProgramMatrix;
   if Mode = vertQuads then
     Mode := vertTriangles;
   glDrawElements(GL_TRIANGLES, Indices.Length, GL_UNSIGNED_SHORT, @Indices.Items[0]);
+  Ctx.PopProgram;
 end;
 
 function TDrawingBuffer<T>.GetMarkCount: Integer;

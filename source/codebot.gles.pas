@@ -1,12 +1,6 @@
 unit Codebot.GLES;
 
-{$mode delphi}
-{$macro on}
-{$ifdef windows}
-  {$define apicall := stdcall}
-{$else}
-  {$define apicall := cdecl}
-{$endif}
+{$i codebot.inc}
 
 interface
 
