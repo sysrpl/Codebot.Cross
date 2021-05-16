@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="codebot_controls_design"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Files Count="7">
+      <Item1>
+        <Filename Value="codebot.design.registration.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="Codebot.Design.Registration"/>
+      </Item1>
+      <Item2>
+        <Filename Value="codebot.design.editors.pas"/>
+        <UnitName Value="Codebot.Design.Editors"/>
+      </Item2>
+      <Item3>
+        <Filename Value="codebot.design.forms.pas"/>
+        <UnitName Value="Codebot.Design.Forms"/>
+      </Item3>
+      <Item4>
+        <Filename Value="codebot.design.imagelisteditor.lfm"/>
+        <Type Value="LFM"/>
+      </Item4>
+      <Item5>
+        <Filename Value="codebot.design.imagelisteditor.pas"/>
+        <UnitName Value="Codebot.Design.ImageListEditor"/>
+      </Item5>
+      <Item6>
+        <Filename Value="codebot.design.surfacebitmapeditor.lfm"/>
+        <Type Value="LFM"/>
+      </Item6>
+      <Item7>
+        <Filename Value="codebot.design.surfacebitmapeditor.pas"/>
+        <UnitName Value="Codebot.Design.SurfaceBitmapEditor"/>
+      </Item7>
+    </Files>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="codebot_controls"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="IDEIntf"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
