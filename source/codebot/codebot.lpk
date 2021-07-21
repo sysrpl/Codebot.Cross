@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="codebot"/>
     <Type Value="RunAndDesignTime"/>
     <CompilerOptions>
@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="35">
+    <Files Count="36">
       <Item1>
         <Filename Value="codebot.animation.pas"/>
         <UnitName Value="Codebot.Animation"/>
@@ -151,7 +151,12 @@
         <Filename Value="codebot.text.xml.windows.inc"/>
         <Type Value="Include"/>
       </Item35>
+      <Item36>
+        <Filename Value="codebot.io.serialport.pas"/>
+        <UnitName Value="codebot.io.serialport"/>
+      </Item36>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">
       <Item1>
         <PackageName Value="LCL"/>
