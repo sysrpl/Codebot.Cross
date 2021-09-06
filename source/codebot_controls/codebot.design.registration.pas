@@ -41,6 +41,7 @@ begin
   // TRenderImage, TRenderBox,
   RegisterComponents('Codebot', [TImageStrip, TSlideBar, TThinButton,
     TRenderImage, TRenderBox,
+    TIndeterminateProgress, TStepBubbles,
     THuePicker, TSaturationPicker, TBanner, TContentGrid,
     TSizingPanel, THeaderBar, TDrawList, TDrawTextList, TDetailsList, TAnimationTimer]);
   { Property editors }
