@@ -109,16 +109,13 @@
       </Item23>
     </Files>
     <CompatibilityMode Value="True"/>
-    <RequiredPkgs Count="3">
+    <RequiredPkgs Count="2">
       <Item1>
-        <PackageName Value="codebot_rendering"/>
+        <PackageName Value="codebot"/>
       </Item1>
       <Item2>
-        <PackageName Value="codebot"/>
-      </Item2>
-      <Item3>
         <PackageName Value="LCL"/>
-      </Item3>
+      </Item2>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
