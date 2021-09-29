@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified September 2021                             *)
 (*                                                      *)
 (********************************************************)
 
@@ -171,6 +171,7 @@ type
     FTimerActive: Boolean;
     FAutoScroll: Boolean;
     FSingleColumn: Boolean;
+    FLastSize: TPoint;
     FOnDrawBackground: TDrawRectEvent;
     FOnDrawCell: TDrawCellEvent;
     FOnDrawRow: TDrawRowEvent;
@@ -217,6 +218,7 @@ type
     procedure SelectionScroll(DX, DY: Integer); override;
     procedure Render; override;
     procedure Resize; override;
+    procedure DoOnResize; override;
     procedure SetHotTrack(const Value: TGridCoord);
     property OnDrawIndexSection: TDrawIndexSectionEvent read FOnDrawIndexSection write FOnDrawIndexSection;
   public
@@ -1650,6 +1652,16 @@ begin
   inherited Resize;
 end;
 
+procedure TContentGrid.DoOnResize;
+begin
+  if (FLastSize.X <> Width) and (FLastSize.Y <> Height) then
+  begin
+    FLastSize.X := Width;
+    FLastSize.Y := Height;
+    inherited DoOnResize;
+  end;
+end;
+
 { TImageListGridProvider }
 
 constructor TImageListGridProvider.Create(AOwner: TComponent);
@@ -1703,6 +1715,7 @@ begin
     FGrid.FreeNotification(Self);
     FFont := NewFont(FGrid.Font);
     FFont.Style := [fsBold];
+    FFont.Color := clBlack;
   end;
   GridChanged;
 end;
@@ -1827,6 +1840,7 @@ begin
     end;
     FImageList.Draw(Surface, I, Rect.Left + (Rect.Width - FImageList.Size) div 2, R.Top + 6);
     R.Top := R.Bottom - Round(Surface.TextSize(FFont, 'Wg').Y) - 8;
+
     Surface.TextOut(FFont, IntToStr(I), R, drCenter);
   end;
 end;

@@ -2875,9 +2875,12 @@ begin
   R.Height := Height;
   B := NewBrush(0, 0, 0, R.Height);
   C := Control.CurrentColor;
-  B.AddStop(C.Fade(0.8).Darken(0.1), 0);
   B.AddStop(C, 0.5);
-  B.AddStop(C.Lighten(0.8), 1);
+  B.AddStop(C, 0.75);
+  if C.Desaturate(1).Red > 127 then
+    B.AddStop(C.Darken(0.3), 1)
+  else
+    B.AddStop(C.Lighten(0.3), 1);
   Surface.FillRect(B, R);
 end;
 

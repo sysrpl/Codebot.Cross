@@ -20,8 +20,8 @@ uses
   Codebot.Interop.Windows.ImageCodecs, Codebot.Interop.Windows.Msxml, 
   Codebot.Networking.Ftp, Codebot.Networking.Storage, Codebot.Networking.Unix, 
   Codebot.Networking.Web, Codebot.System, Codebot.Text.Formats, 
-  Codebot.Text.Json, Codebot.Text, Codebot.Text.Xml, Codebot.IO.SerialPort, 
-  LazarusPackageIntf;
+  Codebot.Text.Json, Codebot.Text, Codebot.Text.Xml, Codebot.Text.Store, 
+  Codebot.IO.SerialPort, LazarusPackageIntf;
 
 implementation
 

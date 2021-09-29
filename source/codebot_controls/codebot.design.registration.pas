@@ -27,7 +27,8 @@ uses
   Codebot.Controls.Containers,
   Codebot.Controls.Colors,
   Codebot.Controls.Scrolling,
-  Codebot.Controls.Sliders;
+  Codebot.Controls.Sliders,
+  Codebot.Text.Store;
 
 procedure Register;
 
@@ -43,7 +44,8 @@ begin
     TRenderImage, TRenderBox,
     TIndeterminateProgress, TStepBubbles,
     THuePicker, TSaturationPicker, TBanner, TContentGrid,
-    TSizingPanel, THeaderBar, TDrawList, TDrawTextList, TDetailsList, TAnimationTimer]);
+    TSizingPanel, THeaderBar, TDrawList, TDrawTextList, TDetailsList, TAnimationTimer,
+    TTextStorage]);
   { Property editors }
   {$ifndef lclgtk2}
   RegisterPropertyEditor(TypeInfo(Integer), TThinButton, 'ImageIndex',

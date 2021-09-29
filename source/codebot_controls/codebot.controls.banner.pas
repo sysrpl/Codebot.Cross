@@ -605,10 +605,12 @@ begin
   FTitle.ParentFont := False;
   FTitle.Font.Size := 20;
   FTitle.Font.Style := [fsBold];
+  FTitle.FFont.Color := clWindowText;
   FTitle.OnChange.Add(PartChange);
   FTitleSub := TBannerText.Create;
   FTitleSub.Text := 'Your description here';
   FTitleSub.ParentFont := True;
+  FTitleSub.FFont.Color := clWindowText;
   FTitleSub.OnChange.Add(PartChange);
   FOptions := [boReanchor, boBannerShadow, boFooterShadow, boFooterGrip];
 end;

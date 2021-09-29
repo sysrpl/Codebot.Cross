@@ -315,6 +315,7 @@ var
   {$ifdef windows}
   Mode: LongWord;
   {$endif}
+  I: LongInt;
 begin
   Close;
   if FSecure then
@@ -343,7 +344,7 @@ begin
   FState := ssClient;
   if FSecure then
   begin
-    FSSLContext := SSL_CTX_new(SSLv23_client_method);
+    FSSLContext := SSL_CTX_new(TLSv1_2_client_method);
     if FSSLContext = nil then
     begin
       Close;
@@ -360,8 +361,12 @@ begin
       Close;
       Exit(False);
     end;
+    I := SSL_connect(FSSLSocket);
     if SSL_connect(FSSLSocket) <> 1 then
     begin
+      WriteLn(I);
+      SSL_get_error(FSSLContext, I);
+      WriteLn(I);
       Close;
       Exit(False);
     end;

@@ -9,7 +9,7 @@
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
-    <Files Count="36">
+    <Files Count="37">
       <Item1>
         <Filename Value="codebot.animation.pas"/>
         <UnitName Value="Codebot.Animation"/>
@@ -152,9 +152,13 @@
         <Type Value="Include"/>
       </Item35>
       <Item36>
-        <Filename Value="codebot.io.serialport.pas"/>
-        <UnitName Value="codebot.io.serialport"/>
+        <Filename Value="codebot.text.store.pas"/>
+        <UnitName Value="Codebot.Text.Store"/>
       </Item36>
+      <Item37>
+        <Filename Value="codebot.io.serialport.pas"/>
+        <UnitName Value="Codebot.IO.SerialPort"/>
+      </Item37>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">

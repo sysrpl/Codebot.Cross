@@ -2243,9 +2243,10 @@ begin
       SetBuffer(C);
     end;
     Premultiply;
+    Surface;
     FNeedsFlip := True;
     FlipPixels;
-    Dirty := True;
+    Dirty := False;
   end;
 end;
 
@@ -2305,9 +2306,11 @@ begin
     S := ExtractFileExt(FileName);
     FFormat := StrToImageFormat(S);
     S := ImageFormatToStr(FFormat);
-    if not Dirty then
-      FlipPixels;
+    FNeedsFlip := True;
+    FlipPixels;
     gdk_pixbuf_save(FBuffer, PChar(FileName), PChar(S), nil);
+    FNeedsFlip := True;
+    FlipPixels;
   end;
 end;
 
@@ -2331,9 +2334,11 @@ begin
     if not (FFormat in [fmBmp, fmJpeg, fmPng, fmTiff]) then
       FFormat := fmPng;
     S := ImageFormatToStr(FFormat);
-    if not Dirty then
-      FlipPixels;
+    FNeedsFlip := True;
+    FlipPixels;
     gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil);
+    FNeedsFlip := True;
+    FlipPixels;
     WriteLn('bitmap save complete');
   end;
 end;
