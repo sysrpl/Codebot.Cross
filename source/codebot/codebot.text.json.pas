@@ -26,7 +26,7 @@ type
 { TJsonNodeKind is 1 of 6 possible values described below }
 
   TJsonNodeKind = (
-    { Object kind curly braces }
+    { Object such as Curly Braces }
     nkObject,
     { Array such as [ ] }
     nkArray,
@@ -130,6 +130,8 @@ type
     function Add(const Name: string; B: Boolean): TJsonNode; overload;
     function Add(const Name: string; const N: Double): TJsonNode; overload;
     function Add(const Name: string; const S: string): TJsonNode; overload;
+    { Convert to an array and add an item }
+    function Add: TJsonNode; overload;
     { Delete a child node by index or name }
     procedure Delete(Index: Integer); overload;
     procedure Delete(const Name: string); overload;
@@ -142,8 +144,14 @@ type
     function Child(Index: Integer): TJsonNode; overload;
     { Get a child node by name. If no node is found nil will be returned. }
     function Child(const Name: string): TJsonNode; overload;
+    { Search for a node using a path string and return true if exists }
+    function Exists(const Path: string): Boolean;
     { Search for a node using a path string }
-    function Find(const Path: string): TJsonNode;
+    function Find(const Path: string): TJsonNode; overload;
+    { Search for a node using a path string and return true if exists }
+    function Find(const Path: string; out Node: TJsonNode): Boolean; overload;
+    { Force a series of nodes to exist and return the end node }
+    function Force(const Path: string): TJsonNode;
     { Format the node and all its children as json }
     function ToString: string; override;
     { Root node is read only. A node the root when it has no parent. }
@@ -319,24 +327,28 @@ begin
       if C^ = '\' then
       begin
         Inc(C);
-        if C^ = '"' then
-          Inc(C)
-        else if C^ = 'u' then
+        if C^ < ' ' then
+        begin
+          T.Tail := C;
+          T.Kind := tkError;
+          Exit(False);
+        end;
+        if C^ = 'u' then
           if not ((C[1] in Hex) and (C[2] in Hex) and (C[3] in Hex) and (C[4] in Hex)) then
           begin
             T.Tail := C;
             T.Kind := tkError;
             Exit(False);
           end;
+      end
+      else if C^ = '"' then
+      begin
+        Inc(C);
+        T.Tail := C;
+        T.Kind := tkString;
+        Exit(True);
       end;
-    until C^ in [#0, #10, #13, '"'];
-    if C^ = '"' then
-    begin
-      Inc(C);
-      T.Tail := C;
-      T.Kind := tkString;
-      Exit(True);
-    end;
+    until C^ in [#0, #10, #13];
     T.Tail := C;
     T.Kind := tkError;
     Exit(False);
@@ -849,6 +861,11 @@ begin
   FValue := FloatToStr(Value);
 end;
 
+function TJsonNode.Add: TJsonNode;
+begin
+  Result := AsArray.Add('');
+end;
+
 function TJsonNode.Add(Kind: TJsonNodeKind; const Name, Value: string): TJsonNode;
 var
   S: string;
@@ -997,6 +1014,11 @@ begin
     end;
 end;
 
+function TJsonNode.Exists(const Path: string): Boolean;
+begin
+  Result := Find(Path) <> nil;
+end;
+
 function TJsonNode.Find(const Path: string): TJsonNode;
 var
   N: TJsonNode;
@@ -1042,6 +1064,78 @@ begin
       begin
         SetString(S, A, B - A);
         N := N.Child(S);
+      end;
+    end;
+  end;
+  Result := N;
+end;
+
+function TJsonNode.Find(const Path: string; out Node: TJsonNode): Boolean;
+begin
+  Node := Find(Path);
+  Result := Node <> nil;
+end;
+
+function TJsonNode.Force(const Path: string): TJsonNode;
+var
+  N: TJsonNode;
+  A, B: PChar;
+  S: string;
+begin
+  Result := nil;
+  // AsObject;
+  if Path = '' then
+  begin
+    N := Child('');
+    if N = nil then
+      N := Add('');
+    Exit(N);
+  end;
+  if Path[1] = '/' then
+  begin
+    N := Self;
+    while N.Parent <> nil do
+      N := N.Parent;
+  end
+  else
+    N := Self;
+  A := PChar(Path);
+  if A^ = '/' then
+  begin
+    Inc(A);
+    if A^ = #0 then
+      Exit(N);
+  end;
+  if A^ = #0 then
+  begin
+    N := Child('');
+    if N = nil then
+      N := Add('');
+    Exit(N);
+  end;
+  B := A;
+  while B^ > #0 do
+  begin
+    if B^ = '/' then
+    begin
+      SetString(S, A, B - A);
+      if N.Child(S) = nil then
+        N := N.Add(S)
+      else
+        N := N.Child(S);
+      A := B + 1;
+      B := A;
+    end
+    else
+    begin
+      Inc(B);
+      if B^ = #0 then
+      begin
+        SetString(S, A, B - A);
+        if N.Child(S) = nil then
+          N := N.Add(S)
+        else
+          N := N.Child(S);
       end;
     end;
   end;
@@ -1240,10 +1334,10 @@ end;
 
 { Convert a json string to a pascal string }
 
-function UnicodeToString(C: LongWord): string;
+function UnicodeToString(C: LongWord): string; inline;
 begin
   if C = 0 then
-    Result := ''
+    Result := #0
   else if C < $80 then
     Result := Chr(C)
   else if C < $800 then
@@ -1259,10 +1353,10 @@ begin
     Result := '';
 end;
 
-function UnicodeToSize(C: LongWord): Integer;
+function UnicodeToSize(C: LongWord): Integer; inline;
 begin
   if C = 0 then
-    Result := 0
+    Result := 1
   else if C < $80 then
     Result := 1
   else if C < $800 then
@@ -1273,6 +1367,26 @@ begin
     Result := 4
   else
     Result := 0;
+end;
+
+function HexToByte(C: Char): Byte; inline;
+const
+  Zero = Ord('0');
+  UpA = Ord('A');
+  LoA = Ord('a');
+begin
+  if C < 'A' then
+    Result := Ord(C) - Zero
+  else if C < 'a' then
+    Result := Ord(C) - UpA + 10
+  else
+    Result := Ord(C) - LoA + 10;
+end;
+
+function HexToInt(A, B, C, D: Char): Integer; inline;
+begin
+  Result := HexToByte(A) shl 12 or HexToByte(B) shl 8 or HexToByte(C) shl 4 or
+    HexToByte(D);
 end;
 
 function JsonStringDecode(const S: string): string;
@@ -1296,7 +1410,7 @@ function JsonStringDecode(const S: string): string;
         begin
           if (C[1] in Hex) and (C[2] in Hex) and (C[3] in Hex) and (C[4] in Hex) then
           begin
-            J := UnicodeToSize(StrToInt('$' + C[1] + C[2] + C[3] + C[4]));
+            J := UnicodeToSize(HexToInt(C[1], C[2], C[3], C[4]));
             if J = 0 then
               Exit(0);
             Inc(I, J - 1);
@@ -1346,7 +1460,7 @@ begin
       end
       else if C^ = 'u' then
       begin
-        H := UnicodeToString(StrToInt('$' + C[1] + C[2] + C[3] + C[4]));
+        H := UnicodeToString(HexToInt(C[1], C[2], C[3], C[4]));
         for J := 1 to Length(H) - 1 do
         begin
           R[I] := H[J];

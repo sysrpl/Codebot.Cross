@@ -10,6 +10,9 @@
 unit Codebot.Networking.Web;
 
 {$i codebot.inc}
+{$ifdef linux}
+  {$define use_curl}
+{$endif}
 
 interface
 
@@ -17,7 +20,8 @@ uses
 	Classes,
 	SysUtils,
   Codebot.System,
-  Codebot.Networking;
+  Codebot.Networking
+  {$ifdef use_curl}, LibCurl{$endif};
 
 { TUrl parses urls such as https://example.com:8080/resource and
   captures the component values
@@ -175,6 +179,12 @@ function WebGet(const Url: TUrl; out Response: string; const UserAgent: string =
 function WebPost(const Url: TUrl; Args: TNamedStrings; Response: TStream; const UserAgent: string = ''): Boolean; overload;
 { Simplified HTTP POST with response output to a string }
 function WebPost(const Url: TUrl; Args: TNamedStrings; out Response: string; const UserAgent: string = ''): Boolean; overload;
+{$ifdef use_curl}
+{ Use curl to HTTP GET with response output to a stream }
+function CurlGet(const Url: string; Response: TStream; const UserAgent: string = ''): Boolean; overload;
+{ Use curl to HTTP GET with response output to a string }
+function CurlGet(const Url: string; out Response: string; const UserAgent: string = ''): Boolean; overload;
+{$endif}
 
 const
   ContentNone  = '';
@@ -924,6 +934,74 @@ begin
     Request.Free;
   end;
 end;
+
+{$ifdef use_curl}
+function CurlWriteStream(Ptr: PByte; MemberSize, MemberCount: UIntPtr; Response: TStream): UIntPtr; cdecl;
+begin
+  Result := MemberSize * MemberCount;
+  Response.Write(Ptr^, Result);
+end;
+
+function CurlGet(const Url: string; Response: TStream; const UserAgent: string = ''): Boolean;
+var
+  Curl: PCURL;
+begin
+  Result := False;
+  if Url = '' then
+    Exit;
+  if Response = nil then
+    Exit;
+  Curl := curl_easy_init();
+  if Curl = nil then
+    Exit;
+  try
+    curl_easy_setopt(Curl, CURLOPT_URL, [PChar(Url)]);
+    if UserAgent <> '' then
+      curl_easy_setopt(Curl, CURLOPT_USERAGENT, [PChar(UserAgent)]);
+    curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, [@CurlWriteStream]);
+    curl_easy_setopt(Curl, CURLOPT_WRITEDATA, [Pointer(Response)]);
+    curl_easy_setopt(Curl, CURLOPT_SSL_VERIFYPEER, [0]);
+    curl_easy_setopt(Curl, CURLOPT_SSL_VERIFYHOST, [0]);
+    Result := curl_easy_perform(Curl) = CURLE_OK;
+  finally
+    curl_easy_cleanup(Curl);
+  end;
+end;
+
+function CurlWriteString(Ptr: PChar; MemberSize, MemberCount: UIntPtr; var Response: string): UIntPtr; cdecl;
+var
+  S: string;
+begin
+  SetString(S, Ptr, MemberSize * MemberCount);
+  Response := Response + S;
+  Result := MemberSize * MemberCount;
+end;
+
+function CurlGet(const Url: string; out Response: string; const UserAgent: string = ''): Boolean;
+var
+  Curl: PCURL;
+begin
+  Response := '';
+  Result := False;
+  if Url = '' then
+    Exit;
+  Curl := curl_easy_init();
+  if Curl = nil then
+    Exit;
+  try
+    curl_easy_setopt(Curl, CURLOPT_URL, [PChar(Url)]);
+    if UserAgent <> '' then
+      curl_easy_setopt(Curl, CURLOPT_USERAGENT, [PChar(UserAgent)]);
+    curl_easy_setopt(Curl, CURLOPT_WRITEFUNCTION, [@CurlWriteString]);
+    curl_easy_setopt(Curl, CURLOPT_WRITEDATA, [@Response]);
+    curl_easy_setopt(Curl, CURLOPT_SSL_VERIFYPEER, [0]);
+    curl_easy_setopt(Curl, CURLOPT_SSL_VERIFYHOST, [0]);
+    Result := curl_easy_perform(Curl) = CURLE_OK;
+  finally
+    curl_easy_cleanup(Curl);
+  end;
+end;
+{$endif}
 
 end.
 

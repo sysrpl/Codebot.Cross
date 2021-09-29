@@ -110,9 +110,13 @@ var
   SSL_library_init: function: LongInt; cdecl;
   SSL_load_error_strings: procedure; cdecl;
   SSLv23_server_method: function: TSSLMethod; cdecl;
-  SSLv23_client_method: function: TSSLMethod; cdecl;
 	SSLv3_server_method: function: TSSLMethod; cdecl;
+  SSLv23_client_method: function: TSSLMethod; cdecl;
 	SSLv3_client_method: function: TSSLMethod; cdecl;
+	TLSv1_client_method: function: TSSLMethod; cdecl;
+	TLSv1_1_client_method: function: TSSLMethod; cdecl;
+	TLSv1_2_client_method: function: TSSLMethod; cdecl;
+	DTLSv1_client_method: function: TSSLMethod; cdecl;
   SSL_CTX_new: function(method: TSSLMethod): TSSLCtx; cdecl;
   SSL_CTX_free: procedure(context: TSSLCtx); cdecl;
   SSL_new: function(context: TSSLCtx): TSSL; cdecl;
@@ -244,9 +248,13 @@ begin
     TryLoad('SSL_library_init', @SSL_library_init) and
     TryLoad('SSL_load_error_strings', @SSL_load_error_strings) and
 		TryLoad('SSLv23_server_method', @SSLv23_server_method) and
-		TryLoad('SSLv23_client_method', @SSLv23_client_method) and
     TryLoad('SSLv3_server_method', @SSLv3_server_method) and
+		TryLoad('SSLv23_client_method', @SSLv23_client_method) and
     TryLoad('SSLv3_client_method', @SSLv3_client_method) and
+    TryLoad('TLSv1_client_method', @TLSv1_client_method) and
+    TryLoad('TLSv1_1_client_method', @TLSv1_1_client_method) and
+    TryLoad('TLSv1_2_client_method', @TLSv1_2_client_method) and
+    TryLoad('DTLSv1_client_method', @DTLSv1_client_method) and
     TryLoad('SSL_CTX_new', @SSL_CTX_new) and
     TryLoad('SSL_CTX_free', @SSL_CTX_free) and
     TryLoad('SSL_new', @SSL_new) and
