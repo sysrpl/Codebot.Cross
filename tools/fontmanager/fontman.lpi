@@ -25,6 +25,9 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="codebot_controls"/>
+      </Item>
+      <Item>
         <PackageName Value="codebot"/>
       </Item>
       <Item>
@@ -39,7 +42,8 @@
       <Unit>
         <Filename Value="main.pas"/>
         <IsPartOfProject Value="True"/>
-        <ComponentName Value="Form1"/>
+        <ComponentName Value="MaterialIconForm"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="Main"/>
       </Unit>
@@ -47,6 +51,11 @@
         <Filename Value="fonttools.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="FontTools"/>
+      </Unit>
+      <Unit>
+        <Filename Value="fontdata.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="FontData"/>
       </Unit>
     </Units>
   </ProjectOptions>

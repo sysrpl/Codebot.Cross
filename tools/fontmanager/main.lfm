@@ -1,8 +1,101 @@
-object Form1: TForm1
+object MaterialIconForm: TMaterialIconForm
   Left = 325
-  Height = 240
+  Height = 444
   Top = 250
-  Width = 320
-  Caption = 'Form1'
-  LCLVersion = '2.1.0.0'
+  Width = 787
+  Caption = 'Material Icons'
+  ClientHeight = 444
+  ClientWidth = 787
+  DesignTimePPI = 106
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  object GlyphList: TDrawList
+    Left = 8
+    Height = 424
+    Top = 8
+    Width = 240
+    Anchors = [akTop, akLeft, akBottom]
+    BorderStyle = bsSingle
+    DesktopFont = True
+    HotTrack = False
+    ItemHeight = 38
+    MultiSelect = False
+    ParentColor = False
+    TabOrder = 2
+    OnDrawItem = GlyphListDrawItem
+    OnSelectItem = GlyphListSelectItem
+  end
+  object SearchLabel: TLabel
+    Left = 256
+    Height = 17
+    Top = 72
+    Width = 44
+    Caption = 'Name:'
+    ParentColor = False
+  end
+  object NameEdit: TEdit
+    Left = 256
+    Height = 28
+    Top = 96
+    Width = 384
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 1
+  end
+  object SearchEdit: TEdit
+    Left = 256
+    Height = 28
+    Top = 32
+    Width = 520
+    Anchors = [akTop, akLeft, akRight]
+    OnChange = SearchEditChange
+    OnKeyDown = SearchEditKeyDown
+    TabOrder = 0
+  end
+  object NameLabel: TLabel
+    Left = 256
+    Height = 17
+    Top = 8
+    Width = 49
+    Caption = 'Search:'
+    ParentColor = False
+  end
+  object CharEdit: TEdit
+    Left = 648
+    Height = 29
+    Top = 96
+    Width = 128
+    Anchors = [akTop, akRight]
+    Font.Height = -15
+    Font.Name = 'Material Design Icons'
+    ParentFont = False
+    TabOrder = 3
+  end
+  object CharLabel: TLabel
+    Left = 648
+    Height = 17
+    Top = 72
+    Width = 70
+    Anchors = [akTop, akRight]
+    Caption = 'Character:'
+    ParentColor = False
+  end
+  object GlyphGrid: TContentGrid
+    Left = 256
+    Height = 296
+    Top = 136
+    Width = 520
+    DefColWidth = 50
+    DefRowHeight = 50
+    ColCount = 10
+    RowCount = 200
+    OnDrawBackground = GlyphGridDrawBackground
+    OnSelection = GlyphGridSelection
+    OnDrawCell = GlyphGridDrawCell
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BorderStyle = bsSingle
+    Color = clWindow
+    ParentColor = False
+    TabOrder = 4
+    UseDockManager = False
+  end
 end
