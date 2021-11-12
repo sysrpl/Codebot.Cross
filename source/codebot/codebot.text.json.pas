@@ -26,7 +26,7 @@ type
 { TJsonNodeKind is 1 of 6 possible values described below }
 
   TJsonNodeKind = (
-    { Object such as Curly Braces }
+    { Object such as curly braces }
     nkObject,
     { Array such as [ ] }
     nkArray,
@@ -58,18 +58,14 @@ type
   You should only create and free the root node of your document. The root
   node will manage the lifetime of all children through methods such as Add,
   Delete, and Clear.
-
   When you create a TJsonNode node it will have no parent and is considered to
   be the root node. The root node must be either an array or an object. Attempts
   to convert a root to anything other than array or object will raise an
   exception.
-
   Note: The parser supports unicode by converting unicode characters escaped as
   values such as \u20AC. If your json string has an escaped unicode character it
   will be unescaped when converted to a pascal string.
-
   See also:
-
   JsonStringDecode to convert a JSON string to a normal string
   JsonStringEncode to convert a normal string to a JSON string }
 
@@ -123,7 +119,6 @@ type
       name parameter will be discarded. If the current node is not an array or
       object the Add methods will convert the node to an object and discard
       its current value.
-
       Note: If the current node is an object then adding an existing name will
       overwrite the matching child node instead of adding. }
     function Add(const Name: string; K: TJsonNodeKind = nkObject): TJsonNode; overload;
@@ -139,7 +134,6 @@ type
     procedure Clear;
     { Get a child node by index. EJsonException is raised if node is not an
       array or object or if the index is out of bounds.
-
       See also: Count }
     function Child(Index: Integer): TJsonNode; overload;
     { Get a child node by name. If no node is found nil will be returned. }
@@ -159,7 +153,6 @@ type
     { Parent node is read only }
     property Parent: TJsonNode read FParent;
     { Kind can also be changed using the As methods.
-
       Note: Changes to Kind cause Value to be reset to a default value. }
     property Kind: TJsonNodeKind read FKind write SetKind;
     { Name is unique within the scope }
@@ -171,7 +164,6 @@ type
     property Count: Integer read GetCount;
     { AsJson is the more efficient version of Value. Text returned from AsJson
       is the most compact representation of the node in json form.
-
       Note: If you are writing a services to transmit or receive json data then
       use AsJson. If you want friendly human readable text use Value. }
     property AsJson: string read GetAsJson write Parse;
@@ -1546,3 +1538,4 @@ begin
 end;
 
 end.
+

@@ -1553,6 +1553,7 @@ begin
           Selection := A;
         end;
     end;
+  Key := 0;
 end;
 
 procedure TContentGrid.MouseDown(Button: TMouseButton; Shift: TShiftState; X,

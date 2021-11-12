@@ -19,7 +19,7 @@ type
 
 { TTextureData }
 
-  TTextureData = record
+(*  TTextureData = record
     { The rectangle of the bitmap within a larger texture }
     Rect: TRectI;
     { The texture coordinates derived from rect above and the texture size }
@@ -47,11 +47,11 @@ type
     Bitmap: PByte;
     { Texture coordinate data useful for hardware rendering }
     TexData: TTextureData;
-  end;
+  end;*)
 
 { IFontStore }
 
-  IFontStore = interface
+  (*IFontStore = interface
   ['{5E90CB46-5680-4841-B99A-FD34AD5141B8}']
     { Load a font store from a file }
     procedure LoadFromFile(const FileName: string);
@@ -79,9 +79,9 @@ type
     property Space: Integer read GetSpace;
     { The y distance in pixels of a newline character }
     property Newline: Integer read GetNewline;
-  end;
+  end;*)
 
-(*type
+type
   TCharacterData = record
     CharCode: TCharCode;
     AdvanceX: Integer;
@@ -125,7 +125,7 @@ type
   end;
 
 
-  IBitmapFont = interface
+  (*IBitmapFont = interface
     ['{13D3B3AC-A724-4909-AB42-B5B470479510}']
     { The clear procedure frees the pixels buffer }
     procedure Clear;
@@ -134,11 +134,11 @@ type
     property Width: Integer read GetWidth;
     property Height: Integer read GetHeight;
 
-  end;
+  end;*)
 
 { TFontStore }
 
-  TFontStore = class
+  {TFontStore = class
   private type
     TFontRange = record
       DontDraw: TFontDraw;
@@ -173,13 +173,13 @@ type
     property Size: Integer read FSize write SetSize;
     property NewLine: Integer read FNewLine;
     property Space: Integer read FSpace;
-  end;
+  end;}
 
-  EFontError = Exception;*)
+  EFontError = Exception;
 
 implementation
 
-(*resourcestring
+resourcestring
   SCouldNotOpenFreeType = 'Could not open free type library';
 
 // The following are some examples of unicode characters
@@ -212,7 +212,7 @@ begin
   inherited Destroy;
 end;
 
-function TFontDraw.Open(const FileName: string): Boolean;
+function TFontDraw.OpenFont(const FileName: string): Boolean;
 begin
   FChanged := True;
   Result := False;
@@ -391,7 +391,7 @@ begin
     FChanged := True;
     FSize := Value;
   end;
-end;*)
+end;
 
 end.
 
