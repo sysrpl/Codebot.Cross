@@ -21,7 +21,7 @@ uses
   Codebot.Networking.Ftp, Codebot.Networking.Storage, Codebot.Networking.Unix, 
   Codebot.Networking.Web, Codebot.System, Codebot.Text.Formats, 
   Codebot.Text.Json, Codebot.Text, Codebot.Text.Xml, Codebot.Text.Store, 
-  Codebot.IO.SerialPort, LazarusPackageIntf;
+  Codebot.IO.SerialPort, Codebot.Unique, LazarusPackageIntf;
 
 implementation
 

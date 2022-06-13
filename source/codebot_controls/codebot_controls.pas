@@ -14,8 +14,7 @@ uses
   Codebot.Controls.Sliders, Codebot.Controls.Tooltips, Codebot.Debug, 
   Codebot.Forms.Floating, Codebot.Forms.Management, Codebot.Forms.Popup, 
   Codebot.Forms.Widget, Codebot.Input.Hotkeys, Codebot.Input.MouseMonitor, 
-  Codebot.Interop.Linux.NetWM, Codebot.Unique, Codebot.Controls.Extras, 
-  LazarusPackageIntf;
+  Codebot.Interop.Linux.NetWM, Codebot.Controls.Extras, LazarusPackageIntf;
 
 implementation
 

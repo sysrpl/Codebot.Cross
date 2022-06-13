@@ -2,19 +2,19 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified September 2019                             *)
+(*  Modified June 2022                                  *)
 (*                                                      *)
 (********************************************************)
 
 { <include docs/codebot.text.json.txt> }
 unit Codebot.Text.Json;
 
-interface
-
 {$i codebot.inc}
 
+interface
+
 uses
-  Classes, SysUtils;
+  SysUtils, Classes;
 
 { EJsonException is the exception type used by TJsonNode. It is thrown
   during parse if the string is invalid json or if an attempt is made to

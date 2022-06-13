@@ -48,6 +48,8 @@ function NewSurface(Control: TWinControl): ISurface; overload;
 function NewBitmap(Width: Integer = 0; Height: Integer = 0): IBitmap;
 { Create a new splash screen }
 function NewSplash: ISplash;
+{ Create a new  bitmap from the screen }
+function NewScreenCapture: IBitmap;
 
 { TSurfaceBitmap is a TGraphic representation of an IBitmap
   See also
@@ -500,6 +502,12 @@ function NewSplash: ISplash;
 begin
   Result := NewSplashCairo;
 end;
+
+function NewScreenCapture: IBitmap;
+begin
+  Result := NewScreenCaptureGtk;
+end;
+
 {$endif}
 {$ifdef windows}
 uses
@@ -1886,9 +1894,6 @@ begin
   BrushNames.Add('Floor Tile', @Brushes.FloorTile);
   BrushNames.Add('Snake Skin', @Brushes.SnakeSkin);
   BrushNames.Add('Pipes', @Brushes.Pipes);
-
-
-
 end;
 
 function StrToBrush(Name: string; Foreground, Background: TColorB; PenWidth: Float = DefPenWidth; BrushSize: Integer = DefBrushSize): IBrush;
@@ -2646,7 +2651,6 @@ end;
 
 class procedure TDefaultTheme.DrawButton(const Rect: TRectI);
 begin
-
 end;
 
 class procedure TDefaultTheme.DrawButtonThin(const Rect: TRectI);
