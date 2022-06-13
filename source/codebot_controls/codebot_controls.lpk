@@ -14,7 +14,7 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="23">
+    <Files Count="22">
       <Item1>
         <Filename Value="codebot.controls.banner.pas"/>
         <UnitName Value="Codebot.Controls.Banner"/>
@@ -92,21 +92,17 @@
         <UnitName Value="Codebot.Interop.Linux.NetWM"/>
       </Item19>
       <Item20>
-        <Filename Value="codebot.unique.pas"/>
-        <UnitName Value="Codebot.Unique"/>
-      </Item20>
-      <Item21>
         <Filename Value="codebot_controls.lpk"/>
         <Type Value="Text"/>
-      </Item21>
-      <Item22>
+      </Item20>
+      <Item21>
         <Filename Value="codebot_controls.pas"/>
         <UnitName Value="codebot_controls"/>
-      </Item22>
-      <Item23>
+      </Item21>
+      <Item22>
         <Filename Value="codebot.controls.extras.pas"/>
         <UnitName Value="Codebot.Controls.Extras"/>
-      </Item23>
+      </Item22>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">

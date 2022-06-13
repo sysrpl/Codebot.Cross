@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified July 2021                                 *)
+(*  Modified June 2022                                  *)
 (*                                                      *)
 (********************************************************)
 
@@ -12,6 +12,9 @@ unit Codebot.IO.SerialPort;
 {$i codebot.inc}
 
 interface
+
+uses
+  SysUtils, Classes, TypInfo;
 
 const
   Baud300 = 300;
@@ -46,6 +49,7 @@ type
     FlowControl: TFlowControl;
     Min: Byte;
     Timeout: Byte;
+    class function Create(const Device: string): TSerialPortOptions; overload; static;
     class function Create(Baud: Integer = Baud9600; DataBits: Integer = Bits8;
       Parity: TParity = prNone): TSerialPortOptions; overload; static;
     function ToString: string;
@@ -58,7 +62,7 @@ type
     FDevice: string;
     FHandle: THandle;
     FReadBuffer: array[0..1023] of Byte;
-    procedure UpdatePort(const Options: TSerialPortOptions);
+    function UpdatePort(const Options: TSerialPortOptions): Boolean;
     procedure CheckOpened;
     function GetOpened: Boolean;
   public
@@ -71,40 +75,15 @@ type
     function ReadBinary(var Buffer; BufferSize: Integer): Integer;
     procedure Write(const S: string);
     procedure WriteBinary(var Buffer; BufferSize: Integer);
+    procedure XOn;
+    procedure XOff;
     property Opened: Boolean read GetOpened;
+    property Device: string read FDevice;
   end;
 
+procedure EnumSerialPorts(Ports: TStrings);
+
 implementation
-
-uses
-  SysUtils,
-  TypInfo;
-
-{ TSerialPortOptions }
-
-class function TSerialPortOptions.Create(Baud: Integer; DataBits: Integer;
-  Parity: TParity): TSerialPortOptions;
-begin
-  Result.Baud := Baud;
-  Result.DataBits := DataBits;
-  Result.Parity := Parity;
-  Result.StopBits := sbOne;
-  Result.FlowControl := [];
-  Result.Min := 0;
-  Result.Timeout := 0;
-end;
-
-function TSerialPortOptions.ToString: string;
-begin
-  Result :=
-    'Baud: ' + IntToStr(Baud) + #10 +
-    'DataBits: ' + IntToStr(DataBits) + #10 +
-    'Parity: ' + GetEnumName(TypeInfo(TParity), Ord(Parity)) + #10 +
-    'StopBits: ' + GetEnumName(TypeInfo(TStopBits), Ord(StopBits)) + #10 +
-    'FlowControl: ' + SetToString(PTypeInfo(TypeInfo(TFlowControl)), Pointer(@FlowControl), True) + #10 +
-    'Min: ' + IntToStr(Min) + #10 +
-    'Timeout: ' + IntToStr(Timeout);
-end;
 
 const
   O_RDWR = $02;
@@ -160,6 +139,9 @@ const
   VTIME = 5;
   VMIN = 6;
 
+  { TCIFLUSH = 0; TCOFLUSH = 1;}
+  TCIOFLUSH = 2;
+
 type
   termios = record
     c_iflag: LongWord;
@@ -184,6 +166,7 @@ function _read(fd: THandle; var buffer; numBytes: Integer): Integer; cdecl; exte
 function _ioctl(fd: THandle; request: DWord; value: Integer): Integer; cdecl; external libc name 'ioctl';
 function _tcgetattr(fd: THandle; out term: TTermios): Integer; cdecl; external libc name 'tcgetattr';
 function _tcsetattr(fd: THandle; actions: Integer; var term: TTermios): Integer; cdecl; external libc name 'tcsetattr';
+function _tcflush(fd: THandle; queue: Integer): Integer; cdecl; external libc name 'tcflush';
 {$else}
 function _open(path: PChar; flags: Integer): Integer;
 begin
@@ -217,6 +200,99 @@ begin
 end;
 {$endif}
 
+{ TSerialPortOptions }
+
+class function TSerialPortOptions.Create(const Device: string): TSerialPortOptions;
+var
+  F: THandle;
+  T: TTermios;
+begin
+  FillChar(Result{%H-}, SizeOf(Result), 0);
+  if not FileExists(Device) then
+    Exit;
+  F := _open(PChar(Device), O_RDWR or O_NOCTTY);
+  if F > 0 then
+  try
+    if _tcgetattr(F, T) = 0 then
+    begin
+      if (T.c_cflag and B230400) = B230400 then
+        Result.Baud := Baud230400
+      else if (T.c_cflag and B115200) = B115200 then
+        Result.Baud := Baud115200
+      else if (T.c_cflag and B57600) = B57600 then
+        Result.Baud := Baud57600
+      else if (T.c_cflag and B38400) = B38400 then
+        Result.Baud := Baud38400
+      else if (T.c_cflag and B19200) = B19200 then
+        Result.Baud := Baud19200
+      else if (T.c_cflag and B9600) = B9600 then
+        Result.Baud := Baud9600
+      else if (T.c_cflag and B4800) = B4800 then
+        Result.Baud := Baud4800
+      else if (T.c_cflag and B2400) = B2400 then
+        Result.Baud := Baud2400
+      else if (T.c_cflag and B1200) = B1200 then
+        Result.Baud := Baud1200
+      else if (T.c_cflag and B300) = B300 then
+        Result.Baud := Baud300
+      else
+        Exit;
+      if (T.c_cflag and CS8) = CS8 then
+        Result.DataBits := Bits8
+      else if (T.c_cflag and CS7) = CS7 then
+        Result.DataBits := Bits7
+      else if (T.c_cflag and CS6) = CS6 then
+        Result.DataBits := Bits6
+      else
+        Result.DataBits := Bits5;
+      if (T.c_cflag and (PARENB or PARODD)) = PARENB or PARODD then
+        Result.Parity := prOdd
+      else if (T.c_cflag and PARENB) = PARENB then
+        Result.Parity := prEven
+      else
+        Result.Parity := prNone;
+      if (T.c_cflag and CSTOPB) = CSTOPB then
+        Result.StopBits := sbTwo
+      else
+        Result.StopBits := sbOne;
+      if (T.c_iflag and IXON) = IXON then
+        Include(Result.FlowControl, fcXOn);
+      if (T.c_iflag and IXOFF) = IXOFF then
+        Include(Result.FlowControl, fcXOff);
+      if (T.c_iflag and CRTSCTS) = CRTSCTS then
+        Include(Result.FlowControl, fcRequestToSend);
+      Result.Timeout := T.c_cc[VTIME] ;
+      Result.Min := T.c_cc[VMIN];
+    end;
+  finally
+    _close(F);
+  end;
+end;
+
+class function TSerialPortOptions.Create(Baud: Integer; DataBits: Integer;
+  Parity: TParity): TSerialPortOptions;
+begin
+  Result.Baud := Baud;
+  Result.DataBits := DataBits;
+  Result.Parity := Parity;
+  Result.StopBits := sbOne;
+  Result.FlowControl := [];
+  Result.Min := 0;
+  Result.Timeout := 0;
+end;
+
+function TSerialPortOptions.ToString: string;
+begin
+  Result :=
+    'Baud: ' + IntToStr(Baud) + #10 +
+    'DataBits: ' + IntToStr(DataBits) + #10 +
+    'Parity: ' + GetEnumName(TypeInfo(TParity), Ord(Parity)) + #10 +
+    'StopBits: ' + GetEnumName(TypeInfo(TStopBits), Ord(StopBits)) + #10 +
+    'FlowControl: ' + SetToString(PTypeInfo(TypeInfo(TFlowControl)), Pointer(@FlowControl), True) + #10 +
+    'Min: ' + IntToStr(Min) + #10 +
+    'Timeout: ' + IntToStr(Timeout);
+end;
+
 { TSerialPort }
 
 constructor TSerialPort.Create(const Device: string);
@@ -244,17 +320,19 @@ begin
   if not FileExists(FDevice) then
     Exit;
   FHandle := _open(PChar(FDevice), O_RDWR or O_NOCTTY);
-  if not Opened then
-    Exit;
-  UpdatePort(Options);
-  Result := True;
+  Result := Opened and UpdatePort(Options);
 end;
 
-procedure TSerialPort.UpdatePort(const Options: TSerialPortOptions);
+function TSerialPort.UpdatePort(const Options: TSerialPortOptions): Boolean;
 var
   T: TTermios;
 begin
-  _tcgetattr(FHandle, T);
+  Result := False;
+  if _tcgetattr(FHandle, T) <> 0 then
+  begin
+    Close;
+    Exit;
+  end;
   T.c_cflag := T.c_cflag or CLOCAL or CREAD;
   T.c_lflag := T.c_lflag and (not (ICANON or ECHO or ECHOE or ECHOK or ECHONL or ISIG or IEXTEN));
   T.c_oflag := T.c_oflag and (not (OPOST or ONLCR or OCRNL));
@@ -283,7 +361,7 @@ begin
     T.c_cflag := T.c_cflag or CS8;
   end;
   if Options.Parity = prOdd then
-      T.c_cflag := T.c_cflag or PARENB or PARODD
+    T.c_cflag := T.c_cflag or PARENB or PARODD
   else if Options.Parity = prEven then
   begin
     T.c_cflag := T.c_cflag and (not PARODD);
@@ -296,14 +374,20 @@ begin
   else
     T.c_cflag := T.c_cflag or CSTOPB;
   if fcXOn in Options.FlowControl then
-      T.c_iflag := T.c_iflag or IXON;
+    T.c_iflag := T.c_iflag or IXON;
   if fcXOff in Options.FlowControl then
-      T.c_iflag := T.c_iflag or IXOFF;
+    T.c_iflag := T.c_iflag or IXOFF;
   if fcRequestToSend in Options.FlowControl then
-      T.c_cflag := T.c_cflag or CRTSCTS;
+    T.c_cflag := T.c_cflag or CRTSCTS;
   T.c_cc[VTIME] := Options.Timeout;
   T.c_cc[VMIN] := Options.Min;
-  _tcsetattr(FHandle, TCSANOW, T);
+  if _tcsetattr(FHandle, TCSANOW, T) <> 0 then
+  begin
+    Close;
+    Exit;
+  end;
+  _tcflush(FHandle, TCIOFLUSH);
+  Result := True;
 end;
 
 procedure TSerialPort.Close;
@@ -314,6 +398,7 @@ begin
     Exit;
   H := FHandle;
   FHandle := 0;
+  _tcflush(H, TCIOFLUSH);
   _close(H);
 end;
 
@@ -361,9 +446,79 @@ begin
   _write(FHandle, Buffer, BufferSize);
 end;
 
+procedure TSerialPort.XOn;
+var
+  B: Byte;
+begin
+  B := $11;
+  WriteBinary(B, 1);
+end;
+
+procedure TSerialPort.XOff;
+var
+  B: Byte;
+begin
+  B := $13;
+  WriteBinary(B, 1);
+end;
+
 function TSerialPort.GetOpened: Boolean;
 begin
   Result := FHandle > 0;
+end;
+
+procedure EnumSerialPorts(Ports: TStrings);
+
+  function CheckPort(const Device: string): Boolean;
+  var
+    F: THandle;
+    T: TTermios;
+  begin
+    Result := False;
+    if not FileExists(Device) then
+      Exit;
+    F := _open(PChar(Device), O_RDWR or O_NOCTTY);
+    if F > 0 then
+    begin
+      Result := _tcgetattr(F, T) = 0;
+      _close(F);
+    end;
+  end;
+
+const
+  MaxPorts = 9;
+var
+  S, D: string;
+  I: Integer;
+begin
+  Ports.BeginUpdate;
+  try
+    Ports.Clear;
+    for I := 0 to MaxPorts do
+    begin
+      S := 'ttyS' + IntToStr(I);
+      D := '/sys/class/tty/' + S + '/device/';
+      if DirectoryExists(D) and (FileExists(D +'/id') or DirectoryExists(D + '/of_node')) then
+      begin
+        S := '/dev/' + S;
+        if CheckPort(S) then
+          Ports.Add(S);
+      end;
+    end;
+    for I := 0 to MaxPorts do
+    begin
+      S := 'ttyUSB' + IntToStr(I);
+      D := '/sys/class/tty/' + S + '/device/tty';
+      if DirectoryExists(D) or DirectoryExists('/sys/bus/usb-serial/devices/' + S) then
+      begin
+        S := '/dev/' + S;
+        if CheckPort(S) then
+          Ports.Add(S);
+      end;
+    end;
+  finally
+    Ports.EndUpdate;
+  end;
 end;
 
 end.

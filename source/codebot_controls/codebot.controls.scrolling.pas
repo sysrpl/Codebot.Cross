@@ -1728,7 +1728,7 @@ begin
   begin
     FScrolling := Value;
     if FScrolling then
-      SetTimer(Handle, ScrollTimer, 60, nil);
+      SetTimer(Handle, ScrollTimer, 100, nil);
   end;
 end;
 
@@ -1843,7 +1843,7 @@ begin
   if Assigned(FOnDrawBackground) then
     FOnDrawBackground(Self, Surface, Rect)
   else
-    FillRectColor(Surface, Rect, CurrentColor);
+    FillRectColor(Surface, Rect, clBackground);
 end;
 
 procedure TCustomDrawList.DrawItem(Index: Integer; var Rect: TRectI;

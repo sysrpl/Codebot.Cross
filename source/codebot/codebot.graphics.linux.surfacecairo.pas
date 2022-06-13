@@ -36,6 +36,7 @@ function NewSurfaceCairo(Control: TWinControl): ISurface; overload;
 function NewBitmapCairo(BitmapBuffer: Pointer): IBitmap; overload;
 function NewBitmapCairo(Width, Height: Integer): IBitmap; overload;
 function NewSplashCairo: ISplash;
+function NewScreenCaptureGtk: IBitmap;
 {$endif}
 
 implementation
@@ -2637,6 +2638,22 @@ end;
 function NewSplashCairo: ISplash;
 begin
   Result := TSplashCairo.Create;
+end;
+
+function NewScreenCaptureGtk: IBitmap;
+var
+  R: PGdkWindow;
+  X, Y, W, H: Integer;
+  B: TBitmapCairo;
+begin
+  R := gdk_get_default_root_window;
+  gdk_window_get_origin(R, @X, @Y);
+  gdk_drawable_get_size(R, @W, @H);
+  Result := NewBitmapCairo(W, H);
+  B := Result as TBitmapCairo;
+  gdk_pixbuf_get_from_drawable(B.FBuffer, R, nil, X, Y, 0, 0, W, H);
+  B.FNeedsFlip := True;
+  B.FlipPixels;
 end;
 {$endif}
 

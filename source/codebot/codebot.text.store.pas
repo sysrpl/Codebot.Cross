@@ -197,6 +197,8 @@ end;
 
 procedure TTextStorage.TextChanged(Sender: TObject);
 begin
+  if csLoading in ComponentState then
+    Exit;
   FJsonChanged := True;
   FXmlChanged := True;
   if FJson <> nil then
