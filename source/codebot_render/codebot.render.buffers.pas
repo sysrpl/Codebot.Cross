@@ -9,10 +9,11 @@ uses
   Codebot.Geometry,
   Codebot.Render.Contexts;
 
+type
+{$define glframebuffer}
+{$ifdef glframebuffer}
 {$region texture buffer}
 { TTextureBuffer is used to render to a texture }
-
-type
   TTextureBuffer = class(TContextManagedObject)
   private
     FFrameBuffer: Integer;
@@ -38,6 +39,7 @@ type
     property Height: Integer read FHeight;
   end;
 {$endregion}
+{$endif}
 
 {$region vertex buffers}
 { TBaseBuffer is the base class for both static and dynamic buffers }
@@ -262,6 +264,7 @@ uses
   Codebot.Render.Shaders,
   Codebot.GLES;
 
+{$ifdef glframebuffer}
 {$region texture buffer}
 { TTextureBuffer }
 
@@ -330,6 +333,7 @@ begin
   Ctx.Identity;
 end;
 {$endregion}
+{$endif}
 
 {$region vertex buffers}
 { TBaseBuffer }

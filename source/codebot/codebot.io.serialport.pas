@@ -13,6 +13,7 @@ unit Codebot.IO.SerialPort;
 
 interface
 
+{$ifdef linux}
 uses
   SysUtils, Classes, TypInfo;
 
@@ -82,9 +83,11 @@ type
   end;
 
 procedure EnumSerialPorts(Ports: TStrings);
+{$endif}
 
 implementation
 
+{$ifdef linux}
 const
   O_RDWR = $02;
   O_NOCTTY = $100;
@@ -520,6 +523,7 @@ begin
     Ports.EndUpdate;
   end;
 end;
+{$endif}
 
 end.
 

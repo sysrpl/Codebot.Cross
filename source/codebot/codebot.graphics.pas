@@ -208,6 +208,13 @@ type
     property OnChange: INotifyDelegate read GetOnChange;
   end;
 
+{ TBitmapHelper }
+
+  TBitmapHelper = class helper for TBitmap
+  public
+    procedure Colorize(Color: TColorB);
+  end;
+
 { Drawing events }
 
   TNotifyIndexEvent = procedure (Sender: TObject; Index: Integer) of object;
@@ -579,6 +586,20 @@ begin
     Result := NewRadialGradientBrushGdi(Rect);
 end;
 
+function NewFont(const FontName: string; FontSize: Integer = 10): IFont;
+var
+  F: TFont;
+begin
+  F := TFont.Create;
+  try
+    F.Name := FontName;
+    F.Size := FontSize;
+    Result := NewFont(F);
+  finally
+    F.Free;
+  end;
+end;
+
 function NewFont(Font: TFont): IFont;
 begin
   if LoadD2D then
@@ -628,6 +649,11 @@ begin
 	else
 		NewBitmapProc := NewBitmapGdiStub;
   Result := NewSplashWin;
+end;
+
+function NewScreenCapture: IBitmap;
+begin
+  Result := nil;
 end;
 {$endif}
 
@@ -1523,6 +1549,40 @@ begin
   else
     FBitmap.Assign(Source);
 end;
+
+{ TBitmapHelper }
+
+procedure TBitmapHelper.Colorize(Color: TColorB);
+var
+  W, H, X, Y: Integer;
+  B: PByte;
+  A: Single;
+begin
+  if Self.PixelFormat <> pf32bit then
+    Exit;
+  W := Self.Width;
+  H := Self.Height;
+  if (W < 1) or (H < 1 ) then
+    Exit;
+  Self.BeginUpdate;
+  for Y := 0 to H - 1 do
+  begin
+    B := Self.RawImage.GetLineStart(Y);
+    for X := 0 to W - 1 do
+    begin
+      A := B[3] / 255;
+      B^ := Trunc(Color.Blue * A);
+      Inc(B);
+      B^ := Trunc(Color.Green * A);
+      Inc(B);
+      B^ := Trunc(Color.Red * A);
+      Inc(B);
+      Inc(B);
+    end;
+  end;
+  Self.EndUpdate;
+end;
+
 
 procedure FillRectColor(Surface: ISurface; const Rect: TRectI; Color: TColorB; Radius: Float = 0);
 begin

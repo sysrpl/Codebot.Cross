@@ -4,6 +4,9 @@ unit Codebot.GLES;
 
 interface
 
+uses
+  Dialogs;
+
 type
   GLbitfield = uint32;
   GLboolean = byte;
@@ -547,9 +550,12 @@ function LoadOpenGLES: Boolean;
 const
   LibName =
   {$if defined(windows)}
-  'opengl32.dll'
+  'opengl32.dll';
+var
+  wglGetProcAddress: function (ProcName: PChar): Pointer; stdcall;
+
   {$elseif defined(darwin)}
-  '/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib'
+  '/System/Library/Frameworks/OpenGL.framework/Libraries/libGL.dylib';
   {$else}
   'libGL.so.1';
   {$endif}
@@ -558,8 +564,28 @@ var
 
   function Load(const ProcName: string; out Proc: Pointer): Boolean;
   begin
+    {$if defined(windows)}
+    Proc := wglGetProcAddress(PChar(ProcName));
+    Result := Proc <> nil;
+    if not Result then
+    begin
+      Proc := GetProcAddress(LibHandle, ProcName);
+      Result := Proc <> nil;
+    end;
+    if not Result then
+      ShowMessage(ProcName);
+    {$else}
     Proc := GetProcAddress(LibHandle, ProcName);
     Result := Proc <> nil;
+    {$endif}
+  end;
+
+  function LoadDirect(const ProcName: string; out Proc: Pointer): Boolean;
+  begin
+    Proc := GetProcAddress(LibHandle, ProcName);
+    Result := Proc <> nil;
+    if not Result then
+      ShowMessage(ProcName);
   end;
 
 begin
@@ -570,6 +596,11 @@ begin
   LibHandle := LoadLibrary(LibName);
   if LibHandle = 0 then
     Exit;
+  {$if defined(windows)}
+  @wglGetProcAddress := GetProcAddress(LibHandle, 'wglGetProcAddress');
+  if @wglGetProcAddress = nil then
+    Exit;
+  {$endif}
   LoadedSuccess := Load('glActiveTexture', @glActiveTexture) and
     Load('glAttachShader', @glAttachShader) and
     Load('glBindAttribLocation', @glBindAttribLocation) and
@@ -580,7 +611,7 @@ begin
     Load('glBlendColor', @glBlendColor) and
     Load('glBlendEquation', @glBlendEquation) and
     Load('glBlendEquationSeparate', @glBlendEquationSeparate) and
-    Load('glBlendFunc', @glBlendFunc) and
+    LoadDirect('glBlendFunc', @glBlendFunc) and
     Load('glBlendFuncSeparate', @glBlendFuncSeparate) and
     Load('glBufferData', @glBufferData) and
     Load('glBufferSubData', @glBufferSubData) and

@@ -223,6 +223,7 @@ type
     constructor Create(F: TFont);
     destructor Destroy; override;
     function GetName: string;
+    procedure SetName(const Value: string);
     function GetColor: TColorB;
     procedure SetColor(Value: TColorB);
     function GetQuality: TFontQuality;
@@ -231,7 +232,7 @@ type
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
-    property Name: string read GetName;
+    property Name: string read GetName write SetName;
     property Color: TColorB read GetColor write SetColor;
     property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
@@ -316,6 +317,7 @@ type
     function GetMatrix: IMatrix;
     procedure SetMatrix(Value: IMatrix);
     function GetPath: IPath;
+    function GetHandle: Pointer;
     procedure Flush; virtual;
     procedure Clear(Color: TColorB);
     procedure CopyTo(const Source: TRectF; Surface: ISurface; const Dest: TRectF;
@@ -1008,6 +1010,11 @@ begin
   Result := FFontObject.Name;
 end;
 
+procedure TFontGdi.SetName(const Value: string);
+begin
+  FFontObject.Name := Value;
+end;
+
 function TFontGdi.GetColor: TColorB;
 begin
   Result := FColor;
@@ -1300,6 +1307,11 @@ end;
 function TSurfaceGdi.GetPath: IPath;
 begin
   Result := FPath;
+end;
+
+function TSurfaceGdi.GetHandle: Pointer;
+begin
+  Result := Self;
 end;
 
 procedure TSurfaceGdi.Flush;
