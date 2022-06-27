@@ -15,6 +15,8 @@ type
   EContextError = class(Exception);
   EContextAssetError = class(EContextError);
   EContextCollectionError = class(EContextError);
+  EOpenGLError = class(Exception);
+
   TContextCollection = class;
 
 { TContextManagedObject provides a way to manage the lifetime of objects such as shaders,
@@ -605,7 +607,6 @@ var
   S: string;
   I: Integer;
 begin
-  WriteLn(GetCurrentDir);
   Result := '';
   S := PathCombine(FAssetFolder, FileName);
   I := 0;
