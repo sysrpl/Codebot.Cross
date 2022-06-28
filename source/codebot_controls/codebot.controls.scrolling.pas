@@ -1110,6 +1110,8 @@ end;
 procedure TScrollList.WMKillFocus(var Message: TLMKillFocus);
 begin
   inherited;
+  FMouseCapture := False;
+  FDownIndex := -1;
   Invalidate;
 end;
 
@@ -1728,7 +1730,7 @@ begin
   begin
     FScrolling := Value;
     if FScrolling then
-      SetTimer(Handle, ScrollTimer, 100, nil);
+      SetTimer(Handle, ScrollTimer, 60, nil);
   end;
 end;
 
@@ -1843,7 +1845,7 @@ begin
   if Assigned(FOnDrawBackground) then
     FOnDrawBackground(Self, Surface, Rect)
   else
-    FillRectColor(Surface, Rect, clBackground);
+    FillRectColor(Surface, Rect, CurrentColor);
 end;
 
 procedure TCustomDrawList.DrawItem(Index: Integer; var Rect: TRectI;

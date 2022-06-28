@@ -5,28 +5,28 @@ unit Main;
 interface
 
 uses
-  FontData,
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, LCLType,
-  Codebot.System,
-  Codebot.Text,
-  Codebot.Text.Xml,
-  Codebot.Controls.Scrolling, Codebot.Controls.Grids,
-  Codebot.Graphics,
-  Codebot.Graphics.Types;
+  MaterialFont, Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls,
+  LCLType, LCLIntf, Buttons, ExtCtrls, ComCtrls, Codebot.System, Codebot.Text,
+  Codebot.Text.Xml, Codebot.Controls.Scrolling, Codebot.Controls.Grids,
+  Codebot.Graphics, Codebot.Graphics.Types, ExportFrm;
 
 { TMaterialIconForm }
 
 type
   TMaterialIconForm = class(TForm)
     GlyphList: TDrawList;
-    SearchLabel: TLabel;
+    IdentityLabel: TLabel;
     NameEdit: TEdit;
     SearchEdit: TEdit;
-    NameLabel: TLabel;
+    SearchLabel: TLabel;
     CharEdit: TEdit;
     CharLabel: TLabel;
     GlyphGrid: TContentGrid;
-    procedure Button1Click(Sender: TObject);
+    NextButton: TSpeedButton;
+    PriorButton: TSpeedButton;
+    ExportButton: TSpeedButton;
+    ExportTimer: TTimer;
+    HelpButton: TSpeedButton;
     procedure FormCreate(Sender: TObject);
     procedure GlyphListDrawItem(Sender: TObject; Surface: ISurface;
       Index: Integer; Rect: TRectI; State: TDrawState);
@@ -40,6 +40,13 @@ type
       Rect: TRectI);
     procedure GlyphGridSelection(Sender: TObject; Col, Row: Integer;
       var Allow: Boolean);
+    procedure NextButtonClick(Sender: TObject);
+    procedure PriorButtonClick(Sender: TObject);
+    procedure ExportButtonClick(Sender: TObject);
+    procedure FormShow(Sender: TObject);
+    procedure ExportTimerTimer(Sender: TObject);
+    procedure FormResize(Sender: TObject);
+    procedure HelpButtonClick(Sender: TObject);
   private
     FFont: IFont;
     FGlyph: IFont;
@@ -55,6 +62,7 @@ implementation
 
 { TMaterialIconForm }
 
+{$ifdef convert}
 function UpConvert(A, B: string): string;
 var
   NeedsUp: Boolean;
@@ -93,7 +101,7 @@ begin
   Strings.Add('  Icons: array of string = [');
   Names :=  TStringList.Create;;
   Doc := DocumentCreate;
-  Doc.Load('/home/gigauser/tmp/maps.xml');
+  Doc.Load('/home/user/tmp/maps.xml');
   A := '   ';
   I := 0;
   for N in Doc.Force('maps') .Nodes do
@@ -137,17 +145,26 @@ begin
   end;
   if A <> '   ' then
     Strings.Add(A);
-  Strings.SaveToFile('/home/gigauser/tmp/maps.pas');
+  Strings.SaveToFile('/home/user/tmp/maps.pas');
   Strings.Free;
   Names.Free;
 end;
-
-procedure TMaterialIconForm.Button1Click(Sender: TObject);
-begin
-end;
+{$endif}
 
 procedure TMaterialIconForm.FormCreate(Sender: TObject);
 begin
+  ClientWidth := GlyphGrid.Left + GlyphGrid.Width + 8;
+  ClientHeight := GlyphGrid.Top + GlyphGrid.Height + 8;
+  GlyphList.Anchors := [akLeft, akTop, akBottom];
+  SearchEdit.Anchors := [akLeft, akTop, akRight];
+  NextButton.Anchors := [akTop, akRight];
+  PriorButton.Anchors := [akTop, akRight];
+  ExportButton.Anchors := [akTop, akRight];
+  HelpButton.Anchors := [akTop, akRight];
+  NameEdit.Anchors := [akLeft, akTop, akRight];
+  CharLabel.Anchors := [akTop, akRight];
+  CharEdit.Anchors := [akTop, akRight];
+  GlyphGrid.Anchors := [akLeft, akTop, akRight, akBottom];
   GlyphList.Count := Length(MaterialGlyphs);
   GlyphGrid.RowCount := Length(MaterialGlyphs) div GlyphGrid.ColCount + 1;
 end;
@@ -214,54 +231,17 @@ end;
 
 procedure TMaterialIconForm.SearchEditKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
-var
-  S: string;
-  I: Integer;
 begin
   if Key = VK_DOWN then
-  begin
-    S := SearchEdit.Text;
-    S := S.Trim;
-    for I := GlyphList.ItemIndex + 1 to High(MaterialGlyphs) do
-      if MaterialGlyphs[I].Contains(S, True) then
-      begin
-        GlyphList.ItemIndex := I;
-        GlyphList.TopIndex := I;
-        Exit;
-      end;
-    for I := 0 to GlyphList.ItemIndex - 1 do
-      if MaterialGlyphs[I].Contains(S, True) then
-      begin
-        GlyphList.ItemIndex := I;
-        GlyphList.TopIndex := I;
-        Exit;
-      end;
-  end;
-  if Key = VK_UP then
-  begin
-    S := SearchEdit.Text;
-    S := S.Trim;
-    for I := GlyphList.ItemIndex - 1 downto 0 do
-      if MaterialGlyphs[I].Contains(S, True) then
-      begin
-        GlyphList.ItemIndex := I;
-        GlyphList.TopIndex := I;
-        Exit;
-      end;
-    for I := High(MaterialGlyphs) downto GlyphList.ItemIndex + 1 do
-      if MaterialGlyphs[I].Contains(S, True) then
-      begin
-        GlyphList.ItemIndex := I;
-        GlyphList.TopIndex := I;
-        Exit;
-      end;
-  end;
+    NextButton.Click
+  else if Key = VK_UP then
+    PriorButton.Click;
 end;
 
 procedure TMaterialIconForm.GlyphGridDrawBackground(Sender: TObject;
   Surface: ISurface; Rect: TRectI);
 begin
-  Surface.FillRect(NewBrush(Self.CurrentColor), Rect);
+  GlyphGrid.DrawRectState(Surface, Rect, []);
 end;
 
 procedure TMaterialIconForm.GlyphGridSelection(Sender: TObject; Col,
@@ -278,6 +258,89 @@ begin
   end;
 end;
 
+procedure TMaterialIconForm.NextButtonClick(Sender: TObject);
+var
+  S: string;
+  I: Integer;
+begin
+  S := SearchEdit.Text;
+  S := S.Trim;
+  for I := GlyphList.ItemIndex + 1 to High(MaterialGlyphs) do
+    if MaterialGlyphs[I].Contains(S, True) then
+    begin
+      GlyphList.ItemIndex := I;
+      GlyphList.TopIndex := I;
+      Exit;
+    end;
+  for I := 0 to GlyphList.ItemIndex - 1 do
+    if MaterialGlyphs[I].Contains(S, True) then
+    begin
+      GlyphList.ItemIndex := I;
+      GlyphList.TopIndex := I;
+      Exit;
+    end;
+end;
+
+procedure TMaterialIconForm.PriorButtonClick(Sender: TObject);
+var
+  S: string;
+  I: Integer;
+begin
+  S := SearchEdit.Text;
+  S := S.Trim;
+  for I := GlyphList.ItemIndex - 1 downto 0 do
+    if MaterialGlyphs[I].Contains(S, True) then
+    begin
+      GlyphList.ItemIndex := I;
+      GlyphList.TopIndex := I;
+      Exit;
+    end;
+  for I := High(MaterialGlyphs) downto GlyphList.ItemIndex + 1 do
+    if MaterialGlyphs[I].Contains(S, True) then
+    begin
+      GlyphList.ItemIndex := I;
+      GlyphList.TopIndex := I;
+      Exit;
+    end;
+end;
+
+procedure TMaterialIconForm.ExportButtonClick(Sender: TObject);
+begin
+  ExportTimer.Enabled := True;
+end;
+
+procedure TMaterialIconForm.FormShow(Sender: TObject);
+begin
+  NextButton.Top := (SearchEdit.Top + SearchEdit.Height div 2) - NextButton.Height div 2;
+  PriorButton.Top := NextButton.Top;
+  ExportButton.Top := NextButton.Top;
+  HelpButton.Top := NextButton.Top;
+  OnShow := nil;
+end;
+
+procedure TMaterialIconForm.ExportTimerTimer(Sender: TObject);
+var
+  I: Integer;
+begin
+  ExportTimer.Enabled := False;
+  I := GlyphList.ItemIndex;
+  if I < 0 then
+    Exit;
+  ShowExport(I);
+end;
+
+procedure TMaterialIconForm.FormResize(Sender: TObject);
+begin
+  GlyphGrid.ColCount := (GlyphGrid.ClientWidth - 5) div GlyphGrid.DefColWidth;
+  GlyphGrid.RowCount := Length(MaterialGlyphs) div GlyphGrid.ColCount + 1;
+  GlyphListSelectItem(GlyphList);
+end;
+
+procedure TMaterialIconForm.HelpButtonClick(Sender: TObject);
+begin
+  OpenURL('https://www.getlazarus.org/apps/maticons/#help');
+end;
+
 procedure TMaterialIconForm.GlyphGridDrawCell(Sender: TObject;
   Surface: ISurface; Col, Row: Integer; Rect: TRectI; State: TDrawState);
 var
@@ -291,7 +354,7 @@ begin
     FLargeGlyph := NewFont(CharEdit.Font);
     FLargeGlyph.Size := 30;
   end;
-  DrawRectState(Surface, Rect, State);
+  GlyphGrid.DrawRectState(Surface, Rect, State);
   I := Col + Row * GlyphGrid.ColCount;
   if I < Length(MaterialGlyphs) then
   begin
@@ -313,7 +376,7 @@ begin
     FGlyph := NewFont(CharEdit.Font);
     FGlyph.Size := 24;
   end;
-  DrawRectState(Surface, Rect, State);
+  GlyphList.DrawRectState(Surface, Rect, State);
   S := MaterialGlyphs[Index];
   S :=  S.Split(' ')[1];
   Surface.TextOut(FGlyph, UnicodeToStr(StrToInt(S)), Rect, drLeft);

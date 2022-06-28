@@ -1147,6 +1147,7 @@ begin
     R := RectFromCoord(X, Y);
   FRectSelection.Add(R);
   FRectSelection.Update(Self);
+  FMouseTrack := False;
 end;
 
 procedure TContentGrid.InvalidateCoord(X, Y: Integer);

@@ -654,6 +654,12 @@ function PathExpand(const Path: string): string;
 function PathIncludeDelimiter(const Path: string): string;
 { Exclude the end delimiter for a path }
 function PathExcludeDelimiter(const Path: string): string;
+{ Load a resource data given a name. }
+function ResLoadData(const ResName: string; out Stream: TStream): Boolean;
+{ Load a resource text given a name. }
+function ResLoadText(const ResName: string; out Text: string): Boolean;
+{ Save a resource data to a file given a name. }
+function ResSaveData(const ResName, FileName: string): Boolean;
 { Returns the location of the application configuration file }
 function ConfigAppFile(Global: Boolean; CreateDir: Boolean = False): string;
 { Returns the location of the application configuration directory }
@@ -2962,6 +2968,52 @@ end;
 function PathExcludeDelimiter(const Path: string): string;
 begin
   Result := ExcludeTrailingPathDelimiter(Path);
+end;
+
+function ResLoadData(const ResName: string; out Stream: TStream): Boolean;
+begin
+  Result := False;
+  Stream := nil;
+  if ResName = '' then
+    Exit;
+  if FindResource(Hinstance, PChar(ResName), RT_RCDATA) = 0 then
+    Exit;
+  Stream := TResourceStream.Create(HInstance, ResName, RT_RCDATA);
+  Result := True;
+end;
+
+function ResLoadText(const ResName: string; out Text: string): Boolean;
+var
+  S: TStream;
+  R: TResourceStream absolute S;
+  I: Integer;
+begin
+  Text := '';
+  Result := ResLoadData(ResName, S);
+  if Result then
+  try
+    I := S.Size;
+    if I < 1 then
+      Exit;
+    SetLength(Text, I);
+    Move(R.Memory^, PChar(Text)^, I);
+  finally
+    S.Free;
+  end;
+end;
+
+function ResSaveData(const ResName, FileName: string): Boolean;
+var
+  S: TStream;
+  R: TResourceStream absolute S;
+begin
+  Result := ResLoadData(ResName, S);
+  if Result then
+  try
+    R.SaveToFile(FileName);
+  finally
+    S.Free;
+  end;
 end;
 
 function ConfigAppFile(Global: Boolean; CreateDir: Boolean = False): string;

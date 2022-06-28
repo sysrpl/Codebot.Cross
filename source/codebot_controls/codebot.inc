@@ -11,8 +11,6 @@
 {$z4}
 {$macro on}
 {$WARN 5024 off : Parameter "$1" not used}
-{$WARN 6060 off : Case statement does not handle all possible cases}
-
 
 {$ifdef windows}
 	{$define apicall := stdcall}
