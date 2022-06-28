@@ -2302,8 +2302,24 @@ begin
   end;
 end;
 
+function GetStr(const S: string): PChar;
+var
+  I: Integer;
+begin
+  I := Length(S);
+  Result := GetMem(I + 8);
+  FillChar(Result^, I + 8, 0);
+  Move(PChar(S)^, Result^, I);
+end;
+
+procedure FreeStr(const S: PChar);
+begin
+  FreeMem(S);
+end;
+
 procedure TBitmapCairo.SaveToFile(const FileName: string);
 var
+  A, B: PChar;
   S: string;
 begin
   if not Empty then
@@ -2313,7 +2329,11 @@ begin
     S := ImageFormatToStr(FFormat);
     FNeedsFlip := True;
     FlipPixels;
-    gdk_pixbuf_save(FBuffer, PChar(FileName), PChar(S), nil);
+    A := GetStr(FileName);
+    B := GetStr(S);
+    gdk_pixbuf_save(FBuffer, A, B, nil);
+    FreeStr(B);
+    FreeStr(A);
     FNeedsFlip := True;
     FlipPixels;
   end;
@@ -2330,21 +2350,25 @@ end;
 
 procedure TBitmapCairo.SaveToStream(Stream: TStream);
 var
+  A: PChar;
   S: string;
 begin
   if not Empty then
   begin
-    { For some unknow reason this WriteLn causes the IDE to realize property data }
-    WriteLn('bitmap save start');
+    { For some unknown reason this WriteLn causes the IDE to realize property data }
+    // WriteLn('bitmap save start');
     if not (FFormat in [fmBmp, fmJpeg, fmPng, fmTiff]) then
       FFormat := fmPng;
     S := ImageFormatToStr(FFormat);
     FNeedsFlip := True;
     FlipPixels;
-    gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil);
+    A := GetStr(S);
+    // gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil);
+    gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, A, nil);
+    FreeStr(A);
     FNeedsFlip := True;
     FlipPixels;
-    WriteLn('bitmap save complete');
+    // WriteLn('bitmap save complete');
   end;
 end;
 

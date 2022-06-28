@@ -593,7 +593,6 @@ end;
 procedure TRenderGraphicControl.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   D: TDrawState;
-  P: TPointI;
   I: Integer;
 begin
   if not FMouseDown then

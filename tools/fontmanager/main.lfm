@@ -1,20 +1,23 @@
 object MaterialIconForm: TMaterialIconForm
   Left = 325
-  Height = 444
+  Height = 759
   Top = 250
-  Width = 787
-  Caption = 'Material Icons'
-  ClientHeight = 444
-  ClientWidth = 787
+  Width = 1131
+  Caption = 'Material Design Icons'
+  ClientHeight = 759
+  ClientWidth = 1131
+  Constraints.MinHeight = 300
+  Constraints.MinWidth = 450
   DesignTimePPI = 106
   OnCreate = FormCreate
+  OnResize = FormResize
+  OnShow = FormShow
   Position = poScreenCenter
   object GlyphList: TDrawList
     Left = 8
-    Height = 424
+    Height = 480
     Top = 8
     Width = 240
-    Anchors = [akTop, akLeft, akBottom]
     BorderStyle = bsSingle
     DesktopFont = True
     HotTrack = False
@@ -22,36 +25,38 @@ object MaterialIconForm: TMaterialIconForm
     MultiSelect = False
     ParentColor = False
     TabOrder = 2
+    OnDblClick = ExportButtonClick
     OnDrawItem = GlyphListDrawItem
     OnSelectItem = GlyphListSelectItem
   end
-  object SearchLabel: TLabel
+  object IdentityLabel: TLabel
     Left = 256
     Height = 17
     Top = 72
-    Width = 44
-    Caption = 'Name:'
+    Width = 56
+    Caption = 'Identity:'
     ParentColor = False
   end
   object NameEdit: TEdit
     Left = 256
     Height = 28
     Top = 96
-    Width = 384
-    Anchors = [akTop, akLeft, akRight]
+    Width = 368
     TabOrder = 1
   end
   object SearchEdit: TEdit
     Left = 256
     Height = 28
+    Hint = 'Press (Down Arrow) for next match and (Up Arrow) for previous match'
     Top = 32
-    Width = 520
-    Anchors = [akTop, akLeft, akRight]
+    Width = 376
     OnChange = SearchEditChange
     OnKeyDown = SearchEditKeyDown
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 0
   end
-  object NameLabel: TLabel
+  object SearchLabel: TLabel
     Left = 256
     Height = 17
     Top = 8
@@ -60,30 +65,28 @@ object MaterialIconForm: TMaterialIconForm
     ParentColor = False
   end
   object CharEdit: TEdit
-    Left = 648
+    Left = 640
     Height = 29
-    Top = 96
+    Top = 95
     Width = 128
-    Anchors = [akTop, akRight]
     Font.Height = -15
     Font.Name = 'Material Design Icons'
     ParentFont = False
     TabOrder = 3
   end
   object CharLabel: TLabel
-    Left = 648
+    Left = 640
     Height = 17
     Top = 72
     Width = 70
-    Anchors = [akTop, akRight]
     Caption = 'Character:'
     ParentColor = False
   end
   object GlyphGrid: TContentGrid
     Left = 256
-    Height = 296
+    Height = 352
     Top = 136
-    Width = 520
+    Width = 512
     DefColWidth = 50
     DefRowHeight = 50
     ColCount = 10
@@ -91,11 +94,74 @@ object MaterialIconForm: TMaterialIconForm
     OnDrawBackground = GlyphGridDrawBackground
     OnSelection = GlyphGridSelection
     OnDrawCell = GlyphGridDrawCell
-    Anchors = [akTop, akLeft, akRight, akBottom]
     BorderStyle = bsSingle
     Color = clWindow
     ParentColor = False
     TabOrder = 4
     UseDockManager = False
+    OnDblClick = ExportButtonClick
+  end
+  object NextButton: TSpeedButton
+    Left = 640
+    Height = 32
+    Hint = 'Search for next icon (Down Arrow)'
+    Top = 32
+    Width = 32
+    Caption = '󰁆'
+    Font.Height = -27
+    Font.Name = 'Material Design Icons'
+    OnClick = NextButtonClick
+    ShowHint = True
+    ParentFont = False
+    ParentShowHint = False
+  end
+  object PriorButton: TSpeedButton
+    Left = 672
+    Height = 32
+    Hint = 'Search for previous icon (Up Arrow)'
+    Top = 32
+    Width = 32
+    Caption = '󰁞'
+    Font.Height = -27
+    Font.Name = 'Material Design Icons'
+    OnClick = PriorButtonClick
+    ShowHint = True
+    ParentFont = False
+    ParentShowHint = False
+  end
+  object ExportButton: TSpeedButton
+    Left = 704
+    Height = 32
+    Hint = 'Export icon to a png image file'
+    Top = 32
+    Width = 32
+    Caption = '󰧸'
+    Font.Height = -27
+    Font.Name = 'Material Design Icons'
+    OnClick = ExportButtonClick
+    ShowHint = True
+    ParentFont = False
+    ParentShowHint = False
+  end
+  object HelpButton: TSpeedButton
+    Left = 736
+    Height = 32
+    Hint = 'Open the help documentation'
+    Top = 32
+    Width = 32
+    Caption = '󰋗'
+    Font.Height = -27
+    Font.Name = 'Material Design Icons'
+    OnClick = HelpButtonClick
+    ShowHint = True
+    ParentFont = False
+    ParentShowHint = False
+  end
+  object ExportTimer: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = ExportTimerTimer
+    Left = 184
+    Top = 112
   end
 end

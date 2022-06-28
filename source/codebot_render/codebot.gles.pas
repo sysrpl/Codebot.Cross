@@ -1,3 +1,12 @@
+(********************************************************)
+(*                                                      *)
+(*  Codebot Pascal Library                              *)
+(*  http://cross.codebot.org                            *)
+(*  Modified June 2022                                  *)
+(*                                                      *)
+(********************************************************)
+
+{ <include docs/codebot.gles.txt> }
 unit Codebot.GLES;
 
 {$i codebot.inc}
