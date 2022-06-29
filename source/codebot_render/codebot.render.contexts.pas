@@ -158,6 +158,9 @@ type
     procedure SaveToFile(const FileName: string);
     {$endregion}
     {$region assets and collections}
+    { Search for an asset stream first using a resource name then using
+      GetAssetFile.  }
+    function GetAssetStream(const Name: string): TStream;
     { Search upwards for an asset returning the valid filename or raise
       an EContextAssetError exception }
     function GetAssetFile(const FileName: string): string;
@@ -602,6 +605,16 @@ end;
 {$endregion}
 
 {$region assets and collections}
+function TContext.GetAssetStream(const Name: string): TStream;
+var
+  S: string;
+begin
+  if ResLoadData(Name, Result) then
+    Exit;
+  S := GetAssetFile(Name);
+  Result := TFileStream.Create(S, fmOpenRead);
+end;
+
 function TContext.GetAssetFile(const FileName: string): string;
 var
   S: string;

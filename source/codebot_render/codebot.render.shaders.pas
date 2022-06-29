@@ -6,7 +6,8 @@ interface
 
 uses
   Codebot.System,
-  Codebot.Render.Contexts;
+  Codebot.Render.Contexts,
+  Classes;
 
 { TShaderObject }
 
@@ -71,6 +72,8 @@ type
     constructor Create;
     { Create a shader given a vertex and fragement source }
     constructor CreateFromSource(const VertSource, FragSource: string);
+    { Create a shader program from a resource or asset }
+    constructor CreateFromAsset(const Name: string); overload;
     { Create a shader program with two files ending in .vert and .frag }
     constructor CreateFromFile(const ProgramName: string); overload;
     { Create a shader program two specific vert and frag files }
@@ -212,6 +215,26 @@ begin
     V.Free;
     F.Free;
   end;
+end;
+
+constructor TShaderProgram.CreateFromAsset(const Name: string);
+var
+  V, F: string;
+  S: TStream;
+begin
+  S := Ctx.GetAssetStream(Name + '.vert');
+  try
+    V := StreamReadStr(S);
+  finally
+    S.Free;
+  end;
+  S := Ctx.GetAssetStream(Name + '.frag');
+  try
+    F := StreamReadStr(S);
+  finally
+    S.Free;
+  end;
+  CreateFromSource(V, F);
 end;
 
 constructor TShaderProgram.CreateFromFile(const ProgramName: string);
