@@ -615,8 +615,10 @@ var
 
 function HotkeyCapture: THotkeyCapture;
 begin
+  {$ifdef linux}
   if InternalCapture = nil then
     InternalCapture := THotkeyCaptureImpl.Create;
+  {$endif}
   Result := THotkeyCapture(InternalCapture);
 end;
 

@@ -432,6 +432,8 @@ function ResampleBitmap(Bitmap: IBitmap; Width, Height: Integer;
   Filter: TSamplingFilter = DefaultCubicFilter; WrapEdges:
   Boolean = False): IBitmap; overload;
 
+function GraphicsEngine: string;
+
 implementation
 
 {$ifdef linux}
@@ -3598,6 +3600,19 @@ begin
   ResampleBitmap(Bitmap, 0, 0, Bitmap.Width, Bitmap.Height,
     Result, 0, 0, Result.Width, Result.Height,
     SamplingFilterFunctions[Filter], SamplingFilterRadii[Filter], WrapEdges);
+end;
+
+function GraphicsEngine: string;
+begin
+  {$ifdef linux}
+  Result := 'Cairo';
+  {$endif}
+  {$ifdef windows}
+  if LoadD2D then
+    Result := 'Direct2D'
+  else
+    Result := 'GDI+';
+  {$endif}
 end;
 
 initialization

@@ -18,6 +18,9 @@ uses
   Codebot.System;
 
 type
+
+  { FormManager }
+
   FormManager = record
   private
     class var FDefaultFont: TFont;
@@ -89,6 +92,22 @@ begin
   FDefaultFont.Size := StrToInt(Items.Pop);
   FDefaultFont.Name := Items.Join(' ');
   Result := FDefaultFont;
+end;
+{$endif}
+
+{$if defined(windows)}
+class function FormManager.GetCurrent: TCustomForm;
+begin
+  Result := nil;
+end;
+
+class function FormManager.GetDefaultFont: TFont;
+begin
+  Result := nil;
+end;
+
+class procedure FormManager.Activate(Form: TCustomForm);
+begin
 end;
 {$endif}
 

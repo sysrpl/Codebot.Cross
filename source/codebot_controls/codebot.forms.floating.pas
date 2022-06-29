@@ -200,4 +200,51 @@ begin
 end;
 {$endif}
 
+{$if defined(windows) }
+function TFloatingForm.GetCompositing: Boolean;
+begin
+  Result := False;
+end;
+
+procedure TFloatingForm.SetFaded(Value: Boolean);
+begin
+
+end;
+
+procedure TFloatingForm.SetInteractive(Value: Boolean);
+begin
+
+end;
+
+procedure TFloatingForm.SetOpacity(Value: Byte);
+begin
+
+end;
+{$endif}
+
+procedure TFloatingForm.CreateHandle;
+begin
+  inherited CreateHandle;
+end;
+
+procedure TFloatingForm.Loaded;
+begin
+  inherited Loaded;
+end;
+
+procedure TFloatingForm.Paint;
+begin
+  inherited Paint;
+end;
+
+constructor TFloatingForm.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+end;
+
+procedure TFloatingForm.MoveSize(Rect: TRectI);
+begin
+
+end;
+
 end.
