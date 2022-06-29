@@ -658,6 +658,8 @@ function PathExpand(const Path: string): string;
 function PathIncludeDelimiter(const Path: string): string;
 { Exclude the end delimiter for a path }
 function PathExcludeDelimiter(const Path: string): string;
+{ Read all the content of a stream as text }
+function StreamReadStr(Stream: TStream): string;
 { Load a resource data given a name. }
 function ResLoadData(const ResName: string; out Stream: TStream): Boolean;
 { Load a resource text given a name. }
@@ -3016,6 +3018,16 @@ end;
 function PathExcludeDelimiter(const Path: string): string;
 begin
   Result := ExcludeTrailingPathDelimiter(Path);
+end;
+
+function StreamReadStr(Stream: TStream): string;
+var
+  I: Integer;
+begin
+  I := Stream.Size;
+  SetLength(Result, I);
+  if I > 0 then
+    Stream.Read(PChar(Result)^, I);
 end;
 
 const
