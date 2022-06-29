@@ -14,7 +14,7 @@ unit Codebot.Forms.Widget;
 interface
 
 uses
-  Classes, SysUtils, Graphics, Controls, Forms, ExtCtrls, gtk2winapiwindow,
+  Classes, SysUtils, Graphics, Controls, Forms, ExtCtrls,
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types,

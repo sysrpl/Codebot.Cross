@@ -589,14 +589,6 @@ var
     {$endif}
   end;
 
-  function LoadDirect(const ProcName: string; out Proc: Pointer): Boolean;
-  begin
-    Proc := GetProcAddress(LibHandle, ProcName);
-    Result := Proc <> nil;
-    if not Result then
-      ShowMessage(ProcName);
-  end;
-
 begin
   Result := LoadedSuccess;
   if Loaded then
@@ -620,7 +612,7 @@ begin
     Load('glBlendColor', @glBlendColor) and
     Load('glBlendEquation', @glBlendEquation) and
     Load('glBlendEquationSeparate', @glBlendEquationSeparate) and
-    LoadDirect('glBlendFunc', @glBlendFunc) and
+    Load('glBlendFunc', @glBlendFunc) and
     Load('glBlendFuncSeparate', @glBlendFuncSeparate) and
     Load('glBufferData', @glBufferData) and
     Load('glBufferSubData', @glBufferSubData) and

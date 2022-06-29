@@ -55,6 +55,10 @@ type
     property ModuleName: string read FModuleName;
     property ProcName: string read FProcName;
   end;
+
+  TPlatform = (platformLinux, platformMac, platformWindowsXP, platformWindows);
+
+function GetPlatform: TPlatform;
 {$endregion}
 
 type
@@ -1146,6 +1150,50 @@ begin
   else
     S := Format(SLibraryModuleError, [FModuleName]);
   inherited Create(S);
+end;
+
+{$ifdef windows}
+var
+  PlatformState: TPlatform;
+
+type
+  TOSVersionInfo = record
+    dwOSVersionInfoSize: DWord;
+    dwMajorVersion: DWord;
+    dwMinorVersion: DWord;
+    dwBuildNumber: DWord;
+    dwPlatformId: DWord;
+    szCSDVersion: array[0..127] of Char;
+  end;
+
+function GetVersionExA(var Info: TOSVersionInfo): LongBool; stdcall; external 'kernel32.dll';
+{$endif}
+
+function GetPlatform: TPlatform;
+{$ifdef windows}
+var
+  Info: TOSVersionInfo;
+{$endif}
+begin
+  {$ifdef windows}
+  if PlatformState < platformWindowsXP then
+  begin
+    FillChar(Info, SizeOf(Info), 0);
+    Info.dwOSVersionInfoSize := SizeOf(TOSVersionInfo);
+    GetVersionExA(Info);
+    if Info.dwMajorVersion > 5 then
+      PlatformState := platformWindows
+    else
+      PlatformState := platformWindowsXP;
+  end;
+  Exit(PlatformState);
+  {$endif}
+  {$ifdef darwin}
+  Exit(platformLinux);
+  {$endif}
+  {$ifdef linux}
+  Exit(platformLinux);
+  {$endif}
 end;
 
 procedure LibraryExcept(const ModuleName: string; ProcName: string);
@@ -2970,6 +3018,9 @@ begin
   Result := ExcludeTrailingPathDelimiter(Path);
 end;
 
+const
+  RT_RCDATA = PChar(10);
+
 function ResLoadData(const ResName: string; out Stream: TStream): Boolean;
 begin
   Result := False;
@@ -3888,10 +3939,10 @@ end;
 function TNullInfo.Reset: TNullResult;
 begin
   FCount := 0;
-  InterLockedExchange(FBytes, 0);
-  InterLockedExchange(FRate, 0);
-  InterLockedExchange(FSeconds, 0);
-  InterLockedExchange(FAvergage, 0);
+  System.InterLockedExchange(FBytes, 0);
+  System.InterLockedExchange(FRate, 0);
+  System.InterLockedExchange(FSeconds, 0);
+  System.InterLockedExchange(FAvergage, 0);
   FTime := 0;
   FRateTime := 0;
   FRateBytes := 0;
@@ -3940,19 +3991,19 @@ begin
   begin
     Info.FTime := Time;
     Info.FCount := Count;
-    InterLockedExchange(Info.FBytes, Info.FCount);
+    System.InterLockedExchange(Info.FBytes, Info.FCount);
   end
   else if Time - Info.FTime < 1 then
   begin
     Info.FCount += Count;
-    InterLockedExchange(Info.FBytes, Info.FBytes + Info.FCount);
+    System.InterLockedExchange(Info.FBytes, Info.FBytes + Info.FCount);
   end
   else if Time - Info.FTime < 2 then
   begin
     Info.FResult.Push(Info.FCount);
     Info.FCount := Count;
-    InterLockedExchange(Info.FBytes, Info.FBytes + Info.FCount);
-    InterLockedIncrement(Info.FSeconds);
+    System.InterLockedExchange(Info.FBytes, Info.FBytes + Info.FCount);
+    System.InterLockedIncrement(Info.FSeconds);
     Info.FTime += 1;
   end
   else
@@ -3960,7 +4011,7 @@ begin
     Info.Reset;
     Info.FTime := Time;
     Info.FCount := Count;
-    InterLockedExchange(Info.FBytes, Info.FCount);
+    System.InterLockedExchange(Info.FBytes, Info.FCount);
   end;
   if Info.FRateTime = 0 then
     Info.FRateTime := Time;
@@ -3972,13 +4023,13 @@ begin
     Compliment := Round(Count * ((Time - Poll) / Time));
     Info.FRateBytes += Count - Compliment;
     Section := Round(Info.FRateBytes / Poll);
-    InterLockedExchange(Info.FRate, Section);
+    System.InterLockedExchange(Info.FRate, Section);
     Info.FRateBytes := Compliment;
     Info.FRateTime += Poll;
     Info.FAvergageTotal += Section;
     Inc(Info.FAvergageCount);
     Section := Round(Info.FAvergageTotal / Info.FAvergageCount);
-    InterLockedExchange(Info.FAvergage, Section);
+    System.InterLockedExchange(Info.FAvergage, Section);
   end
   else
   begin
@@ -3990,8 +4041,8 @@ begin
       Info.FRateTime += Poll;
     end;
     Section := Round(Info.FAvergageTotal / Info.FAvergageCount);
-    InterLockedExchange(Info.FAvergage, Section);
-    InterLockedExchange(Info.FRate, 0);
+    System.InterLockedExchange(Info.FAvergage, Section);
+    System.InterLockedExchange(Info.FRate, 0);
     Info.FRateBytes := 0;
     Info.FRateTime := 0;
   end;

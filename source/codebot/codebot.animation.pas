@@ -1405,7 +1405,7 @@ begin
 end;
 
 const
-  TimerRate = 70;
+  TimerRate = 30;
 
 procedure TAnimationThread.Execute;
 const

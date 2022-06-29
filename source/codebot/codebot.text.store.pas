@@ -15,7 +15,6 @@ interface
 
 uses
   Codebot.System,
-  Codebot.Text,
   Codebot.Text.Xml,
   Codebot.Text.Json,
   Classes;
