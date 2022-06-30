@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="codebot_controls"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx6060="True"/>
+        </CompilerMessages>
+      </Other>
+    </CompilerOptions>
+    <Files Count="22">
+      <Item1>
+        <Filename Value="codebot.controls.banner.pas"/>
+        <UnitName Value="Codebot.Controls.Banner"/>
+      </Item1>
+      <Item2>
+        <Filename Value="codebot.controls.buttons.pas"/>
+        <UnitName Value="Codebot.Controls.Buttons"/>
+      </Item2>
+      <Item3>
+        <Filename Value="codebot.controls.colors.pas"/>
+        <UnitName Value="Codebot.Controls.Colors"/>
+      </Item3>
+      <Item4>
+        <Filename Value="codebot.controls.containers.pas"/>
+        <UnitName Value="Codebot.Controls.Containers"/>
+      </Item4>
+      <Item5>
+        <Filename Value="codebot.controls.edits.pas"/>
+        <UnitName Value="Codebot.Controls.Edits"/>
+      </Item5>
+      <Item6>
+        <Filename Value="codebot.controls.grids.pas"/>
+        <UnitName Value="Codebot.Controls.Grids"/>
+      </Item6>
+      <Item7>
+        <Filename Value="codebot.controls.highlighter.pas"/>
+        <UnitName Value="Codebot.Controls.Highlighter"/>
+      </Item7>
+      <Item8>
+        <Filename Value="codebot.controls.pas"/>
+        <UnitName Value="Codebot.Controls"/>
+      </Item8>
+      <Item9>
+        <Filename Value="codebot.controls.scrolling.pas"/>
+        <UnitName Value="Codebot.Controls.Scrolling"/>
+      </Item9>
+      <Item10>
+        <Filename Value="codebot.controls.sliders.pas"/>
+        <UnitName Value="Codebot.Controls.Sliders"/>
+      </Item10>
+      <Item11>
+        <Filename Value="codebot.controls.tooltips.pas"/>
+        <UnitName Value="Codebot.Controls.Tooltips"/>
+      </Item11>
+      <Item12>
+        <Filename Value="codebot.debug.pas"/>
+        <UnitName Value="Codebot.Debug"/>
+      </Item12>
+      <Item13>
+        <Filename Value="codebot.forms.floating.pas"/>
+        <UnitName Value="Codebot.Forms.Floating"/>
+      </Item13>
+      <Item14>
+        <Filename Value="codebot.forms.management.pas"/>
+        <UnitName Value="Codebot.Forms.Management"/>
+      </Item14>
+      <Item15>
+        <Filename Value="codebot.forms.popup.pas"/>
+        <UnitName Value="Codebot.Forms.Popup"/>
+      </Item15>
+      <Item16>
+        <Filename Value="codebot.forms.widget.pas"/>
+        <UnitName Value="Codebot.Forms.Widget"/>
+      </Item16>
+      <Item17>
+        <Filename Value="codebot.input.hotkeys.pas"/>
+        <UnitName Value="Codebot.Input.Hotkeys"/>
+      </Item17>
+      <Item18>
+        <Filename Value="codebot.input.mousemonitor.pas"/>
+        <UnitName Value="Codebot.Input.MouseMonitor"/>
+      </Item18>
+      <Item19>
+        <Filename Value="codebot.interop.linux.netwm.pas"/>
+        <UnitName Value="Codebot.Interop.Linux.NetWM"/>
+      </Item19>
+      <Item20>
+        <Filename Value="codebot_controls.lpk"/>
+        <Type Value="Text"/>
+      </Item20>
+      <Item21>
+        <Filename Value="codebot_controls.pas"/>
+        <UnitName Value="codebot_controls"/>
+      </Item21>
+      <Item22>
+        <Filename Value="codebot.controls.extras.pas"/>
+        <UnitName Value="Codebot.Controls.Extras"/>
+      </Item22>
+    </Files>
+    <CompatibilityMode Value="True"/>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="codebot"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="LCL"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
