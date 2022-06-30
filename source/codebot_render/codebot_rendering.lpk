@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <Name Value="codebot_rendering"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx5024="True"/>
+        </CompilerMessages>
+      </Other>
+    </CompilerOptions>
+    <Files Count="11">
+      <Item1>
+        <Filename Value="codebot.gles.pas"/>
+        <UnitName Value="Codebot.GLES"/>
+      </Item1>
+      <Item2>
+        <Filename Value="codebot.inc"/>
+        <Type Value="Include"/>
+      </Item2>
+      <Item3>
+        <Filename Value="codebot.render.buffers.pas"/>
+        <UnitName Value="Codebot.Render.Buffers"/>
+      </Item3>
+      <Item4>
+        <Filename Value="codebot.render.contexts.pas"/>
+        <UnitName Value="Codebot.Render.Contexts"/>
+      </Item4>
+      <Item5>
+        <Filename Value="codebot.render.fonts.pas"/>
+        <UnitName Value="Codebot.Render.Fonts"/>
+      </Item5>
+      <Item6>
+        <Filename Value="codebot.render.scenes.controller.pas"/>
+        <UnitName Value="Codebot.Render.Scenes.Controller"/>
+      </Item6>
+      <Item7>
+        <Filename Value="codebot.render.scenes.pas"/>
+        <UnitName Value="Codebot.Render.Scenes"/>
+      </Item7>
+      <Item8>
+        <Filename Value="codebot.render.shaders.pas"/>
+        <UnitName Value="Codebot.Render.Shaders"/>
+      </Item8>
+      <Item9>
+        <Filename Value="codebot.render.textures.pas"/>
+        <UnitName Value="Codebot.Render.Textures"/>
+      </Item9>
+      <Item10>
+        <Filename Value="codebot.render.world.pas"/>
+        <UnitName Value="Codebot.Render.World"/>
+      </Item10>
+      <Item11>
+        <Filename Value="codebot_rendering.pas"/>
+        <UnitName Value="codebot_rendering"/>
+      </Item11>
+    </Files>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="LazOpenGLContext"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="codebot"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
