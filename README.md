@@ -4,7 +4,7 @@ This is the Codebot Cross repository hosted on github. It contains the source an
 
 ## Package Codebot
 
-The Codebot package defines types and routines for general purpose use. These include items such as string and file system handling, collections, advanced graphics contexts, networks sockets, andimation, and much more
+The Codebot package defines types and routines for general purpose use. These include items such as string and file system handling, collections, advanced graphics contexts, networks sockets, animation, and much more.
 
 ## Package Codebot Control
 
