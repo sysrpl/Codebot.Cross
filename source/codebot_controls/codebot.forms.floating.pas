@@ -220,7 +220,6 @@ procedure TFloatingForm.SetOpacity(Value: Byte);
 begin
 
 end;
-{$endif}
 
 procedure TFloatingForm.CreateHandle;
 begin
@@ -246,5 +245,6 @@ procedure TFloatingForm.MoveSize(Rect: TRectI);
 begin
 
 end;
+{$endif}
 
 end.
