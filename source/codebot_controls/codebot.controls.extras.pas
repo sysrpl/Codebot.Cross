@@ -531,6 +531,7 @@ begin
     B.LoadFromResourceName(HINSTANCE, 'progress_busy');
     GlobalBusyImages := TImageStrip.Create(Application);
     GlobalBusyImages.Add(B);
+    GlobalBusyImages.Colorize(clWindowText);
     B.Free;
   end;
   if GlobalStatusImages = nil then

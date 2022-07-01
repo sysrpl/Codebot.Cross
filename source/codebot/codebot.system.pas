@@ -620,6 +620,8 @@ function FileSize(const FileName: string): LargeWord;
 function FileDate(const FileName: string): TDateTime;
 { Extract the name portion of a file name [group files] }
 function FileExtractName(const FileName: string): string;
+{ Extract the name portion of a file name [group files] }
+function FileExtractNameOnly(const FileName: string): string;
 { Extract the extension portion of a file name [group files] }
 function FileExtractExt(const FileName: string): string;
 { Change the extension portion of a file name [group files] }
@@ -2845,6 +2847,12 @@ end;
 function FileExtractName(const FileName: string): string;
 begin
   Result := StrLastOf(PathAdjustDelimiters(FileName), DirectorySeparator);
+end;
+
+function FileExtractNameOnly(const FileName: string): string;
+begin
+  Result := FileExtractName(FileName);
+  Result := FileChangeExt(Result, '');
 end;
 
 function FileExtractExt(const FileName: string): string;
