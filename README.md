@@ -1,6 +1,8 @@
 # Codebot Cross Platform Library
 
-This is the Codebot Cross repository. It contains the source and assets code for three Free Pascal pakacges.
+This is the official git repository for the Codebot Cross library. It contains the source and assets code for three Free Pascal packges.
+
+The official landing page for the library with detailed information, including installation, documentation, and examples about this library is [located here](https://cross.codebot.org).
 
 ## Package Codebot
 
