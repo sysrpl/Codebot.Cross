@@ -9,7 +9,7 @@
 { <include docs/codebot.forms.popup.txt> }
 unit Codebot.Forms.Popup;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

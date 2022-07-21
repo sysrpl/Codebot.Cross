@@ -43,8 +43,13 @@ implementation
 
 {$ifdef linux}
 uses
-  glib2, gdk2, gtk2, gtk2def, gtk2proc, gtk2int, gdk2pixbuf, gtk2extra,
-  cairo, pango, pangocairo;
+  GLib2, Gdk2Pixbuf, Cairo, Pango, PangoCairo,
+  {$ifdef lclgtk2}
+  Gdk2, Gtk2, Gtk2Def, Gtk2Proc, Gtk2Int, Gtk2Extra;
+  {$endif}
+  {$ifdef lclgtk3}
+  LazGdk3, LazGtk3, Gtk3Objects;
+  {$endif}
 
 const
   Delta = 0.5;
@@ -91,7 +96,9 @@ function gdk_pixbuf_save_to_callback(pixbuf: PGdkPixbuf; save_func: GdkPixbufSav
 
 { Extra cairo routines }
 
+{$ifdef lclgtk2}
 procedure gdk_cairo_reset_clip(cr: Pcairo_t; drawable: PGdkDrawable); cdecl; external gdklib;
+{$endif}
 
 { Extra pango routines }
 
@@ -406,6 +413,7 @@ type
 
 { TSurfacePathClipCairo }
 
+{$ifdef lclgtk2}
   TSurfacePathClipCairo = class(TSurfacePathCairo)
   private
     FDrawable: PGdkDrawable;
@@ -414,6 +422,7 @@ type
     constructor Create(Cairo: PCairo; Drawable: PGdkDrawable; Clip: TRectI);
     procedure Unclip; override;
   end;
+{$endif}
 
   TBitmapCairo = class;
 
@@ -421,6 +430,7 @@ type
 
   TSurfaceCairo = class(TInterfacedObject, ISurface)
   private
+    FOwned: Boolean;
     FCairo: PCairo;
     FPath: IPath;
     FPathCairo: TSurfacePathCairo;
@@ -471,6 +481,7 @@ type
 
 { TClipSurfaceCairo }
 
+{$ifdef lclgtk2}
   TClipSurfaceCairo = class(TSurfaceCairo)
   { TODO: Acquire brush for pattern brushes setting origins to clip }
   { TODO: Consider reworking clipping multiply matrix to use translate only }
@@ -490,6 +501,7 @@ type
     constructor Create(Control: TWinControl);
     procedure Flush; override;
   end;
+{$endif}
 
 { TBitmapSurfaceCairo }
 
@@ -1271,6 +1283,7 @@ end;
 
 { TSurfacePathClipCairo }
 
+{$ifdef lclgtk2}
 constructor TSurfacePathClipCairo.Create(Cairo: PCairo; Drawable: PGdkDrawable; Clip: TRectI);
 begin
   inherited Create(Cairo);
@@ -1298,12 +1311,14 @@ begin
   cairo_clip(FCairo);
   cairo_set_matrix(FCairo, @OldMat);
 end;
+{$endif}
 
 { TSurfaceCairo }
 
 constructor TSurfaceCairo.Create(C: PCairo = nil);
 begin
   inherited Create;
+  FOwned := True;
   FCairo := C;
   FMatrix := TMatrixCairo.Create;
 end;
@@ -1337,8 +1352,16 @@ begin
   if FPathCairo <> nil then
     FPathCairo.FCairo := nil;
   if FCairo <> nil then
-    cairo_destroy(FCairo);
-  FCairo := nil;
+    if FOwned then
+    begin
+      cairo_destroy(FCairo);
+      FCairo := nil;
+    end
+    else
+    begin
+      FMatrix.Identity;
+      cairo_set_matrix(FCairo, FMatrix.AtMatrix);
+    end;
 end;
 
 function TSurfaceCairo.LayoutAvailable: Boolean;
@@ -1891,6 +1914,7 @@ end;
 
 { TClipSurfaceCairo }
 
+{$ifdef lclgtk2}
 constructor TClipSurfaceCairo.Create(Drawable: PGdkDrawable; const Clip: TRectI);
 begin
   inherited Create;
@@ -1948,6 +1972,7 @@ begin
   { Without the call below everything is slow }
   gdk_flush;
 end;
+{$endif}
 
 { TBitmapSurfaceCairo }
 
@@ -2231,11 +2256,29 @@ begin
   end;
 end;
 
+function GetStr(const S: string): PChar;
+var
+  I: Integer;
+begin
+  I := Length(S);
+  Result := GetMem(I + 8);
+  FillChar(Result^, I + 8, 0);
+  Move(PChar(S)^, Result^, I);
+end;
+
+procedure FreeStr(const S: PChar);
+begin
+  FreeMem(S);
+end;
+
 procedure TBitmapCairo.LoadFromFile(const FileName: string);
 var
+  A: PChar;
   B, C: PGdkPixbuf;
 begin
-  B := gdk_pixbuf_new_from_file(PChar(FileName), nil);
+  A := GetStr(FileName);
+  B := gdk_pixbuf_new_from_file(A, nil);
+  FreeStr(A);
   if B <> nil then
   begin
     FFormat := StrToImageFormat(ExtractFileExt(FileName));
@@ -2302,21 +2345,6 @@ begin
   end;
 end;
 
-function GetStr(const S: string): PChar;
-var
-  I: Integer;
-begin
-  I := Length(S);
-  Result := GetMem(I + 8);
-  FillChar(Result^, I + 8, 0);
-  Move(PChar(S)^, Result^, I);
-end;
-
-procedure FreeStr(const S: PChar);
-begin
-  FreeMem(S);
-end;
-
 procedure TBitmapCairo.SaveToFile(const FileName: string);
 var
   A, B: PChar;
@@ -2355,20 +2383,16 @@ var
 begin
   if not Empty then
   begin
-    { For some unknown reason this WriteLn causes the IDE to realize property data }
-    // WriteLn('bitmap save start');
     if not (FFormat in [fmBmp, fmJpeg, fmPng, fmTiff]) then
       FFormat := fmPng;
     S := ImageFormatToStr(FFormat);
     FNeedsFlip := True;
     FlipPixels;
     A := GetStr(S);
-    // gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil);
     gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, A, nil);
     FreeStr(A);
     FNeedsFlip := True;
     FlipPixels;
-    // WriteLn('bitmap save complete');
   end;
 end;
 
@@ -2424,6 +2448,7 @@ begin
   Result := TFontCairo.Create(Font);
 end;
 
+{$ifdef lclgtk2}
 function CanvasToDrawable(Canvas: TCanvas; out Rect: TRectI): Pointer;
 var
   Root: PGdkWindow;
@@ -2474,10 +2499,46 @@ function NewSurfaceCairo(Control: TWinControl): ISurface;
 begin
   Result := TControlSurfaceCairo.Create(Control);
 end;
+{$endif}
+
+{$ifdef lclgtk3}
+function NewSurfaceCairo(Canvas: TCanvas): ISurface;
+var
+  Obj: TObject;
+  P: PCairo;
+begin
+  Result := nil;
+  Obj := TObject(Canvas.Handle);
+  if Obj is TGtk3DeviceContext then
+  begin
+    P := PCairo(TGtk3DeviceContext(Obj).pcr);
+    Result := TSurfaceCairo.Create(P);
+    (Result as TSurfaceCairo).FOwned := False;
+  end;
+end;
+
+function NewSurfaceCairo(Control: TWinControl): ISurface;
+var
+  Obj: TObject;
+  P: PCairo;
+begin
+  Result := nil;
+  if Control is TCustomControl then
+  begin
+    Obj := TObject(TCustomControl(Control).Canvas.Handle);
+    if Obj is TGtk3DeviceContext then
+    begin
+      P := PCairo(TGtk3DeviceContext(Obj).pcr);
+      Result := TSurfaceCairo.Create(P);
+      (Result as TSurfaceCairo).FOwned := False;
+    end
+  end;
+end;
+{$endif}
 
 function NewBitmapCairo(BitmapBuffer: Pointer): IBitmap;
 begin
-  Result := TBitmapCairo.Create(PGdkPixmap(BitmapBuffer));
+  Result := TBitmapCairo.Create(BitmapBuffer);
 end;
 
 function NewBitmapCairo(Width, Height: Integer): IBitmap;
@@ -2488,9 +2549,10 @@ end;
 
 { TSplashCairo }
 
+{$ifdef lclgtk2}
 type
   TSplashCairo = class(TInterfacedObject, ISplash)
-    private
+  private
     FClipped: Boolean;
     FBitmap: IBitmap;
     FWidget: PGtkWidget;
@@ -2511,7 +2573,7 @@ type
     procedure Update;
   end;
 
-procedure gdk_window_input_shape_combine_mask (window: PGdkWindow;
+procedure gdk_window_input_shape_combine_mask(window: PGdkWindow;
   mask: PGdkBitmap; x, y: GInt); cdecl; external gdklib;
 function gtk_widget_get_window(widget: PGtkWidget): PGdkWindow; cdecl; external gtklib;
 
@@ -2679,6 +2741,32 @@ begin
   B.FNeedsFlip := True;
   B.FlipPixels;
 end;
+{$endif}
+
+{$ifdef lclgtk3}
+function NewSplashCairo: ISplash;
+begin
+  Result := nil;
+end;
+
+function NewScreenCaptureGtk: IBitmap;
+var
+  R: PGdkWindow;
+  X, Y, W, H: Integer;
+  P: PGdkPixbuf;
+  B: TBitmapCairo;
+begin
+  R := gdk_get_default_root_window;
+  gdk_window_get_origin(R, @X, @Y);
+  W := gdk_window_get_width(R);
+  H := gdk_window_get_height(R);
+  P := gdk_pixbuf_get_from_window(R, X, Y, W, H);
+  Result := TBitmapCairo.Create(P);
+  B := Result as TBitmapCairo;
+  B.FNeedsFlip := True;
+  B.FlipPixels;
+end;
+{$endif}
 {$endif}
 
 end.

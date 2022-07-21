@@ -9,7 +9,7 @@
 { <include docs/codebot.input.mousequeue.txt> }
 unit Codebot.Input.MouseMonitor;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

@@ -1094,8 +1094,9 @@ type
 
 { Execute a procedure inside a simple thread }
 
-procedure ThreadExecute(ThreadProc: TThreadExecuteProc); overload;
-procedure ThreadExecute(Proc: TProcedure); overload;
+function ThreadExecute(ThreadMethod: TThreadExecuteMethod): TSimpleThread; overload;
+function ThreadExecute(ThreadProc: TThreadExecuteProc): TSimpleThread; overload;
+function ThreadExecute(Proc: TProcedure): TSimpleThread; overload;
 
 { Sleep for a given number of milliseconds }
 
@@ -4089,12 +4090,6 @@ end;
 {$endregion}
 
 {$region threading}
-var
-  SemaphoreInit: TCriticalSectionHandler;
-  SemaphoreDestroy: TCriticalSectionHandler;
-  SemaphoreWait: TCriticalSectionHandler;
-  SemaphoreLeave: TCriticalSectionHandler;
-
 procedure ThreadsInit;
 var
   M: TThreadManager;
@@ -4102,10 +4097,6 @@ begin
   M.AllocateThreadVars := nil;
   FillChar(M, SizeOf(M), 0);
   GetThreadManager(M);
-  SemaphoreInit := @M.InitCriticalSection;
-  SemaphoreDestroy := @M.DoneCriticalSection;
-  SemaphoreWait := @M.EnterCriticalSection;
-  SemaphoreLeave := @M.LeaveCriticalSection;
 end;
 
 { TMutexObject }
@@ -4113,7 +4104,7 @@ end;
 type
   TMutexObject = class(TInterfacedObject, IMutex)
   private
-    FSemaphore: Pointer;
+    FSemaphore: TRTLCriticalSection;
     FLock: LongInt;
   public
     constructor Create;
@@ -4138,27 +4129,25 @@ type
 constructor TMutexObject.Create;
 begin
   inherited Create;
-  if @SemaphoreInit = nil then
-    ThreadsInit;
-  SemaphoreInit(FSemaphore);
+  InitCriticalSection(FSemaphore);
 end;
 
 destructor TMutexObject.Destroy;
 begin
-  SemaphoreDestroy(FSemaphore);
+  DoneCriticalSection(FSemaphore);
   inherited Destroy;
 end;
 
 function TMutexObject.Lock: LongInt;
 begin
-  SemaphoreWait(FSemaphore);
+  EnterCriticalSection(FSemaphore);
   Result := InterlockedIncrement(FLock);
 end;
 
 function TMutexObject.Unlock: LongInt;
 begin
   Result := InterlockedDecrement(FLock);
-  SemaphoreLeave(FSemaphore);
+  LeaveCriticalSection(FSemaphore);
 end;
 
 constructor TEventObject.Create;
@@ -4190,7 +4179,7 @@ end;
 
 function MutexCreate: IMutex;
 begin
-  Result := TMutexObject.Create;;
+  Result := TMutexObject.Create;
 end;
 
 function EventCreate: IEvent;
@@ -4247,7 +4236,7 @@ type
     procedure Execute(Thread: TSimpleThread);
 	public
     constructor Create(ThreadProc: TThreadExecuteProc; Proc: TProcedure);
-    procedure Run;
+    function Run: TSimpleThread;
   end;
 
 constructor TThreadContainer.Create(ThreadProc: TThreadExecuteProc; Proc: TProcedure);
@@ -4266,19 +4255,24 @@ begin
   Free;
 end;
 
-procedure TThreadContainer.Run;
+function TThreadContainer.Run: TSimpleThread;
 begin
-	TSimpleThread.Create(Execute);
+	Result := TSimpleThread.Create(Execute);
 end;
 
-procedure ThreadExecute(ThreadProc: TThreadExecuteProc);
+function ThreadExecute(ThreadMethod: TThreadExecuteMethod): TSimpleThread;
 begin
-	TThreadContainer.Create(ThreadProc, nil).Run;
+  Result := TSimpleThread.Create(ThreadMethod);
 end;
 
-procedure ThreadExecute(Proc: TProcedure);
+function ThreadExecute(ThreadProc: TThreadExecuteProc): TSimpleThread;
 begin
-	TThreadContainer.Create(nil, Proc).Run;
+	Result := TThreadContainer.Create(ThreadProc, nil).Run;
+end;
+
+function ThreadExecute(Proc: TProcedure): TSimpleThread;
+begin
+	Result := TThreadContainer.Create(nil, Proc).Run;
 end;
 
 procedure Sleep(Milliseconds: Cardinal);

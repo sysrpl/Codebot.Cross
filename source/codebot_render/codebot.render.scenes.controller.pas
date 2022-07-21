@@ -1,12 +1,12 @@
 unit Codebot.Render.Scenes.Controller;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 
 uses
   SysUtils, Classes, Controls, Forms, OpenGLContext,
-  Codebot.System,
+  Codebot.System, X,
   Codebot.Animation,
   Codebot.Render.Contexts,
   Codebot.Render.Scenes;

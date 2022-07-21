@@ -9,7 +9,7 @@
 { <include docs/codebot.graphics.types.txt> }
 unit Codebot.Controls.Colors;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

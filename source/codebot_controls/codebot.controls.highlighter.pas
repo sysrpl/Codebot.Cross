@@ -9,7 +9,7 @@
 { <include docs/codebot.controls.highlighter.txt> }
 unit Codebot.Controls.Highlighter;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

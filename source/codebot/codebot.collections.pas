@@ -154,7 +154,7 @@ type
     { Returns true if the list owns the objects }
     function RequiresDelete: Boolean; override;
   public
-    { Create the lsit optionally owning objects added to it }
+    { Create the list optionally owning objects added to it }
     constructor Create(OwnsObjects: Boolean);
     { Returns the index of the object or -1 if it cannot be found }
     function IndexOf(const Item: ItemType): Integer; override;

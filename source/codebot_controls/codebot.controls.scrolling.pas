@@ -9,7 +9,7 @@
 { <include docs/codebot.controls.scrolling.txt> }
 unit Codebot.Controls.Scrolling;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

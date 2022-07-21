@@ -9,7 +9,7 @@
 { <include docs/codebot.interop.linux.netwm.txt> }
 unit Codebot.Interop.Linux.NetWM;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

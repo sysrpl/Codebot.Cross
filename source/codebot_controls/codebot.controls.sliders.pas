@@ -9,7 +9,7 @@
 { <include docs/codebot.controls.sliders.txt> }
 unit Codebot.Controls.Sliders;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

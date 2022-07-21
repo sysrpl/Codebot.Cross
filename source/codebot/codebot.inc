@@ -11,6 +11,8 @@
 {$z4}
 {$macro on}
 {$WARN 5024 off : Parameter "$1" not used}
+{$WARN 5094 off : Function result variable of a managed type does not seem to be initialized}
+{$WARN 6058 off : Call to subroutine "$1" marked as inline is not inlined}
 
 {$ifdef windows}
 	{$define apicall := stdcall}

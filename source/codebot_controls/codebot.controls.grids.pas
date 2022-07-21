@@ -9,7 +9,7 @@
 { <include docs/codebot.controls.grids.txt> }
 unit Codebot.Controls.Grids;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

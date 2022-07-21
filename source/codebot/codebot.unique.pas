@@ -75,7 +75,10 @@ end;
 destructor TUniqueInstance.Destroy;
 begin
   if FThread <> nil then
+  begin
     FThread.Terminate;
+    Sleep(1);
+  end;
   FSocket.Free;
   inherited Destroy;
 end;
