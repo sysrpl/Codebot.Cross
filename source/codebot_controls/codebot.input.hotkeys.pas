@@ -9,7 +9,7 @@
 { <include docs/codebot.input.hotkeys.txt> }
 unit Codebot.Input.Hotkeys;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 
@@ -615,7 +615,7 @@ var
 
 function HotkeyCapture: THotkeyCapture;
 begin
-  {$ifdef linux}
+  {$if defined(linux) and defined(lclgtk2)}
   if InternalCapture = nil then
     InternalCapture := THotkeyCaptureImpl.Create;
   {$endif}

@@ -9,7 +9,7 @@
 { <include docs/codebot.forms.management.txt> }
 unit Codebot.Forms.Management;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 
@@ -17,10 +17,9 @@ uses
   Classes, SysUtils, Graphics, Controls, Forms,
   Codebot.System;
 
+{ FormManager }
+
 type
-
-  { FormManager }
-
   FormManager = record
   private
     class var FDefaultFont: TFont;
@@ -93,9 +92,7 @@ begin
   FDefaultFont.Name := Items.Join(' ');
   Result := FDefaultFont;
 end;
-{$endif}
-
-{$if defined(windows)}
+{$else}
 class function FormManager.GetCurrent: TCustomForm;
 begin
   Result := nil;

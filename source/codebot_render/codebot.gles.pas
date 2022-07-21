@@ -1,7 +1,7 @@
 (********************************************************)
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
-(*  http://cross.codebot.org                            *)
+(*  http://cross.cfodebot.org                            *)
 (*  Modified June 2022                                  *)
 (*                                                      *)
 (********************************************************)
@@ -12,9 +12,6 @@ unit Codebot.GLES;
 {$i codebot.inc}
 
 interface
-
-uses
-  Dialogs;
 
 type
   GLbitfield = uint32;

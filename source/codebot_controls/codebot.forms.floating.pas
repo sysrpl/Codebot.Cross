@@ -9,7 +9,7 @@
 { <include docs/codebot.forms.floating.txt> }
 unit Codebot.Forms.Floating;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 
@@ -198,9 +198,7 @@ begin
       Visible := not FFaded;
   end;
 end;
-{$endif}
-
-{$if defined(windows) }
+{$else}
 function TFloatingForm.GetCompositing: Boolean;
 begin
   Result := False;

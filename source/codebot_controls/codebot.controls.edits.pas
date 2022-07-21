@@ -9,7 +9,7 @@
 { <include docs/codebot.edits.txt> }
 unit Codebot.Controls.Edits;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

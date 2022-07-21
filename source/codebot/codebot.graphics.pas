@@ -3515,14 +3515,14 @@ begin
   MapY := BuildMappingTable(DstY, DstY + DstHeight, SrcY, SrcY + SrcHeight, Src.Height, Filter, Radius, WrapEdges);
   ClusterX := nil;
   ClusterY := nil;
-  SetLength(SrcPixels, Src.Height);
+  SetLength(SrcPixels{%H-}, Src.Height);
   Pixels := Src.Pixels;
   for I := 0 to Src.Height - 1 do
   begin
     SrcPixels[I] := PByteArray(Pixels);
     Inc(Pixels, Src.Width);
   end;
-  SetLength(DstPixels, Dst.Height);
+  SetLength(DstPixels{%H-}, Dst.Height);
   Pixels := Dst.Pixels;
   for I := 0 to Dst.Height - 1 do
   begin
@@ -3530,7 +3530,7 @@ begin
     Inc(Pixels, Dst.Width);
   end;
   FindExtremes(MapX, MinX, MaxX);
-  SetLength(LineBufferInt, MaxX - MinX + 1);
+  SetLength(LineBufferInt{%H-}, MaxX - MinX + 1);
   for J := 0 to DstHeight - 1 do
   begin
     ClusterY := MapY[J];
