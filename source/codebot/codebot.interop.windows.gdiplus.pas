@@ -11903,7 +11903,7 @@ var
   F: IGdiSolidBrush;
   R: TGdiRectF;
 begin
-  B := TGdiBitmap.Create(Size * 2, Size * 2);
+  B := TGdiBitmap.Create(Integer(Size * 2), Integer(Size * 2));
   G := TGdiGraphics.Create(B);
   F := TGdiSolidBrush.Create(C1);
   R.X := 0;

@@ -587,7 +587,7 @@ begin
         Result := FStream.Seek(O, Origin) - FStart;
       end;
   else
-    Result := 0;
+    Result := 0{%H-};
   end;
 end;
 
@@ -760,7 +760,7 @@ var
     OleCheck(FFactory.CreateBitmapFromMemory(FWidth, FHeight,
       PixelFormat, ScanlineStride(FBitmap),
       ScanlineStride(FBitmap) * FHeight, Bits, BitmapInstance));
-    S := Format;
+    S := {%H-}Format;
     OleCheck(WICMapShortNameToGuid(PWideChar(S), G));
     BitmapSource := BitmapInstance;
     OleCheck(FFactory.CreateEncoder(G, nil, BitmapEncoder));
