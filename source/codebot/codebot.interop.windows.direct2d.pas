@@ -14,6 +14,8 @@ unit Codebot.Interop.Windows.Direct2D;
 interface
 
 {$ifdef windows}
+{$WARN 3057 off : An inherited method is hidden by "$1"}
+
 uses
   Windows,
   Codebot.Core,

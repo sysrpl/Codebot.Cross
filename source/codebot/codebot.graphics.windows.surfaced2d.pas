@@ -15,7 +15,7 @@ interface
 
 {$ifdef windows}
 uses
-  SysUtils, Classes, Graphics, Controls, ActiveX, Windows,
+  SysUtils, Classes, Graphics, Controls, Windows,
   Codebot.System,
   Codebot.Collections,
   Codebot.Graphics.Types,
@@ -1511,8 +1511,6 @@ begin
 end;
 
 procedure TSurfacePathD2D.SaveClipStack;
-var
-  I: Integer;
 begin
   if not HandleAvailable then
     Exit;

@@ -991,8 +991,6 @@ begin
 end;
 
 function TFontGdi.Font: IGdiFont;
-const
-  Bytes: array[Boolean] of Byte = (0, 1);
 var
   DC: HDC;
 begin
