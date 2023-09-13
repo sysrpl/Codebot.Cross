@@ -9,7 +9,7 @@
 { <include docs/codebot.graphics.design.registration.txt> }
 unit Codebot.Design.Editors;
 
-{$i codebot.inc}
+{$i ../codebot/codebot.inc}
 
 interface
 

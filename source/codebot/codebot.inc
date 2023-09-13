@@ -8,6 +8,7 @@
 {$WARN 5024 off : Parameter "$1" not used}
 {$WARN 5094 off : Function result variable of a managed type does not seem to be initialized}
 {$WARN 6058 off : Call to subroutine "$1" marked as inline is not inlined}
+{$WARN 6060 off : }
 
 {$ifdef linux}
 	{$define apicall := cdecl}
