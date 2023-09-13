@@ -70,6 +70,7 @@ type
     function GetSize: LongInt;
     procedure SetSize(Value: LongInt);
     function GetAsString: string;
+    function GetAsHex: string;
   public
     { Allocate size number of bytes }
     class function Create(Size: LongInt): TBuffer; static;
@@ -91,8 +92,10 @@ type
     property Data: Pointer read GetData;
     { The number of bytes allocated by buffer }
     property Size: LongInt read GetSize write SetSize;
-    { If the buffer contains text, this is a shortcut to read back the text }
+    { Convert data to a string }
     property AsString: string read GetAsString;
+    { Convert data to a hexidecimal string }
+    property AsHex: string read GetAsHex;
   end;
 
 { TBufferStream can be used to convert a buffer to a stream [group stream]
@@ -257,14 +260,20 @@ begin
 end;
 
 procedure TBufferObject.SetSize(Value: LongInt);
+var
+  OldSize: LongInt;
 begin
   if Value <> FSize then
   begin
+    OldSize := FSize;
     FSize := Value;
     if FSize > 0 then
     begin
       if FData <> nil then
-        ReallocMem(FData, FSize)
+      begin
+        if (FSize > OldSize) or (FSize > 4096) then
+          ReallocMem(FData, FSize);
+      end
       else
         GetMem(FData, FSize);
     end
@@ -371,6 +380,15 @@ begin
   SetLength(Result, I);
   Move(PChar(Data)[0], PChar(Result)[0], I);
 end;
+
+function TBuffer.GetAsHex: string;
+begin
+  if Size > 0 then
+    Result := HexEncode(Data, Size)
+  else
+    Result := '';
+end;
+
 
 { TBufferStream }
 

@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified August 2019                                *)
+(*  Modified September 2023                             *)
 (*                                                      *)
 (********************************************************)
 
@@ -30,70 +30,29 @@ const
   SSL_FILETYPE_PEM = 1;
   EVP_PKEY_RSA = 6;
 
-  MD5_DIGEST_LENGTH = 16;
-  SHA1_DIGEST_LENGTH = 20;
-  SHA256_DIGEST_LENGTH = 32;
-  SHA512_DIGEST_LENGTH = 64;
+  EVP_MAX_MD_SIZE = 64;
+  EVP_MAX_KEY_LENGTH = 64;
+  EVP_MAX_IV_LENGTH = 16;
+  EVP_MAX_BLOCK_LENGTH = 32;
 
 type
-  TSSLCtx = Pointer;
-  TSSL = Pointer;
-  TSSLMethod = Pointer;
-  TEVPMethod = Pointer;
+  TSSLCtxPrivate = record end;
+  TSSLCtx = ^TSSLCtxPrivate;
 
-  MD5_CTX = record
-    data: array[0..127] of Byte;
-  end;
-  TMD5Ctx = MD5_CTX;
-  PMD5Ctx = ^TMD5Ctx;
+  TSSLPrivate = record end;
+  TSSL = ^TSSLPrivate;
 
-  MD5_DIGEST = record
-    data: array [0..MD5_DIGEST_LENGTH - 1] of Byte;
-  end;
-  TMD5Digest = MD5_DIGEST;
-  PMD5Digest = ^TMD5Digest;
+  TSSLMethodPrivate = record end;
+  TSSLMethod = ^TSSLMethodPrivate;
 
-  SHA1_CTX = record
-    data: array[0..255] of Byte;
-  end;
-  TSHA1Ctx = SHA1_CTX;
-  PSHA1Ctx = ^TSHA1Ctx;
+  TEVPMethodPrivate = record end;
+  TEVPMethod = ^TEVPMethodPrivate;
 
-  SHA1_DIGEST = record
-    data: array [0..SHA1_DIGEST_LENGTH - 1] of Byte;
-  end;
-  TSHA1Digest = SHA1_DIGEST;
-  PSHA1Digest = ^TSHA1Digest;
+  TEVPMdCtxPrivate = record end;
+  TEVPMdCtx = ^TEVPMdCtxPrivate;
 
-  SHA256_CTX = record
-    data: array[0..255] of Byte;
-  end;
-  TSHA256Ctx = SHA256_CTX;
-  PSHA256Ctx = ^TSHA256Ctx;
-
-  SHA256_DIGEST = record
-    data: array [0..SHA256_DIGEST_LENGTH - 1] of Byte;
-  end;
-  TSHA256Digest = SHA256_DIGEST;
-  PSHA256Digest = ^TSHA256Digest;
-
-  SHA512_CTX = record
-    data: array[0..255] of Byte;
-  end;
-  TSHA512Ctx = SHA512_CTX;
-  PSHA512Ctx = ^TSHA512Ctx;
-
-  SHA512_DIGEST = record
-    data: array [0..SHA512_DIGEST_LENGTH - 1] of Byte;
-  end;
-  TSHA512Digest = SHA512_DIGEST;
-  PSHA512Digest = ^TSHA512Digest;
-
-  HMAC_CTX = record
-    data: array[0..511] of Byte;
-  end;
-  THMACCtx = HMAC_CTX;
-  PHMACCtx = ^THMACCtx;
+  THMACCtxPrivate = record end;
+  THMACCtx = ^THMACCtxPrivate;
 
   X509 = Pointer;
   TX509 = X509;
@@ -107,16 +66,9 @@ type
 { OpenSSL routines }
 
 var
-  SSL_library_init: function: LongInt; cdecl;
-  SSL_load_error_strings: procedure; cdecl;
-  SSLv23_server_method: function: TSSLMethod; cdecl;
-	SSLv3_server_method: function: TSSLMethod; cdecl;
-  SSLv23_client_method: function: TSSLMethod; cdecl;
-	SSLv3_client_method: function: TSSLMethod; cdecl;
-	TLSv1_client_method: function: TSSLMethod; cdecl;
-	TLSv1_1_client_method: function: TSSLMethod; cdecl;
-	TLSv1_2_client_method: function: TSSLMethod; cdecl;
-	DTLSv1_client_method: function: TSSLMethod; cdecl;
+  TLS_method: function: TSSLMethod; cdecl;
+  TLS_client_method: function: TSSLMethod; cdecl;
+  TLS_server_method: function: TSSLMethod; cdecl;
   SSL_CTX_new: function(method: TSSLMethod): TSSLCtx; cdecl;
   SSL_CTX_free: procedure(context: TSSLCtx); cdecl;
   SSL_new: function(context: TSSLCtx): TSSL; cdecl;
@@ -153,64 +105,61 @@ var
 
 { Hashing routines }
 
-	OPENSSL_add_all_algorithms_conf: procedure; cdecl;
-  OPENSSL_add_all_algorithms_noconf: procedure; cdecl;
-  OpenSSL_add_all_ciphers: procedure; cdecl;
-  OpenSSL_add_all_digests: procedure; cdecl;
-  MD5_Init: function(out context: TMD5Ctx): LongBool; cdecl;
-  MD5_Update: function(var context: TMD5Ctx; data: Pointer; size: Cardinal): LongBool; cdecl;
-  MD5_Final: function(out digest: TMD5Digest; var context: TMD5Ctx): LongBool; cdecl;
-  SHA1_Init: function(out context: TSHA1Ctx): LongBool; cdecl;
-  SHA1_Update: function(var context: TSHA1Ctx; data: Pointer; size: Cardinal): LongBool; cdecl;
-  SHA1_Final: function(out digest: TSHA1Digest; var context: TSHA1Ctx): LongBool; cdecl;
-  SHA256_Init: function(out context: TSHA256Ctx): LongBool; cdecl;
-  SHA256_Update: function(var context: TSHA256Ctx; data: Pointer; size: Cardinal): LongBool; cdecl;
-  SHA256_Final: function(out digest: TSHA256Digest; var context: TSHA256Ctx): LongBool; cdecl;
-  SHA512_Init: function(out context: TSHA512Ctx): LongBool; cdecl;
-  SHA512_Update: function(var context: TSHA512Ctx; data: Pointer; size: Cardinal): LongBool; cdecl;
-  SHA512_Final: function(out digest: TSHA512Digest; var context: TSHA512Ctx): LongBool; cdecl;
   EVP_md5: function: TEVPMethod; cdecl;
   EVP_sha1: function: TEVPMethod; cdecl;
   EVP_sha256: function: TEVPMethod; cdecl;
   EVP_sha512: function: TEVPMethod; cdecl;
-  EVP_cleanup: procedure; cdecl;
-  HMAC_CTX_init: procedure(out context: THMACCtx); cdecl;
-  HMAC_CTX_cleanup: procedure(var context: THMACCtx); cdecl;
-  HMAC_Init_ex: function(var context: THMACCtx; key: Pointer; size: Cardinal; method: TEVPMethod; engine: Pointer): LongBool; cdecl;
-  HMAC_Update: function(var context: THMACCtx; data: Pointer; size: Cardinal): LongBool; cdecl;
-  HMAC_Final: function(var context: THMACCtx; digest: Pointer; var digestSize: LongWord): LongBool; cdecl;
+
+  EVP_MD_CTX_new: function: TEVPMdCtx; cdecl;
+  EVP_MD_CTX_reset: function(ctx: TEVPMdCtx): Integer; cdecl;
+  EVP_MD_CTX_free: procedure(ctx: TEVPMdCtx); cdecl;
+
+  EVP_DigestInit_ex: function(ctx: TEVPMdCtx; method: TEVPMethod; engine: Pointer = nil): LongBool; cdecl;
+  EVP_DigestUpdate: function(ctx: TEVPMdCtx; data: Pointer; dataLen: Cardinal): LongBool; cdecl;
+  EVP_DigestFinal: function(ctx: TEVPMdCtx; digest: Pointer; out digestLen: Cardinal): LongBool; cdecl;
+
+  HMAC_CTX_new: function: THMACCtx; cdecl;
+  HMAC_CTX_reset: function(ctx: THMACCtx): Integer; cdecl;
+  HMAC_CTX_free: procedure(ctx: THMACCtx); cdecl;
+
+  HMAC_Init_ex: function(ctx: THMACCtx; key: Pointer; keyLen: Cardinal; method: TEVPMethod;
+    engine: Pointer = nil): LongBool; cdecl;
+  HMAC_Update: function(ctx: THMACCtx; data: Pointer; dataLen: Cardinal): LongBool; cdecl;
+  HMAC_Final: function(ctx: THMACCtx; digest: Pointer; out digestLen: Cardinal): LongBool; cdecl;
+
+  HMAC: function(method: TEVPMethod; key: Pointer; keyLen: Cardinal; data: Pointer; dataLen: Cardinal;
+    digest: Pointer; out digestLen: Cardinal): Pointer; cdecl;
 
 const
 {$ifdef windows}
   libssl = 'libssl32.dll';
-  libssl100 = libssl;
   libcrypto = 'libeay32.dll';
-  libcrypto1 = libcrypto;
 {$endif}
 {$ifdef linux}
-  libssl = 'libssl.' + SharedSuffix;
-  libssl100 = libssl + '.1.0.0';
-  libcrypto = 'libcrypto.' + SharedSuffix;
-  libcrypto1 = libcrypto + '.1.0.0';
+  libssl = 'libssl.so.3';
+  libcrypto = 'libcrypto.so.3';
 {$endif}
 
-function OpenSSLInit(ThrowExceptions: Boolean = False): Boolean;
+function InitSSL(ThrowExceptions: Boolean = False): Boolean;
+function InitCrypto(ThrowExceptions: Boolean = False): Boolean;
 
 implementation
 
 var
-  Loaded: Boolean;
-  Initialized: Boolean;
+  LoadedSSL: Boolean;
+  InitializedSSL: Boolean;
+  LoadedCrypto: Boolean;
+  InitializedCrypto: Boolean;
+
+function InitSSL(ThrowExceptions: Boolean = False): Boolean;
+var
   FailedModuleName: string;
   FailedProcName: string;
-
-function OpenSSLInit(ThrowExceptions: Boolean = False): Boolean;
-var
   Module: HModule;
 
   procedure CheckExceptions;
   begin
-    if (not Initialized) and (ThrowExceptions) then
+    if (not InitializedSSL) and (ThrowExceptions) then
       LibraryExceptProc(FailedModuleName, FailedProcName);
   end;
 
@@ -227,34 +176,27 @@ var
 
 begin
   ThrowExceptions := ThrowExceptions and (@LibraryGetProc <> nil);
-  if Loaded then
+  if LoadedSSL then
   begin
     CheckExceptions;
-    Exit(Initialized);
+    Exit(InitializedSSL);
   end;
-  Loaded:= True;
-  if Initialized then
+  LoadedSSL:= True;
+  if InitializedSSL then
     Exit(True);
   Result := False;
   FailedModuleName := libssl;
   FailedProcName := '';
-  Module := LibraryLoad(libssl100);
+  Module := LibraryLoad(libssl);
   if Module = ModuleNil then
   begin
     CheckExceptions;
     Exit;
   end;
   Result :=
-    TryLoad('SSL_library_init', @SSL_library_init) and
-    TryLoad('SSL_load_error_strings', @SSL_load_error_strings) and
-		TryLoad('SSLv23_server_method', @SSLv23_server_method) and
-    TryLoad('SSLv3_server_method', @SSLv3_server_method) and
-		TryLoad('SSLv23_client_method', @SSLv23_client_method) and
-    TryLoad('SSLv3_client_method', @SSLv3_client_method) and
-    TryLoad('TLSv1_client_method', @TLSv1_client_method) and
-    TryLoad('TLSv1_1_client_method', @TLSv1_1_client_method) and
-    TryLoad('TLSv1_2_client_method', @TLSv1_2_client_method) and
-    TryLoad('DTLSv1_client_method', @DTLSv1_client_method) and
+    TryLoad('TLS_method', @TLS_method) and
+    TryLoad('TLS_client_method', @TLS_client_method) and
+    TryLoad('TLS_server_method', @TLS_server_method) and
     TryLoad('SSL_CTX_new', @SSL_CTX_new) and
     TryLoad('SSL_CTX_free', @SSL_CTX_free) and
     TryLoad('SSL_new', @SSL_new) and
@@ -287,51 +229,70 @@ begin
 		TryLoad('SSL_use_RSAPrivateKey_file', @SSL_use_RSAPrivateKey_file) and
 		TryLoad('SSL_CTX_check_private_key', @SSL_CTX_check_private_key) and
 		TryLoad('SSL_check_private_key', @SSL_check_private_key);
-  if not Result then
-    Exit;
+  InitializedSSL := Result;
+end;
+
+function InitCrypto(ThrowExceptions: Boolean = False): Boolean;
+var
+  FailedModuleName: string;
+  FailedProcName: string;
+  Module: HModule;
+
+  procedure CheckExceptions;
+  begin
+    if (not InitializedCrypto) and (ThrowExceptions) then
+      LibraryExceptProc(FailedModuleName, FailedProcName);
+  end;
+
+  function TryLoad(const ProcName: string; var Proc: Pointer): Boolean;
+  begin
+    FailedProcName := ProcName;
+    Proc := LibraryGetProc(Module, ProcName);
+    Result := Proc <> nil;
+    if not Result then
+		begin
+      CheckExceptions;
+		end;
+  end;
+
+begin
+  ThrowExceptions := ThrowExceptions and (@LibraryGetProc <> nil);
+  if LoadedCrypto then
+  begin
+    CheckExceptions;
+    Exit(InitializedCrypto);
+  end;
+  LoadedCrypto:= True;
+  if InitializedCrypto then
+    Exit(True);
   Result := False;
   FailedModuleName := libcrypto;
   FailedProcName := '';
-  Module := LibraryLoad(libcrypto1);
+  Module := LibraryLoad(FailedModuleName);
   if Module = ModuleNil then
   begin
     CheckExceptions;
     Exit;
   end;
   Result :=
-    TryLoad('OPENSSL_add_all_algorithms_conf', @OPENSSL_add_all_algorithms_conf) and
-    TryLoad('OPENSSL_add_all_algorithms_noconf', @OPENSSL_add_all_algorithms_noconf) and
-    TryLoad('OpenSSL_add_all_ciphers', @OpenSSL_add_all_ciphers) and
-    TryLoad('OPENSSL_add_all_algorithms_noconf', @OpenSSL_add_all_digests) and
-    TryLoad('MD5_Init', @MD5_Init) and
-    TryLoad('MD5_Update', @MD5_Update) and
-    TryLoad('MD5_Final', @MD5_Final) and
-    TryLoad('SHA1_Init', @SHA1_Init) and
-    TryLoad('SHA1_Update', @SHA1_Update) and
-    TryLoad('SHA1_Final', @SHA1_Final) and
-    TryLoad('SHA256_Init', @SHA256_Init) and
-    TryLoad('SHA256_Update', @SHA256_Update) and
-    TryLoad('SHA256_Final', @SHA256_Final) and
-    TryLoad('SHA512_Init', @SHA512_Init) and
-    TryLoad('SHA512_Update', @SHA512_Update) and
-    TryLoad('SHA512_Final', @SHA512_Final) and
     TryLoad('EVP_md5', @EVP_md5) and
     TryLoad('EVP_sha1', @EVP_sha1) and
     TryLoad('EVP_sha256', @EVP_sha256) and
     TryLoad('EVP_sha512', @EVP_sha512) and
-    TryLoad('EVP_cleanup', @EVP_cleanup) and
-    TryLoad('HMAC_CTX_init', @HMAC_CTX_init) and
-    TryLoad('HMAC_CTX_cleanup', @HMAC_CTX_cleanup) and
+    TryLoad('EVP_MD_CTX_new', @EVP_MD_CTX_new) and
+    TryLoad('EVP_MD_CTX_reset', @EVP_MD_CTX_reset) and
+    TryLoad('EVP_MD_CTX_free', @EVP_MD_CTX_free) and
+    TryLoad('EVP_DigestInit_ex', @EVP_DigestInit_ex) and
+    TryLoad('EVP_DigestUpdate', @EVP_DigestUpdate) and
+    TryLoad('EVP_DigestFinal', @EVP_DigestFinal) and
+    TryLoad('HMAC_CTX_new', @HMAC_CTX_new) and
+    TryLoad('HMAC_CTX_reset', @HMAC_CTX_reset) and
+    TryLoad('HMAC_CTX_free', @HMAC_CTX_free) and
     TryLoad('HMAC_Init_ex', @HMAC_Init_ex) and
     TryLoad('HMAC_Update', @HMAC_Update) and
-    TryLoad('HMAC_Final', @HMAC_Final);
-  if not Result then
-    Exit;
-  FailedModuleName := '';
-  FailedProcName := '';;
-  Initialized := True;
-  SSL_library_init;
-  SSL_load_error_strings;
+    TryLoad('HMAC_Final', @HMAC_Final) and
+    TryLoad('HMAC', @HMAC);
+  InitializedCrypto := Result;
 end;
 
 end.
