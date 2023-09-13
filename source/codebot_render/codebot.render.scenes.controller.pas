@@ -6,7 +6,7 @@ interface
 
 uses
   SysUtils, Classes, Controls, Forms, OpenGLContext,
-  Codebot.System, X,
+  Codebot.System,
   Codebot.Animation,
   Codebot.Render.Contexts,
   Codebot.Render.Scenes;

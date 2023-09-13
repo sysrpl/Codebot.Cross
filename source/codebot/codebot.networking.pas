@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified August 2019                                *)
+(*  Modified September 2023                             *)
 (*                                                      *)
 (********************************************************)
 
@@ -319,7 +319,7 @@ var
 begin
   Close;
   if FSecure then
-    if not OpenSSLInit then
+    if not InitSSL then
       Exit(False);
 	FAddress := Address;
   FPort := Port;
@@ -344,7 +344,7 @@ begin
   FState := ssClient;
   if FSecure then
   begin
-    FSSLContext := SSL_CTX_new(TLSv1_2_client_method);
+    FSSLContext := SSL_CTX_new(TLS_method);
     if FSSLContext = nil then
     begin
       Close;
@@ -365,7 +365,7 @@ begin
     if SSL_connect(FSSLSocket) <> 1 then
     begin
       WriteLn(I);
-      SSL_get_error(FSSLContext, I);
+      SSL_get_error(FSSLSocket, I);
       WriteLn(I);
       Close;
       Exit(False);

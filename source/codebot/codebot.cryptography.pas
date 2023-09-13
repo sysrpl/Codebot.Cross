@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified August 2019                                *)
+(*  Modified September 2023                             *)
 (*                                                      *)
 (********************************************************)
 
@@ -65,146 +65,80 @@ function DecryptSequence(const S: string): string;
 implementation
 
 {$region hashing}
+const
+  BufferSize = 4096;
+
+var
+  HashInitialized: Boolean;
+  HashMethods: array[THashKind] of TEVPMethod;
+
+procedure Init;
+begin
+  if HashInitialized then
+    Exit;
+  InitCrypto(True);
+  HashMethods[hashMD5] := EVP_md5;
+  HashMethods[hashSHA1] := EVP_sha1;
+  HashMethods[hashSHA256] := EVP_sha256;
+  HashMethods[hashSHA512] := EVP_sha512;
+  HashInitialized := True;
+end;
+
 function DigestToStr(const Digest: TDigest): string;
 begin
   Result := HexEncode(Digest);
 end;
 
-type
-  THashMethods = record
-    Context: array[0..500] of Byte;
-    Digest: TDigest;
-    Init: function(var Context): LongBool; cdecl;
-    Update: function(var Context; Data: Pointer; Size: Cardinal): LongBool; cdecl;
-    Final: function(var Digest; var Context): LongBool; cdecl;
-  end;
-
-  TAuthMethod = record
-    Digest: TDigest;
-    Method:  TEVPMethod;
-  end;
-
-function GetHashMethods(Kind: THashKind; out Methods: THashMethods): Boolean;
-begin
-  OpenSSLInit(True);
-  Result := True;
-  case Kind of
-    hashMD5:
-      begin
-        Methods.Digest := TBuffer.Create(SizeOf(TMD5Digest));
-        Methods.Init := @MD5_Init;
-        Methods.Update := @MD5_Update;
-        Methods.Final := @MD5_Final;
-      end;
-    hashSHA1:
-      begin
-        Methods.Digest := TBuffer.Create(SizeOf(TSHA1Digest));
-        Methods.Init := @SHA1_Init;
-        Methods.Update := @SHA1_Update;
-        Methods.Final := @SHA1_Final;
-      end;
-    hashSHA256:
-      begin
-        Methods.Digest := TBuffer.Create(SizeOf(TSHA256Digest));
-        Methods.Init := @SHA256_Init;
-        Methods.Update := @SHA256_Update;
-        Methods.Final := @SHA256_Final;
-      end;
-    hashSHA512:
-      begin
-        Methods.Digest := TBuffer.Create(SizeOf(TSHA512Digest));
-        Methods.Init := @SHA512_Init;
-        Methods.Update := @SHA512_Update;
-        Methods.Final := @SHA512_Final;
-      end;
-  { If we add more...
-  else
-    Methods.Digest := TBuffer.Create(0);
-    Methods.Init := nil;
-    Methods.Update := nil;
-    Methods.Final := nil;
-    Result := False; }
-  end;
-end;
-
-function GetAuthMethod(Kind: THashKind; out Method: TAuthMethod): Boolean;
-begin
-  OpenSSLInit(True);
-  Result := True;
-  case Kind of
-    hashMD5:
-      begin
-        Method.Digest := TBuffer.Create(SizeOf(TMD5Digest));
-        Method.Method := EVP_md5;
-      end;
-    hashSHA1:
-      begin
-        Method.Digest := TBuffer.Create(SizeOf(TSHA1Digest));
-        Method.Method := EVP_sha1;
-      end;
-    hashSHA256:
-      begin
-        Method.Digest := TBuffer.Create(SizeOf(TSHA256Digest));
-        Method.Method := EVP_sha256;
-      end;
-    hashSHA512:
-      begin
-        Method.Digest := TBuffer.Create(SizeOf(TSHA512Digest));
-        Method.Method := EVP_sha512;
-      end;
-  { If we add more...
-  else
-    Method.Digest := TBuffer.Create(0);
-    Method.Method := nil;
-    Result := False;}
-  end;
-end;
-
 function HashString(Kind: THashKind; const S: string): TDigest;
 begin
-  Result := HashBuffer(Kind, PAnsiChar(S)^, Length(S));
+  Result := HashBuffer(Kind, PAnsiChar(S)^, Cardinal(Length(S)));
 end;
 
 function HashBuffer(Kind: THashKind; var Buffer; BufferSize: Cardinal): TDigest;
 var
-  Methods: THashMethods;
+  Ctx: TEVPMdCtx;
+  Size: Cardinal;
 begin
-  if GetHashMethods(Kind, Methods) then
-  begin
-    Methods.Init(Methods.Context);
-    Methods.Update(Methods.Context, @Buffer, BufferSize);
-    if not Methods.Final(Methods.Digest.Data^, Methods.Context) then
-      Methods.Digest := TDigest.Create(0);
+  Init;
+  Result := TDigest.Create(EVP_MAX_MD_SIZE);
+  Ctx := EVP_MD_CTX_new;
+  try
+    EVP_DigestInit_ex(Ctx, HashMethods[Kind]);
+    EVP_DigestUpdate(Ctx, @Buffer, BufferSize);
+    EVP_DigestFinal(Ctx, Result.Data, Size);
+    Result.Size := LongInt(Size);
+  finally
+    EVP_MD_CTX_free(Ctx);
   end;
-  Result := Methods.Digest;
 end;
 
 function HashStream(Kind: THashKind; Stream: TStream): TDigest;
-const
-  BufferSize = $10000;
 var
-  Buffer: TBuffer;
-  Bytes: LongInt;
-
-  function ReadBuffer: Boolean;
-  begin
-    Bytes := Stream.Read(Buffer.Data^, BufferSize);
-    Result := Bytes > 0;
-  end;
-
-var
-  Methods: THashMethods;
+  Ctx: TEVPMdCtx;
+  Size: Cardinal;
+  Bytes: Pointer;
+  BytesRead: LongInt;
 begin
-  if GetHashMethods(Kind, Methods) then
-  begin
-    Buffer := TBuffer.Create(BufferSize);
-    Methods.Init(Methods.Context);
-    while ReadBuffer do
-      Methods.Update(Methods.Context, Buffer, Bytes);
-    if not Methods.Final(Methods.Digest.Data^, Methods.Context) then
-      Methods.Digest := TDigest.Create(0);
+  Init;
+  Result := TDigest.Create(EVP_MAX_MD_SIZE);
+  Bytes := GetMem(BufferSize);
+  Ctx := EVP_MD_CTX_new;
+  try
+    EVP_DigestInit_ex(Ctx, HashMethods[Kind]);
+    BytesRead := Stream.Read(Bytes^, BufferSize);
+    while BytesRead > 0 do
+    begin
+      EVP_DigestUpdate(Ctx, Bytes, Cardinal(BytesRead));
+      BytesRead := Stream.Read(Bytes^, BufferSize);
+    end;
+    if EVP_DigestFinal(Ctx, Result.Data, Size) then
+      Result.Size := LongInt(Size)
+    else
+      Result.Size := 0;
+  finally
+    EVP_MD_CTX_free(Ctx);
+    FreeMem(Bytes);
   end;
-  Result := Methods.Digest;
 end;
 
 function HashFile(Kind: THashKind; const FileName: string): TDigest;
@@ -221,65 +155,56 @@ end;
 
 function AuthString(const Key: string; Kind: THashKind; const S: string): TDigest;
 begin
-  Result := AuthBuffer(Key, Kind, Pointer(S)^, Length(S));
+  Result := AuthBuffer(Key, Kind, Pointer(S)^, Cardinal(Length(S)));
 end;
 
 function AuthBuffer(const Key: string; Kind: THashKind; var Buffer; BufferSize: Cardinal): TDigest;
 var
-  Method: TAuthMethod;
-  Context: THMACCtx;
-  I: LongWord;
+  Ctx: THMACCtx;
+  Size: Cardinal;
 begin
-  if GetAuthMethod(Kind, Method) then
-  begin
-    HMAC_CTX_init(Context);
-    try
-      HMAC_Init_ex(Context, Pointer(Key), Length(Key), Method.Method, nil);
-      HMAC_Update(Context, @Buffer, BufferSize);
-      I := Method.Digest.Size;
-      if not HMAC_Final(Context, Method.Digest, I) then
-        Method.Digest := TDigest.Create(0);
-    finally
-      HMAC_CTX_cleanup(Context);
-    end;
+  Init;
+  Result := TDigest.Create(EVP_MAX_MD_SIZE);
+  Ctx := HMAC_CTX_new;
+  try
+    HMAC_Init_ex(Ctx, Pointer(Key), Length(Key), HashMethods[Kind]);
+    HMAC_Update(Ctx, @Buffer, BufferSize);
+    if HMAC_Final(Ctx, Result.Data, Size) then
+      Result.Size := LongInt(Size)
+    else
+      Result.Size := 0;;
+  finally
+    HMAC_CTX_free(Ctx);
   end;
-  Result := Method.Digest;
 end;
 
 function AuthStream(const Key: string; Kind: THashKind; Stream: TStream): TDigest;
-const
-  BufferSize = $10000;
 var
-  Buffer: TBuffer;
-  Bytes: LongInt;
-
-  function ReadBuffer: Boolean;
-  begin
-    Bytes := Stream.Read(Buffer.Data^, BufferSize);
-    Result := Bytes > 0;
-  end;
-
-var
-  Method: TAuthMethod;
-  Context: THMACCtx;
-  I: LongWord;
+  Ctx: THMACCtx;
+  Size: Cardinal;
+  Bytes: Pointer;
+  BytesRead: LongInt;
 begin
-  if GetAuthMethod(Kind, Method) then
-  begin
-    Buffer := TBuffer.Create(BufferSize);
-    HMAC_CTX_init(Context);
-    try
-      HMAC_Init_ex(Context, Pointer(Key), Length(Key), Method.Method, nil);
-      while ReadBuffer do
-        HMAC_Update(Context, Buffer, BufferSize);
-      I := Method.Digest.Size;
-      if not HMAC_Final(Context, Method.Digest, I) then
-        Method.Digest := TDigest.Create(0);
-    finally
-      HMAC_CTX_cleanup(Context);
+  Init;
+  Result := TDigest.Create(EVP_MAX_MD_SIZE);
+  Bytes := GetMem(BufferSize);
+  Ctx := HMAC_CTX_new;
+  try
+    HMAC_Init_ex(Ctx, Pointer(Key), Length(Key), HashMethods[Kind]);
+    BytesRead := Stream.Read(Bytes^, BufferSize);
+    while BytesRead > 0 do
+    begin
+      HMAC_Update(Ctx, Bytes, Cardinal(BytesRead));
+      BytesRead := Stream.Read(Bytes^, BufferSize);
     end;
+    if HMAC_Final(Ctx, Result.Data, Size) then
+      Result.Size := LongInt(Size)
+    else
+      Result.Size := 0;
+  finally
+    HMAC_CTX_free(Ctx);
+    FreeMem(Bytes);
   end;
-  Result := Method.Digest;
 end;
 
 function AuthFile(const Key: string; Kind: THashKind; const FileName: string): TDigest;
