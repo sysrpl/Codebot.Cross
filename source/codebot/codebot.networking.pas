@@ -362,11 +362,9 @@ begin
       Exit(False);
     end;
     I := SSL_connect(FSSLSocket);
-    if SSL_connect(FSSLSocket) <> 1 then
+    if I <> 1 then
     begin
-      WriteLn(I);
       SSL_get_error(FSSLSocket, I);
-      WriteLn(I);
       Close;
       Exit(False);
     end;

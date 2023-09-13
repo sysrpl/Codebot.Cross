@@ -32,6 +32,7 @@ type
     FFixed: Boolean;
     FMinWidth: Integer;
     FSort: TSortingOrder;
+    FCanSelect: Boolean;
     FTag: Integer;
     FVisible: Boolean;
     FWidth: Integer;
@@ -46,6 +47,7 @@ type
     procedure SetWidth(Value: Integer);
     function GetOnResize: INotifyDelegate;
   protected
+    function GetDisplayName: string; override;
     procedure DoResize;
   public
     constructor Create(ACollection: TCollection); override;
@@ -53,6 +55,7 @@ type
     property VisibleIndex: Integer read GetVisibleIndex;
   published
     property Alignment: TAlignment read FAlignment write SetAlignment default taLeftJustify;
+    property CanSelect: Boolean read FCanSelect write FCanSelect;
     property Caption: string read FCaption write SetCaption;
     property Fixed: Boolean read FFixed write SetFixed default False;
     property MinWidth: Integer read FMinWidth write SetMinWidth default 10;
@@ -516,6 +519,14 @@ begin
   FTag := Collection.Count - 1;
 end;
 
+function THeaderColumn.GetDisplayName: string;
+begin
+  if Length(FCaption) = 0 then
+    Result := inherited GetDisplayName
+  else
+    Result := FCaption;
+end;
+
 procedure THeaderColumn.SetAlignment(Value: TAlignment);
 begin
   if FAlignment = Value then Exit;
@@ -567,6 +578,8 @@ end;
 
 procedure THeaderColumn.SetSort(Value: TSortingOrder);
 begin
+  if not FCanSelect then
+    Value := soNone;
   if FSort = Value then Exit;
   FSort := Value;
   Changed(False);
@@ -701,6 +714,8 @@ end;
 
 procedure THeaderBar.SetSelected(Value: THeaderColumn);
 begin
+  if not Value.FCanSelect then
+    Exit;
   if FSelected = Value then Exit;
   FSelected := Value;
   Invalidate;
@@ -756,7 +771,7 @@ begin
   State := [];
   Theme.Select(State);
   F := NewFont(Font);
-  F.Color := F.Color.Lighten(0.4);
+  // F.Color := F.Color.Lighten(0.4);
   for I := 0 to FColumns.Count - 1 do
   begin
     Column := FColumns[I];
@@ -779,6 +794,12 @@ begin
     R.Inflate(Margin, 0);
     R.Offset(0, 1);
     Dec(R.Width);
+    if dsPressed in State then
+      F.Color := clWindowText
+    else if dsSelected in State then
+      F.Color := clHighlightText
+    else
+      F.Color := clWindowText;
     if R.Width > 10 then
       Surface.TextOut(F, Column.Caption, R, AlignDir[Column.Alignment]);
   end;

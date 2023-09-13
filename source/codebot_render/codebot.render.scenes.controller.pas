@@ -1,23 +1,30 @@
 unit Codebot.Render.Scenes.Controller;
 
-{$i ../codebot/codebot.inc}
+{$i render.inc}
 
 interface
 
 uses
-  SysUtils, Classes, Controls, Forms, OpenGLContext,
-  Codebot.System,
-  Codebot.Animation,
-  Codebot.Render.Contexts,
-  Codebot.Render.Scenes;
+  SysUtils, Classes, Controls, Forms,
+  Codebot.Render.Scenes,
+  Codebot.Render.Controls;
+
+type
+  TInputMotion = (imDown, imUp, imMove);
+
+  ISceneController = interface
+  ['{F18D1376-CB63-4601-9D65-AB30AA929D2C}']
+    procedure Start;
+    procedure Stop;
+    procedure Key(Motion: TInputMotion; var Key: Word; Shift: TShiftState);
+    procedure Mouse(Motion: TInputMotion; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+  end;
 
 { TSceneController }
 
-type
-  TSceneController = class(TComponent)
+  TSceneController = class(TComponent, ISceneController)
   private
-    FTimer: TAnimationTimer;
-    FControl: TOpenGLControl;
+    FControl: TGraphicsBox;
     FScene: TScene;
     FOnKeyUp: TKeyEvent;
     FSecond: Int64;
@@ -27,7 +34,6 @@ type
     FOnMouseMove: TMouseMoveEvent;
     FOnMouseUp: TMouseEvent;
     FOnPaint: TNotifyEvent;
-    procedure Animate(Sender: TObject);
     procedure ControlKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure ControlMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -39,7 +45,7 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    procedure OpenScene(Control: TOpenGLControl; SceneClass: TSceneClass);
+    procedure OpenScene(Control: TGraphicsBox; SceneClass: TSceneClass);
     procedure UpdateScene;
     procedure CloseScene;
     property Scene: TScene read FScene;
@@ -53,21 +59,19 @@ implementation
 constructor TSceneController.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FTimer := TAnimationTimer.Create(Self);
-  FTimer.OnTimer := Animate;
 end;
 
 procedure TSceneController.Animate(Sender: TObject);
 begin
-  if FScene <> nil then
+  {if FScene <> nil then
     UpdateScene
   else
-    FTimer.Enabled := False;
+    FTimer.Enabled := False;}
 end;
 
 destructor TSceneController.Destroy;
 begin
-  FTimer.Free;
+  // FTimer.Free;
   CloseScene;
   inherited Destroy;
 end;
@@ -75,7 +79,7 @@ end;
 procedure TSceneController.OpenScene(Control: TOpenGLControl;
   SceneClass: TSceneClass);
 begin
-  FTimer.Enabled := False;
+  // FTimer.Enabled := False;
   CloseScene;
   if (Control = nil) or (SceneClass = nil) then
     Exit;
@@ -94,7 +98,6 @@ begin
   FControl.OnMouseUp := ControlMouseUp;
   FControl.OnPaint := ControlPaint;
   FControl.Invalidate;
-  FTimer.Enabled := FScene.Animated;
 end;
 
 procedure TSceneController.UpdateScene;
@@ -110,7 +113,6 @@ var
 begin
   if (FControl = nil) or (FScene = nil) then
     Exit;
-  FTimer.Enabled := False;
   FControl.OnKeyUp := FOnKeyUp;
   FControl.OnMouseDown := FOnMouseDown;
   FControl.OnMouseMove := FOnMouseMove;

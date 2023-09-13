@@ -8,10 +8,11 @@ unit codebot_rendering;
 interface
 
 uses
-  Codebot.GLES, Codebot.Render.Buffers, Codebot.Render.Contexts, 
+  Codebot.GLES, Codebot.GLES.Linux, Codebot.GLES.Windows, 
+  Codebot.Render.Controls, Codebot.Render.Buffers, Codebot.Render.Contexts, 
   Codebot.Render.Fonts, Codebot.Render.Scenes.Controller, 
   Codebot.Render.Scenes, Codebot.Render.Shaders, Codebot.Render.Textures, 
-  Codebot.Render.World, LazarusPackageIntf;
+  Codebot.Render.World, codebot.render.controls.gtk2, LazarusPackageIntf;
 
 implementation
 

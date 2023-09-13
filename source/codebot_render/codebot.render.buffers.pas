@@ -1,6 +1,6 @@
 unit Codebot.Render.Buffers;
 
-{$i codebot.inc}
+{$i render.inc}
 
 interface
 
