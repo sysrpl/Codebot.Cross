@@ -69,6 +69,7 @@ type
     procedure SetCapacity(Value: Integer);
     function GetItem(Index: Integer): ItemType;
     procedure SetItem(Index: Integer; const Value: ItemType);
+    function GetDirect(Index: Integer): PItemType;
   protected
 		FItems: TArrayList<ItemType>;
     { Allows list types to take action on add }
@@ -111,6 +112,8 @@ type
       Remarks
       When setting the existing item will be deleted }
     property Item[Index: Integer]: ItemType read GetItem write SetItem; default;
+    { Retreive a direct reference to the item }
+    property Direct[Index: Integer]: PItemType read GetDirect;
   end;
 
 { TListDuplicates allows, ignores, or generates errors which a matching value is
@@ -584,6 +587,12 @@ function TList<TItem>.GetItem(Index: Integer): ItemType;
 begin
   CheckBounds('GetItem', Index);
   Result := FItems[Index];
+end;
+
+function TList<TItem>.GetDirect(Index: Integer): PItemType;
+begin
+  CheckBounds('GetDirect', Index);
+  Result := @FItems.Items[Index];
 end;
 
 procedure TList<TItem>.SetItem(Index: Integer; const Value: ItemType);

@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <Name Value="codebot_rendering"/>
     <Type Value="RunAndDesignTime"/>
+    <AutoUpdate Value="Manually"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
@@ -14,59 +15,73 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="11">
+    <Files Count="15">
       <Item1>
         <Filename Value="codebot.gles.pas"/>
         <UnitName Value="Codebot.GLES"/>
       </Item1>
       <Item2>
-        <Filename Value="codebot.inc"/>
-        <Type Value="Include"/>
+        <Filename Value="codebot.gles.linux.pas"/>
+        <UnitName Value="Codebot.GLES.Linux"/>
       </Item2>
       <Item3>
-        <Filename Value="codebot.render.buffers.pas"/>
-        <UnitName Value="Codebot.Render.Buffers"/>
+        <Filename Value="codebot.gles.windows.pas"/>
+        <UnitName Value="Codebot.GLES.Windows"/>
       </Item3>
       <Item4>
-        <Filename Value="codebot.render.contexts.pas"/>
-        <UnitName Value="Codebot.Render.Contexts"/>
+        <Filename Value="codebot.render.controls.pas"/>
+        <UnitName Value="Codebot.Render.Controls"/>
       </Item4>
       <Item5>
-        <Filename Value="codebot.render.fonts.pas"/>
-        <UnitName Value="Codebot.Render.Fonts"/>
+        <Filename Value="codebot.render.buffers.pas"/>
+        <UnitName Value="Codebot.Render.Buffers"/>
       </Item5>
       <Item6>
-        <Filename Value="codebot.render.scenes.controller.pas"/>
-        <UnitName Value="Codebot.Render.Scenes.Controller"/>
+        <Filename Value="codebot.render.contexts.pas"/>
+        <UnitName Value="Codebot.Render.Contexts"/>
       </Item6>
       <Item7>
-        <Filename Value="codebot.render.scenes.pas"/>
-        <UnitName Value="Codebot.Render.Scenes"/>
+        <Filename Value="codebot.render.fonts.pas"/>
+        <UnitName Value="Codebot.Render.Fonts"/>
       </Item7>
       <Item8>
-        <Filename Value="codebot.render.shaders.pas"/>
-        <UnitName Value="Codebot.Render.Shaders"/>
+        <Filename Value="codebot.render.scenes.controller.pas"/>
+        <UnitName Value="Codebot.Render.Scenes.Controller"/>
       </Item8>
       <Item9>
-        <Filename Value="codebot.render.textures.pas"/>
-        <UnitName Value="Codebot.Render.Textures"/>
+        <Filename Value="codebot.render.scenes.pas"/>
+        <UnitName Value="Codebot.Render.Scenes"/>
       </Item9>
       <Item10>
-        <Filename Value="codebot.render.world.pas"/>
-        <UnitName Value="Codebot.Render.World"/>
+        <Filename Value="codebot.render.shaders.pas"/>
+        <UnitName Value="Codebot.Render.Shaders"/>
       </Item10>
       <Item11>
+        <Filename Value="codebot.render.textures.pas"/>
+        <UnitName Value="Codebot.Render.Textures"/>
+      </Item11>
+      <Item12>
+        <Filename Value="codebot.render.world.pas"/>
+        <UnitName Value="Codebot.Render.World"/>
+      </Item12>
+      <Item13>
         <Filename Value="codebot_rendering.pas"/>
         <UnitName Value="codebot_rendering"/>
-      </Item11>
+      </Item13>
+      <Item14>
+        <Filename Value="render.inc"/>
+        <Type Value="Include"/>
+      </Item14>
+      <Item15>
+        <Filename Value="codebot.render.controls.gtk2.pas"/>
+        <UnitName Value="codebot.render.controls.gtk2"/>
+      </Item15>
     </Files>
-    <RequiredPkgs Count="2">
+    <CompatibilityMode Value="True"/>
+    <RequiredPkgs Count="1">
       <Item1>
-        <PackageName Value="LazOpenGLContext"/>
-      </Item1>
-      <Item2>
         <PackageName Value="codebot"/>
-      </Item2>
+      </Item1>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

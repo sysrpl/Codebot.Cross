@@ -1,6 +1,6 @@
 unit Codebot.Render.Textures;
 
-{$i codebot.inc}
+{$i render.inc}
 
 interface
 

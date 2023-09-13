@@ -1,6 +1,6 @@
 unit Codebot.Render.Fonts;
 
-{$i codebot.inc}
+{$i render.inc}
 
 interface
 

@@ -8,6 +8,7 @@
 
 { <include docs/codebot.graphics.types.txt> }
 unit Codebot.Graphics.Types;
+
 {$WARN 3177 off : Some fields coming after "$1" were not initialized}
 {$i codebot.inc}
 
@@ -793,6 +794,9 @@ var
     ErrorCorrection: False;
     GammaCorrection: False;
   );
+
+const
+  JoinCaps: array[TLineJoin] of TLineCap = (cpButt, cpRound, cpButt);
 
 implementation
 

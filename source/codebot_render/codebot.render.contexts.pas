@@ -1,6 +1,6 @@
 unit Codebot.Render.Contexts;
 
-{$i codebot.inc}
+{$i render.inc}
 
 interface
 
@@ -9,6 +9,7 @@ uses
   Codebot.System,
   Codebot.Graphics,
   Codebot.Graphics.Types,
+  Codebot.GLES,
   Codebot.Geometry;
 
 type
@@ -271,9 +272,6 @@ resourcestring
 
 implementation
 
-uses
-  Codebot.GLES;
-
 var
   InternalContext: TObject;
 
@@ -396,7 +394,7 @@ const
   StackSize = 100;
 begin
   inherited Create;
-  if not LoadOpenGLES then
+  if not OpenGLInfo.IsValid then
     raise EContextError.Create(SNoOpenGL);
   InternalContext := Self;
   FAssetFolder := 'assets';

@@ -23,9 +23,9 @@ uses
 { Create a new matrix }
 function NewMatrix: IMatrix;
 { Create a new pen using a brush as the color }
-function NewPen(Brush: IBrush; Width: Float = 1): IPen; overload;
+function NewPen(Brush: IBrush; Width: Float = 1; Join: TLineJoin = jnMiter): IPen; overload;
 { Create a new solid color pen }
-function NewPen(Color: TColorB; Width: Float = 1): IPen; overload;
+function NewPen(Color: TColorB; Width: Float = 1; Join: TLineJoin = jnMiter): IPen; overload;
 { Create a new solid color brush }
 function NewBrush(Color: TColorB): ISolidBrush; overload;
 { Create a new bitmap pattern brush }
@@ -445,17 +445,21 @@ begin
   Result := NewMatrixCairo;
 end;
 
-function NewPen(Brush: IBrush; Width: Float): IPen;
+function NewPen(Brush: IBrush; Width: Float = 1; Join: TLineJoin = jnMiter): IPen; overload;
 begin
   Result := NewPenCairo(Brush, Width);
+  Result.LineJoin := Join;
+  Result.LineCap := JoinCaps[Join];
 end;
 
-function NewPen(Color: TBGRA; Width: Float): IPen;
+function NewPen(Color: TColorB; Width: Float = 1; Join: TLineJoin = jnMiter): IPen;
 begin
   Result := NewPenCairo(Color, Width);
+  Result.LineJoin := Join;
+  Result.LineCap := JoinCaps[Join];
 end;
 
-function NewBrush(Color: TBGRA): ISolidBrush;
+function NewBrush(Color: TColorB): ISolidBrush;
 begin
   Result := NewSolidBrushCairo(Color);
 end;
@@ -532,23 +536,27 @@ begin
     Result := NewMatrixGdi;
 end;
 
-function NewPen(Brush: IBrush; Width: Float): IPen;
+function NewPen(Brush: IBrush; Width: Float = 1; Join: TLineJoin = jnMiter): IPen;
 begin
   if LoadD2D then
     Result := NewPenD2D(Brush, Width)
   else
     Result := NewPenGdi(Brush, Width);
+  Result.LineJoin := Join;
+  Result.LineCap := JoinCaps[Join];
 end;
 
-function NewPen(Color: TBGRA; Width: Float): IPen;
+function NewPen(Color: TColorB; Width: Float = 1; Join: TLineJoin = jnMiter): IPen;
 begin
   if LoadD2D then
     Result := NewPenD2D(Color, Width)
   else
     Result := NewPenGdi(Color, Width);
+  Result.LineJoin := Join;
+  Result.LineCap := JoinCaps[Join];
 end;
 
-function NewBrush(Color: TBGRA): ISolidBrush;
+function NewBrush(Color: TColorB): ISolidBrush;
 begin
   if LoadD2D then
     Result := NewSolidBrushD2D(Color)
@@ -2854,10 +2862,11 @@ begin
   begin
     C := clHighlight;
     H := THSL(C);
-    H.Lightness := 0.925;
+    H.Lightness := 0.5;
     C := H;
+    C.Alpha := 170;
     B.AddStop(C, 0.4);
-    C := C.Lighten(0.6);
+    C := C.Lighten(0.4);
     B.AddStop(C, 0.5);
   end
   else
@@ -2865,19 +2874,19 @@ begin
     C := Control.CurrentColor;
     B.AddStop(C.Fade(0.8).Darken(0.1), 0);
     B.AddStop(C, 0.5);
-    B.AddStop(C.Lighten(0.8), 0.75);
+    B.AddStop(C.Lighten(0.1), 0.75);
   end;
   Surface.FillRect(B, R);
   if dsBackground in State then
     Exit;
-  R.Inflate(-1, -1);
-  R.Bottom := Rect.Bottom + 1;
-  StrokeRectColor(Surface, R, clWhite);
+  //R.Inflate(-1, -1);
+  //R.Bottom := Rect.Bottom + 1;
+  //StrokeRectColor(Surface, R, clBtnFace);
   R := Rect;
   R.Inflate(0, 5);
   R.Left := -5;
-  C := clBtnShadow;
-  C := C.Lighten(0.5);
+  C := clBtnFace;
+  C := C.Lighten(0.3);
   StrokeRectColor(Surface, R, C);
   C := clBtnShadow;
   C := C.Lighten(0.4);
@@ -2891,9 +2900,10 @@ begin
   else if dsSelected in State then
   begin
     C := clHighlight;
-    C := C.Lighten(0.5);
+    C := C.Lighten(0.25);
     R := Rect;
     R.Left := R.Left - 1;
+    if R.Left < 0 then R.Left := 0;
     StrokeRectColor(Surface, R, C);
     C := clHighlight;
     C := C.Lighten(0.25);

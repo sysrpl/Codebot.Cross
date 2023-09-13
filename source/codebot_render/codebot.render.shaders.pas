@@ -1,6 +1,6 @@
 unit Codebot.Render.Shaders;
 
-{$i codebot.inc}
+{$i render.inc}
 
 interface
 

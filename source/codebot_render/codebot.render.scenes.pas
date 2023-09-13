@@ -1,6 +1,6 @@
 unit Codebot.Render.Scenes;
 
-{$i codebot.inc}
+{$i render.inc}
 
 interface
 
