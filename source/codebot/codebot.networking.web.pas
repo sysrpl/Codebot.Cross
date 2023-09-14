@@ -11,7 +11,7 @@ unit Codebot.Networking.Web;
 
 {$i codebot.inc}
 {$ifdef linux}
-  {$define use_curl}
+  {.$define use_curl}
 {$endif}
 
 interface
@@ -171,19 +171,22 @@ type
     property OnComplete: TNotifyEvent read FOnComplete write FOnComplete;
   end;
 
+const
+  SDefaultUA = 'Mozilla/5.0 (compatible; WebKit/Chrome)';
+
 { Simplified HTTP GET with response output to a stream }
-function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = ''): Boolean; overload;
+function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = SDefaultUA): Boolean; overload;
 { Simplified HTTP GET with response output to a string }
-function WebGet(const Url: TUrl; out Response: string; const UserAgent: string = ''): Boolean; overload;
+function WebGet(const Url: TUrl; out Response: string; const UserAgent: string = SDefaultUA): Boolean; overload;
 { Simplified HTTP POST with response output to a stream }
-function WebPost(const Url: TUrl; Args: TNamedStrings; Response: TStream; const UserAgent: string = ''): Boolean; overload;
+function WebPost(const Url: TUrl; Args: TNamedStrings; Response: TStream; const UserAgent: string = SDefaultUA): Boolean; overload;
 { Simplified HTTP POST with response output to a string }
-function WebPost(const Url: TUrl; Args: TNamedStrings; out Response: string; const UserAgent: string = ''): Boolean; overload;
+function WebPost(const Url: TUrl; Args: TNamedStrings; out Response: string; const UserAgent: string = SDefaultUA): Boolean; overload;
 {$ifdef use_curl}
 { Use curl to HTTP GET with response output to a stream }
-function CurlGet(const Url: string; Response: TStream; const UserAgent: string = ''): Boolean; overload;
+function CurlGet(const Url: string; Response: TStream; const UserAgent: string = SDefaultUA): Boolean; overload;
 { Use curl to HTTP GET with response output to a string }
-function CurlGet(const Url: string; out Response: string; const UserAgent: string = ''): Boolean; overload;
+function CurlGet(const Url: string; out Response: string; const UserAgent: string = SDefaultUA): Boolean; overload;
 {$endif}
 
 const
@@ -199,13 +202,13 @@ const
 function HttpResponseHeaderExtract(var Buffer: string; out Header: string;
   out BreakStyle: string): Boolean;
 { HttpRequestGet creates an http get request given a url }
-function HttpRequestGet(const Url: TUrl; const UserAgent: string = ''): string;
+function HttpRequestGet(const Url: TUrl; const UserAgent: string = SDefaultUA): string;
 { HttpRequestPost creates an http post request given a url and arguments }
-function HttpRequestPostArgs(const Url: TUrl; const Args: TNamedStrings; const UserAgent: string = ''): string;
+function HttpRequestPostArgs(const Url: TUrl; const Args: TNamedStrings; const UserAgent: string = SDefaultUA): string;
 { HttpRequestPostJson creates an http post request given a url and json string }
-function HttpRequestPostJson(const Url: TUrl; const Json: string; const UserAgent: string = ''): string;
+function HttpRequestPostJson(const Url: TUrl; const Json: string; const UserAgent: string = SDefaultUA): string;
 { HttpRequestPostJson creates an http post request given a url and json string }
-function HttpRequestPostXml(const Url: TUrl; const Xml: string; const UserAgent: string = ''): string;
+function HttpRequestPostXml(const Url: TUrl; const Xml: string; const UserAgent: string = SDefaultUA): string;
 { UrlEncode escapes char sequences suitable for posting data }
 function UrlEncode(const Value: string): string;
 { UrlDecode reverts previously escaped char sequences }
@@ -642,7 +645,7 @@ begin
   end;
 end;
 
-function HttpRequestGet(const Url: TUrl; const UserAgent: string = ''): string;
+function HttpRequestGet(const Url: TUrl; const UserAgent: string = SDefaultUA): string;
 begin
   if not Url.Valid then
     Exit('');
@@ -654,7 +657,7 @@ begin
   Result := Result + 'Connection: Close'#13#10#13#10;
 end;
 
-function HttpRequestPostArgs(const Url: TUrl; const Args: TNamedStrings; const UserAgent: string = ''): string;
+function HttpRequestPostArgs(const Url: TUrl; const Args: TNamedStrings; const UserAgent: string = SDefaultUA): string;
 var
   Content: string;
 begin
@@ -671,7 +674,7 @@ begin
   Result := Result + 'Connection: Close'#13#10#13#10 + Content;
 end;
 
-function HttpRequestPostJson(const Url: TUrl; const Json: string; const UserAgent: string = ''): string;
+function HttpRequestPostJson(const Url: TUrl; const Json: string; const UserAgent: string = SDefaultUA): string;
 begin
   if not Url.Valid then
     Exit('');
@@ -685,7 +688,7 @@ begin
   Result := Result + 'Connection: Close'#13#10#13#10 + Json;
 end;
 
-function HttpRequestPostXml(const Url: TUrl; const Xml: string; const UserAgent: string = ''): string;
+function HttpRequestPostXml(const Url: TUrl; const Xml: string; const UserAgent: string = SDefaultUA): string;
 begin
   if not Url.Valid then
     Exit('');
@@ -879,7 +882,7 @@ begin
 	Result := 'application/octet-stream';
 end;
 
-function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = ''): Boolean;
+function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = SDefaultUA): Boolean;
 var
   Request: THttpClient;
 begin
@@ -893,7 +896,7 @@ begin
   end;
 end;
 
-function WebGet(const Url: TUrl; out Response: string; const UserAgent: string = ''): Boolean;
+function WebGet(const Url: TUrl; out Response: string; const UserAgent: string = SDefaultUA): Boolean;
 var
   Request: THttpClient;
 begin
@@ -907,7 +910,7 @@ begin
   end;
 end;
 
-function WebPost(const Url: TUrl; Args: TNamedStrings; Response: TStream; const UserAgent: string = ''): Boolean;
+function WebPost(const Url: TUrl; Args: TNamedStrings; Response: TStream; const UserAgent: string = SDefaultUA): Boolean;
 var
   Request: THttpClient;
 begin
@@ -921,7 +924,7 @@ begin
   end;
 end;
 
-function WebPost(const Url: TUrl; Args: TNamedStrings; out Response: string; const UserAgent: string = ''): Boolean;
+function WebPost(const Url: TUrl; Args: TNamedStrings; out Response: string; const UserAgent: string = SDefaultUA): Boolean;
 var
   Request: THttpClient;
 begin
@@ -942,7 +945,7 @@ begin
   Response.Write(Ptr^, Result);
 end;
 
-function CurlGet(const Url: string; Response: TStream; const UserAgent: string = ''): Boolean;
+function CurlGet(const Url: string; Response: TStream; const UserAgent: string = SDefaultUA): Boolean;
 var
   Curl: PCURL;
 begin
@@ -977,7 +980,7 @@ begin
   Result := MemberSize * MemberCount;
 end;
 
-function CurlGet(const Url: string; out Response: string; const UserAgent: string = ''): Boolean;
+function CurlGet(const Url: string; out Response: string; const UserAgent: string = SDefaultUA): Boolean;
 var
   Curl: PCURL;
 begin
