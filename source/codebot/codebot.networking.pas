@@ -236,6 +236,11 @@ end;
 
 { TSocket class }
 
+{$define SockAccept := Codebot.Interop.Sockets.accept}
+{$define SockClose := Codebot.Interop.Sockets.close}
+{$define SockConnect := Codebot.Interop.Sockets.connect}
+{$define SockListen := Codebot.Interop.Sockets.listen}
+
 constructor TSocket.Create;
 const
   DefaultTimeout = 4000;
@@ -281,7 +286,7 @@ begin
   if C <> nil then
     SSL_CTX_free(C);
   shutdown(H, SHUT_RDWR);
-  Codebot.Interop.Sockets.close(H);
+  SockClose(H);
 end;
 
 procedure TSocket.TimerReset;
@@ -309,13 +314,17 @@ begin
     Result := TimeQuery - FTimer > FTimeout / 1000;
 end;
 
+procedure SSL_set_tlsext_host_name(ssl: Tssl; host: PChar);
+begin
+  SSL_ctrl(ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, TLSEXT_NAMETYPE_host_name, host);
+end;
+
 function TSocket.Connect(const Address: TAddressName; Port: Word):  Boolean;
 var
   Addr: TSockAddr;
   {$ifdef windows}
   Mode: LongWord;
   {$endif}
-  I: LongInt;
 begin
   Close;
   if FSecure then
@@ -336,7 +345,7 @@ begin
   Addr.sin_family := AF_INET;
   Addr.sin_addr.s_addr := FAddress.Address;
   Addr.sin_port := htons(FPort);
-  if Codebot.Interop.Sockets.connect(FHandle, @Addr, SizeOf(Addr)) = SOCKET_ERROR then
+  if SockConnect(FHandle, @Addr, SizeOf(Addr)) = SOCKET_ERROR then
   begin
     Close;
     Exit(False);
@@ -344,7 +353,7 @@ begin
   FState := ssClient;
   if FSecure then
   begin
-    FSSLContext := SSL_CTX_new(TLS_method);
+    FSSLContext := SSL_CTX_new(TLS_client_method);
     if FSSLContext = nil then
     begin
       Close;
@@ -356,15 +365,15 @@ begin
       Close;
       Exit(False);
     end;
+    if Address.Host <> '' then
+      SSL_set_tlsext_host_name(FSSLSocket, PChar(Address.Host));
     if SSL_set_fd(FSSLSocket, FHandle) <> 1 then
     begin
       Close;
       Exit(False);
     end;
-    I := SSL_connect(FSSLSocket);
-    if I <> 1 then
+    if SSL_connect(FSSLSocket) <> 1 then
     begin
-      SSL_get_error(FSSLSocket, I);
       Close;
       Exit(False);
     end;
@@ -412,7 +421,7 @@ begin
   end;
   if not FAddress.Resolved then
     FAddress := TAddressName.Create(Addr.sin_addr.s_addr);
-  if Codebot.Interop.Sockets.listen(FHandle, SOMAXCONN) = SOCKET_ERROR then
+  if SockListen(FHandle, SOMAXCONN) = SOCKET_ERROR then
   begin
     Close;
     Exit;
@@ -442,7 +451,7 @@ begin
   if FState <> ssServer then
     Exit;
   I := SizeOf(Addr);
-  H := Codebot.Interop.Sockets.accept(FHandle, @Addr, I);
+  H := SockAccept(FHandle, @Addr, I);
   if H = INVALID_SOCKET then
     Exit(False);
   Socket.FHandle := H;
@@ -624,7 +633,6 @@ function TSocket.GetConnected: Boolean;
 begin
   Result := FHandle <> INVALID_SOCKET;
 end;
-
 
 function SocketSend(const Host: string; Port: Word; const Data: string): Boolean;
 var
