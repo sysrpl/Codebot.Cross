@@ -25,6 +25,10 @@ const
   SSL_ERROR_SYSCALL = 5;
   SSL_ERROR_ZERO_RETURN = 6;
   SSL_ERROR_WANT_CONNECT = 7;
+  SSL_ERROR_WANT_ACCEPT = 8;
+
+  SSL_CTRL_SET_TLSEXT_HOSTNAME = 55;
+  TLSEXT_NAMETYPE_host_name = 0;
 
   SSL_FILETYPE_ASN1	= 2;
   SSL_FILETYPE_PEM = 1;
@@ -74,6 +78,7 @@ var
   SSL_new: function(context: TSSLCtx): TSSL; cdecl;
   SSL_shutdown: function(ssl: TSSL): LongInt; cdecl;
   SSL_free: procedure(ssl: TSSL); cdecl;
+  SSL_ctrl: function(ssl: TSSL; cmd: Integer; arg: LongInt; param: Pointer): LongInt; cdecl;
   SSL_set_fd: function(ssl: TSSL; socket: LongInt): LongInt; cdecl;
   SSL_accept: function(ssl: TSSL): LongInt; cdecl;
   SSL_connect: function(ssl: TSSL): LongInt; cdecl;
@@ -101,7 +106,7 @@ var
 	SSL_use_RSAPrivateKey_ASN1: function(ssl: TSSL; data: PChar; len: NativeInt): LongInt; cdecl;
 	SSL_use_RSAPrivateKey_file: function(ssl: TSSL; filename: PChar; kind: LongInt): LongInt; cdecl;
 	SSL_CTX_check_private_key: function(context: TSSLCtx): LongInt; cdecl;
-	SSL_check_private_key: function(ssl: TSSL): LongInt; cdecl;
+  SSL_check_private_key: function(ssl: TSSL): LongInt; cdecl;
 
 { Hashing routines }
 
@@ -202,6 +207,7 @@ begin
     TryLoad('SSL_new', @SSL_new) and
     TryLoad('SSL_shutdown', @SSL_shutdown) and
     TryLoad('SSL_free', @SSL_free) and
+    TryLoad('SSL_ctrl', @SSL_ctrl) and
     TryLoad('SSL_set_fd', @SSL_set_fd) and
     TryLoad('SSL_accept', @SSL_accept) and
     TryLoad('SSL_connect', @SSL_connect) and
