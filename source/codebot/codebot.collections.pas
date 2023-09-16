@@ -19,13 +19,13 @@ uses
 
 {doc off}
 type
-	IIndexedEnumerator<T> = interface(IEnumerator<T>)
-	['{4F6365A5-B833-4E35-BD2B-9C64C363CC4B}']
+  IIndexedEnumerator<T> = interface(IEnumerator<T>)
+  ['{4F6365A5-B833-4E35-BD2B-9C64C363CC4B}']
     function GetEnumerator: IIndexedEnumerator<T>;
-		function GetCount: Integer;
+    function GetCount: Integer;
     function GetItem(Index: Integer): T;
     property Count: Integer read GetCount;
-  	property Item[Index: Integer]: T read GetItem; default;
+    property Item[Index: Integer]: T read GetItem; default;
   end;
 
   TListEnumerator<T> = class(TInterfacedObject, IEnumerator<T>, IIndexedEnumerator<T>)
@@ -39,10 +39,10 @@ type
     function MoveNext: Boolean;
     procedure Reset;
     function GetEnumerator: IIndexedEnumerator<T>;
-		function GetCount: Integer;
+    function GetCount: Integer;
     function GetItem(Index: Integer): T;
     property Count: Integer read GetCount;
-  	property Item[Index: Integer]: T read GetItem; default;
+    property Item[Index: Integer]: T read GetItem; default;
   end;
 {doc on}
 
@@ -71,7 +71,7 @@ type
     procedure SetItem(Index: Integer; const Value: ItemType);
     function GetDirect(Index: Integer): PItemType;
   protected
-		FItems: TArrayList<ItemType>;
+    FItems: TArrayList<ItemType>;
     { Allows list types to take action on add }
     procedure AddItem(constref Item: ItemType); virtual;
     { Allows list types to take action on delete }
@@ -353,12 +353,12 @@ end;
 
 function TListEnumerator<T>.GetCount: Integer;
 begin
-	Result := FCount;
+  Result := FCount;
 end;
 
 function TListEnumerator<T>.GetItem(Index: Integer): T;
 begin
-	Result := FItems[Index];
+  Result := FItems[Index];
 end;
 
 { TList<TItem> }

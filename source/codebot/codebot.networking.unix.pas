@@ -21,13 +21,13 @@ uses
 
 type
   TUnixClientSocket = class(TObject)
-	private
+  private
     FHandle: TSocketHandle;
     FFileName: string;
     function GetConnected: Boolean;
     procedure SetConnected(Value: Boolean);
     procedure SetFileName(Value: string);
-	public
+  public
     constructor Create;
     destructor Destroy; override;
     procedure Connect;
@@ -45,7 +45,7 @@ implementation
 
 constructor TUnixClientSocket.Create;
 begin
-	inherited Create;
+  inherited Create;
   FHandle := INVALID_SOCKET;
 end;
 
@@ -57,16 +57,16 @@ end;
 
 procedure TUnixClientSocket.Connect;
 begin
-	if FHandle <> INVALID_SOCKET then
-    	Exit;
+  if FHandle <> INVALID_SOCKET then
+      Exit;
 end;
 
 procedure TUnixClientSocket.Disconnect;
 var
   S: TSocketHandle;
 begin
-	if FHandle = INVALID_SOCKET then
-    	Exit;
+  if FHandle = INVALID_SOCKET then
+      Exit;
   S := FHandle;
   FHandle := INVALID_SOCKET;
   close(S);
@@ -74,11 +74,11 @@ end;
 
 function TUnixClientSocket.Read(var Buffer; BufferSize: LongWord): Integer;
 begin
-	if FHandle = INVALID_SOCKET then
-		Exit(SOCKET_ERROR);
-	Result := recv(FHandle, Buffer, BufferSize, 0);
+  if FHandle = INVALID_SOCKET then
+    Exit(SOCKET_ERROR);
+  Result := recv(FHandle, Buffer, BufferSize, 0);
   if Result = SOCKET_ERROR then
-		Disconnect;
+    Disconnect;
 end;
 
 function TUnixClientSocket.Read(out Text: string; BufferSize: LongWord = $10000): Integer;
@@ -102,14 +102,14 @@ end;
 
 function TUnixClientSocket.GetConnected: Boolean;
 begin
-	Result := FHandle <> INVALID_SOCKET;
+  Result := FHandle <> INVALID_SOCKET;
 end;
 
 procedure TUnixClientSocket.SetConnected(Value: Boolean);
 begin
-	if Value then
-  	Connect
-	else
+  if Value then
+    Connect
+  else
     Disconnect;
 end;
 

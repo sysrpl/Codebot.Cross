@@ -556,7 +556,7 @@ end;
 procedure TIndeterminateProgress.Render;
 const
   Dir: array[TIconPosition] of TDirection =
-   (drLeft, drCenter, drRight, drCenter);
+    (drLeft, drCenter, drRight, drCenter);
   Margin = 4;
 var
   ComputedStatus: TProgressStatus;

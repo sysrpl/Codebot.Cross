@@ -77,7 +77,7 @@ type
 { TConvert\<Source, Target\> is used to convert from one type to another }
   // TConvert<TItem, T> = function(constref Item: TItem): T; see issue #28766
 { TConvertString\<T\> is used to convert a type to a string }
- TConvertString<TItem> = function(constref Item: TItem): string;
+  TConvertString<TItem> = function(constref Item: TItem): string;
 
 { TFilterFunc\<T\> is used to test if and item passes a test }
 
@@ -132,7 +132,7 @@ type
     function GetLength: Integer;
     procedure SetLength(Value: Integer);
     function GetData: Pointer;
-     function GetItem(Index: Integer): T;
+      function GetItem(Index: Integer): T;
     procedure SetItem(Index: Integer; const Value: T);
   public
     class var DefaultCompare: TCompare<T>;
@@ -776,8 +776,8 @@ type
 
 { INamedValues<T> is a reference type for TNamedValues<T> }
 
-	INamedValues<T> = interface(IEnumerable<T>)
-  	['{D228ADD8-4C4E-4C6C-A6F6-FA17FC307253}']
+  INamedValues<T> = interface(IEnumerable<T>)
+    ['{D228ADD8-4C4E-4C6C-A6F6-FA17FC307253}']
     function GetCount: Integer;
     function GetEmpty: Boolean;
     function GetName(Index: Integer): string;
@@ -802,13 +802,13 @@ type
 
   INamedStrings = interface(INamedValues<string>)
     ['{C03EF776-46AC-4757-8654-F31EC34E67A7}']
-	end;
+  end;
 
 { TNamedValuesIntf<T> exposes INamedValues<T> }
 
   TNamedValuesIntf<T> = class(TInterfacedObject, IEnumerable<T>, INamedValues<T>)
   private
-		FData: TNamedValues<T>;
+    FData: TNamedValues<T>;
   public
     { IEnumerable<T> }
     function GetEnumerator: IEnumerator<string>;
@@ -822,12 +822,12 @@ type
     procedure Remove(const Name: string);
     procedure Delete(Index: Integer);
     procedure Clear;
-	end;
+  end;
 
 { TNamedStringsIntf exposes INamedStrings }
 
   TNamedStringsIntf = class(TNamedValuesIntf<string>, INamedStrings)
-	end;
+  end;
 
 { IDelegate\<T\> allows event subscribers to add or remove their event handlers
   See also
@@ -1305,8 +1305,8 @@ function IntPower(Base: Float; Exponent: Integer): Float;
 var
   I: LongInt;
 begin
- if (Base = 0.0) and (Exponent = 0) then
-   Exit(1);
+  if (Base = 0.0) and (Exponent = 0) then
+    Exit(1);
   I := Abs(Exponent);
   Result := 1.0;
   while I > 0 do
@@ -1682,7 +1682,7 @@ var
 begin
   Len := Length(S);
   while (Len > 0) and (S[Len] in WhiteSpace) do
-   Dec(Len);
+    Dec(Len);
   I := 1;
   while ( I <= Len) and (S[I] in WhiteSpace) do
     Inc(I);
@@ -1776,7 +1776,7 @@ begin
     begin
       Inc(OldIndex, OldPattern.Length);
       for I := 0 to NewPattern.Length - 1 do
-      	Result[NewIndex + I] := NewPattern[I + 1];
+        Result[NewIndex + I] := NewPattern[I + 1];
       Inc(NewIndex, NewPattern.Length);
       Inc(FindIndex);
     end
@@ -2142,11 +2142,11 @@ begin
       #13:
         if Style = tlbsCRLF then
           if (I < L) and (S[I+1] = #10) then
-	          Inc(I)
+            Inc(I)
           else
-  	        Inc(DestLen)
+            Inc(DestLen)
           else if (I < L) and (S[I + 1] = #10) then
-    	      Dec(DestLen);
+            Dec(DestLen);
     end;
     Inc(I);
   end;
@@ -2165,8 +2165,8 @@ begin
           begin
             if Style=tlbsCRLF then
             begin
-             Dest[J] := #13;
-             Inc(J);
+              Dest[J] := #13;
+              Inc(J);
             end;
             Dest[J] := #10;
             Inc(J);
@@ -2174,16 +2174,16 @@ begin
           end;
         #13:
           begin
-             if Style = tlbsCRLF then
-             begin
-               Dest[J] := #13;
-               Inc(J);
-             end;
-             Dest[J] := #10;
-             Inc(J);
-             Inc(I);
-             if Source[I]=#10 then
-               Inc(I);
+              if Style = tlbsCRLF then
+              begin
+                Dest[J] := #13;
+                Inc(J);
+              end;
+              Dest[J] := #10;
+              Inc(J);
+              Inc(I);
+              if Source[I]=#10 then
+                Inc(I);
           end;
       else
         Dest[J] := Source[I];
@@ -2729,7 +2729,7 @@ begin
   else if Format = 'UTC' then
     Result := FormatDateTime('ddd, d mmm yyyy hh:nn:ss', Self) + ' UTC'
   else if Format <> '' then
-	  Result := FormatDateTime(Format, Self)
+    Result := FormatDateTime(Format, Self)
   else
     Result := FormatDateTime('yyyy-mm-dd hh:nn:ss', Self);
 end;
@@ -2982,7 +2982,7 @@ function DirDelete(const Dir: string; OnlyContents: Boolean = False): Boolean;
 begin
   Result := RemoveDir(Dir);
   if OnlyContents then
-     ForceDirectories(Dir);
+      ForceDirectories(Dir);
 end;
 
 function DirExists(const Dir: string): Boolean;
@@ -3007,10 +3007,10 @@ end;
 
 function PathCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
 begin
-	if IncludeDelimiter then
-	  Result := PathIncludeDelimiter(A) + PathIncludeDelimiter(B)
+  if IncludeDelimiter then
+    Result := PathIncludeDelimiter(A) + PathIncludeDelimiter(B)
   else
-	  Result := PathIncludeDelimiter(A) + PathExcludeDelimiter(B);
+    Result := PathIncludeDelimiter(A) + PathExcludeDelimiter(B);
   Result := PathAdjustDelimiters(Result);
 end;
 
@@ -3424,7 +3424,7 @@ var
   I, J: Integer;
 begin
   J := System.Length(Items);
-	Result.Items := nil;
+  Result.Items := nil;
   System.SetLength(Result.Items, J);
   J := 0;
   for I := 0 to System.Length(Items) - 1 do
@@ -3717,13 +3717,13 @@ var
   S: string;
   I: Integer;
 begin
-	Result := False;
+  Result := False;
   if Name = '' then
     Exit;
   S := Name.ToUpper;
   for I := FNames.Lo to FNames.Hi do
     if S = FNames[I].ToUpper then
-    	Exit(True);
+      Exit(True);
 end;
 
 function TNamedValues<T>.GetCount: Integer;
@@ -4230,18 +4230,18 @@ end;
 
 type
   TThreadContainer = class
-	private
+  private
     FThreadProc: TThreadExecuteProc;
     FProc: TProcedure;
     procedure Execute(Thread: TSimpleThread);
-	public
+  public
     constructor Create(ThreadProc: TThreadExecuteProc; Proc: TProcedure);
     function Run: TSimpleThread;
   end;
 
 constructor TThreadContainer.Create(ThreadProc: TThreadExecuteProc; Proc: TProcedure);
 begin
-	inherited Create;
+  inherited Create;
   FThreadProc := ThreadProc;
   FProc := Proc;
 end;
@@ -4249,15 +4249,15 @@ end;
 procedure TThreadContainer.Execute(Thread: TSimpleThread);
 begin
   if Assigned(FThreadProc) then
-		FThreadProc(Thread)
+    FThreadProc(Thread)
   else
-		FProc;
+    FProc;
   Free;
 end;
 
 function TThreadContainer.Run: TSimpleThread;
 begin
-	Result := TSimpleThread.Create(Execute);
+  Result := TSimpleThread.Create(Execute);
 end;
 
 function ThreadExecute(ThreadMethod: TThreadExecuteMethod): TSimpleThread;
@@ -4267,12 +4267,12 @@ end;
 
 function ThreadExecute(ThreadProc: TThreadExecuteProc): TSimpleThread;
 begin
-	Result := TThreadContainer.Create(ThreadProc, nil).Run;
+  Result := TThreadContainer.Create(ThreadProc, nil).Run;
 end;
 
 function ThreadExecute(Proc: TProcedure): TSimpleThread;
 begin
-	Result := TThreadContainer.Create(nil, Proc).Run;
+  Result := TThreadContainer.Create(nil, Proc).Run;
 end;
 
 procedure Sleep(Milliseconds: Cardinal);

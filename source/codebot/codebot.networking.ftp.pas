@@ -619,16 +619,16 @@ end;
 
 function TFtpClient.FindNext(out FindData: TRemoteFindData): Boolean;
 
-	function SafeRead(var Columns: StringArray; Index: Integer): string;
+  function SafeRead(var Columns: StringArray; Index: Integer): string;
   var
     I: Integer;
   begin
     I := Columns.Length;
     if Index < I then
-	    Result := Columns[Index]
-		else
-	  	Result := '';
-	end;
+      Result := Columns[Index]
+    else
+      Result := '';
+  end;
 
 const
   AttributeColumn = 0;
@@ -654,10 +654,10 @@ begin
   if FFindIndex < FFindList.Length then
   begin
     Columns := FFindList[FFindIndex].Words(FileColumn);
-		S := SafeRead(Columns, AttributeColumn);
+    S := SafeRead(Columns, AttributeColumn);
     if S.Length >= 10 then
     begin
-  		if S[1] = 'd' then
+      if S[1] = 'd' then
         Include(FindData.Attributes, fsaDirectory);
       if S[1] = 'l' then
         Include(FindData.Attributes, fsaLink);
@@ -667,7 +667,7 @@ begin
         Include(FindData.Attributes, fsaWrite);
       if S[10] = 'x' then
         Include(FindData.Attributes, fsaExecute);
-		end;
+    end;
     if FindData.Attributes * FFindMask = [] then
     begin
       Result := FindNext(FindData);
@@ -701,7 +701,7 @@ begin
     Result := True;
   end
   else
-	  Result := False;
+    Result := False;
 end;
 
 procedure TFtpClient.SetConnected(Value: Boolean);

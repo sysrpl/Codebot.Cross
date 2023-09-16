@@ -94,7 +94,7 @@ var
 begin
   Result := nil;
   if FNode = nil then
-     Exit;
+      Exit;
   if FNode.nodeType = NODE_DOCUMENT then
     Exit;
   T := FNode.nodeType;
@@ -102,7 +102,7 @@ begin
   while N <> nil do
   begin
     if N.nodeType = T then
-       Exit(TNode.Create(N));
+        Exit(TNode.Create(N));
     N := FNode.nextSibling;
   end;
 end;
@@ -335,7 +335,7 @@ type
 
 constructor TNodeListEnumerator.Create(List: INodeList);
 begin
-	inherited Create;
+  inherited Create;
   FList := List;
   FPosition := -1;
 end;
@@ -367,7 +367,7 @@ end;
 
 function TNodeList.GetEnumerator: IEnumerator<INode>;
 begin
-	Result := TNodeListEnumerator.Create(Self);
+  Result := TNodeListEnumerator.Create(Self);
 end;
 
 procedure TNodeList.Clear;

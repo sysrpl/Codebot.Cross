@@ -208,7 +208,7 @@ type
   public
     constructor Create(Bitmap: IBitmap);
     procedure SetOpacity(Value: Byte); override;
- end;
+  end;
 
 { TFontGdi }
 
@@ -717,7 +717,7 @@ end;
 
 function TGradientBrushGdi.HandleAvailable: Boolean;
 begin
-   Result := (not FStops.IsEmpty) and (FOpacity > 0);
+    Result := (not FStops.IsEmpty) and (FOpacity > 0);
   if not Result then
     Exit;
   if FBrush = nil then
@@ -826,7 +826,7 @@ begin
     FGradient.SetWrapMode(Modes[FWrap]);
     { Gamma correction is not supported by cairo }
     if SurfaceOptions.GammaCorrection then
-       FGradient.SetGammaCorrection(True);
+        FGradient.SetGammaCorrection(True);
     FBrush := FGradient;
     Matrix.FChanged := True;
   end;
@@ -919,7 +919,7 @@ begin
     FGradient.SetCenterPoint(CenterPoint);
     FGradient.SetInterpolationColors(Colors.Data, Offsets.Data, Colors.Length);
     if SurfaceOptions.GammaCorrection then
-       FGradient.SetGammaCorrection(True);
+        FGradient.SetGammaCorrection(True);
     FBrush := FGradient;
     Matrix.FChanged := True;
   end;
@@ -1030,7 +1030,7 @@ end;
 
 procedure TFontGdi.SetQuality(Value: TFontQuality);
 begin
-	FQuality := Value;
+  FQuality := Value;
 end;
 
 function TFontGdi.GetStyle: TFontStyles;
@@ -1087,7 +1087,7 @@ end;
 procedure TSurfacePathGdi.HandleRelease;
 begin
   FData := nil;
-   FFigure := nil;
+    FFigure := nil;
   FOrigin.X := 0;
   FOrigin.Y := 0;
   FClosed := False;
@@ -1565,8 +1565,8 @@ procedure TSurfaceGdi.TextOut(Font: IFont; const Text: string; const Rect: TRect
   Direction: TDirection; Immediate: Boolean = True);
 const
   TextHints: array[TFontQuality] of TTextRenderingHint = (
-	  TextRenderingHintSystemDefault, TextRenderingHintSingleBitPerPixelGridFit,
-    	TextRenderingHintAntiAliasGridFit, TextRenderingHintSingleBitPerPixelGridFit,
+    TextRenderingHintSystemDefault, TextRenderingHintSingleBitPerPixelGridFit,
+      TextRenderingHintAntiAliasGridFit, TextRenderingHintSingleBitPerPixelGridFit,
       TextRenderingHintAntiAliasGridFit, TextRenderingHintClearTypeGridFit,
       TextRenderingHintClearTypeGridFit);
 var
@@ -1641,9 +1641,9 @@ var
 begin
   State := NewGdiMatrix;
   if Brush = nil then
-  	Exit;
+    Exit;
   M := (Matrix as TMatrixGdi).FMatrix.Clone;
-	State := Brush.GetTransform;
+  State := Brush.GetTransform;
   M.Multiply(State);
   Brush.SetTransform(M);
 end;
@@ -1651,14 +1651,14 @@ end;
 procedure RestoreMatrix(Brush: IGdiBrush; State: IGdiMatrix);
 begin
   if Brush = nil then
-  	Exit;
+    Exit;
   Brush.SetTransform(State);
 end;
 
 function PenWidth(Matrix: IMatrix; Width: Float): Float;
 const
-	A: TPointF = (X: 1; Y : 0);
-	B: TPointF = (X: 0; Y : 0);
+  A: TPointF = (X: 1; Y : 0);
+  B: TPointF = (X: 0; Y : 0);
 begin
   Result := Matrix.Transform(A).Dist(Matrix.Transform(B));
   Result := Abs(Result * Width);
@@ -1681,22 +1681,22 @@ begin
     ApplyMatrix((Brush as TBrushGdi).FBrush, GetMatrix, State);
     FGraphics.FillPath((Brush as TBrushGdi).FBrush, P.FData);
     RestoreMatrix((Brush as TBrushGdi).FBrush, State);
-	end
-	else if (Pen is TPenGdi) and (Pen as TPenGdi).HandleAvailable then
+  end
+  else if (Pen is TPenGdi) and (Pen as TPenGdi).HandleAvailable then
   begin
     W := Pen.Width;
     Pen.Width := PenWidth(GetMatrix, W);
     if Pen.Brush <> nil then
     begin
-  		ApplyMatrix((Pen.Brush as TBrushGdi).FBrush, GetMatrix, State);
-	    FGraphics.DrawPath((Pen as TPenGdi).FPen, P.FData);
+      ApplyMatrix((Pen.Brush as TBrushGdi).FBrush, GetMatrix, State);
+      FGraphics.DrawPath((Pen as TPenGdi).FPen, P.FData);
       RestoreMatrix((Pen.Brush as TBrushGdi).FBrush, State);
-		end
+    end
     else
-	    FGraphics.DrawPath((Pen as TPenGdi).FPen, P.FData);
+      FGraphics.DrawPath((Pen as TPenGdi).FPen, P.FData);
     Pen.Width := W;
-	end;
-	if not Preserve then
+  end;
+  if not Preserve then
     P.Remove;
 end;
 

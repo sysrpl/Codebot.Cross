@@ -72,13 +72,13 @@ type
   See also
   <link Codebot.Networking.TTransmitProgress, TTransmitProgress members> }
 
-	TTransmitData = record
-  	Expected: Longint;
+  TTransmitData = record
+    Expected: Longint;
     Actual: Longint;
   end;
 
 
-	TTransmitCallback = procedure(Bytes: LargeInt; var Cancel: Boolean) of object;
+  TTransmitCallback = procedure(Bytes: LargeInt; var Cancel: Boolean) of object;
 
 { TTransmitEvent can be reused to indicate progress of reading or writing }
 
@@ -87,8 +87,8 @@ type
 
 { Note, SSL certificate files can be generated using this terminal command:
 
-	openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem \
-		-days 365 -nodes -subj '/CN=localhost' }
+  openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem \
+    -days 365 -nodes -subj '/CN=localhost' }
 
 { TSocket provides a simple object oriented interface to network sockets
   See also
@@ -123,8 +123,8 @@ type
     { Create an incomming connection for a server socket }
     constructor Create(Server: TSocket); overload;
     destructor Destroy; override;
-		{ If you plan to create a secure socket server you need to load both a
-    	certificate file and key file before listening }
+    { If you plan to create a secure socket server you need to load both a
+      certificate file and key file before listening }
     function LoadCertificate(CertFile: string; KeyFile: string): Boolean;
     { release any resources related to server certificates }
     procedure UnloadCertificate;
@@ -176,25 +176,25 @@ type
 
   THttpRequest = class
   private
-  	FPartialBody: string;
-  	FDone: Boolean;
+    FPartialBody: string;
+    FDone: Boolean;
     FVerb: string;
     FResource: string;
     FProtocol: string;
-	  FHeaders: INamedStrings;
-  	FBodyStream: TStream;
-	  FBodyText: string;
+    FHeaders: INamedStrings;
+    FBodyStream: TStream;
+    FBodyText: string;
     FValid: Boolean;
-  	FCancelled: Boolean;
-	  FOnProgress: TTransmitEvent;
+    FCancelled: Boolean;
+    FOnProgress: TTransmitEvent;
     function ReadHeader(Socket: TSocket): Boolean;
     function ReadBody(Socket: TSocket): Boolean;
     function SendHeader(Socket: TSocket): Boolean;
     function SendBody(Socket: TSocket): Boolean;
-	public
+  public
     constructor Create;
-		{ Reset all read only properties to their defaults }
-  	procedure Reset;
+    { Reset all read only properties to their defaults }
+    procedure Reset;
     { Cancels the request, which you normally invoke during OnProgress }
     procedure Cancel;
     { Attempt to receive a request. Use this when you're the server. }
@@ -202,19 +202,19 @@ type
     { Attempt to send a request. Use this when you're the client. }
     function Send(Socket: TSocket): Boolean;
     { Verb contains the method used by the client such as GET or POST }
-		property Verb: string read FVerb;
-  	{ Resource contains the resources and quest string,such as /index.htm }
-		property Resource: string read FResource write FResource;
-		{ Protocol such as HTTP/1.1 }
-		property Protocol: string read FProtocol write FProtocol;
-  	{ Headers are the string value pairs }
-		property Headers: INamedStrings read FHeaders;
+    property Verb: string read FVerb;
+    { Resource contains the resources and quest string,such as /index.htm }
+    property Resource: string read FResource write FResource;
+    { Protocol such as HTTP/1.1 }
+    property Protocol: string read FProtocol write FProtocol;
+    { Headers are the string value pairs }
+    property Headers: INamedStrings read FHeaders;
     { When BodyStream is assigned it is used by send or receive }
     property BodyStream: TStream read FBodyStream write FBodyStream;
     { When BodyStream is unassigned BodyText is used by send or receive }
     property BodyText: string read FBodyText write FBodyText;
-  	{ Valid holds the scuess or failure of the last send or receive }
-		property Valid: Boolean read FValid;
+    { Valid holds the scuess or failure of the last send or receive }
+    property Valid: Boolean read FValid;
     { OnProgress is invoked when body is being sent or received }
     property OnProgress: TTransmitEvent read FOnProgress write FOnProgress;
   end;
@@ -322,17 +322,17 @@ end;
 
 function TSocket.LoadCertificate(CertFile: string; KeyFile: string): Boolean;
 begin
-	Close;
+  Close;
   FSecure := True;
   if OpenSSLInit then
-	begin
-		FSSLCertificates := SSL_CTX_new(SSLv23_server_method);
-		if FSSLCertificates = nil then
-    	Exit(False);
+  begin
+    FSSLCertificates := SSL_CTX_new(SSLv23_server_method);
+    if FSSLCertificates = nil then
+      Exit(False);
     Result :=
-    	(SSL_CTX_use_certificate_file(FSSLCertificates, PChar(CertFile), SSL_FILETYPE_PEM) > 0) and
-			(SSL_CTX_use_PrivateKey_file(FSSLCertificates, PChar(KeyFile), SSL_FILETYPE_PEM) > 0) and
-			(SSL_CTX_check_private_key(FSSLCertificates) > 0);
+      (SSL_CTX_use_certificate_file(FSSLCertificates, PChar(CertFile), SSL_FILETYPE_PEM) > 0) and
+      (SSL_CTX_use_PrivateKey_file(FSSLCertificates, PChar(KeyFile), SSL_FILETYPE_PEM) > 0) and
+      (SSL_CTX_check_private_key(FSSLCertificates) > 0);
     if not Result then
     begin
       SSL_CTX_free(FSSLCertificates);
@@ -340,14 +340,14 @@ begin
     end;
   end
   else
-  	Result := False;
+    Result := False;
 end;
 
 procedure TSocket.UnloadCertificate;
 begin
   if FSSLCertificates <> nil then
   begin
-		Close;
+    Close;
     SSL_CTX_free(FSSLCertificates);
     FSSLCertificates := nil;
   end;
@@ -417,7 +417,7 @@ begin
   if FSecure then
     if not OpenSSLInit then
       Exit(False);
-	FAddress := Address;
+  FAddress := Address;
   FPort := Port;
   if not FAddress.Resolve then
     Exit(False);
@@ -479,7 +479,7 @@ begin
   Result := False;
   Close;
   if FSecure and (FSSLCertificates = nil) then
-  	Exit;
+    Exit;
   FAddress := Address;
   FPort := Port;
   if FPort = 0 then
@@ -570,12 +570,12 @@ begin
         Socket.Close;
         Exit;
       end;
-		end
+    end
     else
     repeat
-  		Error := SSL_accept(Socket.FSSLSocket);
+      Error := SSL_accept(Socket.FSSLSocket);
       if Error > 0 then
-      	Break;
+        Break;
       if Error = 0 then
       begin
         Socket.Close;
@@ -583,7 +583,7 @@ begin
       end;
       Error := SSL_get_error(Socket.FSSLSocket, Error);
       if (Error = SSL_ERROR_WANT_READ) or (Error = SSL_ERROR_WANT_WRITE) then
-      	Continue;
+        Continue;
       Socket.Close;
       Exit;
     until False;
@@ -687,7 +687,7 @@ begin
   begin
     I := Write(B^, BufferSize);
     if not Connected then
-    	Exit;
+      Exit;
     if I < 1 then
       Continue;
     BufferSize := BufferSize - I;
@@ -725,19 +725,19 @@ end;
 constructor THttpRequest.Create;
 begin
   inherited  Create;
-	FHeaders := TNamedStringsIntf.Create;
+  FHeaders := TNamedStringsIntf.Create;
 end;
 
 procedure THttpRequest.Reset;
 begin
   FCancelled := False;
-	FVerb := '';
-	FResource := '';
+  FVerb := '';
+  FResource := '';
   FProtocol := '';
-	FPartialBody := '';
+  FPartialBody := '';
   FBodyText := '';
   FHeaders.Clear;
-	FDone := False;
+  FDone := False;
   FValid := False;
 end;
 
@@ -757,26 +757,26 @@ var
 begin
   Result := False;
   Reset;
-	HeaderComplete := False;
-	Header := '';
+  HeaderComplete := False;
+  Header := '';
   J := 0;
   repeat
     if not Socket.Connected then
-    	Break;
-		I := Socket.Read(S);
+      Break;
+    I := Socket.Read(S);
     { We wait on read to give the user a chance to accept an ssl certificate }
     if I = 0 then
     begin
-			Inc(J);
+      Inc(J);
       Sleep(500);
       if J = 60 then
-      	Exit
-			else
+        Exit
+      else
         Continue;
     end;
     if I > 0 then
     begin
-			Header := Header + S;
+      Header := Header + S;
       EndIndex := -1;
       for I := Low(Endings) to High(Endings) do
       begin
@@ -784,21 +784,21 @@ begin
         if EndIndex > 0 then
         begin
           EndIndex := I;
-        	Break;
+          Break;
         end;
       end;
       if EndIndex > -1 then
       begin
         HeaderComplete := True;
         Ending := Endings[EndIndex];
-      	FPartialBody := Header.SecondOf(Ending);
-      	S := Header.FirstOf(Ending);
+        FPartialBody := Header.SecondOf(Ending);
+        S := Header.FirstOf(Ending);
         Ending.Length := Ending.Length div 2;
-				Lines := S.Split(Ending);
+        Lines := S.Split(Ending);
         if Lines.Length > 0 then
         begin
           S := Lines[0];
-					First := S.Split(' ');
+          First := S.Split(' ');
           if First.Length > 2 then
           begin
             FVerb := First[0];
@@ -833,18 +833,18 @@ var
 begin
   Result := False;
   if (not FValid) or FDone then
-  	Exit;
+    Exit;
   FDone := True;
   if FVerb = 'GET' then
-  	Exit(True);
+    Exit(True);
   OwnStream := BodyStream = nil;
   if OwnStream then
-  	Stream := TStringStream.Create(FPartialBody)
-	else
-	begin
+    Stream := TStringStream.Create(FPartialBody)
+  else
+  begin
     Stream := BodyStream;
     if FPartialBody.Length > 0 then
-    	Stream.Write(PChar(FPartialBody)^, FPartialBody.Length);
+      Stream.Write(PChar(FPartialBody)^, FPartialBody.Length);
   end;
   Buffer := GetMem(BufferSize);
   FPartialBody := '';
@@ -852,51 +852,51 @@ begin
   try
     ContentRead := 0;
     ContentLength := 0;
-  	I := StrToInt64Def(FHeaders.GetValue('Content-Length'), -1);
+    I := StrToInt64Def(FHeaders.GetValue('Content-Length'), -1);
     UndefinedLength := I < 0;
     if UndefinedLength then
       ContentLength := High(ContentLength)
     else
       ContentLength := I;
     if (I <> 0) and Assigned(FOnProgress) then
-    	if UndefinedLength then
-      	FOnProgress(Self, 0, 0)
+      if UndefinedLength then
+        FOnProgress(Self, 0, 0)
       else
-      	FOnProgress(Self, ContentLength, 0);
+        FOnProgress(Self, ContentLength, 0);
     if FCancelled then
-    	Exit;
+      Exit;
     if I <> 0 then
     repeat
       if not Socket.Connected then
-      	Break;
+        Break;
       if UndefinedLength then
-	      I := Socket.Read(Buffer^, BufferSize)
+        I := Socket.Read(Buffer^, BufferSize)
       else if ContentLength - ContentRead >  BufferSize then
-	      I := Socket.Read(Buffer^, BufferSize)
-			else
-	      I := Socket.Read(Buffer^, ContentLength - ContentRead);
+        I := Socket.Read(Buffer^, BufferSize)
+      else
+        I := Socket.Read(Buffer^, ContentLength - ContentRead);
       if I < 0 then
-      	Break;
+        Break;
       if I > 0 then
       begin
-				Stream.Write(Buffer^, I);
+        Stream.Write(Buffer^, I);
         ContentRead := ContentRead + I;
         if Assigned(FOnProgress) then
-        	if UndefinedLength then
-	        	FOnProgress(Self, 0, ContentRead)
+          if UndefinedLength then
+            FOnProgress(Self, 0, ContentRead)
           else
-	        	FOnProgress(Self, ContentLength, ContentRead);
+            FOnProgress(Self, ContentLength, ContentRead);
         if FCancelled then
-        	Exit;
+          Exit;
       end;
     until ContentRead = ContentLength;
-		Result := UndefinedLength or (ContentRead = ContentLength);
+    Result := UndefinedLength or (ContentRead = ContentLength);
     if OwnStream then
-			FBodyText := (Stream as TStringStream).DataString;
+      FBodyText := (Stream as TStringStream).DataString;
   finally
     FreeMem(Buffer);
     if OwnStream then
-    	Stream.Free;
+      Stream.Free;
   end;
 end;
 
@@ -916,20 +916,20 @@ begin
   Result := False;
   try
     if not Socket.Connected then
-    	Exit;
+      Exit;
     if FVerb = '' then
-    	FVerb := 'GET';
-		Request := FVerb;
+      FVerb := 'GET';
+    Request := FVerb;
     if FResource = '' then
-    	FResource := '/';
-  	Request :=  Request + ' ' + FResource;
+      FResource := '/';
+    Request :=  Request + ' ' + FResource;
     if FProtocol = '' then
-    	FProtocol := 'HTTP/1.1'
-		Request :=  Request + ' ' + FProtocol + Ending;
+      FProtocol := 'HTTP/1.1'
+    Request :=  Request + ' ' + FProtocol + Ending;
     for I := 0 to FHeaders.Count - 1 do
     begin
       S := FHeaders.Names[I];
-  		Request := Request + S + ': ' FHeaders.ValueByIndex[I] + Ending;
+      Request := Request + S + ': ' FHeaders.ValueByIndex[I] + Ending;
     end;
     Request := Request + Ending;
     Result := Socket.WriteAll(Request);
@@ -951,48 +951,48 @@ begin
   Result := False;
   try
     if not Socket.Connected then
-    	Exit;
+      Exit;
     if not FValid then
-    	Exit;
+      Exit;
     if FVerb = 'GET' then
     begin
       Result := True;
       Exit;
-		end;
+    end;
     if FBodyStream = nil then
     begin
-			Stream := TStringStream.Create(FBodyText);
+      Stream := TStringStream.Create(FBodyText);
       OwnStream := True;
     end
     else
     begin
       Stream := FBodyStream;
-	    OwnStream := False;
+      OwnStream := False;
     end;
     try
       I := Stream.Size - Stream.Position < 0;
       if I < 1 then
         ContentLength := 0
-  		else
+      else
         ContentLength := I;
       I := StrToInt64Def(FHeaders['Content-Length'], 0);
       if I <> ContentLength then
-      	Exit;
-			if ContentLength = 0 then
+        Exit;
+      if ContentLength = 0 then
       begin
         Result := True;
         Exit;
-  		end;
-			ContentWrite := 0;
+      end;
+      ContentWrite := 0;
       if Assigned(FOnProgress) then
-      	FOnProgress(Self, ContentLength, ContentWrite);
+        FOnProgress(Self, ContentLength, ContentWrite);
       if FCancelled then
-      	Exit;
-			Buffer := GetMem();
+        Exit;
+      Buffer := GetMem();
 
     finally
       if OwnStream then
-      	Stream.Free;
+        Stream.Free;
     end;
   finally
     FValid := Result;
@@ -1014,178 +1014,178 @@ const
   procedure Init;
   begin
     Domains := TDomainList.Create(
-     'ac whois.nic.ac',
-     'ae whois.aeda.net.ae',
-     'aero whois.aero',
-     'af whois.nic.af',
-     'ag whois.nic.ag',
-     'al whois.ripe.net',
-     'am whois.amnic.net',
-     'as whois.nic.as',
-     'asia whois.nic.asia',
-     'at whois.nic.at',
-     'au whois.aunic.net',
-     'ax whois.ax',
-     'az whois.ripe.net',
-     'ba whois.ripe.net',
-     'be whois.dns.be',
-     'bg whois.register.bg',
-     'bi whois.nic.bi',
-     'biz whois.neulevel.biz',
-     'bj www.nic.bj',
-     'br whois.nic.br',
-     'br.com whois.centralnic.com',
-     'bt whois.netnames.net',
-     'by whois.cctld.by',
-     'bz whois.belizenic.bz',
-     'ca whois.cira.ca',
-     'cat whois.cat',
-     'cc whois.nic.cc',
-     'cd whois.nic.cd',
-     'ch whois.nic.ch',
-     'ck whois.nic.ck',
-     'cl whois.nic.cl',
-     'cn whois.cnnic.net.cn',
-     'cn.com whois.centralnic.com',
-     'co whois.nic.co',
-     'co.nl whois.co.nl',
-     'com whois.verisign-grs.com',
-     'coop whois.nic.coop',
-     'cx whois.nic.cx',
-     'cy whois.ripe.net',
-     'cz whois.nic.cz',
-     'de whois.denic.de',
-     'dk whois.dk-hostmaster.dk',
-     'dm whois.nic.cx',
-     'dz whois.nic.dz',
-     'edu whois.educause.net',
-     'ee whois.tld.ee',
-     'eg whois.ripe.net',
-     'es whois.nic.es',
-     'eu whois.eu',
-     'eu.com whois.centralnic.com',
-     'fi whois.ficora.fi',
-     'fo whois.nic.fo',
-     'fr whois.nic.fr',
-     'gb whois.ripe.net',
-     'gb.com whois.centralnic.com',
-     'gb.net whois.centralnic.com',
-     'qc.com whois.centralnic.com',
-     'ge whois.ripe.net',
-     'gl whois.nic.gl',
-     'gm whois.ripe.net',
-     'gov whois.nic.gov',
-     'gr whois.ripe.net',
-     'gs whois.nic.gs',
-     'hk whois.hknic.net.hk',
-     'hm whois.registry.hm',
-     'hn whois2.afilias-grs.net',
-     'hr whois.dns.hr',
-     'hu whois.nic.hu',
-     'hu.com whois.centralnic.com',
-     'id whois.pandi.or.id',
-     'ie whois.domainregistry.ie',
-     'il whois.isoc.org.il',
-     'in whois.inregistry.net',
-     'info whois.afilias.info',
-     'int whois.isi.edu',
-     'io whois.nic.io',
-     'iq vrx.net',
-     'ir whois.nic.ir',
-     'is whois.isnic.is',
-     'it whois.nic.it',
-     'je whois.je',
-     'jobs jobswhois.verisign-grs.com',
-     'jp whois.jprs.jp',
-     'ke whois.kenic.or.ke',
-     'kg whois.domain.kg',
-     'kr whois.nic.or.kr',
-     'la whois2.afilias-grs.net',
-     'li whois.nic.li',
-     'lt whois.domreg.lt',
-     'lu whois.restena.lu',
-     'lv whois.nic.lv',
-     'ly whois.lydomains.com',
-     'ma whois.iam.net.ma',
-     'mc whois.ripe.net',
-     'md whois.nic.md',
-     'me whois.nic.me',
-     'mil whois.nic.mil',
-     'mk whois.ripe.net',
-     'mobi whois.dotmobiregistry.net',
-     'ms whois.nic.ms',
-     'mt whois.ripe.net',
-     'mu whois.nic.mu',
-     'mx whois.nic.mx',
-     'my whois.mynic.net.my',
-     'name whois.nic.name',
-     'net whois.verisign-grs.com',
-     'news whois.rightside.co',
-     'nf whois.nic.cx',
-     'ng whois.nic.net.ng',
-     'nl whois.domain-registry.nl',
-     'no whois.norid.no',
-     'no.com whois.centralnic.com',
-     'nu whois.nic.nu',
-     'nz whois.srs.net.nz',
-     'org whois.pir.org',
-     'pl whois.dns.pl',
-     'pr whois.nic.pr',
-     'pro whois.registrypro.pro',
-     'pt whois.dns.pt',
-     'pw whois.nic.pw',
-     'ro whois.rotld.ro',
-     'ru whois.tcinet.ru',
-     'sa saudinic.net.sa',
-     'sa.com whois.centralnic.com',
-     'sb whois.nic.net.sb',
-     'sc whois2.afilias-grs.net',
-     'se whois.nic-se.se',
-     'se.com whois.centralnic.com',
-     'se.net whois.centralnic.com',
-     'sg whois.nic.net.sg',
-     'sh whois.nic.sh',
-     'si whois.arnes.si',
-     'sk whois.sk-nic.sk',
-     'sm whois.nic.sm',
-     'st whois.nic.st',
-     'so whois.nic.so',
-     'su whois.tcinet.ru',
-     'tc whois.adamsnames.tc',
-     'tel whois.nic.tel',
-     'tf whois.nic.tf',
-     'th whois.thnic.net',
-     'tj whois.nic.tj',
-     'tk whois.nic.tk',
-     'tl whois.domains.tl',
-     'tm whois.nic.tm',
-     'tn whois.ati.tn',
-     'to whois.tonic.to',
-     'tp whois.domains.tl',
-     'tr whois.nic.tr',
-     'travel whois.nic.travel',
-     'tw whois.twnic.net.tw',
-     'tv whois.nic.tv',
-     'tz whois.tznic.or.tz',
-     'ua whois.ua',
-     'uk whois.nic.uk',
-     'uk.com whois.centralnic.com',
-     'uk.net whois.centralnic.com',
-     'ac.uk whois.ja.net',
-     'gov.uk whois.ja.net',
-     'us whois.nic.us',
-     'us.com whois.centralnic.com',
-     'uy nic.uy',
-     'uy.com whois.centralnic.com',
-     'uz whois.cctld.uz',
-     'va whois.ripe.net',
-     'vc whois2.afilias-grs.net',
-     've whois.nic.ve',
-     'vg whois.adamsnames.tc',
-     'ws whois.website.ws',
-     'xxx whois.nic.xxx',
-     'yu whois.ripe.net',
-     'za.com whois.centralnic.com');
+      'ac whois.nic.ac',
+      'ae whois.aeda.net.ae',
+      'aero whois.aero',
+      'af whois.nic.af',
+      'ag whois.nic.ag',
+      'al whois.ripe.net',
+      'am whois.amnic.net',
+      'as whois.nic.as',
+      'asia whois.nic.asia',
+      'at whois.nic.at',
+      'au whois.aunic.net',
+      'ax whois.ax',
+      'az whois.ripe.net',
+      'ba whois.ripe.net',
+      'be whois.dns.be',
+      'bg whois.register.bg',
+      'bi whois.nic.bi',
+      'biz whois.neulevel.biz',
+      'bj www.nic.bj',
+      'br whois.nic.br',
+      'br.com whois.centralnic.com',
+      'bt whois.netnames.net',
+      'by whois.cctld.by',
+      'bz whois.belizenic.bz',
+      'ca whois.cira.ca',
+      'cat whois.cat',
+      'cc whois.nic.cc',
+      'cd whois.nic.cd',
+      'ch whois.nic.ch',
+      'ck whois.nic.ck',
+      'cl whois.nic.cl',
+      'cn whois.cnnic.net.cn',
+      'cn.com whois.centralnic.com',
+      'co whois.nic.co',
+      'co.nl whois.co.nl',
+      'com whois.verisign-grs.com',
+      'coop whois.nic.coop',
+      'cx whois.nic.cx',
+      'cy whois.ripe.net',
+      'cz whois.nic.cz',
+      'de whois.denic.de',
+      'dk whois.dk-hostmaster.dk',
+      'dm whois.nic.cx',
+      'dz whois.nic.dz',
+      'edu whois.educause.net',
+      'ee whois.tld.ee',
+      'eg whois.ripe.net',
+      'es whois.nic.es',
+      'eu whois.eu',
+      'eu.com whois.centralnic.com',
+      'fi whois.ficora.fi',
+      'fo whois.nic.fo',
+      'fr whois.nic.fr',
+      'gb whois.ripe.net',
+      'gb.com whois.centralnic.com',
+      'gb.net whois.centralnic.com',
+      'qc.com whois.centralnic.com',
+      'ge whois.ripe.net',
+      'gl whois.nic.gl',
+      'gm whois.ripe.net',
+      'gov whois.nic.gov',
+      'gr whois.ripe.net',
+      'gs whois.nic.gs',
+      'hk whois.hknic.net.hk',
+      'hm whois.registry.hm',
+      'hn whois2.afilias-grs.net',
+      'hr whois.dns.hr',
+      'hu whois.nic.hu',
+      'hu.com whois.centralnic.com',
+      'id whois.pandi.or.id',
+      'ie whois.domainregistry.ie',
+      'il whois.isoc.org.il',
+      'in whois.inregistry.net',
+      'info whois.afilias.info',
+      'int whois.isi.edu',
+      'io whois.nic.io',
+      'iq vrx.net',
+      'ir whois.nic.ir',
+      'is whois.isnic.is',
+      'it whois.nic.it',
+      'je whois.je',
+      'jobs jobswhois.verisign-grs.com',
+      'jp whois.jprs.jp',
+      'ke whois.kenic.or.ke',
+      'kg whois.domain.kg',
+      'kr whois.nic.or.kr',
+      'la whois2.afilias-grs.net',
+      'li whois.nic.li',
+      'lt whois.domreg.lt',
+      'lu whois.restena.lu',
+      'lv whois.nic.lv',
+      'ly whois.lydomains.com',
+      'ma whois.iam.net.ma',
+      'mc whois.ripe.net',
+      'md whois.nic.md',
+      'me whois.nic.me',
+      'mil whois.nic.mil',
+      'mk whois.ripe.net',
+      'mobi whois.dotmobiregistry.net',
+      'ms whois.nic.ms',
+      'mt whois.ripe.net',
+      'mu whois.nic.mu',
+      'mx whois.nic.mx',
+      'my whois.mynic.net.my',
+      'name whois.nic.name',
+      'net whois.verisign-grs.com',
+      'news whois.rightside.co',
+      'nf whois.nic.cx',
+      'ng whois.nic.net.ng',
+      'nl whois.domain-registry.nl',
+      'no whois.norid.no',
+      'no.com whois.centralnic.com',
+      'nu whois.nic.nu',
+      'nz whois.srs.net.nz',
+      'org whois.pir.org',
+      'pl whois.dns.pl',
+      'pr whois.nic.pr',
+      'pro whois.registrypro.pro',
+      'pt whois.dns.pt',
+      'pw whois.nic.pw',
+      'ro whois.rotld.ro',
+      'ru whois.tcinet.ru',
+      'sa saudinic.net.sa',
+      'sa.com whois.centralnic.com',
+      'sb whois.nic.net.sb',
+      'sc whois2.afilias-grs.net',
+      'se whois.nic-se.se',
+      'se.com whois.centralnic.com',
+      'se.net whois.centralnic.com',
+      'sg whois.nic.net.sg',
+      'sh whois.nic.sh',
+      'si whois.arnes.si',
+      'sk whois.sk-nic.sk',
+      'sm whois.nic.sm',
+      'st whois.nic.st',
+      'so whois.nic.so',
+      'su whois.tcinet.ru',
+      'tc whois.adamsnames.tc',
+      'tel whois.nic.tel',
+      'tf whois.nic.tf',
+      'th whois.thnic.net',
+      'tj whois.nic.tj',
+      'tk whois.nic.tk',
+      'tl whois.domains.tl',
+      'tm whois.nic.tm',
+      'tn whois.ati.tn',
+      'to whois.tonic.to',
+      'tp whois.domains.tl',
+      'tr whois.nic.tr',
+      'travel whois.nic.travel',
+      'tw whois.twnic.net.tw',
+      'tv whois.nic.tv',
+      'tz whois.tznic.or.tz',
+      'ua whois.ua',
+      'uk whois.nic.uk',
+      'uk.com whois.centralnic.com',
+      'uk.net whois.centralnic.com',
+      'ac.uk whois.ja.net',
+      'gov.uk whois.ja.net',
+      'us whois.nic.us',
+      'us.com whois.centralnic.com',
+      'uy nic.uy',
+      'uy.com whois.centralnic.com',
+      'uz whois.cctld.uz',
+      'va whois.ripe.net',
+      'vc whois2.afilias-grs.net',
+      've whois.nic.ve',
+      'vg whois.adamsnames.tc',
+      'ws whois.website.ws',
+      'xxx whois.nic.xxx',
+      'yu whois.ripe.net',
+      'za.com whois.centralnic.com');
   end;
 
   function FindServer: string;

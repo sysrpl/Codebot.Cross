@@ -85,27 +85,27 @@ var
   SSL_write: function(ssl: TSSL; buffer: Pointer; size: LongWord): LongInt; cdecl;
   SSL_read: function(ssl: TSSL; buffer: Pointer; size: LongWord): LongInt; cdecl;
   SSL_get_error: function(ssl: TSSL; ret_code: Integer): Integer; cdecl;
-	SSL_CTX_use_certificate: function(context: TSSLCtx; x: TX509): LongInt; cdecl;
-	SSL_CTX_use_certificate_ASN1: function(context: TSSLCtx; len: LongInt; data: PChar): LongInt; cdecl;
-	SSL_CTX_use_certificate_file: function(context: TSSLCtx; filename: PChar; kind: LongInt): LongInt; cdecl;
-	SSL_use_certificate: function(ssl: TSSL; x: TX509): LongInt; cdecl;
-	SSL_use_certificate_ASN1: function(ssl: TSSL; data: PChar; len: LongInt): LongInt; cdecl;
-	SSL_use_certificate_file: function(ssl: TSSL; filename: PChar; kind: LongInt): LongInt; cdecl;
-	SSL_CTX_use_certificate_chain_file: function(context: TSSLCtx; filename: PChar): LongInt; cdecl;
-	SSL_use_certificate_chain_file: function(ssl: TSSL; filename: PChar): LongInt; cdecl;
-	SSL_CTX_use_PrivateKey: function(context: TSSLCtx; key: TEVPPKey): LongInt; cdecl;
-	SSL_CTX_use_PrivateKey_ASN1: function(pk: LongInt; context: TSSLCtx; data: PChar; len: NativeInt): LongInt; cdecl;
-	SSL_CTX_use_PrivateKey_file: function(context: TSSLCtx; filename: PChar; kind: LongInt): LongInt; cdecl;
-	SSL_CTX_use_RSAPrivateKey: function(context: TSSLCtx; rsa: TRSA): LongInt; cdecl;
-	SSL_CTX_use_RSAPrivateKey_ASN1: function(context: TSSLCtx; data: PChar; len: NativeInt): LongInt; cdecl;
-	SSL_CTX_use_RSAPrivateKey_file: function(context: TSSLCtx; filename: PChar; kind: LongInt): LongInt; cdecl;
-	SSL_use_PrivateKey: function(ssl: TSSL; pkey: TEVPPKey): LongInt; cdecl;
-	SSL_use_PrivateKey_ASN1: function(pk: LongInt; ssl: TSSL; data: PChar; len: NativeInt): LongInt; cdecl;
-	SSL_use_PrivateKey_file: function(ssl: TSSL; filename: PChar; kind: LongInt): LongInt; cdecl;
-	SSL_use_RSAPrivateKey: function(ssl: TSSL; rsa: TRSA): LongInt; cdecl;
-	SSL_use_RSAPrivateKey_ASN1: function(ssl: TSSL; data: PChar; len: NativeInt): LongInt; cdecl;
-	SSL_use_RSAPrivateKey_file: function(ssl: TSSL; filename: PChar; kind: LongInt): LongInt; cdecl;
-	SSL_CTX_check_private_key: function(context: TSSLCtx): LongInt; cdecl;
+  SSL_CTX_use_certificate: function(context: TSSLCtx; x: TX509): LongInt; cdecl;
+  SSL_CTX_use_certificate_ASN1: function(context: TSSLCtx; len: LongInt; data: PChar): LongInt; cdecl;
+  SSL_CTX_use_certificate_file: function(context: TSSLCtx; filename: PChar; kind: LongInt): LongInt; cdecl;
+  SSL_use_certificate: function(ssl: TSSL; x: TX509): LongInt; cdecl;
+  SSL_use_certificate_ASN1: function(ssl: TSSL; data: PChar; len: LongInt): LongInt; cdecl;
+  SSL_use_certificate_file: function(ssl: TSSL; filename: PChar; kind: LongInt): LongInt; cdecl;
+  SSL_CTX_use_certificate_chain_file: function(context: TSSLCtx; filename: PChar): LongInt; cdecl;
+  SSL_use_certificate_chain_file: function(ssl: TSSL; filename: PChar): LongInt; cdecl;
+  SSL_CTX_use_PrivateKey: function(context: TSSLCtx; key: TEVPPKey): LongInt; cdecl;
+  SSL_CTX_use_PrivateKey_ASN1: function(pk: LongInt; context: TSSLCtx; data: PChar; len: NativeInt): LongInt; cdecl;
+  SSL_CTX_use_PrivateKey_file: function(context: TSSLCtx; filename: PChar; kind: LongInt): LongInt; cdecl;
+  SSL_CTX_use_RSAPrivateKey: function(context: TSSLCtx; rsa: TRSA): LongInt; cdecl;
+  SSL_CTX_use_RSAPrivateKey_ASN1: function(context: TSSLCtx; data: PChar; len: NativeInt): LongInt; cdecl;
+  SSL_CTX_use_RSAPrivateKey_file: function(context: TSSLCtx; filename: PChar; kind: LongInt): LongInt; cdecl;
+  SSL_use_PrivateKey: function(ssl: TSSL; pkey: TEVPPKey): LongInt; cdecl;
+  SSL_use_PrivateKey_ASN1: function(pk: LongInt; ssl: TSSL; data: PChar; len: NativeInt): LongInt; cdecl;
+  SSL_use_PrivateKey_file: function(ssl: TSSL; filename: PChar; kind: LongInt): LongInt; cdecl;
+  SSL_use_RSAPrivateKey: function(ssl: TSSL; rsa: TRSA): LongInt; cdecl;
+  SSL_use_RSAPrivateKey_ASN1: function(ssl: TSSL; data: PChar; len: NativeInt): LongInt; cdecl;
+  SSL_use_RSAPrivateKey_file: function(ssl: TSSL; filename: PChar; kind: LongInt): LongInt; cdecl;
+  SSL_CTX_check_private_key: function(context: TSSLCtx): LongInt; cdecl;
   SSL_check_private_key: function(ssl: TSSL): LongInt; cdecl;
 
 { Hashing routines }
@@ -174,9 +174,9 @@ var
     Proc := LibraryGetProc(Module, ProcName);
     Result := Proc <> nil;
     if not Result then
-		begin
+    begin
       CheckExceptions;
-		end;
+    end;
   end;
 
 begin
@@ -214,27 +214,27 @@ begin
     TryLoad('SSL_write', @SSL_write) and
     TryLoad('SSL_read', @SSL_read) and
     TryLoad('SSL_get_error', @SSL_get_error) and
-		TryLoad('SSL_CTX_use_certificate', @SSL_CTX_use_certificate) and
-		TryLoad('SSL_CTX_use_certificate_ASN1', @SSL_CTX_use_certificate_ASN1) and
-		TryLoad('SSL_CTX_use_certificate_file', @SSL_CTX_use_certificate_file) and
-		TryLoad('SSL_use_certificate', @SSL_use_certificate) and
-		TryLoad('SSL_use_certificate_ASN1', @SSL_use_certificate_ASN1) and
-		TryLoad('SSL_use_certificate_file', @SSL_use_certificate_file) and
-		TryLoad('SSL_CTX_use_certificate_chain_file', @SSL_CTX_use_certificate_chain_file) and
-		TryLoad('SSL_CTX_use_PrivateKey', @SSL_CTX_use_PrivateKey) and
-		TryLoad('SSL_CTX_use_PrivateKey_ASN1', @SSL_CTX_use_PrivateKey_ASN1) and
-		TryLoad('SSL_CTX_use_PrivateKey_file', @SSL_CTX_use_PrivateKey_file) and
-		TryLoad('SSL_CTX_use_RSAPrivateKey', @SSL_CTX_use_RSAPrivateKey) and
-		TryLoad('SSL_CTX_use_RSAPrivateKey_ASN1', @SSL_CTX_use_RSAPrivateKey_ASN1) and
-		TryLoad('SSL_CTX_use_RSAPrivateKey_file', @SSL_CTX_use_RSAPrivateKey_file) and
-		TryLoad('SSL_use_PrivateKey', @SSL_use_PrivateKey) and
-		TryLoad('SSL_use_PrivateKey_ASN1', @SSL_use_PrivateKey_ASN1) and
-		TryLoad('SSL_use_PrivateKey_file', @SSL_use_PrivateKey_file) and
-		TryLoad('SSL_use_RSAPrivateKey', @SSL_use_RSAPrivateKey) and
-		TryLoad('SSL_use_RSAPrivateKey_ASN1', @SSL_use_RSAPrivateKey_ASN1) and
-		TryLoad('SSL_use_RSAPrivateKey_file', @SSL_use_RSAPrivateKey_file) and
-		TryLoad('SSL_CTX_check_private_key', @SSL_CTX_check_private_key) and
-		TryLoad('SSL_check_private_key', @SSL_check_private_key);
+    TryLoad('SSL_CTX_use_certificate', @SSL_CTX_use_certificate) and
+    TryLoad('SSL_CTX_use_certificate_ASN1', @SSL_CTX_use_certificate_ASN1) and
+    TryLoad('SSL_CTX_use_certificate_file', @SSL_CTX_use_certificate_file) and
+    TryLoad('SSL_use_certificate', @SSL_use_certificate) and
+    TryLoad('SSL_use_certificate_ASN1', @SSL_use_certificate_ASN1) and
+    TryLoad('SSL_use_certificate_file', @SSL_use_certificate_file) and
+    TryLoad('SSL_CTX_use_certificate_chain_file', @SSL_CTX_use_certificate_chain_file) and
+    TryLoad('SSL_CTX_use_PrivateKey', @SSL_CTX_use_PrivateKey) and
+    TryLoad('SSL_CTX_use_PrivateKey_ASN1', @SSL_CTX_use_PrivateKey_ASN1) and
+    TryLoad('SSL_CTX_use_PrivateKey_file', @SSL_CTX_use_PrivateKey_file) and
+    TryLoad('SSL_CTX_use_RSAPrivateKey', @SSL_CTX_use_RSAPrivateKey) and
+    TryLoad('SSL_CTX_use_RSAPrivateKey_ASN1', @SSL_CTX_use_RSAPrivateKey_ASN1) and
+    TryLoad('SSL_CTX_use_RSAPrivateKey_file', @SSL_CTX_use_RSAPrivateKey_file) and
+    TryLoad('SSL_use_PrivateKey', @SSL_use_PrivateKey) and
+    TryLoad('SSL_use_PrivateKey_ASN1', @SSL_use_PrivateKey_ASN1) and
+    TryLoad('SSL_use_PrivateKey_file', @SSL_use_PrivateKey_file) and
+    TryLoad('SSL_use_RSAPrivateKey', @SSL_use_RSAPrivateKey) and
+    TryLoad('SSL_use_RSAPrivateKey_ASN1', @SSL_use_RSAPrivateKey_ASN1) and
+    TryLoad('SSL_use_RSAPrivateKey_file', @SSL_use_RSAPrivateKey_file) and
+    TryLoad('SSL_CTX_check_private_key', @SSL_CTX_check_private_key) and
+    TryLoad('SSL_check_private_key', @SSL_check_private_key);
   InitializedSSL := Result;
 end;
 
@@ -256,9 +256,9 @@ var
     Proc := LibraryGetProc(Module, ProcName);
     Result := Proc <> nil;
     if not Result then
-		begin
+    begin
       CheckExceptions;
-		end;
+    end;
   end;
 
 begin

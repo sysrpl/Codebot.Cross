@@ -403,8 +403,8 @@ procedure ThemeNames(Strings: TStrings);
 type
   TFilterFunction = function(Value: Single): Single;
 
- TSamplingFilter = (sfNearest, sfLinear, sfCosine, sfHermite, sfQuadratic,
-   sfGaussian, sfSpline, sfLanczos, sfMitchell, sfCatmullRom);
+  TSamplingFilter = (sfNearest, sfLinear, sfCosine, sfHermite, sfQuadratic,
+    sfGaussian, sfSpline, sfLanczos, sfMitchell, sfCatmullRom);
 
 { Default resampling filter used for bicubic resizing }
 
@@ -423,7 +423,7 @@ var
 { Resamples rectangle in source image to rectangle in destination image
   with resampling. You can use custom sampling function and filter radius.
 
- Set WrapEdges to True for seamlessly tileable images }
+  Set WrapEdges to True for seamlessly tileable images }
 
 procedure ResampleBitmap(Src: IBitmap; SrcX, SrcY, SrcWidth, SrcHeight: LongInt;
   Dst: IBitmap; DstX, DstY, DstWidth, DstHeight: LongInt;
@@ -655,9 +655,9 @@ end;
 function NewSplash: ISplash;
 begin
   if LoadD2D then
-		NewBitmapProc := NewBitmapD2DStub
-	else
-		NewBitmapProc := NewBitmapGdiStub;
+    NewBitmapProc := NewBitmapD2DStub
+  else
+    NewBitmapProc := NewBitmapGdiStub;
   Result := NewSplashWin;
 end;
 

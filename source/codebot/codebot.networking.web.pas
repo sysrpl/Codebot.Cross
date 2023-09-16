@@ -17,8 +17,8 @@ unit Codebot.Networking.Web;
 interface
 
 uses
-	Classes,
-	SysUtils,
+  Classes,
+  SysUtils,
   Codebot.System,
   Codebot.Networking
   {$ifdef use_curl}, LibCurl{$endif};
@@ -786,7 +786,7 @@ function MimeType(const FileName: string): string;
 var
   S: string;
 begin
-	S := FileExtractExt(FileName).ToLower;
+  S := FileExtractExt(FileName).ToLower;
   if s = '.7z' then
     Exit('application/x-7z-compressed');
   if s = '.aac' then
@@ -806,7 +806,7 @@ begin
   if s = '.gif' then
     Exit('image/gif');
   if s = '.htm' then
-	  Exit('text/html');
+    Exit('text/html');
   if s = '.html' then
     Exit('text/html');
   if s = '.jpeg' then
@@ -850,7 +850,7 @@ begin
   if s = '.swf' then
     Exit('application/x-shockwave-flash');
   if s = '.tif' then
-	  Exit('image/tiff');
+    Exit('image/tiff');
   if s = '.tiff' then
     Exit('image/tiff');
   if s = '.ini' then
@@ -879,7 +879,7 @@ begin
     Exit('text/xml');
   if s = '.zip' then
     Exit('application/zip');
-	Result := 'application/octet-stream';
+  Result := 'application/octet-stream';
 end;
 
 function WebGet(const Url: TUrl; Response: TStream; const UserAgent: string = SDefaultUA): Boolean;

@@ -21,8 +21,8 @@
 {$ifndef gles2}
   { Require GLES3 driver support to run your program }
   {$define gles3}
-	{$define glapi := 'ES3'}
+  {$define glapi := 'ES3'}
 {$else}
   { Require GLES2 driver support to run your program }
-	{$define glapi := 'ES2'}
+  {$define glapi := 'ES2'}
 {$endif}

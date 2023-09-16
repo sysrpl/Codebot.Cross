@@ -67,7 +67,7 @@ type
   PSockAddrIn = ^TSockAddrIn;
   TSockAddrIn = packed record
     case LongInt of
-       0: (
+        0: (
         sin_family: Word;
         sin_port: Word;
         sin_addr: TInAddr;
@@ -80,8 +80,8 @@ type
   PSockAddr = ^TSockAddr;
   TSockAddr = TSockAddrIn;
 
-	{$ifdef unix}
-	TUnixAddrIn = packed record
+  {$ifdef unix}
+  TUnixAddrIn = packed record
     family: Word;
     path: array[0..107] of AnsiChar;
   end;
@@ -311,8 +311,8 @@ const
 type
   PSockProto = ^TSockProto;
   TSockProto = record
-   sp_family: Word;
-   sp_protocol: Word;
+    sp_family: Word;
+    sp_protocol: Word;
   end;
 
 const
