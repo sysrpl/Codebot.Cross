@@ -80,22 +80,22 @@ type
     destructor Destroy; override;
     procedure EraseBackground(DC: HDC); override;
     { Context is only valid between OnRenderStart and OnRenderStop.
-    	Context can be used in threads, but can be current in only
+      Context can be used in threads, but can be current in only
       one thread at a time. A good strategy is to spawn a rendering thread
       in response to OnRenderStart, and exiting that thread in response
       to OnRenderStop. }
     property Context: IOpenGLContext read GetContext;
     { Rendering is True only while a context is allowed to render.
-    	That is the property is True between OnRenderStart and OnRenderStop.
+      That is the property is True between OnRenderStart and OnRenderStop.
 
       OnRenderStart occurs immediately after a window is first shown.
       OnRenderStop occurs immediately before a window is destroyed. }
     property Rendering: Boolean read FRendering;
     { Failed is True when a context failed the creation step.
-    	Failure is caused by unsupported options and is distinctly
+      Failure is caused by unsupported options and is distinctly
       different from OpenGLInfo.IsValid. }
     property Failed: Boolean read FFailed;
-	published
+  published
     { Options are used once immediately before a context is created }
     property Options: TGraphicsBoxOptions read FOptions write SetOptions;
     { OnFailed fires after a context failed the creation step }
@@ -190,7 +190,7 @@ begin
   FOptions := TGraphicsBoxOptions.Create;
   ControlStyle := ControlStyle - [csSetCaption];
   DoubleBuffered := False;
-	ParentDoubleBuffered := False;
+  ParentDoubleBuffered := False;
   SetInitialBounds(0, 0, 400, 300);
 end;
 
@@ -234,11 +234,11 @@ end;
 procedure TGraphicsBox.TryRenderStart;
 begin
   if not CanRender then
-  	Exit;
+    Exit;
   if Context = nil then
   begin
     if Assigned(FOnFailed) then
-    	FOnFailed(Self);
+      FOnFailed(Self);
   end;
   if not FRendering then
   begin
@@ -350,7 +350,7 @@ begin
   LoadBitmap;
   Canvas.Draw((Width - FLogo.Width) shr 1, (Height - FLogo.Height) shr 1, FLogo);
   if csDesigning in ComponentState then
-  	Exit;
+    Exit;
   Canvas.Font.Color := clWhite;
   H := Canvas.TextHeight('Wg');
   X := 5;
@@ -358,7 +358,7 @@ begin
   if FFailed then
     Canvas.TextOut(X, Y, 'Options failed to create a context')
   else
-	begin
+  begin
     S := 'Your video driver does not support ' + glapi;
     Canvas.TextOut(5, Y, S);
     Inc(Y, H);

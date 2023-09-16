@@ -11,20 +11,20 @@
 {$WARN 6060 off : }
 
 {$ifdef linux}
-	{$define apicall := cdecl}
-	{$ifdef lclgtk2}
-		{$define platformok}
-	{$endif}
+  {$define apicall := cdecl}
+  {$ifdef lclgtk2}
+    {$define platformok}
+  {$endif}
   {$ifdef lclgtk3}
-	  {$define platformok}
+    {$define platformok}
   {$endif}
 {$endif}
 
 {$ifdef windows}
-	{$define apicall := stdcall}
-	{$ifdef lclwin32}
-		{$define platformok}
-	{$endif}
+  {$define apicall := stdcall}
+  {$ifdef lclwin32}
+    {$define platformok}
+  {$endif}
 {$endif}
 
 {$ifndef platformok}

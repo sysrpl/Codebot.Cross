@@ -213,7 +213,7 @@ begin
           if glXMakeCurrent(Display, Window, Context) then
           try
             if LoadIndirect('glGetString', @glGetString) and
-               LoadIndirect('glGetIntegerv', @glGetIntegerv) then
+                LoadIndirect('glGetIntegerv', @glGetIntegerv) then
             begin
               Obj.FRenderer := glGetString(GL_RENDERER);
               Obj.FVendor := glGetString(GL_VENDOR);

@@ -83,7 +83,7 @@ type
     { Add a single item to the buffer }
     procedure AddItem(const Item: T);
     { Clear the buffer optionally allocating room for a N number
-   of future items }
+    of future items }
     procedure Clear(N: Integer = 0);
     { Pointer to the data at a specified index }
     property Data[Index: Integer]: Pointer read GetData; default;
@@ -95,17 +95,17 @@ type
 
 { TVertMode described how vertex arrays are sequenced by by draw buffers }
 
-   TVertMode = (
-     vertPoints,
-     vertLines,
-     vertLineLoop,
-     vertLineStrip,
-     vertTriangles,
-     vertTriangleStrip,
-     vertTriangleFan,
-     vertQuads);
+    TVertMode = (
+      vertPoints,
+      vertLines,
+      vertLineLoop,
+      vertLineStrip,
+      vertTriangles,
+      vertTriangleStrip,
+      vertTriangleFan,
+      vertQuads);
 
-   WordArray = TArrayList<Word>;
+    WordArray = TArrayList<Word>;
 
 { TDrawingBuffer\<T\> is the abstract base class for drawing vertex arrays }
 

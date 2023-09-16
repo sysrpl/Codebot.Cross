@@ -382,7 +382,7 @@ end;
 procedure TImageBitmap.Resize(AWidth, AHeight: Integer);
 const
   Formats: array[Boolean] of DWORD =
-   (PixelFormat24bppRGB, PixelFormat32bppARGB);
+    (PixelFormat24bppRGB, PixelFormat32bppARGB);
 var
   B: TFastBitmap;
   G: IGdiGraphics;
@@ -797,7 +797,7 @@ var
   procedure SaveGdiBitmap;
   const
     Formats: array[Boolean] of DWORD =
-     (PixelFormat24bppRGB, PixelFormat32bppARGB);
+      (PixelFormat24bppRGB, PixelFormat32bppARGB);
   var
     B: IGdiBitmap;
     G: TGUID;

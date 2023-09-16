@@ -94,6 +94,7 @@ type
     FSecure: Boolean;
     FSSLContext: TSSLCtx;
     FSSLSocket: TSSL;
+    FSSLConnected: Boolean;
     FTimeout: LongWord;
     FTimer: Double;
     procedure SetBlocking(Value: Boolean);
@@ -265,6 +266,7 @@ end;
 
 procedure TSocket.Close;
 var
+  B: Boolean;
   S: TSSL;
   C: TSSLCtx;
   H: TSocketHandle;
@@ -272,15 +274,18 @@ begin
   FState := ssClosed;
   if FHandle = INVALID_SOCKET then
     Exit;
+  B := FSSLConnected;
   S := FSSLSocket;
   C := FSSLContext;
   H := FHandle;
+  FSSLConnected := False;
   FSSLSocket := nil;
   FSSLContext := nil;
   FHandle := INVALID_SOCKET;
   if S <> nil then
   begin
-    SSL_shutdown(S);
+    if B then
+      SSL_shutdown(S);
     SSL_free(S);
   end;
   if C <> nil then
@@ -330,7 +335,7 @@ begin
   if FSecure then
     if not InitSSL then
       Exit(False);
-	FAddress := Address;
+  FAddress := Address;
   FPort := Port;
   if not FAddress.Resolve then
     Exit(False);
@@ -377,6 +382,7 @@ begin
       Close;
       Exit(False);
     end;
+    FSSLConnected := True;
   end;
   if not FBlocking then
   begin
@@ -585,9 +591,9 @@ function TSocket.WriteFile(const FileName: string): Integer;
 var
   S: TStream;
 begin
-	S := TFileStream.Create(FileName, fmOpenRead);
+  S := TFileStream.Create(FileName, fmOpenRead);
   try
-		Result := WriteStream(S);
+    Result := WriteStream(S);
   finally
     S.Free;
   end;
@@ -600,15 +606,15 @@ var
   Buffer: Pointer;
   I: Integer;
 begin
-	Buffer := GetMem(BufferSize);
+  Buffer := GetMem(BufferSize);
   try
     Result := 0;
     while True do
     begin
-		  I := Stream.Read(Buffer^, BufferSize);
+      I := Stream.Read(Buffer^, BufferSize);
       if I < 1 then
-    	  Break;
-		  Result := Result + Write(Buffer^, I);
+        Break;
+      Result := Result + Write(Buffer^, I);
     end;
   finally
     FreeMem(Buffer);
@@ -639,9 +645,9 @@ var
   S: TSocket;
 begin
   Result := False;
-	S := TSocket.Create;
+  S := TSocket.Create;
   try
-		if S.Connect(Host, Port) then
+    if S.Connect(Host, Port) then
     begin
       S.Write(Data);
       Result := True;

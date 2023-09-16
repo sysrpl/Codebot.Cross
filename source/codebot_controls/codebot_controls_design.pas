@@ -1,6 +1,6 @@
 { This file was automatically created by Lazarus. Do not edit!
   This source is only used to compile and install the package.
- }
+  }
 
 unit codebot_controls_design;
 
@@ -8,15 +8,15 @@ unit codebot_controls_design;
 interface
 
 uses
-  Codebot.Design.Registration, Codebot.Design.Editors, Codebot.Design.Forms, 
-  Codebot.Design.ImageListEditor, Codebot.Design.SurfaceBitmapEditor, 
+  Codebot.Design.Registration, Codebot.Design.Editors, Codebot.Design.Forms,
+  Codebot.Design.ImageListEditor, Codebot.Design.SurfaceBitmapEditor,
   LazarusPackageIntf;
 
 implementation
 
 procedure Register;
 begin
-  RegisterUnit('Codebot.Design.Registration', 
+  RegisterUnit('Codebot.Design.Registration',
     @Codebot.Design.Registration.Register);
 end;
 

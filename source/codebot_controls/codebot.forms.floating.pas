@@ -36,7 +36,7 @@ type
   protected
     procedure CreateHandle; override;
     procedure Loaded; override;
-		procedure Paint; override;
+    procedure Paint; override;
   public
     constructor Create(AOwner: TComponent); override;
     procedure MoveSize(Rect: TRectI);
@@ -67,7 +67,7 @@ var
 begin
   Screen := gtk_widget_get_screen(widget);
   Colormap := gdk_screen_get_rgba_colormap(Screen);
-	gtk_widget_set_colormap(widget, Colormap);
+  gtk_widget_set_colormap(widget, Colormap);
 end;
 
 { TFloatingForm }
@@ -130,14 +130,14 @@ var
 begin
   Window := GTK_WIDGET({%H-}Pointer(Handle)).window;
   if FInteractive then
-	  gdk_window_input_shape_combine_mask(Window, nil, 0, 0)
+    gdk_window_input_shape_combine_mask(Window, nil, 0, 0)
   else
   begin
     Mask := gdk_pixmap_new(nil, Width, Height, 1);
     gdk_window_input_shape_combine_mask(Window, nil, 0, 0);
     gdk_window_input_shape_combine_mask(Window, Mask, 0, 0);
     g_object_unref(Mask);
-	end
+  end
 end;
 
 procedure TFloatingForm.MoveSize(Rect: TRectI);

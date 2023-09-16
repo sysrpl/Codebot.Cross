@@ -1,6 +1,6 @@
 { This file was automatically created by Lazarus. Do not edit!
   This source is only used to compile and install the package.
- }
+  }
 
 unit codebot_rendering;
 
@@ -8,10 +8,10 @@ unit codebot_rendering;
 interface
 
 uses
-  Codebot.GLES, Codebot.GLES.Linux, Codebot.GLES.Windows, 
-  Codebot.Render.Controls, Codebot.Render.Buffers, Codebot.Render.Contexts, 
-  Codebot.Render.Fonts, Codebot.Render.Scenes.Controller, 
-  Codebot.Render.Scenes, Codebot.Render.Shaders, Codebot.Render.Textures, 
+  Codebot.GLES, Codebot.GLES.Linux, Codebot.GLES.Windows,
+  Codebot.Render.Controls, Codebot.Render.Buffers, Codebot.Render.Contexts,
+  Codebot.Render.Fonts, Codebot.Render.Scenes.Controller,
+  Codebot.Render.Scenes, Codebot.Render.Shaders, Codebot.Render.Textures,
   Codebot.Render.World, codebot.render.controls.gtk2, LazarusPackageIntf;
 
 implementation

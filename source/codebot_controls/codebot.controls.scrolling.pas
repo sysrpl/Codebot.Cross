@@ -238,9 +238,9 @@ type
     procedure KeyPress(var Key: Char); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
-     X, Y: Integer); override;
+      X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
-     X, Y: Integer); override;
+      X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseLeave; override;
     function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;

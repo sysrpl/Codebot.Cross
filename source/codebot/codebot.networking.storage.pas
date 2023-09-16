@@ -56,7 +56,7 @@ implementation
 
 uses
 {$ifdef windows}
-	Windows;
+  Windows;
 
 function NowUTC: TDateTime;
 var
@@ -67,7 +67,7 @@ begin
 end;
 
 {$else}
-	Unix, BaseUnix;
+  Unix, BaseUnix;
 
 Procedure JulianToGregorian(Julian: LongInt; out Year, Month, Day: Word);
 const

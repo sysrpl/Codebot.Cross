@@ -196,7 +196,7 @@ var
 
 function OpenGLInfoPrivate: IOpenGLInfo;
 
-	function Load(const Name: string; out Proc: Pointer): Boolean;
+  function Load(const Name: string; out Proc: Pointer): Boolean;
   begin
     Proc := wglGetProcAddress(PChar(Name));
     Result := Proc <> nil;
@@ -217,8 +217,8 @@ var
   A, B: string;
 begin
   if Info <> nil then
-  	Exit(Info);
-	Info := TOpenGLInfo.Create;
+    Exit(Info);
+  Info := TOpenGLInfo.Create;
   Result := Info;
   Obj := Result as TOpenGLInfo;
   WindowClass := 'OpenGLInfoPrivateClass';
@@ -257,10 +257,10 @@ begin
     if wglMakeCurrent(DC, RC) then
     begin
       Obj.FIsValid :=
-      	Load('glGetString', @glGetString) and
-				Load('glGetIntegerv', @glGetIntegerv) and
+        Load('glGetString', @glGetString) and
+        Load('glGetIntegerv', @glGetIntegerv) and
         Load('wglGetExtensionsStringARB', @wglGetExtensionsString) and
-	      Load('wglChoosePixelFormatARB', @wglChoosePixelFormat);
+        Load('wglChoosePixelFormatARB', @wglChoosePixelFormat);
       if Obj.FIsValid then
       begin
         Obj.FRenderer := glGetString(GL_RENDERER);
@@ -272,8 +272,8 @@ begin
         WGL_ARB_MULTISAMPLE := B.IndexOf('WGL_ARB_multisample') > -1;
         WGL_EXT_SWAP_CONTROL := B.IndexOf('WGL_EXT_swap_control') > -1;
         WGL_EXT_SWAP_CONTROL := WGL_EXT_SWAP_CONTROL and
-	      	Load('wglSwapIntervalEXT', @wglSwapIntervalEXT);
-  	      Load('wglGetSwapIntervalEXT', @wglGetSwapIntervalEXT);
+          Load('wglSwapIntervalEXT', @wglSwapIntervalEXT);
+          Load('wglGetSwapIntervalEXT', @wglGetSwapIntervalEXT);
         glGetIntegerv(GL_MAJOR_VERSION, @Obj.FMajor);
         glGetIntegerv(GL_MINOR_VERSION, @Obj.FMinor);
         if Obj.FVersion.Length > 2 then
@@ -695,12 +695,12 @@ var
   Format, NumFormat: GLint;
   Multi: Boolean;
 begin
-	Result := nil;
+  Result := nil;
   if not OpenGLInfoPrivate.IsValid then
-  	Exit;
+    Exit;
   Wnd := HWND(Window);
   if Wnd = 0 then
-  	Exit;
+    Exit;
   DC := GetDC(Wnd);
   RC := 0;
   Attrib.Push(WGL_DRAW_TO_WINDOW); Attrib.Push(1);
@@ -726,7 +726,7 @@ begin
   begin
     RC := wglCreateContext(DC);
     if RC <> 0 then
-    	Result := TOpenGLContext.Create(RC, Wnd, DC);
+      Result := TOpenGLContext.Create(RC, Wnd, DC);
   end;
   if (RC = 0) and Multi then
   begin
@@ -739,12 +739,12 @@ begin
       SetPixelFormat(DC, Format, nil);
       RC := wglCreateContext(DC);
       if RC <> 0 then
-      	Result := TOpenGLContext.Create(RC, Wnd, DC);
+        Result := TOpenGLContext.Create(RC, Wnd, DC);
     end
   end;
   if Result = nil then
-  	if DC <> 0 then
-    	ReleaseDC(Wnd, DC);
+    if DC <> 0 then
+      ReleaseDC(Wnd, DC);
 end;
 
 function OpenGLContextCurrentPrivate: IOpenGLContext;

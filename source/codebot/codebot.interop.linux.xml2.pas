@@ -100,11 +100,11 @@ type
   end;
 
 (*
- * xmlBufferAllocationScheme:
- *
- * A buffer allocation scheme can be defined to either match exactly the
- * need or double it's allocated size each time it is found too small.
- *)
+  * xmlBufferAllocationScheme:
+  *
+  * A buffer allocation scheme can be defined to either match exactly the
+  * need or double it's allocated size each time it is found too small.
+  *)
   xmlBufferAllocationScheme = (
     XML_BUFFER_ALLOC_DOUBLEIT,
     XML_BUFFER_ALLOC_EXACT,
@@ -112,10 +112,10 @@ type
   );
 
 (*
- * xmlBuffer:
- *
- * A buffer structure.
- *)
+  * xmlBuffer:
+  *
+  * A buffer structure.
+  *)
   xmlBuffer = record
     content: xmlCharPtr; (* The buffer content UTF8 *)
     use: cuint; (* The buffer size used *)
@@ -124,14 +124,14 @@ type
   end;
 
 (*
- * The different element types carried by an XML tree.
- *
- * NOTE: This is synchronized with DOM Level1 values
- *       See http://www.w3.org/TR/REC-DOM-Level-1/
- *
- * Actually this had diverged a bit, and now XML_DOCUMENT_TYPE_NODE should
- * be deprecated to use an XML_DTD_NODE.
- *)
+  * The different element types carried by an XML tree.
+  *
+  * NOTE: This is synchronized with DOM Level1 values
+  *       See http://www.w3.org/TR/REC-DOM-Level-1/
+  *
+  * Actually this had diverged a bit, and now XML_DOCUMENT_TYPE_NODE should
+  * be deprecated to use an XML_DTD_NODE.
+  *)
   xmlElementType = (
     XML_ELEMENT_NODE = 1,
     XML_ATTRIBUTE_NODE = 2,
@@ -156,10 +156,10 @@ type
   );
 
 (*
- * xmlNotation:
- *
- * A DTD Notation definition.
- *)
+  * xmlNotation:
+  *
+  * A DTD Notation definition.
+  *)
   xmlNotation = record
     name: xmlCharPtr; (* Notation name *)
     PublicID: xmlCharPtr; (* Public identifier, if any *)
@@ -167,10 +167,10 @@ type
   end;
 
 (*
- * xmlAttributeType:
- *
- * A DTD Attribute type definition.
- *)
+  * xmlAttributeType:
+  *
+  * A DTD Attribute type definition.
+  *)
   xmlAttributeType = (
     XML_ATTRIBUTE_CDATA = 1,
     XML_ATTRIBUTE_ID,
@@ -185,10 +185,10 @@ type
   );
 
 (*
- * xmlAttributeDefault:
- *
- * A DTD Attribute default definition.
- *)
+  * xmlAttributeDefault:
+  *
+  * A DTD Attribute default definition.
+  *)
   xmlAttributeDefault = (
     XML_ATTRIBUTE_NONE = 1,
     XML_ATTRIBUTE_REQUIRED,
@@ -197,20 +197,20 @@ type
   );
 
 (*
- * xmlEnumeration:
- *
- * List structure used when there is an enumeration in DTDs.
- *)
+  * xmlEnumeration:
+  *
+  * List structure used when there is an enumeration in DTDs.
+  *)
   xmlEnumeration = record
     next: xmlEnumerationPtr; (* next one *)
     name: xmlCharPtr;
   end;
 
 (*
- * xmlAttribute:
- *
- * An Attribute declaration in a DTD.
- *)
+  * xmlAttribute:
+  *
+  * An Attribute declaration in a DTD.
+  *)
   xmlAttribute = record
     _private: pointer; (* application data *)
     _type: xmlElementType; (* XML_ATTRIBUTE_DECL, must be second ! *)
@@ -231,10 +231,10 @@ type
   end;
 
 (*
- * xmlElementContentType:
- *
- * Possible definitions of element content types.
- *)
+  * xmlElementContentType:
+  *
+  * Possible definitions of element content types.
+  *)
   xmlElementContentType = (
     XML_ELEMENT_CONTENT_PCDATA = 1,
     XML_ELEMENT_CONTENT_ELEMENT,
@@ -243,10 +243,10 @@ type
   );
 
 (*
- * xmlElementContentOccur:
- *
- * Possible definitions of element content occurrences.
- *)
+  * xmlElementContentOccur:
+  *
+  * Possible definitions of element content occurrences.
+  *)
   xmlElementContentOccur = (
     XML_ELEMENT_CONTENT_ONCE = 1,
     XML_ELEMENT_CONTENT_OPT,
@@ -255,11 +255,11 @@ type
   );
 
 (*
- * xmlElementContent:
- *
- * An XML Element content as stored after parsing an element definition
- * in a DTD.
- *)
+  * xmlElementContent:
+  *
+  * An XML Element content as stored after parsing an element definition
+  * in a DTD.
+  *)
   xmlElementContent = record
     _type: xmlElementContentType; (* PCDATA, ELEMENT, SEQ or OR *)
     ocur: xmlElementContentOccur; (* ONCE, OPT, MULT or PLUS *)
@@ -271,10 +271,10 @@ type
   end;
 
 (*
- * xmlElementTypeVal:
- *
- * The different possibilities for an element content type.
- *)
+  * xmlElementTypeVal:
+  *
+  * The different possibilities for an element content type.
+  *)
   xmlElementTypeVal = (
     XML_ELEMENT_TYPE_UNDEFINED = 0,
     XML_ELEMENT_TYPE_EMPTY = 1,
@@ -284,10 +284,10 @@ type
   );
 
 (*
- * xmlElement:
- *
- * An XML Element declaration from a DTD.
- *)
+  * xmlElement:
+  *
+  * An XML Element declaration from a DTD.
+  *)
   xmlElement = record
     _private: pointer; (* application data *)
     _type: xmlElementType; (* XML_ELEMENT_DECL, must be second ! *)
@@ -308,14 +308,14 @@ type
   xmlNsType = xmlElementType;
 
 (*
- * xmlNs:
- *
- * An XML namespace.
- * Note that prefix == NULL is valid, it defines the default namespace
- * within the subtree (until overridden).
- *
- * xmlNsType is unified with xmlElementType.
- *)
+  * xmlNs:
+  *
+  * An XML namespace.
+  * Note that prefix == NULL is valid, it defines the default namespace
+  * within the subtree (until overridden).
+  *
+  * xmlNsType is unified with xmlElementType.
+  *)
   xmlNs = record
     next: xmlNsPtr; (* next Ns link for this node  *)
     _type: xmlNsType; (* global or local *)
@@ -326,11 +326,11 @@ type
   end;
 
 (*
- * xmlDtd:
- *
- * An XML DTD, as defined by <!DOCTYPE ... There is actually one for
- * the internal subset and for the external subset.
- *)
+  * xmlDtd:
+  *
+  * An XML DTD, as defined by <!DOCTYPE ... There is actually one for
+  * the internal subset and for the external subset.
+  *)
   xmlDtd = record
     _private: pointer; (* application data *)
     _type: xmlElementType; (* XML_DTD_NODE, must be second ! *)
@@ -351,10 +351,10 @@ type
   end;
 
 (*
- * xmlAttr:
- *
- * An attribute on an XML node.
- *)
+  * xmlAttr:
+  *
+  * An attribute on an XML node.
+  *)
   xmlAttr = record
     _private: pointer; (* application data *)
     _type: xmlElementType; (* XML_ATTRIBUTE_NODE, must be second ! *)
@@ -371,10 +371,10 @@ type
   end;
 
 (*
- * xmlID:
- *
- * An XML ID instance.
- *)
+  * xmlID:
+  *
+  * An XML ID instance.
+  *)
   xmlID = record
     next: xmlIDPtr; (* next ID *)
     value: xmlCharPtr; (* The ID name *)
@@ -385,10 +385,10 @@ type
   end;
 
 (*
- * xmlRef:
- *
- * An XML IDREF instance.
- *)
+  * xmlRef:
+  *
+  * An XML IDREF instance.
+  *)
   xmlRef = record
     next: xmlRefPtr; (* next Ref *)
     value: xmlCharPtr; (* The Ref name *)
@@ -398,10 +398,10 @@ type
   end;
 
 (*
- * xmlNode:
- *
- * A node in an XML tree.
- *)
+  * xmlNode:
+  *
+  * A node in an XML tree.
+  *)
   xmlNode = record
     _private: pointer; (* application data *)
     _type: xmlElementType; (* type number, must be second ! *)
@@ -433,8 +433,8 @@ type
     doc: xmlDocPtr; (* autoreference to itself *)
     compression: cint; (* level of zlib compression *)
     standalone: cint; (* standalone document (no external refs)
-             1 if standalone="yes"
-             0 if standalone="no"
+              1 if standalone="yes"
+              0 if standalone="no"
             -1 if there is no XML declaration
             -2 if there is an XML declaration, but no
           standalone attribute was specified *)
@@ -452,94 +452,94 @@ type
   end;
 
 (*
- * xmlInputMatchCallback:
- * @filename: the filename or URI
- *
- * Callback used in the I/O Input API to detect if the current handler
- * can provide input fonctionnalities for this resource.
- *
- * Returns 1 if yes and 0 if another Input module should be used
- *)
+  * xmlInputMatchCallback:
+  * @filename: the filename or URI
+  *
+  * Callback used in the I/O Input API to detect if the current handler
+  * can provide input fonctionnalities for this resource.
+  *
+  * Returns 1 if yes and 0 if another Input module should be used
+  *)
   xmlInputMatchCallback = function(filename: pchar): cint; cdecl;
 
 (*
- * xmlInputOpenCallback:
- * @filename: the filename or URI
- *
- * Callback used in the I/O Input API to open the resource
- *
- * Returns an Input context or NULL in case or error
- *)
+  * xmlInputOpenCallback:
+  * @filename: the filename or URI
+  *
+  * Callback used in the I/O Input API to open the resource
+  *
+  * Returns an Input context or NULL in case or error
+  *)
   xmlInputOpenCallback = function(filename: pchar): pointer; cdecl;
 
 (*
- * xmlInputReadCallback:
- * @context:  an Input context
- * @buffer:  the buffer to store data read
- * @len:  the length of the buffer in bytes
- *
- * Callback used in the I/O Input API to read the resource
- *
- * Returns the number of bytes read or -1 in case of error
- *)
+  * xmlInputReadCallback:
+  * @context:  an Input context
+  * @buffer:  the buffer to store data read
+  * @len:  the length of the buffer in bytes
+  *
+  * Callback used in the I/O Input API to read the resource
+  *
+  * Returns the number of bytes read or -1 in case of error
+  *)
   xmlInputReadCallback = function(context: pointer; buffer: pchar; len: cint): cint; cdecl;
 
 (*
- * xmlInputCloseCallback:
- * @context:  an Input context
- *
- * Callback used in the I/O Input API to close the resource
- *
- * Returns 0 or -1 in case of error
- *)
+  * xmlInputCloseCallback:
+  * @context:  an Input context
+  *
+  * Callback used in the I/O Input API to close the resource
+  *
+  * Returns 0 or -1 in case of error
+  *)
   xmlInputCloseCallback = function(context: pointer): cint; cdecl;
 
 (*
- * Those are the functions and datatypes for the library output
- * I/O structures.
- *)
+  * Those are the functions and datatypes for the library output
+  * I/O structures.
+  *)
 
 (*
- * xmlOutputMatchCallback:
- * @filename: the filename or URI
- *
- * Callback used in the I/O Output API to detect if the current handler
- * can provide output fonctionnalities for this resource.
- *
- * Returns 1 if yes and 0 if another Output module should be used
- *)
+  * xmlOutputMatchCallback:
+  * @filename: the filename or URI
+  *
+  * Callback used in the I/O Output API to detect if the current handler
+  * can provide output fonctionnalities for this resource.
+  *
+  * Returns 1 if yes and 0 if another Output module should be used
+  *)
   xmlOutputMatchCallback = function(filename: pchar): cint; cdecl;
 
 (*
- * xmlOutputOpenCallback:
- * @filename: the filename or URI
- *
- * Callback used in the I/O Output API to open the resource
- *
- * Returns an Output context or NULL in case or error
- *)
+  * xmlOutputOpenCallback:
+  * @filename: the filename or URI
+  *
+  * Callback used in the I/O Output API to open the resource
+  *
+  * Returns an Output context or NULL in case or error
+  *)
   xmlOutputOpenCallback = function(filename: pchar): pointer; cdecl;
 
 (*
- * xmlOutputWriteCallback:
- * @context:  an Output context
- * @buffer:  the buffer of data to write
- * @len:  the length of the buffer in bytes
- *
- * Callback used in the I/O Output API to write to the resource
- *
- * Returns the number of bytes written or -1 in case of error
- *)
+  * xmlOutputWriteCallback:
+  * @context:  an Output context
+  * @buffer:  the buffer of data to write
+  * @len:  the length of the buffer in bytes
+  *
+  * Callback used in the I/O Output API to write to the resource
+  *
+  * Returns the number of bytes written or -1 in case of error
+  *)
   xmlOutputWriteCallback = function(context: pointer; buffer: pchar; len: cint): cint; cdecl;
 
 (*
- * xmlOutputCloseCallback:
- * @context:  an Output context
- *
- * Callback used in the I/O Output API to close the resource
- *
- * Returns 0 or -1 in case of error
- *)
+  * xmlOutputCloseCallback:
+  * @context:  an Output context
+  *
+  * Callback used in the I/O Output API to close the resource
+  *
+  * Returns 0 or -1 in case of error
+  *)
   xmlOutputCloseCallback = function(context: pointer): cint; cdecl;
 
   xmlParserInputBuffer = record
@@ -566,10 +566,10 @@ type
   end;
 
 (*
- * xmlErrorLevel:
- *
- * Indicates the level of an error
- *)
+  * xmlErrorLevel:
+  *
+  * Indicates the level of an error
+  *)
   xmlErrorLevel = (
     XML_ERR_NONE = 0,
     XML_ERR_WARNING = 1, (* A simple warning *)
@@ -578,10 +578,10 @@ type
   );
 
 (*
- * xmlErrorDomain:
- *
- * Indicates where an error may have come from
- *)
+  * xmlErrorDomain:
+  *
+  * Indicates where an error may have come from
+  *)
   xmlErrorDomain = (
     XML_FROM_NONE = 0,
     XML_FROM_PARSER, (* The XML parser *)
@@ -615,10 +615,10 @@ type
   );
 
 (*
- * xmlError:
- *
- * An XML Error instance.
- *)
+  * xmlError:
+  *
+  * An XML Error instance.
+  *)
   xmlError = record
     domain: cint; (* What part of the library raised this error *)
     code: cint; (* The error code, e.g. an xmlParserError *)
@@ -636,8 +636,8 @@ type
   end;
 
 (*
- * A node-set (an unordered collection of nodes without duplicates).
- *)
+  * A node-set (an unordered collection of nodes without duplicates).
+  *)
   xmlNodeSet = record
     nodeNr: cint; (* number of nodes in the set *)
     nodeMax: cint; (* size of the array as allocated *)
@@ -646,15 +646,15 @@ type
   end;
 
 (*
- * An expression is evaluated to yield an object, which
- * has one of the following four basic types:
- *   - node-set
- *   - boolean
- *   - number
- *   - string
- *
- * @@ XPointer will add more types !
- *)
+  * An expression is evaluated to yield an object, which
+  * has one of the following four basic types:
+  *   - node-set
+  *   - boolean
+  *   - number
+  *   - string
+  *
+  * @@ XPointer will add more types !
+  *)
 
   xmlXPathObjectType = (
     XPATH_UNDEFINED = 0,
@@ -682,46 +682,46 @@ type
   end;
 
 (*
- * xmlXPathConvertFunc:
- * @obj:  an XPath object
- * @type:  the number of the target type
- *
- * A conversion function is associated to a type and used to cast
- * the new type to primitive values.
- *
- * Returns -1 in case of error, 0 otherwise
- *)
+  * xmlXPathConvertFunc:
+  * @obj:  an XPath object
+  * @type:  the number of the target type
+  *
+  * A conversion function is associated to a type and used to cast
+  * the new type to primitive values.
+  *
+  * Returns -1 in case of error, 0 otherwise
+  *)
   xmlXPathConvertFunc = function(obj: xmlXPathObjectPtr; _type: cint): cint; cdecl;
 
 (*
- * Extra type: a name and a conversion function.
- *)
+  * Extra type: a name and a conversion function.
+  *)
   xmlXPathType = record
     name: xmlCharPtr; (* the type name *)
     func: xmlXPathConvertFunc; (* the conversion function *)
   end;
 
 (*
- * Extra variable: a name and a value.
- *)
+  * Extra variable: a name and a value.
+  *)
   xmlXPathVariable = record
     name: xmlCharPtr; (* the variable name *)
     value: xmlXPathObjectPtr; (* the value *)
   end;
 
 (*
- * xmlXPathEvalFunc:
- * @ctxt: an XPath parser context
- * @nargs: the number of arguments passed to the function
- *
- * An XPath evaluation function, the parameters are on the XPath context stack.
- *)
+  * xmlXPathEvalFunc:
+  * @ctxt: an XPath parser context
+  * @nargs: the number of arguments passed to the function
+  *
+  * An XPath evaluation function, the parameters are on the XPath context stack.
+  *)
 
   xmlXPathEvalFunc = procedure(ctxt: xmlXPathParserContextPtr; nargs: cint); cdecl;
 
 (*
- * Extra function: a name and a evaluation function.
- *)
+  * Extra function: a name and a evaluation function.
+  *)
 
   xmlXPathFunc = record
     name: xmlCharPtr; (* the function name *)
@@ -729,84 +729,84 @@ type
   end;
 
 (*
- * xmlXPathAxisFunc:
- * @ctxt:  the XPath interpreter context
- * @cur:  the previous node being explored on that axis
- *
- * An axis traversal function. To traverse an axis, the engine calls
- * the first time with cur == NULL and repeat until the function returns
- * NULL indicating the end of the axis traversal.
- *
- * Returns the next node in that axis or NULL if at the end of the axis.
- *)
+  * xmlXPathAxisFunc:
+  * @ctxt:  the XPath interpreter context
+  * @cur:  the previous node being explored on that axis
+  *
+  * An axis traversal function. To traverse an axis, the engine calls
+  * the first time with cur == NULL and repeat until the function returns
+  * NULL indicating the end of the axis traversal.
+  *
+  * Returns the next node in that axis or NULL if at the end of the axis.
+  *)
 
   xmlXPathAxisFunc = function(ctxt: xmlXPathParserContextPtr; cur: xmlXPathObjectPtr): xmlXPathObjectPtr; cdecl;
 
 (*
- * Extra axis: a name and an axis function.
- *)
+  * Extra axis: a name and an axis function.
+  *)
   xmlXPathAxis = record
     name: xmlCharPtr; (* the axis name *)
     func: xmlXPathAxisFunc; (* the search function *)
   end;
 
 (*
- * xmlXPathFunction:
- * @ctxt:  the XPath interprestation context
- * @nargs:  the number of arguments
- *
- * An XPath function.
- * The arguments (if any) are popped out from the context stack
- * and the result is pushed on the stack.
- *)
+  * xmlXPathFunction:
+  * @ctxt:  the XPath interprestation context
+  * @nargs:  the number of arguments
+  *
+  * An XPath function.
+  * The arguments (if any) are popped out from the context stack
+  * and the result is pushed on the stack.
+  *)
   xmlXPathFunction = procedure(ctxt: xmlXPathParserContextPtr; nargs: cint); cdecl;
 
 (*
- * Function and Variable Lookup.
- *)
+  * Function and Variable Lookup.
+  *)
 
 (*
- * xmlXPathVariableLookupFunc:
- * @ctxt:  an XPath context
- * @name:  name of the variable
- * @ns_uri:  the namespace name hosting this variable
- *
- * Prototype for callbacks used to plug variable lookup in the XPath
- * engine.
- *
- * Returns the XPath object value or NULL if not found.
- *)
+  * xmlXPathVariableLookupFunc:
+  * @ctxt:  an XPath context
+  * @name:  name of the variable
+  * @ns_uri:  the namespace name hosting this variable
+  *
+  * Prototype for callbacks used to plug variable lookup in the XPath
+  * engine.
+  *
+  * Returns the XPath object value or NULL if not found.
+  *)
   xmlXPathVariableLookupFunc = function(ctxt: pointer; name, ns_uri: xmlCharPtr): xmlXPathObjectPtr; cdecl;
 
 (*
- * xmlXPathFuncLookupFunc:
- * @ctxt:  an XPath context
- * @name:  name of the function
- * @ns_uri:  the namespace name hosting this function
- *
- * Prototype for callbacks used to plug function lookup in the XPath
- * engine.
- *
- * Returns the XPath function or NULL if not found.
- *)
+  * xmlXPathFuncLookupFunc:
+  * @ctxt:  an XPath context
+  * @name:  name of the function
+  * @ns_uri:  the namespace name hosting this function
+  *
+  * Prototype for callbacks used to plug function lookup in the XPath
+  * engine.
+  *
+  * Returns the XPath function or NULL if not found.
+  *)
   xmlXPathFuncLookupFunc = function(ctxt: pointer; name, ns_uri: xmlCharPtr): xmlXPathFunction; cdecl;
 
 (*
- * xmlXPathContext:
- *
- * Expression evaluation occurs with respect to a context.
- * he context consists of:
- *    - a node (the context node)
- *    - a node list (the context node list)
- *    - a set of variable bindings
- *    - a function library
- *    - the set of namespace declarations in scope for the expression
- * Following the switch to hash tables, this need to be trimmed up at
- * the next binary incompatible release.
- * The node may be modified when the context is passed to libxml2
- * for an XPath evaluation so you may need to initialize it again
- * before the next call.
- *)
+  * xmlXPathContext:
+  *
+  * Expression evaluation occurs with respect to a context.
+  * he context consists of:
+  *    - a node (the context node)
+  *    - a node list (the context node list)
+  *    - a set of variable bindings
+  *    - a function library
+  *    - the set of namespace declarations in scope for the expression
+  * Following the switch to hash tables, this need to be trimmed up at
+  * the next binary incompatible release.
+  * The node may be modified when the context is passed to libxml2
+  * for an XPath evaluation so you may need to initialize it again
+  * before the next call.
+  *)
 
   xmlXPathContext = record
     doc: xmlDocPtr; (* The current document *)
@@ -878,16 +878,16 @@ type
   end;
 
 (*
- * The structure of a compiled expression form is not public.
- *)
+  * The structure of a compiled expression form is not public.
+  *)
   xmlXPathCompExpr = record end;
 
 (*
- * xmlXPathParserContext:
- *
- * An XPath parser context. It contains pure parsing informations,
- * an xmlXPathContext, and the stack of objects.
- *)
+  * xmlXPathParserContext:
+  *
+  * An XPath parser context. It contains pure parsing informations,
+  * an xmlXPathContext, and the stack of objects.
+  *)
   xmlXPathParserContext = record
     cur: xmlCharPtr; (* the current char being parsed *)
     base: xmlCharPtr; (* the full expression *)

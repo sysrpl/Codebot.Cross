@@ -602,7 +602,7 @@ end;
 procedure TIndeterminateProgress.Render;
 const
   AlignDir: array[TAlignment] of TDirection =
-   (drLeft, drCenter, drRight);
+    (drLeft, drCenter, drRight);
   Margin = 4;
 var
   ComputedStatus: TProgressStatus;
