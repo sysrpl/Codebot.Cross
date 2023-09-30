@@ -349,15 +349,20 @@ begin
   end;
 end;
 
+procedure free(Ptr: Pointer); cdecl; external 'c';
+
 function xmlGetText(Node: xmlNodePtr): string;
 var
   B: PChar;
 begin
+  Result := '';
   if Node = nil then
-    Exit('');
+    Exit;
   B := xmlNodeGetContent(Node);
+  if B = nil then
+    Exit;
   Result := B;
-  xmlMemFree(B);
+  free(B);
 end;
 
 procedure xmlRemoveEmptyText(Node: xmlNodePtr);
@@ -403,7 +408,8 @@ type
     function Instance: Pointer;
     function Next: INode;
     function SelectNode(const XPath: string): INode;
-    function SelectList(const XPath: string): INodeList;
+    function SelectList(const XPath: string): INodeList; overload;
+    function SelectList(const XPath: string; out List: INodeList): Boolean; overload;
     function Force(const Path: string): INode;
     function GetDocument: IDocument;
     function GetParent: INode;
@@ -616,14 +622,14 @@ begin
 end;
 
 function TNode.SelectList(const XPath: string): INodeList;
-var
-  R: TXPathResult;
 begin
-  R := Execute(XPath);
-  if Length(R) > 0 then
-    Result := TXPathList.Create(R)
-  else
-    Result := nil;
+  Result := TXPathList.Create(Execute(XPath));
+end;
+
+function TNode.SelectList(const XPath: string; out List: INodeList): Boolean;
+begin
+  List := TXPathList.Create(Execute(XPath));
+  Result := List.Count > 0;
 end;
 
 function TNode.Force(const Path: string): INode;
@@ -1159,9 +1165,15 @@ end;
 
 function DocumentCreate: IDocument;
 begin
+  Result := NewDocument;
+end;
+
+function NewDocument: IDocument;
+begin
   Xml2Init(True);
   Result := TDocument.Create(nil);
 end;
+
 {$endregion}
 {$endif}
 

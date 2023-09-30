@@ -19,9 +19,9 @@ uses
   Codebot.Interop.Windows.Direct2D, Codebot.Interop.Windows.GdiPlus,
   Codebot.Interop.Windows.ImageCodecs, Codebot.Interop.Windows.Msxml,
   Codebot.Networking.Ftp, Codebot.Networking.Storage, Codebot.Networking.Unix,
-  Codebot.Networking.Web, Codebot.System, Codebot.Text.Formats,
-  Codebot.Text.Json, Codebot.Text, Codebot.Text.Xml, Codebot.Text.Store,
-  Codebot.IO.SerialPort, Codebot.Unique, LazarusPackageIntf;
+  Codebot.Networking.Web, Codebot.System, Codebot.Support,
+  Codebot.Text.Formats, Codebot.Text.Json, Codebot.Text, Codebot.Text.Xml,
+  Codebot.Text.Store, Codebot.IO.SerialPort, Codebot.Unique, LazarusPackageIntf;
 
 implementation
 

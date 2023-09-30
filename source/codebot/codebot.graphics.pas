@@ -233,6 +233,7 @@ type
 procedure FillRectColor(Surface: ISurface; const Rect: TRectI; Color: TColorB; Radius: Float = 0);
 procedure StrokeRectColor(Surface: ISurface; const Rect: TRectI; Color: TColorB; Radius: Float = 0);
 procedure FillRectState(Surface: ISurface; const Rect: TRectI; State: TDrawState);
+procedure FillRectStateOutlined(Surface: ISurface; const Rect: TRectI; State: TDrawState);
 procedure FillRectSelected(Surface: ISurface; const Rect: TRectI; Radius: Float = 0);
 function DrawDummyBitmap(Width, Height: Integer): IBitmap;
 function DrawHueLinear(Width, Height: Integer): IBitmap;
@@ -1619,6 +1620,28 @@ begin
     C := clHighlight;
     Surface.FillRect(NewBrush(C.Blend(clWindow, 0.75)), Rect);
     Surface.StrokeRect(NewPen(C.Blend(clWindow, 0.25)), Rect);
+  end
+  else
+    Surface.FillRect(NewBrush(clWindow), Rect);
+end;
+
+procedure FillRectStateOutlined(Surface: ISurface; const Rect: TRectI; State: TDrawState);
+var
+  C: TColorB;
+begin
+  if dsSelected in State then
+  begin
+    C := clHighlight;
+    if dsFocused in State then
+    begin
+      Surface.FillRect(NewBrush(C.Blend(clWindow, 0.75)), Rect);
+      Surface.StrokeRect(NewPen(C.Blend(clWindow, 0.25)), Rect);
+    end
+    else
+    begin
+      Surface.FillRect(NewBrush(clWindow), Rect);
+      Surface.StrokeRect(NewPen(C.Blend(clWindow, 0.25)), Rect);
+    end;
   end
   else
     Surface.FillRect(NewBrush(clWindow), Rect);
@@ -3123,6 +3146,9 @@ end;
 
 class procedure TRedmondTheme.DrawHeaderColumn(const Rect: TRectI; Sort: TSortingOrder = soNone);
 begin
+  Surface.MoveTo(Rect.Right - 2.5, Rect.Top);
+  Surface.LineTo(Rect.Right - 2.5, Rect.Bottom);
+  Surface.Stroke(NewPen(clBtnShadow));
 
 end;
 

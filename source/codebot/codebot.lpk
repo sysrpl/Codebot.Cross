@@ -31,7 +31,7 @@
         </Debugging>
       </Linking>
     </CompilerOptions>
-    <Files Count="38">
+    <Files Count="39">
       <Item1>
         <Filename Value="codebot.animation.pas"/>
         <UnitName Value="Codebot.Animation"/>
@@ -150,41 +150,45 @@
         <UnitName Value="Codebot.System"/>
       </Item29>
       <Item30>
-        <Filename Value="codebot.text.formats.pas"/>
-        <UnitName Value="Codebot.Text.Formats"/>
+        <Filename Value="codebot.support.pas"/>
+        <UnitName Value="codebot.support"/>
       </Item30>
       <Item31>
-        <Filename Value="codebot.text.json.pas"/>
-        <UnitName Value="Codebot.Text.Json"/>
+        <Filename Value="codebot.text.formats.pas"/>
+        <UnitName Value="Codebot.Text.Formats"/>
       </Item31>
       <Item32>
-        <Filename Value="codebot.text.pas"/>
-        <UnitName Value="Codebot.Text"/>
+        <Filename Value="codebot.text.json.pas"/>
+        <UnitName Value="Codebot.Text.Json"/>
       </Item32>
       <Item33>
-        <Filename Value="codebot.text.xml.linux.inc"/>
-        <Type Value="Include"/>
+        <Filename Value="codebot.text.pas"/>
+        <UnitName Value="Codebot.Text"/>
       </Item33>
       <Item34>
-        <Filename Value="codebot.text.xml.pas"/>
-        <UnitName Value="Codebot.Text.Xml"/>
+        <Filename Value="codebot.text.xml.linux.inc"/>
+        <Type Value="Include"/>
       </Item34>
       <Item35>
-        <Filename Value="codebot.text.xml.windows.inc"/>
-        <Type Value="Include"/>
+        <Filename Value="codebot.text.xml.pas"/>
+        <UnitName Value="Codebot.Text.Xml"/>
       </Item35>
       <Item36>
-        <Filename Value="codebot.text.store.pas"/>
-        <UnitName Value="Codebot.Text.Store"/>
+        <Filename Value="codebot.text.xml.windows.inc"/>
+        <Type Value="Include"/>
       </Item36>
       <Item37>
-        <Filename Value="codebot.io.serialport.pas"/>
-        <UnitName Value="Codebot.IO.SerialPort"/>
+        <Filename Value="codebot.text.store.pas"/>
+        <UnitName Value="Codebot.Text.Store"/>
       </Item37>
       <Item38>
+        <Filename Value="codebot.io.serialport.pas"/>
+        <UnitName Value="Codebot.IO.SerialPort"/>
+      </Item38>
+      <Item39>
         <Filename Value="codebot.unique.pas"/>
         <UnitName Value="Codebot.Unique"/>
-      </Item38>
+      </Item39>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">

@@ -711,7 +711,7 @@ begin
   for I := 1 to Value.Length do
   begin
     C := Value[I];
-    if C in ['-', '_', '0'..'9', 'A'..'Z', 'a'..'z'] then
+    if C in ['-', '_', '.', '~', '0'..'9', 'A'..'Z', 'a'..'z'] then
       Result := Result + C
     else
       Result := Result + '%' + IntToHex(Ord(C), 2);

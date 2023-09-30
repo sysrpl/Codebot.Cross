@@ -235,6 +235,8 @@ type
 
 { IList<T> }
 
+  TFindProc<T> = function(Item: T; var Match): Boolean;
+
   IList<T> = interface(IEnumerable<T>)
   ['{79BFA1EC-6CEA-42FA-A602-2FC727436CC0}']
     function GetCapacity: Integer;
@@ -244,8 +246,10 @@ type
     procedure Put(I: Integer; Item: T);
     procedure Clear;
     procedure Delete(Index: Integer);
+    procedure Sort(Compare: TCompare<T>);
     procedure Exchange(Index1, Index2: Integer);
     function First: T;
+    function Find(FindProc: TFindProc<T>; var Match): T;
     function IndexOf(Item: T): Integer;
     function Add(Item: T): Integer;
     function Last: T;
@@ -255,6 +259,8 @@ type
     property Count: Integer read GetCount;
     property Items[Index: Integer]: T read Get write Put; default;
   end;
+
+{ TReferences<T> }
 
   TReferences<T> = class(TInterfacedObject, IList<T>)
   private
@@ -274,9 +280,11 @@ type
     procedure Put(I: Integer; Item: T);
     procedure Clear;
     procedure Delete(Index: Integer);
+    procedure Sort(Compare: TCompare<T>);
     procedure Exchange(Index1, Index2: Integer);
     function First: T;
     function IndexOf(Item: T): Integer; virtual; abstract;
+    function Find(FindProc: TFindProc<T>; var Match): T;
     function Add(Item: T): Integer;
     function Last: T;
     function Remove(Item: T): Integer;
@@ -922,6 +930,11 @@ begin
   FList.Delete(Index);
 end;
 
+procedure TReferences<T>.Sort(Compare: TCompare<T>);
+begin
+  FList.Sort(Compare);
+end;
+
 procedure TReferences<T>.Exchange(Index1, Index2: Integer);
 begin
   FList.Exchange(Index1, Index2);
@@ -930,6 +943,16 @@ end;
 function TReferences<T>.First: T;
 begin
   Result := FList.First;
+end;
+
+function TReferences<T>.Find(FindProc: TFindProc<T>; var Match): T;
+var
+  I: Integer;
+begin
+  for I := 0 to FList.Count - 1 do
+    if FindProc(FList[I], Match) then
+      Exit(FList[I]);
+  Result := Default(T);
 end;
 
 function TReferences<T>.Add(Item: T): Integer;

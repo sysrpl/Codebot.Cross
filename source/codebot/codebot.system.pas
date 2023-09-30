@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified February 2020                              *)
+(*  Modified September 2023                             *)
 (*                                                      *)
 (********************************************************)
 
@@ -221,7 +221,7 @@ resourcestring
 type
   EStackError = class(Exception);
 
-{ TStack<T> }
+{ TStack\<T\> }
 
   TStack<T> = record
   private
@@ -497,6 +497,8 @@ type
     function MatchCount(const SubStr: string; IgnoreCase: Boolean = False): Integer;
     { Returns an array of indices of a substring matches within a string }
     function Matches(const SubStr: string; IgnoreCase: Boolean = False): IntArray;
+    { Removes the last occurance of a substring }
+    function RemoveLast(const SubStr: string; IgnoreCase: Boolean = False): string;
     { Replaces every instance of a pattern in a string }
     function Replace(const OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;
     { Replaces the first instance of a pattern in a string }
@@ -690,9 +692,7 @@ function FindOpen(const Path: string; Attr: Longint; out Search: TSearchRec): Lo
 { Find file system items from a path outputting to a TStrings object }
 procedure FindFiles(const Path: string; out FileSearch: TStrings; Attributes: Integer = 0); overload;
 
-{ TNamedValues\<T\> is a simple case insensitive string based dictionary
-  See also
-  <link Overview.Codebot.System.TNamedValues, TNamedValues\<T\> members> }
+{ TFileSearchItem }
 
 type
   TFileSearchItem = record
@@ -1051,7 +1051,50 @@ function MutexCreate: IMutex;
 { Create a new event object }
 function EventCreate: IEvent;
 
+{ The following is a summary of async status values.
+
+    asyncBusy: The task is still running and duration is increasing
+    asyncSuccess: The task completed with success
+    asyncFail: The task completed with failure
+    asyncCanceled: The task was cancelled and did not complete }
+
 type
+  TAsyncStatus = (asyncBusy, asyncSuccess, asyncFail, asyncCanceled);
+
+  EAsyncException = class(Exception);
+
+{ IAsyncTask is used to perform cancellable tasks in background threads. When
+  a task is created its initial status is busy and the start time is recorded.
+
+  See also
+  <link Overview.Codebot.System.IAsyncTask, IAsyncTask members> }
+
+  IAsyncTask = interface
+  ['{C51218C0-526D-4167-B778-3018E5C00509}']
+    function GetCancelled: Boolean;
+    function GetData: TObject;
+    function GetProgress: Int64;
+    function GetStartTime: TDateTime;
+    function GetDuration: Double;
+    function GetStatus: TAsyncStatus;
+    { Cancel marks the task as cancelled }
+    procedure Cancel;
+    { Waits for the task to complete }
+    procedure Wait;
+    { Cancelled is true if cancel has been invoked at least one time }
+    property Cancelled: Boolean read GetCancelled;
+    { Data can be set to be owned by the task }
+    property Data: TObject read GetData;
+    { Progress is a number to indicating the amount of work done }
+    property Progress: Int64 read GetProgress;
+    { Start time is a record of when the task began }
+    property StartTime: TDateTime read GetStartTime;
+    { Duration is a record of time in seconds the task lasted }
+    property Duration: Double read GetDuration;
+    { Status of the task  }
+    property Status: TAsyncStatus read GetStatus;
+  end;
+
   {doc off}
   TSimpleThread = class;
   {doc on}
@@ -1107,7 +1150,7 @@ procedure Sleep(Milliseconds: Cardinal);
 {$region waiting routines}
 { Definable message pump }
 var
-  PumpMessagesProc: procedure;
+  PumpMessagesProc: procedure of object;
 
 { Retrieve messages from a queue while waiting }
 procedure PumpMessages;
@@ -1750,6 +1793,13 @@ begin
     Inc(Start, Length(SubStr));
     Inc(Index);
   end;
+end;
+
+function StrRemoveLast(const S, SubStr: string; IgnoreCase: Boolean = False): string;
+begin
+  Result := S;
+  if StrEndsWith(S, SubStr, IgnoreCase) then
+    SetLength(Result, Length(Result) - Length(SubStr));
 end;
 
 function StrReplace(const S, OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;
@@ -2490,6 +2540,11 @@ end;
 function StringHelper.Matches(const SubStr: string; IgnoreCase: Boolean = False): IntArray;
 begin
   Result := StrFindIndex(Self, SubStr, IgnoreCase);
+end;
+
+function StringHelper.RemoveLast(const SubStr: string; IgnoreCase: Boolean = False): string;
+begin
+  Result := StrRemoveLast(Self, SubStr, IgnoreCase);
 end;
 
 function StringHelper.Replace(const OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;

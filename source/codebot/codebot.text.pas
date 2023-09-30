@@ -384,7 +384,7 @@ end;
 function TBuffer.GetAsHex: string;
 begin
   if Size > 0 then
-    Result := HexEncode(Data, Size)
+    Result := LowerCase(HexEncode(Data, Size))
   else
     Result := '';
 end;
