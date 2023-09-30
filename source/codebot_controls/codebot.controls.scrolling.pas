@@ -115,6 +115,7 @@ type
     destructor Destroy; override;
     function GetColumnRect(Index: Integer): TRectI;
     function GetSizingRect(Index: Integer): TRectI;
+    function GetColWidths: IntArray;
     property HotIndex: Integer read GetHotIndex;
     property ScrollLeft: Integer read FScrollLeft write SetScrollLeft;
     property ScrollWidth: Integer read GetScrollWidth;
@@ -337,6 +338,8 @@ type
     property TabStop;
     property Visible;
     property OnClick;
+    property OnEnter;
+    property OnExit;
     property OnConstrainedResize;
     property OnContextPopup;
     property OnDblClick;
@@ -594,10 +597,15 @@ end;
 
 procedure THeaderColumn.SetWidth(Value: Integer);
 var
+  Owner: TComponent;
   Loading: Boolean;
 begin
   if (Collection <> nil) and (Collection.Owner is TComponent) then
-    Loading := csLoading in (Collection.Owner as TComponent).ComponentState
+  begin
+    Owner := Collection.Owner as TComponent;
+    Loading := (csDesigning in Owner.ComponentState) or
+      (csLoading in Owner.ComponentState);
+  end
   else
     Loading := False;
   if FFixed and (not Loading) then
@@ -752,6 +760,15 @@ begin
     Exit;
   Result.X := Result.Right - Size;
   Result.Width := Size * 2;
+end;
+
+function THeaderBar.GetColWidths: IntArray;
+var
+  I: Integer;
+begin
+  Result.Length := FColumns.Count;
+  for I := 0 to FColumns.Count - 1 do
+    Result[I] := FColumns[I].Width;
 end;
 
 procedure THeaderBar.Render;
@@ -1167,8 +1184,16 @@ begin
     VK_END: ItemIndex := Count - 1;
     VK_NEXT: SetScrollIndex(ItemIndex + (ClientHeight - FHeaderSize) div FItemHeight);
     VK_PRIOR: SetScrollIndex(ItemIndex - (ClientHeight - FHeaderSize) div FItemHeight);
-    VK_UP: SetScrollIndex(ItemIndex - 1);
-    VK_DOWN: SetScrollIndex(ItemIndex + 1);
+    VK_UP:
+      begin
+        SetScrollIndex(ItemIndex - 1);
+        Key := 0;
+      end;
+    VK_DOWN:
+      begin
+        SetScrollIndex(ItemIndex + 1);
+        Key := 0;
+      end;
   end;
   InsureItemVisible;
 end;
@@ -1301,9 +1326,9 @@ begin
   Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
   if Result then
     Exit;
-  { TODO:
+  { TODO: Review this line }
   if FMultiSelect then
-    FShift := KeyboardStateToShiftState - [ssCtrl]; }
+    FShift := KeyboardStateToShiftState - [ssCtrl];
   N := Now;
   if N - Last < Delay then
     Exit;
@@ -1636,6 +1661,8 @@ procedure TScrollList.SetItemIndex(Value: Integer);
 var
   PriorIndex: Integer;
   CanSelect: Boolean;
+  WasSelected: Boolean;
+  I: Integer;
 begin
   if FLocked then
     if Value > -1 then
@@ -1664,10 +1691,11 @@ begin
       if PriorIndex <> FItemIndex then
       begin
         InvalidateItem(FItemIndex);
-        {if FMultiSelect and (FItemIndex > -1) then
+        { TODO: begin uncomment }
+        if FMultiSelect and (FItemIndex > -1) then
           if ssShift in FShift then
           begin
-            if FShiftIndex > -1 then
+            if (FShiftIndex > -1) and (FShiftIndex < FSelectItems.Length) then
               WasSelected := FSelectItems[FShiftIndex]
             else
               WasSelected := False;
@@ -1724,7 +1752,8 @@ begin
             FSelectCount := 1;
             FSelectItems[FItemIndex] := True;
             Invalidate;
-          end;}
+          end;
+          { TODO: end uncomment }
       end;
       if not (ssShift in FShift) then
         FShiftIndex := FItemIndex;

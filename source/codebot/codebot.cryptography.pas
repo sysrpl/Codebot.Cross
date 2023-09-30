@@ -51,6 +51,16 @@ function AuthBuffer(const Key: string; Kind: THashKind; var Buffer; BufferSize: 
 function AuthStream(const Key: string; Kind: THashKind; Stream: TStream): TDigest;
 { Compute the hmac digest of a file }
 function AuthFile(const Key: string; Kind: THashKind; const FileName: string): TDigest;
+
+{ TDigestHelper }
+
+type
+  TDigestHelper = record helper for TDigest
+  public
+    { Compute the next hmac digest of a string using the current digest as the key }
+    function AuthNext(Kind: THashKind; const S: string): TDigest;
+  end;
+
 {$endregion}
 
 {$region encryption}
@@ -91,7 +101,7 @@ end;
 
 function HashString(Kind: THashKind; const S: string): TDigest;
 begin
-  Result := HashBuffer(Kind, PAnsiChar(S)^, Cardinal(Length(S)));
+  Result := HashBuffer(Kind, PChar(S)^, Cardinal(Length(S)));
 end;
 
 function HashBuffer(Kind: THashKind; var Buffer; BufferSize: Cardinal): TDigest;
@@ -172,7 +182,7 @@ begin
     if HMAC_Final(Ctx, Result.Data, Size) then
       Result.Size := LongInt(Size)
     else
-      Result.Size := 0;;
+      Result.Size := 0;
   finally
     HMAC_CTX_free(Ctx);
   end;
@@ -218,6 +228,29 @@ begin
     Stream.Free;
   end;
 end;
+
+{ TDigestHelper }
+
+function TDigestHelper.AuthNext(Kind: THashKind; const S: string): TDigest;
+var
+  Ctx: THMACCtx;
+  Size: Cardinal;
+begin
+  Init;
+  Result := TDigest.Create(EVP_MAX_MD_SIZE);
+  Ctx := HMAC_CTX_new;
+  try
+    HMAC_Init_ex(Ctx, Self.Data, Self.Size, HashMethods[Kind]);
+    HMAC_Update(Ctx, Pointer(S), Cardinal(Length(S)));
+    if HMAC_Final(Ctx, Result.Data, Size) then
+      Result.Size := LongInt(Size)
+    else
+      Result.Size := 0;
+  finally
+    HMAC_CTX_free(Ctx);
+  end;
+end;
+
 {$endregion}
 
 {$region encryption}

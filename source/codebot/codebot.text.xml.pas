@@ -43,6 +43,8 @@ type
     procedure WriteBool(const Key: string; Value: Boolean);
     function ReadInt(const Key: string; const DefValue: Integer = 0; Stored: Boolean = False): Integer;
     procedure WriteInt(const Key: string; Value: Integer);
+    function ReadInt64(const Key: string; const DefValue: Int64 = 0; Stored: Boolean = False): Int64;
+    procedure WriteInt64(const Key: string; Value: Int64);
     function ReadFloat(const Key: string; const DefValue: Single = 0; Stored: Boolean = False): Single;
     procedure WriteFloat(const Key: string; Value: Single);
     function ReadDate(const Key: string; const DefValue: TDateTime = 0; Stored: Boolean = False): TDateTime;
@@ -68,7 +70,8 @@ type
     function Instance: Pointer;
     function Next: INode;
     function SelectNode(const XPath: string): INode;
-    function SelectList(const XPath: string): INodeList;
+    function SelectList(const XPath: string): INodeList; overload;
+    function SelectList(const XPath: string; out List: INodeList): Boolean; overload;
     function Force(const Path: string): INode;
     property Document: IDocument read GetDocument;
     property Parent: INode read GetParent;
@@ -121,6 +124,7 @@ var
 
 { Create a new xml document }
 function DocumentCreate: IDocument;
+function NewDocument: IDocument;
 { Create a new filer given a document and a node }
 function FilerCreate(Document: IDocument; Node: INode): IFiler;
 {$endregion}
@@ -160,6 +164,8 @@ type
     procedure WriteBool(const Key: string; Value: Boolean);
     function ReadInt(const Key: string; const DefValue: Integer = 0; Stored: Boolean = False): Integer;
     procedure WriteInt(const Key: string; Value: Integer);
+    function ReadInt64(const Key: string; const DefValue: Int64 = 0; Stored: Boolean = False): Int64;
+    procedure WriteInt64(const Key: string; Value: Int64);
     function ReadFloat(const Key: string; const DefValue: Single = 0; Stored: Boolean = False): Single;
     procedure WriteFloat(const Key: string; Value: Single);
     function ReadDate(const Key: string; const DefValue: TDateTime = 0; Stored: Boolean = False): TDateTime;
@@ -259,6 +265,20 @@ procedure TFiler.WriteInt(const Key: string; Value: Integer);
 begin
   WriteStr(Key, IntToStr(Value));
 end;
+
+function TFiler.ReadInt64(const Key: string; const DefValue: Int64 = 0; Stored: Boolean = False): Int64;
+var
+  S: string;
+begin
+  S := ReadStr(Key, IntToStr(DefValue), Stored);
+  Result := StrToInt64Def(S, DefValue);
+end;
+
+procedure TFiler.WriteInt64(const Key: string; Value: Int64);
+begin
+  WriteStr(Key, IntToStr(Value));
+end;
+
 
 function TFiler.ReadFloat(const Key: string; const DefValue: Single = 0; Stored: Boolean = False): Single;
 var

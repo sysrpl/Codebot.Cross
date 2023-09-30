@@ -61,7 +61,6 @@ type
   xmlCharEncodingHandlerPtr = ^xmlCharEncodingHandler;
   xmlDictPtr = Pointer;
   xmlHashTablePtr = Pointer;
-  xmlStructuredErrorFunc = Pointer;
 
   xmlCharEncoding = (
     XML_CHAR_ENCODING_ERROR = -1, (* No char encoding detected *)
@@ -635,6 +634,8 @@ type
     node: pointer; (* the node in the tree *)
   end;
 
+  xmlStructuredErrorFunc = procedure(userData, error: Pointer); cdecl;
+
 (*
   * A node-set (an unordered collection of nodes without duplicates).
   *)
@@ -1120,7 +1121,9 @@ var
   xmlXPathInit: procedure; cdecl;
   xmlXPathIsNaN: function(val: cdouble): cint; cdecl;
   xmlXPathIsInf: function(val: cdouble): cint; cdecl;
+  xmlXPathRegisterNs: function(ctxt: pointer; prefix, ns_uri: xmlCharPtr): cint; cdecl;
   xmlMemFree: procedure(ptr: pointer); cdecl;
+  xmlFree: procedure(ptr: pointer); cdecl;
 
 function Xml2Init(ThrowExceptions: Boolean = False): Boolean;
 {$endif}
@@ -1393,7 +1396,9 @@ begin
     TryLoad('xmlXPathInit', @xmlXPathInit) and
     TryLoad('xmlXPathIsNaN', @xmlXPathIsNaN) and
     TryLoad('xmlXPathIsInf', @xmlXPathIsInf) and
-    TryLoad('xmlMemFree', @xmlMemFree);
+    TryLoad('xmlXPathRegisterNs', @xmlXPathRegisterNs) and
+    TryLoad('xmlMemFree', @xmlMemFree) and
+    TryLoad('xmlFree', @xmlFree);
   if not Result then
     Exit;
   FailedModuleName := '';
