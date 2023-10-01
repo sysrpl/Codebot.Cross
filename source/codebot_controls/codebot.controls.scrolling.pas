@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified March 2015                                 *)
+(*  Modified October 2023                               *)
 (*                                                      *)
 (********************************************************)
 
@@ -64,6 +64,8 @@ type
     property Visible: Boolean read FVisible write SetVisible default True;
     property Width: Integer read FWidth write SetWidth default 100;
   end;
+
+{ THeaderColumns }
 
   THeaderColumns = class(TNotifyCollection<THeaderColumn>)
   end;
@@ -177,9 +179,11 @@ type
     property Point: TPointI read FPoint write SetPoint;
   end;
 
+{ TScrollDir }
+
   TScrollDir = (sdNone, sdUp, sdDown);
 
-{ TScrollList }
+{ TScrollList is a custom scrolling list control }
 
   TScrollList = class(TRenderCustomControl)
   private
@@ -285,20 +289,60 @@ type
     property ScrollLeft: Integer read FScrollLeft write SetScrollLeft;
   end;
 
+{ TButtonRects }
+
+  TButtonRects = TArrayList<TRectI>;
+
+{ TButtonCalcEvent allows user defined buttons within a scroll list
+  control. Index represents the item index of line in the list. }
+
+  TButtonCalcEvent = procedure(Sender: TObject; ItemIndex: Integer; Rect: TRectI;
+    var Buttons: TButtonRects) of object;
+
+{ TButtonDrawEvent gives the user the opportunity to render a button within
+  a scroll list. Index represents the item index of and button is the index
+  of the button from a prior invocation of calc buttons. }
+
+  TButtonDrawEvent = procedure(Sender: TObject; Surface: ISurface; ItemIndex, Button: Integer;
+    Rect: TRectI; State: TDrawState) of object;
+
+{ TButtonClickEvent notifies the user a calculated button inside a scroll
+  list was clicked. Index represents the item index of and button is the index
+  of the button from a prior invocation of calc buttons. }
+
+  TButtonClickEvent = procedure(Sender: TObject; ItemIndex, Button: Integer) of object;
+
 { TCustomDrawList }
 
   TCustomDrawList = class(TScrollList)
   private
     FAutoScroll: Boolean;
+    FButtonItemIndex: Integer;
+    FButtonIndex: Integer;
+    FOnButtonCalc: TButtonCalcEvent;
+    FOnButtonDraw: TButtonDrawEvent;
+    FOnButtonClick: TButtonClickEvent;
     FOnDrawBackground: TDrawRectEvent;
     FOnDrawItem: TDrawIndexEvent;
     procedure SetAutoScroll(Value: Boolean);
   protected
+    procedure ButtonCalc(ItemIndex: Integer; const Rect: TRectI; out Buttons: TButtonRects);
+    procedure ButtonDraw(Surface: ISurface; ItemIndex, Button: Integer;
+      const Rect: TRectI; State: TDrawState);
+    procedure ButtonClick(ItemIndex, Button: Integer);
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure DrawBackground(const Rect: TRectI); override;
     procedure DrawItem(Index: Integer; var Rect: TRectI;
       State: TDrawState); override;
     procedure Scroll(Delta: Integer); override;
     property AutoScroll: Boolean read FAutoScroll write SetAutoScroll;
+    property OnButtonCalc: TButtonCalcEvent read FOnButtonCalc write FOnButtonCalc;
+    property OnButtonDraw: TButtonDrawEvent read FOnButtonDraw write FOnButtonDraw;
+    property OnButtonClick: TButtonClickEvent read FOnButtonClick write FOnButtonClick;
     property OnDrawBackground: TDrawRectEvent read FOnDrawBackground write FOnDrawBackground;
     property OnDrawItem: TDrawIndexEvent read FOnDrawItem write FOnDrawItem;
   public
@@ -345,6 +389,9 @@ type
     property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
+    property OnButtonCalc;
+    property OnButtonDraw;
+    property OnButtonClick;
     property OnDrawBackground;
     property OnDrawItem;
     property OnEndDock;
@@ -1888,6 +1935,111 @@ constructor TCustomDrawList.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FAutoScroll := True;
+  FButtonItemIndex := -1;
+  FButtonIndex := -1;
+end;
+
+procedure TCustomDrawList.ButtonCalc(ItemIndex: Integer; const Rect: TRectI;
+  out Buttons: TButtonRects);
+begin
+  Buttons.Length := 0;
+  if Assigned(FOnButtonCalc) then
+    FOnButtonCalc(Self, ItemIndex, Rect, Buttons);
+end;
+
+procedure TCustomDrawList.ButtonDraw(Surface: ISurface; ItemIndex, Button: Integer;
+  const Rect: TRectI; State: TDrawState);
+begin
+  if Assigned(FOnButtonDraw) then
+    FOnButtonDraw(Self, Surface, ItemIndex, Button, Rect, State);
+end;
+
+procedure TCustomDrawList.ButtonClick(ItemIndex, Button: Integer);
+begin
+  if Assigned(FOnButtonClick) then
+    FOnButtonClick(Self, ItemIndex, Button);
+end;
+
+procedure TCustomDrawList.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+var
+  Rect: TRectI;
+  Buttons: TButtonRects;
+  ItemIndex: Integer;
+  I: Integer;
+begin
+  if Button <> mbLeft then
+  begin
+    inherited MouseDown(Button, Shift, X, Y);
+    Exit;
+  end;
+  FButtonItemIndex := -1;
+  FButtonIndex := -1;
+  if Assigned(FOnButtonCalc) then
+  begin
+    ItemIndex := ItemAtPos(TPointI.Create(X, Y), True);
+    if ItemIndex < 0 then
+    begin
+      inherited MouseDown(Button, Shift, X, Y);
+      Exit;
+    end;
+    Rect := ItemRect(ItemIndex);
+    ButtonCalc(ItemIndex, Rect, Buttons);
+    for I := 0 to Buttons.Length - 1  do
+      if Buttons[I].Contains(X, Y) then
+      begin
+        FButtonItemIndex := ItemIndex;
+        FButtonIndex := I;
+        InvalidateItem(ItemIndex);
+        Exit;
+      end;
+  end;
+  inherited MouseDown(Button, Shift, X, Y);
+end;
+
+procedure TCustomDrawList.MouseUp(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+var
+  ButtonItemIndex: Integer;
+  ButtonIndex: Integer;
+  Rect: TRectI;
+  Buttons: TButtonRects;
+  ItemIndex: Integer;
+begin
+  if Button <> mbLeft then
+  begin
+    inherited MouseDown(Button, Shift, X, Y);
+    Exit;
+  end;
+  ButtonItemIndex := FButtonItemIndex;
+  ButtonIndex := FButtonIndex;
+  if ButtonItemIndex > -1 then
+    InvalidateItem(FButtonItemIndex);
+  FButtonItemIndex := -1;
+  FButtonIndex := -1;
+  if (ButtonItemIndex > -1) and Assigned(FOnButtonClick) then
+  begin
+    ItemIndex := ItemAtPos(TPointI.Create(X, Y), True);
+    if ItemIndex < 0 then
+    begin
+      inherited MouseUp(Button, Shift, X, Y);
+      Exit;
+    end;
+    Rect := ItemRect(ItemIndex);
+    ButtonCalc(ItemIndex, Rect, Buttons);
+    if (Buttons.Length > 0) and (ButtonIndex < Buttons.Length) and
+      Buttons[ButtonIndex].Contains(X, Y) then
+    begin
+      ButtonClick(ButtonItemIndex, ButtonIndex);
+      Exit;
+    end;
+  end;
+  inherited MouseUp(Button, Shift, X, Y);
+end;
+
+procedure TCustomDrawList.MouseMove(Shift: TShiftState; X, Y: Integer);
+begin
+  inherited MouseMove(Shift, X, Y);
 end;
 
 procedure TCustomDrawList.DrawBackground(const Rect: TRectI);
@@ -1900,9 +2052,31 @@ end;
 
 procedure TCustomDrawList.DrawItem(Index: Integer; var Rect: TRectI;
   State: TDrawState);
+
+  function CalcState(Button: Integer): TDrawState;
+  begin
+    Result := State;
+    Result := Result - [dsDefaulted, dsPressed];
+    if Index = FButtonItemIndex then
+    begin
+      Result := Result + [dsDefaulted];
+      if Button = FButtonIndex then
+        Result := Result + [dsPressed];
+    end;
+  end;
+
+var
+  Buttons: TButtonRects;
+  I: Integer;
 begin
   if Assigned(FOnDrawItem) then
     FOnDrawItem(Self, Surface, Index, Rect, State);
+  if Assigned(FOnButtonCalc) and Assigned(FOnButtonDraw) then
+  begin
+    ButtonCalc(Index, Rect, Buttons);
+    for I := 0 to Buttons.Length - 1 do
+      ButtonDraw(Surface, Index, I, Buttons[I], CalcState(I));
+  end;
 end;
 
 procedure TCustomDrawList.Scroll(Delta: Integer);
