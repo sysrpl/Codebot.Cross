@@ -282,16 +282,13 @@ type
     function ItemAtPos(const Pos: TPointI; Existing: Boolean = False): Integer;
     procedure ScrollBy(DeltaX, DeltaY: Integer); override;
     procedure InsureItemVisible;
+    function IsSelected(Index: Integer): Boolean;
     procedure Select;
     procedure ScrollToSelection;
     property HeaderSize: Integer read FHeaderSize write SetHeaderSize;
     property ScrollWidth: Integer read FScrollWidth write SetScrollWidth;
     property ScrollLeft: Integer read FScrollLeft write SetScrollLeft;
   end;
-
-{ TButtonRects }
-
-  TButtonRects = TArrayList<TRectI>;
 
 { TButtonCalcEvent allows user defined buttons within a scroll list
   control. Index represents the item index of line in the list. }
@@ -1438,12 +1435,8 @@ begin
     end;
     if FMultiSelect and FSelectItems[FTopIndex + I] then
       Include(FDrawState, dsSelected);
-    if FMultiSelect and FSelectItems[FTopIndex + I] then
-      Include(FDrawState, dsSelected);
     if FTopIndex + I = FHotIndex then
       Include(FDrawState, dsHot);
-    if FTopIndex + I = FDownIndex then
-      Include(FDrawState, dsPressed);
     DrawItem(FTopIndex + I, R, FDrawState);
   end;
 end;
@@ -1525,6 +1518,14 @@ begin
     if Assigned(FOnSelectItem) then
       FOnSelectItem(Self);
   end;
+end;
+
+function TScrollList.IsSelected(Index: Integer): Boolean;
+begin
+  if FMultiSelect then
+    Result := FSelectItems[Index]
+  else
+    Result := Index = FItemIndex;
 end;
 
 procedure TScrollList.Select;
