@@ -120,6 +120,10 @@ type
   end;
   PRectI = ^TRectI;
 
+{ TButtonRects is useful for virtualized buttons }
+
+  TButtonRects = TArrayList<TRectI>;
+
 { TPointF }
 
   TPointF = record
