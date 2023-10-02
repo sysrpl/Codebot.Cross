@@ -396,6 +396,9 @@ type
     property OnMouseDown;
     property OnMouseMove;
     property OnMouseUp;
+    property OnKeyDown;
+    property OnKeyUp;
+    property OnKeyPress;
     property OnSelectItem;
     property OnResize;
     property OnStartDock;
@@ -1228,6 +1231,8 @@ begin
     VK_END: ItemIndex := Count - 1;
     VK_NEXT: SetScrollIndex(ItemIndex + (ClientHeight - FHeaderSize) div FItemHeight);
     VK_PRIOR: SetScrollIndex(ItemIndex - (ClientHeight - FHeaderSize) div FItemHeight);
+    VK_LEFT, VK_RIGHT:
+      Key := 0;
     VK_UP:
       begin
         SetScrollIndex(ItemIndex - 1);
