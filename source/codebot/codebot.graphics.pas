@@ -3146,10 +3146,9 @@ end;
 
 class procedure TRedmondTheme.DrawHeaderColumn(const Rect: TRectI; Sort: TSortingOrder = soNone);
 begin
-  Surface.MoveTo(Rect.Right - 2.5, Rect.Top);
-  Surface.LineTo(Rect.Right - 2.5, Rect.Bottom);
+  Surface.MoveTo(Rect.Right - 0.5, Rect.Top);
+  Surface.LineTo(Rect.Right - 0.5, Rect.Bottom);
   Surface.Stroke(NewPen(clBtnShadow));
-
 end;
 
 class procedure TRedmondTheme.DrawHeader(Height: Integer = DefaulHeaderHeight);

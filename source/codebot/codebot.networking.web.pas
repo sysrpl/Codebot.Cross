@@ -37,6 +37,7 @@ type
     FResource: string;
     FSecure: Boolean;
     FValid: Boolean;
+    function GetAsString: string;
   public
     { Convert a TUrl to a string }
     class operator Implicit(const Value: TUrl): string;
@@ -56,6 +57,8 @@ type
     property Secure: Boolean read FSecure;
     { Flag indicating if a url is properly formatted }
     property Valid: Boolean read FValid;
+    { Convert the url back to a string }
+    property AsString: string read GetAsString;
   end;
 
 { THttpResponseHeader parses a buffer and find components of a
@@ -81,6 +84,26 @@ type
     function Extract(var Buffer: string): Boolean;
   end;
 
+{ WebSendRequest performs a http 1.1 web request and supports chunked replies }
+
+  TResponseStatus = (
+    { Socket connect failed }
+    rsNoConnect,
+    { No response was received }
+    rsNoResponse,
+    { Status code was not 200 OK }
+    rsError,
+    { Status code was 200 OK }
+    rsSuccess,
+    { Task was cancelled }
+    rsCancelled);
+
+function WebSendRequest(Url: TUrl; const Request: string; Response: TStream;
+  out Header: THttpResponseHeader; Task: IAsyncTask = nil): TResponseStatus; overload;
+function WebSendRequest(Url: TUrl; const Request: string; out Response: string;
+  out Header: THttpResponseHeader; Task: IAsyncTask = nil): TResponseStatus; overload;
+
+type
   TTransmistHeaderCompleteEvent = procedure (Sender: TObject; const Header: THttpResponseHeader) of object;
 
 { THttpClient implements the http 1.0 client protocol
@@ -222,6 +245,9 @@ function MimeType(const FileName: string): string;
 
 implementation
 
+uses
+  Codebot.Support;
+
 function ProtocolPort(const Protocol: string): Word;
 var
   S: string;
@@ -283,6 +309,11 @@ begin
   Result.FValid := DomainValidate(Result.FDomain) and (Result.FPort > 0);
 end;
 
+function TUrl.GetAsString: string;
+begin
+  Result := Self;
+end;
+
 { THttpResponseHeader }
 
 procedure THttpResponseHeader.Clear;
@@ -320,6 +351,202 @@ begin
         Keys.Add(Lines[I].FirstOf(':').Trim, Lines[I].SecondOf(':').Trim);
   end;
   Result := Valid;
+end;
+
+type
+  TReadBuffer = class
+    FSocket: TSocket;
+    FBuffer: string;
+    FChunked: Boolean;
+    FContentLength: Int64;
+    FIndex: Integer;
+    FLength: Integer;
+  public
+    { TODO: Use ContentLength instead of assuming the header Connection: Close }
+    procedure Reset(Socket: TSocket; Buffer: string; Chunked: Boolean; ContentLength: Int64 = -1);
+    function Read(var Buffer; BufferSize: LongWord): Integer; overload;
+    function Read(out Text: string): Integer; overload;
+    property Chunked: Boolean read FChunked;
+  end;
+
+procedure TReadBuffer.Reset(Socket: TSocket; Buffer: string; Chunked: Boolean; ContentLength: Int64 = -1);
+begin
+  FSocket := Socket;
+  FBuffer := Buffer;
+  FChunked := Chunked;
+  FContentLength := ContentLength;
+  FIndex := 1;
+  FLength := Length(FBuffer);
+end;
+
+function TReadBuffer.Read(var Buffer; BufferSize: LongWord): Integer;
+var
+  B: PByte;
+begin
+  if FLength > 0 then
+  begin
+    Result := 0;
+    B := PByte(@Buffer);
+    while (FLength > 0) and (BufferSize > 0) do
+    begin
+      B^ := Byte(FBuffer[FIndex]);
+      Inc(FIndex);
+      Dec(FLength);
+      Dec(BufferSize);
+      Inc(Result);
+    end;
+  end
+  else
+    Result := FSocket.Read(Buffer, BufferSize);
+end;
+
+function TReadBuffer.Read(out Text: string): Integer;
+var
+  P: PChar;
+begin
+  if FLength > 0 then
+  begin
+    P := PChar(FBuffer);
+    Inc(P, FIndex - 1);
+    Text := P^;
+    Result := FLength;
+    FLength := 0;
+  end
+  else
+    Result := FSocket.Read(Text);
+end;
+
+function WebSendRequest(Url: TUrl; const Request: string; Response: TStream;
+  out Header: THttpResponseHeader; Task: IAsyncTask = nil): TResponseStatus;
+
+  procedure DoProgress(Delta: Int64);
+  begin
+    if (Delta > 0) and (Task <> nil) then
+      (Task as IAsyncRunnerBase).Tick(Delta);
+  end;
+
+  function IsCancelled: Boolean;
+  begin
+    Result := (Task <> nil) and Task.Cancelled;
+  end;
+
+  function ReadChunk(S: TReadBuffer; Chunk: string): string;
+  var
+    Buffer: string;
+    P: PChar;
+    I, J: Integer;
+  begin
+    Result := '';
+    if IsCancelled then
+      Exit;
+    Chunk := '$' + Chunk;
+    I := StrToIntDef(Chunk, 0);
+    if I = 0 then
+      Exit;
+    SetLength({%H-}Buffer, I);
+    P := PChar(Buffer);
+    while I > 0 do
+    begin
+      if IsCancelled then
+        Exit;
+      J := S.Read(P^, LongWord(I));
+      if J = 0 then
+        Exit;
+      DoProgress(J);
+      Inc(P, J);
+      Dec(I, J);
+    end;
+    Result := Buffer;
+  end;
+
+var
+  Buffer, Data, Encoding, Chunk: string;
+  Socket: TSocket;
+  ReadBuffer: TReadBuffer;
+  Read: Boolean;
+  C: Char;
+begin
+  Result := rsNoConnect;
+  Header.Clear;
+  Buffer := '';
+  Socket := TSocket.Create;
+  ReadBuffer := TReadBuffer.Create;
+  try
+    Socket.Secure := Url.Secure;
+    if Socket.Connect(Url.Domain, Url.Port) then
+    begin
+      if IsCancelled then
+        Exit;
+      Socket.Write(Request);
+      Result := rsNoResponse;
+      Read := False;
+      while not Read do
+        while Socket.Read(Data) > 0 do
+        begin
+          Read := True;
+          Buffer := Buffer + Data;
+          if Header.Extract(Buffer) then
+          begin
+            if Header.Code = 200 then
+              Result := rsSuccess
+            else
+              Result := rsError;
+            Encoding := Header.Keys.Values['Transfer-Encoding'];
+            ReadBuffer.Reset(Socket, Buffer, StrContains(Encoding, 'chunked', True));
+            if ReadBuffer.Chunked then
+            repeat
+              Chunk := '';
+              if IsCancelled then
+                Exit;
+              while ReadBuffer.Read({%H-}C, 1) = 1 do
+              begin
+                if IsCancelled then
+                  Exit;
+                if (C = #10) and (Chunk <> '') then
+                begin
+                  Data := ReadChunk(ReadBuffer, Chunk);
+                  if IsCancelled then
+                    Exit;
+                  Chunk := '';
+                  if Length(Data) < 1 then
+                    Break;
+                  Response.Write(Pointer(Data)^, Length(Data));
+                end
+                else if C > ' ' then
+                  Chunk := Chunk + C;
+              end;
+            until Chunk = ''
+            else while ReadBuffer.Read(Data) > 0 do
+            begin
+              if IsCancelled then
+                Exit;
+              DoProgress(Length(Data));
+              Response.Write(Pointer(Data)^, Length(Data));
+            end;
+            Break;
+          end;
+        end;
+    end;
+  finally
+    ReadBuffer.Free;
+    Socket.Free;
+    if IsCancelled then
+      Result := rsCancelled;
+  end;
+end;
+
+function WebSendRequest(Url: TUrl; const Request: string; out Response: string;
+  out Header: THttpResponseHeader; Task: IAsyncTask = nil): TResponseStatus;
+var
+  Stream: TStringStream;
+begin
+  Stream := TStringStream.Create;
+  try
+    Result := WebSendRequest(Url, Request, Stream, Header, Task);
+    Response := Stream.DataString;
+  finally
+    Stream.Free;
+  end;
 end;
 
 { THttpClient }

@@ -71,6 +71,7 @@ type
     procedure SetSize(Value: LongInt);
     function GetAsString: string;
     function GetAsHex: string;
+    function GetAsBase64: string;
   public
     { Allocate size number of bytes }
     class function Create(Size: LongInt): TBuffer; static;
@@ -96,6 +97,8 @@ type
     property AsString: string read GetAsString;
     { Convert data to a hexidecimal string }
     property AsHex: string read GetAsHex;
+    { Convert data to a base 64 string }
+    property AsBase64: string read GetAsBase64;
   end;
 
 { TBufferStream can be used to convert a buffer to a stream [group stream]
@@ -389,6 +392,13 @@ begin
     Result := '';
 end;
 
+function TBuffer.GetAsBase64: string;
+begin
+  if Size > 0 then
+    Result := Base64Encode(Data, Size)
+  else
+    Result := '';
+end;
 
 { TBufferStream }
 
