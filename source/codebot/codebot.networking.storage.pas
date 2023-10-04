@@ -95,8 +95,8 @@ type
     {class function DigitalOcean: TS3Config; static;
     class function Google: TS3Config; static;
     class function IBM: TS3Config; static;
-    class function Microsoft: TS3Config; static;
-    class function Wasabi: TS3Config; static;}
+    class function Microsoft: TS3Config; static;}
+    class function Wasabi: TS3Config; static;
   end;
 
 { TS3ConfigFactory is a prototype fo functions that return TS3Config instances.
@@ -223,6 +223,8 @@ type
       Prefix: string = ''; Delimiter: string = ''): TS3Request;
     {$endregion}
     {$region send}
+    { Gnerate a presigned url for public access to an object }
+    function Presign(const Bucket, Path: string; Expires: Integer = 0): string;
     { Send a request to your S3 servers outputting the response to a XML
       document. Returns true if the response code is 200 OK.
 
@@ -262,6 +264,9 @@ implementation
 
 uses
   Codebot.Support;
+
+const
+  DefPort = 443;
 
 {
 function DOPub: string; begin Result := GetEnvironmentVariable('DO_ACCESS_KEY_ID'); end;
@@ -414,7 +419,6 @@ end;
   proper version 4 authentication. }
 
 const
-  NoConnect = 'Could not connect';
   NoContent = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
   Service = 's3';
   Version = 'aws4_request';
@@ -439,6 +443,18 @@ begin
   Result := '';
   for I := 1 to Length(S) do
     if S[I] in ['A'..'Z', 'a'..'z', '0'..'9', '-', '_', '.', '~'] then
+      Result := Result + S[I]
+    else
+      Result := Result + '%' + IntToHex(Ord(S[I]), 2);
+end;
+
+function UrlEncode(const S: string): string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 1 to Length(S) do
+    if S[I] in ['A'..'Z', 'a'..'z', '0'..'9', '-', '_', '.', '~', '/'] then
       Result := Result + S[I]
     else
       Result := Result + '%' + IntToHex(Ord(S[I]), 2);
@@ -523,10 +539,10 @@ begin
       .AuthNext(hashSHA256, StringToSign)
       .AsHex;
     Request :=
-      Verb + ' ' + Url.Resource + ' HTTP/1.1'#10;
+      Verb + ' ' + Url.Resource + ' HTTP/1.1'#13#10;
     for I := 0 to Headers.Count - 1 do
       with Headers[I] do
-        Request := Request + Name + ': ' + Value + #10;
+        Request := Request + Name + ': ' + Value + #13#10;
     Request := Request + 'Authorization: ' +
       'AWS4-HMAC-SHA256 Credential=' + Config.AccessId +
       '/' + DateShort +
@@ -534,13 +550,118 @@ begin
       '/' + Service +
       '/' + Version +
       ', SignedHeaders=' + Headers.Names +
-      ', Signature=' + Signature + #10 +
-      'Connection: Close'#10 +
-        #10;
+      ', Signature=' + Signature + #13#10 +
+      'Connection: Close'#13#10 +
+        #13#10;
     Result := Request;
   finally
     Headers.Free;
   end;
+end;
+
+{
+
+/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe
+
+%2F20231003%2F
+
+CanonicalRequest:
+
+GET
+/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe
+X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ%2F20231003%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20231003T163443Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host
+host:s3.us-east-2.amazonaws.com
+
+host
+UNSIGNED-PAYLOAD
+
+StringToSign:
+
+AWS4-HMAC-SHA256
+20231003T163443Z
+20231003/us-east-2/s3/aws4_request
+1b6c089e9039e006fe56ed0cbe40450d6d86754d8fa238954daf67755f6277be
+
+Signature:
+
+9f80649bbf91167c7cf529c3998bd210ebdac43f1f0b7851b5961ed31dc4f11e
+
+Url:
+
+https://s3.us-east-2.amazonaws.com/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ%2F20231003%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20231003T163443Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=9f80649bbf91167c7cf529c3998bd210ebdac43f1f0b7851b5961ed31dc4f11e
+
+
+}
+
+function GenerateUrl(Config: TS3Config; Url: TUrl; Region: string; Expires: Integer = 0): string;
+const
+  Week = 3600 * 24 * 7;
+var
+  Date: TDateTime;
+  DateLong: string;
+  DateShort: string;
+  Host: string;
+  Resource: string;
+  Seconds: string;
+  CanonicalRequest: string;
+  StringToSign: string;
+  Signature: string;
+begin
+  Date := NowUTC;
+  DateShort := FormatDateTime('yyyymmdd', Date);
+  DateLong := DateShort + 'T' + FormatDateTime('hhnnss', Date) + 'Z';
+  Host := Url.Domain;
+  Resource := Url.Resource;
+  if Expires < 1 then
+    Expires := Week;
+  Seconds := IntToStr(Expires);
+  CanonicalRequest :=
+    'GET'#10 +
+    Resource + #10 +
+    'X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ' +
+    UriEncode('/' + DateShort + '/' + Region + '/s3/aws4_request') +
+    '&X-Amz-Date=' + DateLong + '&X-Amz-Expires=' + Seconds + '&X-Amz-SignedHeaders=host'#10 +
+    'host:' + Host + #10 +
+    #10 +
+    'host'#10 +
+    'UNSIGNED-PAYLOAD';
+  StringToSign :=
+    'AWS4-HMAC-SHA256'#10 +
+    DateLong + #10 +
+    DateShort + '/' + Region + '/s3/aws4_request'#10 +
+    HashString(hashSHA256, CanonicalRequest).AsHex;
+  Signature :=
+    AuthString('AWS4' + Config.SecretKey, hashSHA256, DateShort)
+    .AuthNext(hashSHA256, Region)
+    .AuthNext(hashSHA256, Service)
+    .AuthNext(hashSHA256, Version)
+    .AuthNext(hashSHA256, StringToSign)
+    .AsHex;
+  Result := 'https://' + Host;
+  if Config.Port <> DefPort then
+    Result := Result + ':' + IntToStr(Config.Port);
+  Result := Result + Resource +
+    '?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=' + Config.AccessId +
+    UriEncode('/' + DateShort + '/' + Region + '/s3/aws4_request') +
+    '&X-Amz-Date=' + DateLong + '&X-Amz-Expires=' + Seconds + '&X-Amz-SignedHeaders=host'#10 +
+    '&X-Amz-Signature=' + Signature;
+// https://s3.us-east-2.amazonaws.com/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ%2F20231003%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20231003T163443Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=9f80649bbf91167c7cf529c3998bd210ebdac43f1f0b7851b5961ed31dc4f11e
+// https://s3.us-east-2.amazonaws.com/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ%2F20231003%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20231003T163443Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=9f80649bbf91167c7cf529c3998bd210ebdac43f1f0b7851b5961ed31dc4f11e
+end;
+
+function GenerateUrlSHA1(Config: TS3Config; Url: TUrl; Expires: Integer = 0): string;
+var
+  UnixTime: Int64;
+  StringToSign: string;
+  Signature: string;
+begin
+  if Expires < 1 then
+    Expires := 3600;
+  UnixTime := DateTimeToUnix(NowUTC) + Expires;
+  StringToSign := 'GET'#10#10#10 + IntToStr(UnixTime) + #10 + UrlEncode(Url.Resource);
+  Signature := AuthString(Config.SecretKey, hashSHA1, StringToSign).AsBase64;
+  Result := Url.AsString + Format('?AWSAccessKeyId=%s&Expires=%s&Signature=%s',
+    [Config.AccessId, IntToStr(UnixTime), UriEncode(Signature)]);
 end;
 
 { TS3Methods }
@@ -693,6 +814,76 @@ end;
 {$endregion}
 
 {$region send}
+function TS3Methods.Presign(const Bucket, Path: string; Expires: Integer = 0): string;
+var
+  Region: string;
+  Url: string;
+begin
+  Region := FindRegion(Bucket);
+  Url := 'https://' + FConfig.EndPoint(Region);
+  if FConfig.Port <> DefPort then
+     Url := Url + ':' + IntToStr(FConfig.Port);
+  Url := Url + '/' + Bucket + '/' + UrlEncode(Path);
+  Result := GenerateUrl(FConfig, Url, Region, Expires);
+end;
+
+type
+  TReadBuffer = class
+    FSocket: TSocket;
+    FBuffer: string;
+    FIndex: Integer;
+    FLength: Integer;
+  public
+    procedure Reset(Socket: TSocket; Buffer: string);
+    function Read(var Buffer; BufferSize: LongWord): Integer; overload;
+    function Read(out Text: string): Integer; overload;
+  end;
+
+procedure TReadBuffer.Reset(Socket: TSocket; Buffer: string);
+begin
+  FSocket := Socket;
+  FBuffer := Buffer;
+  FIndex := 1;
+  FLength := Length(FBuffer);
+end;
+
+function TReadBuffer.Read(var Buffer; BufferSize: LongWord): Integer;
+var
+  B: PByte;
+begin
+  if FLength > 0 then
+  begin
+    Result := 0;
+    B := PByte(@Buffer);
+    while (FLength > 0) and (BufferSize > 0) do
+    begin
+      B^ := Byte(FBuffer[FIndex]);
+      Inc(FIndex);
+      Dec(FLength);
+      Dec(BufferSize);
+      Inc(Result);
+    end;
+  end
+  else
+    Result := FSocket.Read(Buffer, BufferSize);
+end;
+
+function TReadBuffer.Read(out Text: string): Integer; overload;
+var
+  P: PChar;
+begin
+  if FLength > 0 then
+  begin
+    P := PChar(FBuffer);
+    Inc(P, FIndex - 1);
+    Text := P^;
+    Result := FLength;
+    FLength := 0;
+  end
+  else
+    Result := FSocket.Read(Text);
+end;
+
 function InternalSend(const Request: TS3Request; Port: Word; Stream: TStream; Task: IAsyncDocTask = nil): Boolean;
 
   procedure DoProgress(Delta: Int64);
@@ -706,7 +897,7 @@ function InternalSend(const Request: TS3Request; Port: Word; Stream: TStream; Ta
     Result := (Task <> nil) and Task.Cancelled;
   end;
 
-  function ReadChunk(S: TSocket; Chunk: string): string;
+  function ReadChunk(S: TReadBuffer; Chunk: string): string;
   var
     Buffer: string;
     P: PChar;
@@ -735,101 +926,153 @@ function InternalSend(const Request: TS3Request; Port: Word; Stream: TStream; Ta
     Result := Buffer;
   end;
 
+  procedure ErrorNoConnect;
+  var
+    D: IDocument;
+    F: IFiler;
+    S: string;
+  begin
+    D := NewDocument;
+    F := D.Force('Error').Filer;
+    F.WriteStr('Kind', 'No Connect');
+    F.WriteStr('Message', 'Could not connect to ' + Request.EndPoint + ':' + IntToStr(Port));
+    S := D.Xml;
+    Stream.Write(PChar(S)^, Length(S));
+  end;
+
+  procedure ErrorNoWrite(ErrorCode: Integer);
+  var
+    D: IDocument;
+    F: IFiler;
+    S: string;
+  begin
+    D := NewDocument;
+    F := D.Force('Error').Filer;
+    if ErrorCode = 0 then
+    begin
+      F.WriteStr('Kind', 'No Header');
+      F.WriteStr('Message', 'No response hreader received');
+    end
+    else
+    begin
+      F.WriteStr('Kind', 'Error Code');
+      F.WriteStr('Message', 'Recevied ' +  IntToStr(ErrorCode) + ' response error');
+    end;
+    S := D.Xml;
+    Stream.Write(PChar(S)^, Length(S));
+  end;
+
 var
   Header: THttpResponseHeader;
   Buffer, Data, Encoding, Chunk: string;
+  Connected, Read, Written: Boolean;
+  ErrorCode: Integer;
   Socket: TSocket;
+  ReadBuffer: TReadBuffer;
   C: Char;
 begin
   Result := False;
   Header.Clear;
   Buffer := '';
+  Connected := False;
+  Read := False;
+  Written := False;
+  ErrorCode := 0;
   Socket := TSocket.Create;
+  ReadBuffer := TReadBuffer.Create;
   try
     Socket.Secure := True;
     if Socket.Connect(Request.EndPoint, Port) then
     begin
+      Connected := True;
       if IsCancelled then
         Exit;
       Socket.Write(Request.Header);
-      while Socket.Read(Data) > 0 do
-      begin
-        Buffer := Buffer + Data;
-        if Header.Extract(Buffer) then
+      while not Read do
+        while Socket.Read(Data) > 0 do
         begin
-          if Buffer <> '' then
-            raise Exception.Create('Chunked header buffer errror');
-          Result := Header.Code = 200;
-          Encoding := Header.Keys.Values['Transfer-Encoding'];
-          if StrContains(Encoding, 'chunked', True) then
-          repeat
-            Chunk := '';
-            if IsCancelled then
-              Exit;
-            while Socket.Read({%H-}C, 1) = 1 do
+          Read := True;
+          Buffer := Buffer + Data;
+          if Header.Extract(Buffer) then
+          begin
+            ReadBuffer.Reset(Socket, Buffer);
+            ErrorCode := Header.Code;
+            Result := ErrorCode = 200;
+            Encoding := Header.Keys.Values['Transfer-Encoding'];
+            if StrContains(Encoding, 'chunked', True) then
+            repeat
+              Chunk := '';
+              if IsCancelled then
+                Exit;
+              while ReadBuffer.Read({%H-}C, 1) = 1 do
+              begin
+                if IsCancelled then
+                  Exit;
+                if (C = #10) and (Chunk <> '') then
+                begin
+                  Data := ReadChunk(ReadBuffer, Chunk);
+                  if IsCancelled then
+                    Exit;
+                  Chunk := '';
+                  if Length(Data) < 1 then
+                    Break;
+                  Written := True;
+                  Stream.Write(Pointer(Data)^, Length(Data));
+                end
+                else if C > ' ' then
+                  Chunk := Chunk + C;
+              end;
+            until Chunk = ''
+            else while ReadBuffer.Read(Data) > 0 do
             begin
               if IsCancelled then
                 Exit;
-              if (C = #10) and (Chunk <> '') then
-              begin
-                Data := ReadChunk(Socket, Chunk);
-                if IsCancelled then
-                  Exit;
-                Chunk := '';
-                if Length(Data) < 1 then
-                  Break;
-                Stream.Write(Pointer(Data)^, Length(Data));
-              end
-              else if C > ' ' then
-                Chunk := Chunk + C;
+              DoProgress(Length(Data));
+              Written := True;
+              Stream.Write(Pointer(Data)^, Length(Data));
             end;
-          until Chunk = ''
-          else while Socket.Read(Data) > 0 do
-          begin
-            if IsCancelled then
-              Exit;
-            DoProgress(Length(Data));
-            Stream.Write(Pointer(Data)^, Length(Data));
+            Break;
           end;
-          Break;
         end;
-      end;
-    end
-    else
-      Buffer := NoConnect;
+    end;
   finally
+    ReadBuffer.Free;
     Socket.Free;
     if IsCancelled then
       Result := False;
   end;
+  if not Result then
+    if not Connected then
+      ErrorNoConnect
+    else if not Written then
+      ErrorNoWrite(ErrorCode);
 end;
 
-procedure InternalDoc(Success: Boolean; Stream: TStringStream; out Response: IDocument);
+function InternalDoc(const Body: string; Status: TResponseStatus): IDocument;
 const
   Xmlns = ' xmlns="http://s3.amazonaws.com/doc/2006-03-01/"';
-var
-  S: string;
 begin
-  Response := NewDocument;
-  if Success then
-  begin
-    S := Stream.DataString;
-    if S.BeginsWith('<?xml') then
-      Response.Xml := S.ReplaceOne(Xmlns, '');
-  end;
+  Result := NewDocument;
+  if Status = rsCancelled then
+    Result.Force('Cancelled')
+  else if Status = rsNoResponse then
+    Result.Force('NoResponse')
+  else if Body.BeginsWith('<?xml') then
+    Result.Xml := Body.ReplaceOne(Xmlns, '')
+  else
+    Result.Force('NoDocument');
 end;
 
 function TS3Methods.Send(const Request: TS3Request; out Response: IDocument): Boolean;
 var
-  Stream: TStringStream;
+  ResponseHeader: THttpResponseHeader;
+  Body: string;
+  Status: TResponseStatus;
 begin
-  Stream := TStringStream.Create;
-  try
-    Result := InternalSend(Request, FConfig.Port, Stream, nil);
-    InternalDoc(Result, Stream, Response);
-  finally
-    Stream.Free;
-  end;
+  Status := WebSendRequest('https://' + Request.EndPoint + ':' + IntToStr(FConfig.Port),
+    Request.Header, Body, ResponseHeader, nil);
+  Response := InternalDoc(Body, Status);
+  Result := Status = rsSuccess;
 end;
 
 function TS3Methods.Send(const Request: TS3Request; Stream: TStream): Boolean;
@@ -865,15 +1108,14 @@ end;
 
 procedure DocExecute(var Params: TAsyncDocParams; Task: IAsyncTask);
 var
-  Stream: TStringStream;
+  ResponseHeader: THttpResponseHeader;
+  Body: string;
+  Status: TResponseStatus;
 begin
-  Stream := TStringStream.Create;
-  try
-    Params.Success := InternalSend(Params.Request, Params.Port, Stream, Task as IAsyncDocTask);
-    InternalDoc(Params.Success, Stream, Params.Result);
-  finally
-    Stream.Free;
-  end;
+  Status := WebSendRequest('https://' + Params.Request.EndPoint + ':' +
+    IntToStr(Params.Port), Params.Request.Header, Body, ResponseHeader, Task);
+  Params.Result := InternalDoc(Body, Status);
+  Params.Success := Status = rsSuccess;
 end;
 
 procedure DocComplete(var Params: TAsyncDocParams; Task: IAsyncTask);
@@ -921,7 +1163,7 @@ end;
 
 function TS3Config.Port: Word;
 begin
-  Result := 443;
+  Result := DefPort;
 end;
 
 { TS3AmazonConfig }
@@ -965,11 +1207,55 @@ begin
   Result := GetEnvironmentVariable('AWS_SECRET_ACCESS_KEY');
 end;
 
+type
+  TS3WasabiConfig = class(TS3Config)
+  public
+    function EndPoint(const Region: string = ''): string; override;
+    function Region: string; override;
+    function AccessId: string; override;
+    function SecretKey: string; override;
+  end;
+
+const
+  DefWasabiRegion = 'us-east-1';
+  DefWasabiDomain = 'wasabisys.com';
+  DefWasabiEndPoint = 's3.' + DefWasabiDomain;
+
+function TS3WasabiConfig.EndPoint(const Region: string): string;
+begin
+    if Region = '' then
+      Result := DefWasabiEndPoint
+    else if Region <> DefAmazonRegion then
+      Result := 's3.' + Region + '.' + DefWasabiDomain
+    else
+      Result := DefWasabiEndPoint;
+end;
+
+function TS3WasabiConfig.Region: string;
+begin
+  Result := DefWasabiRegion;
+end;
+
+function TS3WasabiConfig.AccessId: string;
+begin
+  Result := GetEnvironmentVariable('WAS_ACCESS_KEY_ID');
+end;
+
+function TS3WasabiConfig.SecretKey: string;
+begin
+  Result := GetEnvironmentVariable('WAS_SECRET_ACCESS_KEY');
+end;
+
 { S3Configs }
 
 class function S3Configs.Amazon: TS3Config;
 begin
   Result := TS3AmazonConfig.Create;
+end;
+
+class function S3Configs.Wasabi: TS3Config;
+begin
+  Result := TS3WasabiConfig.Create;
 end;
 
 end.
