@@ -10,7 +10,7 @@
       </SearchPaths>
       <Other>
         <CompilerMessages>
-          <IgnoredMessages idx6060="True"/>
+          <IgnoredMessages idx6060="True" idx5026="True"/>
         </CompilerMessages>
       </Other>
     </CompilerOptions>

@@ -30,6 +30,11 @@
           <UseExternalDbgSyms Value="True"/>
         </Debugging>
       </Linking>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx5026="True"/>
+        </CompilerMessages>
+      </Other>
     </CompilerOptions>
     <Files Count="39">
       <Item1>
@@ -151,7 +156,7 @@
       </Item29>
       <Item30>
         <Filename Value="codebot.support.pas"/>
-        <UnitName Value="codebot.support"/>
+        <UnitName Value="Codebot.Support"/>
       </Item30>
       <Item31>
         <Filename Value="codebot.text.formats.pas"/>
