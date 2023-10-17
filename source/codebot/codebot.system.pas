@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified September 2023                             *)
+(*  Modified October 2023                               *)
 (*                                                      *)
 (********************************************************)
 
@@ -425,7 +425,7 @@ function SwitchIndex(const Switch: string): Integer;
   <link Codebot.System.SwitchExists, SwitchExists function>
   <link Codebot.System.SwitchIndex, SwitchIndex function> [group string] }
 function SwitchValue(const Switch: string): string;
-{ Convert an string to a binary format eg: ¢ = 11000010 10100010 [group string] }
+{ Convert an string to a binary format eg: Â¢ = 11000010 10100010 [group string] }
 function StrToBin(S: string): string;
 { Convert an integer to a string [group string] }
 function IntToStr(Value: Integer): string;
@@ -829,6 +829,30 @@ type
   TNamedStringsIntf = class(TNamedValuesIntf<string>, INamedStrings)
   end;
 
+{ TInterfacedFree creates a connection between an interface and a component.
+  When your interface is destroyed first then ReleaseComponent is invoked. You
+  may override ReleaseComponent to perform househeeping tasks such as
+  unsubscribing from events on component. If the component is destroyed first
+  then the corresponding component field automatically becomes nil.
+
+  Note:
+
+  If you override ReleaseComponent be sure to call the inherited method after
+  you complete your housheeping tasks. }
+
+  TInterfacedFree = class(TInterfacedObject)
+  private
+    FNotify: TObject;
+    procedure NotifyFree(Sender: TObject);
+  protected
+    procedure ReleaseComponent; virtual;
+  public
+    { Holds a reference to a component until it is destroyed }
+    Component: TComponent;
+    constructor Create(AComponent: TComponent); virtual;
+    destructor Destroy; override;
+  end;
+
 { IDelegate\<T\> allows event subscribers to add or remove their event handlers
   See also
   <link Overview.Codebot.System.IDelegate, IDelegate\<T\> members> }
@@ -1091,7 +1115,7 @@ type
     property StartTime: TDateTime read GetStartTime;
     { Duration is a record of time in seconds the task lasted }
     property Duration: Double read GetDuration;
-    { Status of the task  }
+    { Status of the task }
     property Status: TAsyncStatus read GetStatus;
   end;
 
@@ -3878,6 +3902,54 @@ begin
   FData.Clear;
 end;
 
+{ TComponentFreeNotify }
+
+type
+  TComponentFreeNotify = class(TComponent)
+  private
+    FOnFree: TNotifyEvent;
+  public
+    destructor Destroy; override;
+    property OnFree: TNotifyEvent read FOnFree write FOnFree;
+  end;
+
+destructor TComponentFreeNotify.Destroy;
+begin
+  if Assigned(FOnFree) then
+    FOnFree(Self);
+  inherited Destroy;
+end;
+
+{ TInterfacedFree }
+
+constructor TInterfacedFree.Create(AComponent: TComponent);
+begin
+  inherited Create;
+  Component := AComponent;
+  FNotify := TComponentFreeNotify.Create(AComponent);
+  TComponentFreeNotify(FNotify).OnFree := NotifyFree;
+end;
+
+destructor TInterfacedFree.Destroy;
+begin
+  if FNotify <> nil then
+    ReleaseComponent;
+  inherited Destroy;
+end;
+
+procedure TInterfacedFree.ReleaseComponent;
+begin
+  TComponentFreeNotify(FNotify).OnFree := nil;
+  FNotify := nil;
+  Component := nil;
+end;
+
+procedure TInterfacedFree.NotifyFree(Sender: TObject);
+begin
+  FNotify := nil;
+  Component := nil;
+end;
+
 function MemCompare(const A, B; Size: LongWord): Boolean;
 var
   C, D: PByte;
@@ -4401,6 +4473,4 @@ initialization
   FloatArray.DefaultCompare := DefaultFloatCompare;
   FloatArray.DefaultConvertString := DefaultFloatConvertString;
 end.
-
-
 

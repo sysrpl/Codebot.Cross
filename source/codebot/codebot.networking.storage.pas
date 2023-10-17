@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified September 2023                             *)
+(*  Modified October 2023                               *)
 (*                                                      *)
 (********************************************************)
 
@@ -17,49 +17,42 @@ uses
   Classes, SysUtils, DateUtils,
   Codebot.System,
   Codebot.Text,
+  Codebot.Text.Json,
   Codebot.Text.Xml,
   Codebot.Cryptography,
   Codebot.Networking,
   Codebot.Networking.Web;
 
-type
-
-{ TS3Config is used to specify different S3 compatible providers. These providers
-  include Digital Ocean Spaces, IBM Web Storage, Wasabi, Google Cloud Storage,
-  Azure Blob Storage, and MinIO among others.
-
-  To define your own S3 provider simply inherit from this class and override
-  the methods to return your endpoints, default region, and access key retrieval
-  methods. }
-
-  TS3ConfigBase = class
-    { The default end point or one constructed from a region
-
-      Examples:
-
-      s3.amazonaws.com
-      s3.us-east-2.amazonaws.com
-      nyc3.digitaloceanspaces.com
-      s3.wasabisys.com }
-    function EndPoint(const Region: string = ''): string; virtual; abstract;
-    { The default region }
-    function Region: string; virtual; abstract;
-  end;
-
 { TS3Config }
 
-  TS3Config = class(TS3ConfigBase)
-  public
-    { Decrypts or load an access key id }
-    function AccessId: string; virtual; abstract;
-    { A function which decrypts or loads a secret access key }
-    function SecretKey: string; virtual; abstract;
-    { Port defaults to 443 but can be anything. Changing the default port is
-      useful when using S3 services such as MinIO which can run on your local
-      network using any port og your choosing.
+type
+  ES3ConfigError = class(Exception);
 
-      Note: SSL/TLS is always required to send requests regardless of port. }
-    function Port: Word; virtual;
+  TS3Config = class
+  private
+    FNode: TJsonNode;
+    FProvider: string;
+    FHost: string;
+    FDefaultHost: string;
+    FPort: Word;
+    FService: string;
+    FDefaultRegion: string;
+    FAccessIdVar: string;
+    FAccessId: string;
+    FSecretKeyVar: string;
+    FSecretKey: string;
+    function GetAccessId: string;
+    function GetSecretKey: string;
+  public
+    constructor Create(const AProvider: string);
+    destructor Destroy; override;
+    function Provider: string;
+    function EndPoint(const Region: string = ''): string;
+    function Port: Word;
+    function DefaultRegion: string;
+    procedure ListRegions(out Regions: TNamedStrings);
+    property AccessId: string read GetAccessId write FAccessId;
+    property SecretKey: string read GetSecretKey write FSecretKey;
   end;
 
 { S3Configs provides some default S3 confiurations. These configurations are
@@ -89,21 +82,6 @@ type
 
     export AWS_ACCESS_KEY_ID = <your access key id>
     export AWS_SECRET_ACCESS_KEY = <secret access key> }
-
-  S3Configs = record
-    class function Amazon: TS3Config; static;
-    {class function DigitalOcean: TS3Config; static;
-    class function Google: TS3Config; static;
-    class function IBM: TS3Config; static;
-    class function Microsoft: TS3Config; static;}
-    class function Wasabi: TS3Config; static;
-  end;
-
-{ TS3ConfigFactory is a prototype fo functions that return TS3Config instances.
-  You pass this prototype to the TS3Client constructor which will then take
-  ownership of TS3Config. }
-
-  TS3ConfigFactory = function: TS3Config;
 
 { TS3Request includes the end point that will accept the request and a valid
   http and authorized request header }
@@ -186,13 +164,13 @@ type
   private
     FConfig: TS3Config;
     FBuckets: TStrings;
-    function GetConfig: TS3ConfigBase;
+    function GetConfig: TS3Config;
     function QueryBucket(const Bucket, Query: string): TS3Request;
   public
-    constructor Create(Config: TS3ConfigFactory);
+    constructor Create(const AProvider: string);
     destructor Destroy; override;
     { Reconfigure replaces the current config and erases bucket region memory }
-    procedure Reconfigure(Config: TS3ConfigFactory);
+    procedure Reconfigure(const AProvider: string);
     { Find a bucket's region directly and cache it in memory. If a bucket
       region is unknown this method will block while a query is dispatched. }
     function FindRegion(const Bucket: string): string;
@@ -226,7 +204,7 @@ type
     { Gnerate a presigned url for public access to an object }
     function Presign(const Bucket, Path: string; Expires: Integer = 0): string;
     { Send a request to your S3 servers outputting the response to a XML
-      document. Returns true if the response code is 200 OK.
+      document. Returns true if the status code is 200 OK.
 
       First overload can be used when querying or sending commands to S3
       Second overload can be used when receving files from S3 }
@@ -236,7 +214,7 @@ type
       asynchronously.
 
       When sending an async request the task status will be success if the
-      response code is 200 OK. The completion notification will receive either
+      response status is 200 OK. The completion notification will receive either
       a response document or a stream as the result argument.
 
       Failure to provide a completion notification will cause then response
@@ -257,7 +235,7 @@ type
     procedure SendAsync(const Request: TS3Request; Task: IAsyncDocTask); overload;
     procedure SendAsync(const Request: TS3Request; Stream: TStream; Task: IAsyncStreamTask); overload;
     {$endregion}
-    property Config: TS3ConfigBase read GetConfig;
+    property Config: TS3Config read GetConfig;
   end;
 
 implementation
@@ -267,6 +245,106 @@ uses
 
 const
   DefPort = 443;
+
+var
+  InternalServiceRegions: TObject;
+
+function ServiceRegions: TJsonNode;
+const
+  CDN = 'https://cdn.jsdelivr.net/gh/sysrpl/s3.regions/services.js';
+var
+  N: TJsonNode;
+  S: string;
+begin
+  if InternalServiceRegions = nil then
+  begin
+    N := TJsonNode.Create;
+    if WebGet(CDN, S) then
+      N.Parse(S);
+    InternalServiceRegions := N;
+  end;
+  Result := TJsonNode(InternalServiceRegions);
+end;
+
+constructor TS3Config.Create(const AProvider: string);
+begin
+  inherited Create;
+  FProvider := AProvider;
+  if ServiceRegions.Find(AProvider, FNode) then
+  begin
+    FHost := FNode.Force('host').AsString;
+    FDefaultHost := FNode.Force('defaultHost').AsString;
+    FService := FNode.Force('service').AsString;
+    FPort := Round(FNode.Force('port').AsNumber);
+    if FPort = 0 then
+      FPort := DefPort;
+    FDefaultRegion := FNode.Force('defaultRegion').AsString;
+    FAccessIdVar := FNode.Force('accessId').AsString;
+    FSecretKeyVar := FNode.Force('secretKey').AsString;
+  end
+  else
+  begin
+    if FProvider = '' then
+      FProvider := '(empty string)';
+    raise ES3ConfigError.CreateFmt('Provider %s not found', [FProvider]);
+  end;
+end;
+
+destructor TS3Config.Destroy;
+begin
+  FNode.Free;
+  inherited Destroy;
+end;
+
+function TS3Config.Provider: string;
+begin
+  Result := FProvider;
+end;
+
+function TS3Config.EndPoint(const Region: string = ''): string;
+var
+  S: string;
+begin
+  S := Region;
+  if S = '' then
+    Result := FDefaultHost
+  else if FService <> '' then
+    Result := FService + '.' + S + '.' + FHost
+  else
+    Result := S + '.' + FHost;
+end;
+
+function TS3Config.Port: Word;
+begin
+  Result := FPort;
+end;
+
+function TS3Config.DefaultRegion: string;
+begin
+  Result := FDefaultRegion;
+end;
+
+procedure TS3Config.ListRegions(out Regions: TNamedStrings);
+var
+  N: TJsonNode;
+begin
+  for N in FNode.Force('regions').AsArray do
+    Regions.Add(N.Force('name').AsString, N.Force('value').AsString);
+end;
+
+function TS3Config.GetAccessId: string;
+begin
+  if FAccessId = '' then
+    FAccessId :=  GetEnvironmentVariable(FAccessIdVar);
+  Result := FAccessId;
+end;
+
+function TS3Config.GetSecretKey: string;
+begin
+  if FSecretKey = '' then
+    FSecretKey :=  GetEnvironmentVariable(FSecretKeyVar);
+  Result := FSecretKey;
+end;
 
 {
 function DOPub: string; begin Result := GetEnvironmentVariable('DO_ACCESS_KEY_ID'); end;
@@ -559,40 +637,6 @@ begin
   end;
 end;
 
-{
-
-/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe
-
-%2F20231003%2F
-
-CanonicalRequest:
-
-GET
-/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe
-X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ%2F20231003%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20231003T163443Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host
-host:s3.us-east-2.amazonaws.com
-
-host
-UNSIGNED-PAYLOAD
-
-StringToSign:
-
-AWS4-HMAC-SHA256
-20231003T163443Z
-20231003/us-east-2/s3/aws4_request
-1b6c089e9039e006fe56ed0cbe40450d6d86754d8fa238954daf67755f6277be
-
-Signature:
-
-9f80649bbf91167c7cf529c3998bd210ebdac43f1f0b7851b5961ed31dc4f11e
-
-Url:
-
-https://s3.us-east-2.amazonaws.com/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ%2F20231003%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20231003T163443Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=9f80649bbf91167c7cf529c3998bd210ebdac43f1f0b7851b5961ed31dc4f11e
-
-
-}
-
 function GenerateUrl(Config: TS3Config; Url: TUrl; Region: string; Expires: Integer = 0): string;
 const
   Week = 3600 * 24 * 7;
@@ -645,8 +689,6 @@ begin
     UriEncode('/' + DateShort + '/' + Region + '/s3/aws4_request') +
     '&X-Amz-Date=' + DateLong + '&X-Amz-Expires=' + Seconds + '&X-Amz-SignedHeaders=host'#10 +
     '&X-Amz-Signature=' + Signature;
-// https://s3.us-east-2.amazonaws.com/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ%2F20231003%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20231003T163443Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=9f80649bbf91167c7cf529c3998bd210ebdac43f1f0b7851b5961ed31dc4f11e
-// https://s3.us-east-2.amazonaws.com/backup.codebot.org/software/Delphi.7.Second.Edition.v7.2.exe?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ%2F20231003%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Date=20231003T163443Z&X-Amz-Expires=600&X-Amz-SignedHeaders=host&X-Amz-Signature=9f80649bbf91167c7cf529c3998bd210ebdac43f1f0b7851b5961ed31dc4f11e
 end;
 
 function GenerateUrlSHA1(Config: TS3Config; Url: TUrl; Expires: Integer = 0): string;
@@ -666,10 +708,10 @@ end;
 
 { TS3Methods }
 
-constructor TS3Methods.Create(Config: TS3ConfigFactory);
+constructor TS3Methods.Create(const AProvider: string);
 begin
   inherited Create;
-  FConfig := Config;
+  FConfig := TS3Config.Create(AProvider);
   FBuckets := TStringList.Create;
 end;
 
@@ -680,17 +722,17 @@ begin
   inherited Destroy;
 end;
 
-function TS3Methods.GetConfig: TS3ConfigBase;
+function TS3Methods.GetConfig: TS3Config;
 begin
   Result := FConfig;
 end;
 
-procedure TS3Methods.Reconfigure(Config: TS3ConfigFactory);
+procedure TS3Methods.Reconfigure(const AProvider: string);
 begin
   FBuckets.Free;
   FConfig.Free;
-  FConfig := Config;
   FBuckets := TStringList.Create;
+  FConfig := TS3Config.Create(AProvider);
 end;
 
 {$region bucket read}
@@ -699,7 +741,7 @@ var
   Region: string;
 begin
   if Query = 'location' then
-    Region := FConfig.Region
+    Region := FConfig.DefaultRegion
   else
     Region := FindRegion(Bucket);
   Result.EndPoint := FConfig.EndPoint(Region);
@@ -719,13 +761,13 @@ begin
   if I < 0 then
   begin
     Request.EndPoint := FConfig.EndPoint;
-    Request.Header := GenerateRequest(FConfig, FConfig.Region, 'GET',
+    Request.Header := GenerateRequest(FConfig, FConfig.DefaultRegion, 'GET',
       FConfig.EndPoint + '/' + Bucket + '?location');
     if Send(Request, D) then
     begin
       Result := D.Root.Text;
       if Result = '' then
-        Result := FConfig.Region;
+        Result := FConfig.DefaultRegion;
       FBuckets.Add(UpperCase(Bucket));
       FBuckets.Add(Result);
     end;
@@ -733,7 +775,7 @@ begin
   else
     Result := FBuckets[I + 1];
   if Result = '' then
-    Result := FConfig.Region;
+    Result := FConfig.DefaultRegion;
 end;
 
 procedure TS3Methods.AddRegion(const Bucket, Region: string);
@@ -747,14 +789,14 @@ begin
     if Region <> '' then
       FBuckets.Add(Region)
     else
-      FBuckets.Add(FConfig.Region);
+      FBuckets.Add(FConfig.DefaultRegion);
   end;
 end;
 
 function TS3Methods.ListBuckets: TS3Request;
 begin
   Result.EndPoint := FConfig.EndPoint;
-  Result.Header := GenerateRequest(FConfig, FConfig.Region, 'GET', Result.EndPoint);
+  Result.Header := GenerateRequest(FConfig, FConfig.DefaultRegion, 'GET', Result.EndPoint);
 end;
 
 function TS3Methods.GetBucketLocation(const Bucket: string): TS3Request;
@@ -1048,19 +1090,56 @@ begin
       ErrorNoWrite(ErrorCode);
 end;
 
-function InternalDoc(const Body: string; Status: TResponseStatus): IDocument;
+procedure ResponseCodes(Status: TResponseStatus; out Name: string; var Code: Integer);
+const
+  ResponseNames: array[TResponseStatus] of string = (
+    'Could not connect',
+    'No response recevied',
+    'Error',
+    'OK',
+    'Cancelled');
+begin
+  Name :=  ResponseNames[Status];
+  if Status <> rsSuccess then
+    if Status = rsError then
+    case Code of
+      200: Name := 'OK';
+      201: Name := 'Created';
+      202: Name := 'Accepted';
+      204: Name := 'No Content';
+      301: Name := 'Moved Permanently';
+      302: Name := 'Found';
+      304: Name := 'Not Modified';
+      400: Name := 'Bad Request';
+      401: Name := 'Unauthorized';
+      403: Name := 'Forbidden';
+      404: Name := 'Not Found';
+      500: Name := 'Internal Server Error';
+      502: Name := 'Bad Gateway';
+    end
+    else
+      Code := 0;
+end;
+
+function InternalDoc(const Body: string; Status: TResponseStatus; Code: Integer): IDocument;
 const
   Xmlns = ' xmlns="http://s3.amazonaws.com/doc/2006-03-01/"';
+var
+  Name: string;
+  F: IFiler;
 begin
   Result := NewDocument;
-  if Status = rsCancelled then
-    Result.Force('Cancelled')
-  else if Status = rsNoResponse then
-    Result.Force('NoResponse')
-  else if Body.BeginsWith('<?xml') then
+  if Body.BeginsWith('<?xml') then
     Result.Xml := Body.ReplaceOne(Xmlns, '')
   else
-    Result.Force('NoDocument');
+    Result.Force('Error');
+  if Status <> rsSuccess then
+  begin
+    F := Result.Root.Force('ResponseStatus').Filer;
+    ResponseCodes(Status, Name, Code);
+    F.WriteStr('Name', Name);
+    F.WriteInt('Code', Code);
+  end;
 end;
 
 function TS3Methods.Send(const Request: TS3Request; out Response: IDocument): Boolean;
@@ -1070,14 +1149,19 @@ var
   Status: TResponseStatus;
 begin
   Status := WebSendRequest('https://' + Request.EndPoint + ':' + IntToStr(FConfig.Port),
-    Request.Header, Body, ResponseHeader, nil);
-  Response := InternalDoc(Body, Status);
+    Request.Header, Body, ResponseHeader);
+  Response := InternalDoc(Body, Status, ResponseHeader.Code);
   Result := Status = rsSuccess;
 end;
 
 function TS3Methods.Send(const Request: TS3Request; Stream: TStream): Boolean;
+var
+  ResponseHeader: THttpResponseHeader;
+  Status: TResponseStatus;
 begin
-  Result := InternalSend(Request, FConfig.Port, Stream, nil);
+  Status := WebSendRequest('https://' + Request.EndPoint + ':' + IntToStr(FConfig.Port),
+    Request.Header, Stream, ResponseHeader);
+  Result := Status = rsSuccess;
 end;
 
 { Async support }
@@ -1114,7 +1198,7 @@ var
 begin
   Status := WebSendRequest('https://' + Params.Request.EndPoint + ':' +
     IntToStr(Params.Port), Params.Request.Header, Body, ResponseHeader, Task);
-  Params.Result := InternalDoc(Body, Status);
+  Params.Result := InternalDoc(Body, Status, ResponseHeader.Code);
   Params.Success := Status = rsSuccess;
 end;
 
@@ -1159,103 +1243,9 @@ begin
 end;
 {$endregion}
 
-{ TS3Config }
-
-function TS3Config.Port: Word;
-begin
-  Result := DefPort;
-end;
-
-{ TS3AmazonConfig }
-
-type
-  TS3AmazonConfig = class(TS3Config)
-  public
-    function EndPoint(const Region: string = ''): string; override;
-    function Region: string; override;
-    function AccessId: string; override;
-    function SecretKey: string; override;
-  end;
-
-const
-  DefAmazonRegion = 'us-east-1';
-  DefAmazonDomain = 'amazonaws.com';
-  DefAmazonEndPoint = 's3.' + DefAmazonDomain;
-
-function TS3AmazonConfig.EndPoint(const Region: string): string;
-begin
-    if Region = '' then
-      Result := DefAmazonEndPoint
-    else if Region <> DefAmazonRegion then
-      Result := 's3.' + Region + '.' + DefAmazonDomain
-    else
-      Result := DefAmazonEndPoint;
-end;
-
-function TS3AmazonConfig.Region: string;
-begin
-  Result := DefAmazonRegion;
-end;
-
-function TS3AmazonConfig.AccessId: string;
-begin
-  Result := GetEnvironmentVariable('AWS_ACCESS_KEY_ID');
-end;
-
-function TS3AmazonConfig.SecretKey: string;
-begin
-  Result := GetEnvironmentVariable('AWS_SECRET_ACCESS_KEY');
-end;
-
-type
-  TS3WasabiConfig = class(TS3Config)
-  public
-    function EndPoint(const Region: string = ''): string; override;
-    function Region: string; override;
-    function AccessId: string; override;
-    function SecretKey: string; override;
-  end;
-
-const
-  DefWasabiRegion = 'us-east-1';
-  DefWasabiDomain = 'wasabisys.com';
-  DefWasabiEndPoint = 's3.' + DefWasabiDomain;
-
-function TS3WasabiConfig.EndPoint(const Region: string): string;
-begin
-    if Region = '' then
-      Result := DefWasabiEndPoint
-    else if Region <> DefAmazonRegion then
-      Result := 's3.' + Region + '.' + DefWasabiDomain
-    else
-      Result := DefWasabiEndPoint;
-end;
-
-function TS3WasabiConfig.Region: string;
-begin
-  Result := DefWasabiRegion;
-end;
-
-function TS3WasabiConfig.AccessId: string;
-begin
-  Result := GetEnvironmentVariable('WAS_ACCESS_KEY_ID');
-end;
-
-function TS3WasabiConfig.SecretKey: string;
-begin
-  Result := GetEnvironmentVariable('WAS_SECRET_ACCESS_KEY');
-end;
-
-{ S3Configs }
-
-class function S3Configs.Amazon: TS3Config;
-begin
-  Result := TS3AmazonConfig.Create;
-end;
-
-class function S3Configs.Wasabi: TS3Config;
-begin
-  Result := TS3WasabiConfig.Create;
-end;
-
+initialization
+  InternalServiceRegions := nil;
+finalization
+  InternalServiceRegions.Free;
 end.
+
