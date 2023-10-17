@@ -92,7 +92,8 @@ var
 begin
   if FDataFormat = dfNone then
     Exit;
-  FileName := Name.Trim.ToLower;
+  FileName := Name;
+  FileName := FileName.Trim.ToLower;
   if FileName = '' then
     Exit;
   FileName := PathCombine(ConfigAppDir(False, False), FileName) + DataExt[FDataFormat];
@@ -106,7 +107,8 @@ var
 begin
   if FDataFormat = dfNone then
     Exit;
-  FileName := Name.Trim.ToLower;
+  FileName := Name;
+  FileName := FileName.Trim.ToLower;
   if FileName = '' then
     Exit;
   Commit;

@@ -2,7 +2,7 @@
 (*                                                      *)
 (*  Codebot Pascal Library                              *)
 (*  http://cross.codebot.org                            *)
-(*  Modified August 2019                                *)
+(*  Modified October 2023                               *)
 (*                                                      *)
 (********************************************************)
 
