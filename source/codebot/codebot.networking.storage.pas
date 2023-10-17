@@ -864,7 +864,7 @@ begin
   Region := FindRegion(Bucket);
   Url := 'https://' + FConfig.EndPoint(Region);
   if FConfig.Port <> DefPort then
-     Url := Url + ':' + IntToStr(FConfig.Port);
+      Url := Url + ':' + IntToStr(FConfig.Port);
   Url := Url + '/' + Bucket + '/' + UrlEncode(Path);
   Result := GenerateUrl(FConfig, Url, Region, Expires);
 end;
