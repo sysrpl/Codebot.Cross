@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <PathDelim Value="\"/>
     <Name Value="codebot_controls_design"/>
     <Type Value="RunAndDesignTime"/>
@@ -10,6 +10,14 @@
       <SearchPaths>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx5024="True"/>
+        </CompilerMessages>
+        <ConfigFile>
+          <WriteConfigFilePath Value="$(PkgOutDir)\fpclaz.cfg"/>
+        </ConfigFile>
+      </Other>
     </CompilerOptions>
     <Files Count="7">
       <Item1>
@@ -42,6 +50,7 @@
         <UnitName Value="Codebot.Design.SurfaceBitmapEditor"/>
       </Item7>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="codebot_controls"/>

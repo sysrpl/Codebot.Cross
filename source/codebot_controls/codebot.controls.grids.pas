@@ -14,7 +14,7 @@ unit Codebot.Controls.Grids;
 interface
 
 uses
-  SysUtils, Classes, Graphics, Controls, Messages, Forms,
+  Types, SysUtils, Classes, Graphics, Controls, Messages, Forms,
   LCLIntf, LCLType, LMessages,
   Codebot.System,
   Codebot.Controls,
@@ -1162,7 +1162,7 @@ var
 begin
   Result := FManager.GetCell(X, Y);
   D := GetScrollData;
-  OffsetRect(Result, -D.Left, -D.Top);
+  Types.OffsetRect(Result, -D.Left, -D.Top);
   if FSingleColumn then
   begin
     Result.Left := 0;

@@ -214,8 +214,8 @@ begin
     VK_LCL_SLASH: Result := XK_SLASH;
     VK_LCL_SEMI_COMMA: Result := XK_SEMICOLON;
     VK_LCL_MINUS: Result := XK_MINUS;
-    VK_LCL_OPEN_BRAKET: Result := XK_BRACKETLEFT;
-    VK_LCL_CLOSE_BRAKET: Result := XK_BRACKETRIGHT;
+    VK_LCL_OPEN_BRACKET: Result := XK_BRACKETLEFT;
+    VK_LCL_CLOSE_BRACKET: Result := XK_BRACKETRIGHT;
     VK_LCL_BACKSLASH: Result := XK_BACKSLASH;
     VK_LCL_TILDE: Result := XK_GRAVE;
     VK_LCL_QUOTE: Result := XK_SINGLELOWQUOTEMARK;
@@ -318,8 +318,8 @@ begin
     XK_SLASH: Result := VK_LCL_SLASH;
     XK_SEMICOLON: Result := VK_LCL_SEMI_COMMA;
     XK_MINUS: Result := VK_LCL_MINUS;
-    XK_BRACKETLEFT: Result := VK_LCL_OPEN_BRAKET;
-    XK_BRACKETRIGHT: Result := VK_LCL_CLOSE_BRAKET;
+    XK_BRACKETLEFT: Result := VK_LCL_OPEN_BRACKET;
+    XK_BRACKETRIGHT: Result := VK_LCL_CLOSE_BRACKET;
     XK_BACKSLASH: Result := VK_LCL_BACKSLASH;
     XK_GRAVE: Result := VK_LCL_TILDE;
     XK_SINGLELOWQUOTEMARK: Result := VK_LCL_QUOTE;
@@ -524,8 +524,8 @@ begin
     VK_LCL_SLASH: Result := True;
     VK_LCL_SEMI_COMMA: Result := True;
     VK_LCL_MINUS: Result := True;
-    VK_LCL_OPEN_BRAKET: Result := True;
-    VK_LCL_CLOSE_BRAKET: Result := True;
+    VK_LCL_OPEN_BRACKET: Result := True;
+    VK_LCL_CLOSE_BRACKET: Result := True;
     VK_LCL_BACKSLASH: Result := True;
     VK_LCL_TILDE: Result := True;
     VK_LCL_QUOTE: Result := True;
