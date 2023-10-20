@@ -88,11 +88,13 @@ type
   PGdkPixbufFormat = ^GdkPixbufFormat;
 
   GdkPixbufSaveFunc = function(buffer: PGChar; count: GSize; error: PPGError;
-    data: GPointer): GBoolean; cdecl;
+    user_data: GPointer): GBoolean; cdecl;
 
 function gdk_pixbuf_loader_get_format(loader: PGdkPixbufLoader): PGdkPixbufFormat; cdecl; external gdkpixbuflib;
 function gdk_pixbuf_save_to_callback(pixbuf: PGdkPixbuf; save_func: GdkPixbufSaveFunc;
-  data: gpointer; _type: PGChar; error: PPGError): GBoolean; cdecl; external gdkpixbuflib;
+  user_data: gpointer; _type: PGChar; error: PPGError; args: Pointer): GBoolean; cdecl; external gdkpixbuflib;
+function gdk_pixbuf_save_to_callbackv(pixbuf: PGdkPixbuf; save_func: GdkPixbufSaveFunc;
+  user_data: gpointer; _type: PGChar; option_keys, option_values: PPgchar; error: PPGError): GBoolean; cdecl; external gdkpixbuflib;
 
 { Extra cairo routines }
 
@@ -2368,9 +2370,9 @@ begin
 end;
 
 function SaveCallback(buffer: PGChar; count: GSize; error: PPGError;
-  data: GPointer): GBoolean; cdecl;
+  user_data: GPointer): GBoolean; cdecl;
 var
-  Stream: TStream absolute data;
+  Stream: TStream absolute user_data;
 begin
   Stream.Write(buffer^, count);
   Result := True;
@@ -2378,7 +2380,6 @@ end;
 
 procedure TBitmapCairo.SaveToStream(Stream: TStream);
 var
-  A: PChar;
   S: string;
 begin
   if not Empty then
@@ -2388,9 +2389,7 @@ begin
     S := ImageFormatToStr(FFormat);
     FNeedsFlip := True;
     FlipPixels;
-    A := GetStr(S);
-    gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, A, nil);
-    FreeStr(A);
+    gdk_pixbuf_save_to_callback(FBuffer, SaveCallback, Stream, PChar(S), nil, nil);
     FNeedsFlip := True;
     FlipPixels;
   end;
