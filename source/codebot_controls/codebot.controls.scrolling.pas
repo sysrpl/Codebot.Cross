@@ -254,7 +254,6 @@ type
     procedure Resize; override;
     procedure DrawBackground(const Rect: TRectI); virtual;
     procedure DrawItem(Index: Integer; var Rect: TRectI; State: TDrawState); virtual;
-    procedure InvalidateItem(Item: Integer);
     procedure UpdateScrollRange;
     procedure Scroll(Delta: Integer); virtual;
     procedure ScrollMove(Distance: Integer; Direction: TScrollDir); virtual;
@@ -282,6 +281,7 @@ type
     function ItemAtPos(const Pos: TPointI; Existing: Boolean = False): Integer;
     procedure ScrollBy(DeltaX, DeltaY: Integer); override;
     procedure InsureItemVisible;
+    procedure InvalidateItem(Item: Integer);
     function IsSelected(Index: Integer): Boolean;
     procedure Select;
     procedure ScrollToSelection;

@@ -170,7 +170,9 @@ type
     FTitleSub: TBannerText;
     FOptions: TBannerFormOptions;
     FStash: TAnchorStashes;
+    FPicture: TPicture;
     procedure PartChange(Sender: TObject);
+    procedure SetPicture(Value: TPicture);
     procedure SetLogo(Value: TSurfaceBitmap);
     procedure SetBanner(Value: TBannerBackground);
     procedure SetTitle(Value: TBannerText);
@@ -189,6 +191,7 @@ type
     property DockManager;
   published
     property Options: TBannerFormOptions read FOptions write SetOptions;
+    property Picture: TPicture read FPicture write SetPicture;
     property Logo: TSurfaceBitmap read FLogo write SetLogo;
     property Banner: TBannerBackground read FBanner write SetBanner;
     property Title: TBannerText read FTitle write SetTitle;
@@ -376,7 +379,7 @@ begin
       FillRectColor(Surface, R, C);
     end;
     if Theme.Selected then
-      Theme.DrawHeader(FHeight)
+      Theme.DrawHeader(FHeight);
   end
   else
   begin
@@ -595,6 +598,7 @@ constructor TBannerForm.CreateNew(AOwner: TComponent; Num: Integer);
 begin
   inherited CreateNew(AOwner, Num);
   Position := poDesktopCenter;
+  FPicture := TPicture.Create;
   FLogo := TSurfaceBitmap.Create;
   FLogo.SetSize(1, 1);
   FLogo.OnChange := PartChange;
@@ -618,6 +622,7 @@ end;
 destructor TBannerForm.Destroy;
 begin
   Boundary := nil;
+  FPicture.Free;
   FLogo.Free;
   FBanner.Free;
   FTitle.Free;
@@ -760,6 +765,12 @@ procedure TBannerForm.SetBanner(Value: TBannerBackground);
 begin
   if FBanner = Value then Exit;
   FBanner.Assign(Value);
+end;
+
+procedure TBannerForm.SetPicture(Value: TPicture);
+begin
+  if FPicture = Value then Exit;
+  FPicture.Assign(Value);
 end;
 
 procedure TBannerForm.SetLogo(Value: TSurfaceBitmap);

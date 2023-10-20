@@ -795,9 +795,18 @@ begin
 end;
 
 procedure TSurfaceBitmap.DefineProperties(Filer: TFiler);
+
+  function CanWrite: Boolean;
+  begin
+    { TODO: Test whether adding form inherited flag on TSurfaceBitmap is needed }
+    Result := (not Empty) and (Filer.Ancestor is TSurfaceBitmap);
+    if Result then
+      Result := not Equals(TSurfaceBitmap(Filer.Ancestor));
+  end;
+
 begin
   inherited DefineProperties(Filer);
-  Filer.DefineBinaryProperty('Data', ReadData, WriteData, not Empty);
+  Filer.DefineBinaryProperty('Data', ReadData, WriteData, CanWrite);
 end;
 
 function TSurfaceBitmap.GetTransparent: Boolean;
@@ -2973,13 +2982,11 @@ begin
   R := Control.ClientRect;
   R.Height := Height;
   B := NewBrush(0, 0, 0, R.Height);
-  C := Control.CurrentColor;
-  B.AddStop(C, 0.5);
-  B.AddStop(C, 0.75);
-  if C.Desaturate(1).Red > 127 then
-    B.AddStop(C.Darken(0.3), 1)
-  else
-    B.AddStop(C.Lighten(0.3), 1);
+  C := clTransparent;
+  B.AddStop(C, 0.8);
+  C := clBlack;
+  C.Alpha := 100;
+  B.AddStop(C, 1);
   Surface.FillRect(B, R);
 end;
 
