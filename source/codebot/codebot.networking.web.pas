@@ -103,6 +103,53 @@ function WebSendRequest(Url: TUrl; const Request: string; Response: TStream;
 function WebSendRequest(Url: TUrl; const Request: string; out Response: string;
   out Header: THttpResponseHeader; Task: IAsyncTask = nil): TResponseStatus; overload;
 
+{ THttpPost manages sending multipart http post requests. It is recommended that
+  when you attach streams to the body you turn ownership over to this class.
+  Invoking Build will populate both the Header string and Body stream properties.
+
+  Note:
+
+  Adding only one nameless string or stream to the body casues the post to
+  supress the multipart sections  }
+
+type
+  TPostValue = class
+    Name: string;
+    MimeType: string;
+    ValueString: string;
+    ValueStream: TStream;
+    OwnsStream: Boolean;
+  end;
+
+  THttpPost = class
+  private
+    type TStringValues = TNamedValues<string>;
+    type TStreamValues = TNamedValues<TStream>;
+    type TBoolValues = TNamedValues<Boolean>;
+  private
+    FHeaderValues: TStringValues;
+    FStringValues: TStringValues;
+    FStringMimes: TStringValues;
+    FStreamValues: TStreamValues;
+    FStreamMimes: TStringValues;
+    FStreamOwnership: TBoolValues;
+    FHeader: string;
+    FBody: TStream;
+    FBuffer: TStringStream;
+    procedure Reset;
+  public
+    destructor Destroy; override;
+    procedure Clear;
+    function AddHeader(const Name, Value: string): THttpPost;
+    function AddBody(const Name, Value: string): THttpPost; overload;
+    function AddBody(const Name, MimeType, Value: string): THttpPost; overload;
+    function AddBody(const Name, MimeType: string; Value: TStream;
+      OwnsStream: Boolean = True): THttpPost; overload;
+    procedure Build(Url: TUrl);
+    property Header: string read FHeader;
+    property Body: TStream read FBody;
+  end;
+
 type
   TTransmistHeaderCompleteEvent = procedure (Sender: TObject; const Header: THttpResponseHeader) of object;
 
@@ -1232,6 +1279,281 @@ begin
   end;
 end;
 {$endif}
+
+const
+  PostBoundary = 'post_boundary_C5D3DFF684C043DCA9715B823FBB15BD';
+  PostBoundaryLine = '--' + PostBoundary + #13#10;
+
+function PostCount(Post: THttpPost): Integer;
+begin
+  Result := Post.FStringValues.Count + Post.FStreamValues.Count;
+end;
+
+function PostSection(Post: THttpPost; Index: Integer): string;
+var
+  S: TStream;
+  F: TFileStream;
+  N: string;
+begin
+  Result := '';
+  if Index < 0 then
+    Exit;
+  if Index >= PostCount(Post) then
+    Exit;
+  Result := PostBoundaryLine;
+  if Index < Post.FStringValues.Count then
+  begin
+    Result := Result +
+      'Content-Disposition: form-data; name="' + Post.FStringValues.Names[Index] + '"'#13#10 +
+      'Content-Type: ' + Post.FStringMimes.ValueByIndex[Index] + #13#10 +
+      #13#10;
+  end
+  else
+  begin
+    Index := Index - Post.FStringValues.Count;
+    S := Post.FStreamValues.ValueByIndex[Index];
+    if S is TFileStream then
+    begin
+      F := TFileStream(S);
+      N := FileExtractName(F.FileName);
+      Result := Result +
+        'Content-Disposition: form-data; name="' + Post.FStreamValues.Names[Index] + '"; filename= "' + N + '"'#13#10;
+    end
+    else
+      Result := Result +
+        'Content-Disposition: form-data; name="' + Post.FStreamValues.Names[Index] + '"'#13#10;
+    Result := Result +
+      'Content-Type: ' + Post.FStreamMimes.ValueByIndex[Index] + #13#10 +
+      #13#10;
+  end;
+end;
+
+procedure PostWriteString(Post: THttpPost; const Value: string);
+begin
+  Post.FBuffer.Clear;
+  Post.FBuffer.WriteString(Value);
+  Post.FBuffer.Position := 0;
+end;
+
+function PostValue(Post: THttpPost; Index: Integer): TStream;
+var
+  I: Integer;
+begin
+  Result := nil;
+  if Index < 0 then
+    Exit;
+  if Index >= PostCount(Post) then
+    Exit;
+  I := Post.FStringValues.Count;
+  if Index < I then
+  begin
+    Result := Post.FBuffer;
+    if Result.Size = 0 then
+      PostWriteString(Post, Post.FStringValues.ValueByIndex[Index]);
+  end
+  else
+    Result := Post.FStreamValues.ValueByIndex[Index - I];
+end;
+
+function PostContentLength(Post: THttpPost): LargeInt;
+var
+  I, J: Integer;
+begin
+  Result := 0;
+  if PostCount(Post) < 1 then
+    Exit;
+  J := Post.FStringValues.Count;
+  for I := 0 to PostCount(Post) - 1 do
+  begin
+    Inc(Result, PostSection(Post, I).Length);
+    if I < J then
+      Inc(Result, Post.FStringValues.ValueByIndex[I].Length)
+    else
+      Inc(Result, Post.FStreamValues.ValueByIndex[I - J].Size);
+    Inc(Result, 2);
+  end;
+  Inc(Result, PostBoundaryLine.Length);
+end;
+
+type
+  THttpPostStream  = class(TStream)
+  protected
+    FPost: THttpPost;
+    FCount: Integer;
+    FIndex: Integer;
+    FSize: LargeInt;
+    FStringStream: TStringStream;
+    FDataStream: TStream;
+    function  GetSize: Int64; override;
+  public
+    constructor Create(Post: THttpPost);
+    destructor Destroy; override;
+    function Read(var Buffer; Count: LongInt): LongInt; override;
+  end;
+
+constructor THttpPostStream.Create(Post: THttpPost);
+begin
+  inherited Create;
+  FPost := Post;
+  FCount := PostCount(FPost);
+  FIndex := -1;
+  FSize := PostContentLength(Post);
+end;
+
+destructor THttpPostStream.Destroy;
+begin
+  FStringStream.Free;
+  inherited Destroy;
+end;
+
+function THttpPostStream.GetSize: Int64;
+begin
+  Result := FSize;
+end;
+
+function THttpPostStream.Read(var Buffer; Count: LongInt): LongInt;
+var
+  Max: Integer;
+  Stream: TStream;
+begin
+  Result := 0;
+  if (FCount < 1) or (Count < 1) then
+    Exit;
+  if FIndex = -1 then
+  begin
+    Inc(FIndex);
+    PostWriteString(FPost, PostSection(FPost, 0));
+  end;
+  Max := PostCount(FPost) * 3;
+  if FIndex > Max then
+    Exit;
+  if FIndex = Max then
+  begin
+    Stream := FPost.FBuffer;
+    Result := Stream.Read(Buffer, Count);
+    if Result < 1 then
+    begin
+      FPost.FBuffer.Clear;
+      Inc(FIndex);
+    end;
+    Exit;
+  end;
+  if FIndex mod 3 = 1 then
+    Stream := PostValue(FPost, FIndex div 3)
+  else
+    Stream := FPost.FBuffer;
+  Result := Stream.Read(Buffer, Count);
+  if Result < 1 then
+  begin
+    Inc(FIndex);
+    FPost.FBuffer.Clear;
+    if FIndex = Max then
+      PostWriteString(FPost, '--' + PostBoundary + '--')
+    else case FIndex mod 3 of
+      0: PostWriteString(FPost, PostSection(FPost, FIndex div 3));
+      2: PostWriteString(FPost, #13#10);
+    end;
+  end;
+  if Result < 1 then
+    Result := Read(Buffer, Count);
+end;
+
+{ THttpPost }
+
+destructor THttpPost.Destroy;
+begin
+  Clear;
+  inherited Destroy;
+end;
+
+procedure THttpPost.Clear;
+var
+  I: Integer;
+begin
+  Reset;
+  for I := 0 to FStreamOwnership.Count - 1 do
+    if FStreamOwnership.ValueByIndex[I] then
+      FStreamValues.ValueByIndex[I].Free;
+  FHeaderValues.Clear;
+  FStringValues.Clear;
+  FStringMimes.Clear;
+  FStreamValues.Clear;
+  FStreamMimes.Clear;
+  FStreamOwnership.Clear;
+end;
+
+procedure THttpPost.Reset;
+begin
+  FHeader := '';
+  FBody.Free;
+  FBody := nil;
+  FBuffer.Free;
+  FBuffer := nil;
+end;
+
+function THttpPost.AddHeader(const Name, Value: string): THttpPost;
+begin
+  Reset;
+  FHeaderValues.Add(Name, Value);
+  Result := Self;
+end;
+
+function THttpPost.AddBody(const Name, Value: string): THttpPost;
+begin
+  Result := AddBody(Name, '', Value);
+end;
+
+function THttpPost.AddBody(const Name, MimeType, Value: string): THttpPost;
+var
+  S: string;
+begin
+  Reset;
+  FStringValues.Add(Name, Value);
+  S := Trim(MimeType);
+  if S = '' then
+    S := 'text/plain';
+  FStringMimes.Add(Name, S);
+  Result := Self;
+end;
+
+function THttpPost.AddBody(const Name, MimeType: string; Value: TStream;
+  OwnsStream: Boolean = True): THttpPost;
+var
+  S: string;
+begin
+  Reset;
+  FStreamValues.Add(Name, Value);
+  FStreamOwnership.Add(Name, OwnsStream);
+  S := Trim(MimeType);
+  if S = '' then
+    S := 'application/octet-stream';
+  FStreamMimes.Add(Name, S);
+  Result := Self;
+end;
+
+procedure THttpPost.Build(Url: TUrl);
+var
+  I: Integer;
+begin
+  if FHeader <> '' then
+    Exit;
+  FHeader :=
+    'POST ' + Url.Resource + ' HTTP/1.1'#13#10 +
+    'Host: ' + Url.Domain + #13#10;
+  for I := 0 to FHeaderValues.Count - 1 do
+    FHeader := FHeader +
+      FHeaderValues.Names[I] + ': ' + FHeaderValues.ValueByIndex[I] + #13#10;
+  { TODO: Parse query string and add new string values }
+  FBody := THttpPostStream.Create(Self);
+  FBuffer := TStringStream.Create;
+  if FBody.Size > 0 then
+    FHeader := FHeader +
+      'Content-Type: multipart/form-data; boundary=' + PostBoundary + #13#10;
+  FHeader := FHeader +
+    'Content-Length: ' + IntToStr(FBody.Size) + #13#10 +
+    'Connection: Close'#13#10 +
+    #13#10;
+end;
 
 end.
 
