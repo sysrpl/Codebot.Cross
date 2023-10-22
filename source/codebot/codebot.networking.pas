@@ -132,11 +132,11 @@ type
     { Write all bytes in a buffer to a client or remote socket }
     function WriteAll(var Buffer; BufferSize: LongWord): Boolean; overload;
     { Write all text to a client or remote socket }
-    function WriteAll(const Text: string): Boolean; overload;
+    function WriteText(const Text: string; Task: IAsyncTask = nil): Boolean; overload;
     { Write the contents of a file to a client or remote socket }
-    function WriteFile(const FileName: string): Integer;
+    function WriteFile(const FileName: string; Task: IAsyncTask = nil): Boolean;
     { Write a stream to a client or remote socket }
-    function WriteStream(Stream: TStream): Integer;
+    function WriteStream(Stream: TStream; Task: IAsyncTask = nil): Boolean;
     { The address of socket }
     property Address: TAddressName read GetAddress;
     { When blocking is true, read an write operations wait }
@@ -168,6 +168,9 @@ type
 function SocketSend(const Host: string; Port: Word; const Data: string): Boolean;
 
 implementation
+
+uses
+  Codebot.Support;
 
 { TAddressName }
 
@@ -582,39 +585,73 @@ begin
   Result := True;
 end;
 
-function TSocket.WriteAll(const Text: string): Boolean;
+function TSocket.WriteText(const Text: string; Task: IAsyncTask = nil): Boolean;
+const
+  MaxSize = 1024 * 16;
+var
+  S: TStream;
+  I: LargeInt;
 begin
-  Result := WriteAll(Pointer(Text)^, Length(Text));
+  I := Length(Text);
+  if I > MaxSize - 1 then
+  try
+    S := TStringStream.Create(Text);
+    Result := WriteStream(S, Task);
+  finally
+    S.Free;
+  end
+  else
+    Result := WriteAll(Pointer(Text)^, Length(Text));
 end;
 
-function TSocket.WriteFile(const FileName: string): Integer;
+function TSocket.WriteFile(const FileName: string; Task: IAsyncTask = nil): Boolean;
 var
   S: TStream;
 begin
   S := TFileStream.Create(FileName, fmOpenRead);
   try
-    Result := WriteStream(S);
+    Result := WriteStream(S, Task);
   finally
     S.Free;
   end;
 end;
 
-function TSocket.WriteStream(Stream: TStream): Integer;
+function TSocket.WriteStream(Stream: TStream; Task: IAsyncTask = nil): Boolean;
+
+  procedure DoProgress(Delta: Integer);
+  begin
+    if (Delta > 0) and (Task <> nil) then
+      (Task as IAsyncRunnerBase).Tick(Delta);
+  end;
+
+  function IsCancelled: Boolean;
+  begin
+    Result := (Task <> nil) and Task.Cancelled;
+  end;
+
 const
   BufferSize = 1024 * 16;
 var
   Buffer: Pointer;
   I: Integer;
 begin
+  Result := False;
   Buffer := GetMem(BufferSize);
   try
-    Result := 0;
     while True do
     begin
       I := Stream.Read(Buffer^, BufferSize);
       if I < 1 then
+        Exit(True);
+      if WriteAll(Buffer, I) then
+      begin
+        if IsCancelled then
+          Break
+        else
+          DoProgress(I);
+      end
+      else
         Break;
-      Result := Result + Write(Buffer^, I);
     end;
   finally
     FreeMem(Buffer);
