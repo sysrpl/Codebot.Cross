@@ -317,6 +317,27 @@ type
     function IndexOf(Item: T): Integer; override;
   end;
 
+{ TAggregateStream }
+
+  TAggregateStream = class(TStream)
+  private
+    FStreams: TList<TStream>;
+    FOwns: TList<Boolean>;
+    FIndex: Integer;
+    FSize: LargeInt;
+    procedure Reset;
+  protected
+    function  GetSize: Int64; override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure Clear;
+    procedure AddText(const Text: string);
+    procedure AddFile(const FileName: string);
+    procedure AddStream(Stream: TStream; OwnsStream: Boolean = True);
+    function Read(var Buffer; Count: Longint): Longint; override;
+  end;
+
 {docignore}
 
 function FindObject(constref A, B: TObject): Integer;
@@ -1041,6 +1062,92 @@ end;
 function TInterfaces<T>.IndexOf(Item: T): Integer;
 begin
   Result := FList.Find(TCompare<T>(@FindInterface), Item);
+end;
+
+{ TAggregateStream }
+
+constructor TAggregateStream.Create;
+begin
+	inherited Create;
+	FStreams := TList<TStream>.Create;
+	FOwns := TList<Boolean>.Create;
+	Reset;
+end;
+
+destructor TAggregateStream.Destroy;
+begin
+	Clear;
+	FStreams.Free;
+	FOwns.Free;
+	inherited Destroy;
+end;
+
+procedure TAggregateStream.Reset;
+begin
+	FIndex := -1;
+	FSize := -1;
+end;
+
+function TAggregateStream.GetSize: Int64;
+var
+  S: TStream;
+  I: Integer;
+begin
+  if FSize > -1 then
+    Exit(FSize);
+  FSize := 0;
+  for S in FStreams do
+    Inc(FSize, S.Size - S.Position);
+  Result := FSize;
+end;
+
+procedure TAggregateStream.Clear;
+var
+	I: Integer;
+begin
+  Reset;
+	for I := 0 to FOwns.Count - 1 do
+		if FOwns[I] then
+			FStreams[I].Free;
+	FStreams.Clear;
+	FOwns.Clear;
+end;
+
+procedure TAggregateStream.AddText(const Text: string);
+begin
+	AddStream(TStringStream.Create(Text));
+end;
+
+procedure TAggregateStream.AddFile(const FileName: string);
+begin
+	AddStream(TFileStream.Create(FileName, fmOpenRead));
+end;
+
+procedure TAggregateStream.AddStream(Stream: TStream; OwnsStream: Boolean = True);
+begin
+  Reset;
+	FStreams.Add(Stream);
+	FOwns.Add(OwnsStream);
+end;
+
+function TAggregateStream.Read(var Buffer; Count: Integer): Integer;
+var
+	S: TStream;
+begin
+	Result := 0;
+	if Count < 1 then
+		Exit;
+	if FIndex < 0 then
+		Inc(FIndex);
+	if FIndex > FStreams.Count - 1 then
+		Exit;
+	S := FStreams[FIndex];
+	Result := S.Read(Buffer, Count);
+	if Result < 1 then
+	begin
+		Inc(FIndex);
+		Result := Read(Buffer, Count);
+	end;
 end;
 
 end.
