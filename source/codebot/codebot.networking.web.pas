@@ -148,9 +148,11 @@ type
     { Add a custom header }
     function AddHeader(const Name, Value: string): THttpPost;
     { Add a text to the post body }
+    function AddText(Text: string): THttpPost; overload;
     function AddText(const Name, Text: string): THttpPost; overload;
     function AddText(const Name, MimeType, Text: string): THttpPost; overload;
     { Add a file to the post body }
+    function AddFile(const FileName: string): THttpPost; overload;
     function AddFile(const Name, FileName: string): THttpPost; overload;
     function AddFile(const Name, MimeType, FileName: string): THttpPost; overload;
     { Add a stream to the post body }
@@ -557,8 +559,8 @@ begin
   Socket := TSocket.Create;
   ReadBuffer := TReadBuffer.Create;
   try
-    Socket.Secure := Url.Secure;
-    if Socket.Connect(Url.Domain, Url.Port) then
+    Socket.Secure := True; //Url.Secure;
+    if Socket.Connect(Url.Domain, 443) then
     begin
       if IsCancelled then
         Exit;
@@ -571,6 +573,7 @@ begin
         begin
           Read := True;
           Buffer := Buffer + Data;
+          WriteLn(Buffer);
           if Header.Extract(Buffer) then
           begin
             if Header.Code = 200 then
@@ -880,7 +883,7 @@ var
   S: string;
   I: Integer;
 begin
-  S := 'POST ' + Url.Resource + ' HTTP/1.0'#13#10 +
+  S := 'POST ' + Url.Resource + ' HTTP/1.1'#13#10 +
     'Host: ' + Url.Domain + #13#10;
   for I := 0 to Headers.Count - 1 do
   begin
@@ -1400,12 +1403,17 @@ begin
   Result := Self;
 end;
 
-function THttpPost.AddText(const Name, Text: string): THttpPost; overload;
+function THttpPost.AddText(Text: string): THttpPost;
+begin
+  Result := AddText('',  '', Text);
+end;
+
+function THttpPost.AddText(const Name, Text: string): THttpPost;
 begin
   Result := AddText(Name, '', Text);
 end;
 
-function THttpPost.AddText(const Name, MimeType, Text: string): THttpPost; overload;
+function THttpPost.AddText(const Name, MimeType, Text: string): THttpPost;
 var
   Item: TPostValue;
   S: string;
@@ -1420,6 +1428,11 @@ begin
   Item.Text := Text;
   FPostValues.Add(Item);
   Result := Self;
+end;
+
+function THttpPost.AddFile(const FileName: string): THttpPost;
+begin
+  Result := AddFile('', '', FileName);
 end;
 
 function THttpPost.AddFile(const Name, FileName: string): THttpPost;
@@ -1471,6 +1484,14 @@ begin
   Result := Self;
 end;
 
+function StreamText(const Stream: TStream): string;
+var
+  C: Char;
+begin
+  Result := '';
+  while Stream.Read(C, 1) = 1 do Result := Result + C;
+end;
+
 procedure THttpPost.Build(Url: TUrl);
 var
   Stream: TAggregateStream;
@@ -1516,8 +1537,8 @@ begin
       'Connection: Close'#13#10 +
       #13#10;
     FRequest := TAggregateStream.Create;
-    TAggregateStream(FRequest).AddText(S);
-    TAggregateStream(FRequest).AddStream(Stream);
+    TAggregateStream(FRequest).AddText(S + StreamText(Stream));
+    // TAggregateStream(FRequest).AddStream(Stream);
     Exit;
   end;
   { We have determined that this is a multipart post }

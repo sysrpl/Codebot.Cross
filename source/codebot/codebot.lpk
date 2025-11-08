@@ -36,7 +36,7 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="39">
+    <Files Count="40">
       <Item1>
         <Filename Value="codebot.animation.pas"/>
         <UnitName Value="Codebot.Animation"/>
@@ -194,6 +194,10 @@
         <Filename Value="codebot.unique.pas"/>
         <UnitName Value="Codebot.Unique"/>
       </Item39>
+      <Item40>
+        <Filename Value="codebot.process.pas"/>
+        <UnitName Value="codebot.process"/>
+      </Item40>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">

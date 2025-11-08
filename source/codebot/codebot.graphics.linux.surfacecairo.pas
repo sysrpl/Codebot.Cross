@@ -111,6 +111,7 @@ procedure pango_layout_set_ellipsize(layout: PPangoLayout;
   ellipsize: TPangoEllipsizeMode); cdecl; external pangolib;
 function pango_layout_get_ellipsize(layout: PPangoLayout): TPangoEllipsizeMode; cdecl; external pangolib;
 function pango_layout_is_ellipsized(layout: PPangoLayout): GBoolean; cdecl; external pangolib;
+function pango_attr_letter_spacing_new(letter_spacing: Integer): PPangoAttribute; cdecl; external pangolib;
 
 type
   TCairoMatrixHelper = record helper for TCairoMatrix
@@ -366,6 +367,7 @@ type
     FQuality: TFontQuality;
     FStyle: TFontStyles;
     FSize: Float;
+    FKerning: Float;
   public
     constructor Create(Font: TFont); overload;
     constructor Create(const FontName: string; FontSize: Integer = 10); overload;
@@ -380,11 +382,14 @@ type
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
+    function GetKerning: Float;
+    procedure SetKerning(Value: Float);
     property Name: string read GetName write SetName;
     property Color: TColorB read GetColor write SetColor;
     property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
     property Size: Float read GetSize write SetSize;
+    property Kerning: Float read GetKerning write SetKerning;
   end;
 { TPathCairo }
 
@@ -1204,6 +1209,16 @@ begin
   end;
 end;
 
+function TFontCairo.GetKerning: Float;
+begin
+  Result := FKerning;
+end;
+
+procedure TFontCairo.SetKerning(Value: Float);
+begin
+  FKerning := Value;
+end;
+
 { TPathCairo }
 
 constructor TPathCairo.Create(Path: PCairoPath);
@@ -1739,6 +1754,8 @@ var
   W, H: LongInt;
   M: TCairoMatrix;
   C: TColorF;
+  L: PPangoAttrList;
+  A: PPangoAttribute;
   Options: PCairoFontOptions;
 begin
   if SurfaceOptions.ErrorCorrection or Immediate then
@@ -1787,6 +1804,14 @@ begin
   else
     cairo_translate(FCairo, R.X, Rect.Y + R.Height - H);
   end;
+  { Kerning }
+  if Font.Kerning <> 0 then
+  begin
+    L := pango_attr_list_new;
+    A := pango_attr_letter_spacing_new(Round(Font.Kerning));
+    pango_attr_list_insert(L, A);
+    pango_layout_set_attributes(FLayout, L)
+  end;
   pango_cairo_update_layout(FCairo, FLayout);
   Options := cairo_font_options_create;
   cairo_font_options_set_antialias(Options, FontOptions[Font.Quality]);
@@ -1803,6 +1828,8 @@ begin
   end
   else
     pango_cairo_layout_path(FCairo, FLayout);
+  if Font.Kerning <> 0 then
+    pango_attr_list_unref(L);
   cairo_set_matrix(FCairo, @M);
   cairo_font_options_destroy(Options);
 end;

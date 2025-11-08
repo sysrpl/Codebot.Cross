@@ -17,6 +17,7 @@ uses
   SysUtils,
   Classes,
   Codebot.System,
+  Codebot.Cryptography,
   Codebot.Interop.Sockets,
   Codebot.Interop.OpenSSL;
 
@@ -482,6 +483,13 @@ begin
   Result := True;
 end;
 
+function __errno_location: PInteger; cdecl; external 'c' name '__errno_location';
+
+function GetErrno: Integer;
+begin
+  Result := __errno_location^;
+end;
+
 function TSocket.DoRead(var Buffer; BufferSize: LongWord): Integer;
 var
   Bytes: LongInt;
@@ -494,6 +502,12 @@ begin
     Bytes := SSL_read(FSSLSocket, @Buffer, BufferSize)
   else
     Bytes := recv(FHandle, Buffer, BufferSize, 0);
+  if Bytes = -1 then
+  begin
+    ErrorCode := GetErrno;
+    WriteLn('recv error: ', ErrorCode);
+    Exit;
+  end;
   if Bytes = 0 then
   begin
     Close;
@@ -593,7 +607,7 @@ var
   I: LargeInt;
 begin
   I := Length(Text);
-  if I > MaxSize - 1 then
+  if I > 0 then // MaxSize - 1 then
   try
     S := TStringStream.Create(Text);
     Result := WriteStream(S, Task);
@@ -616,6 +630,9 @@ begin
   end;
 end;
 
+var
+  BytesWritten: Integer;
+
 function TSocket.WriteStream(Stream: TStream; Task: IAsyncTask = nil): Boolean;
 
   procedure DoProgress(Delta: Integer);
@@ -633,8 +650,10 @@ const
   BufferSize = 1024 * 16;
 var
   Buffer: Pointer;
+  S: string;
   I: Integer;
 begin
+  BytesWritten := 0;
   Result := False;
   Buffer := GetMem(BufferSize);
   try
@@ -643,6 +662,11 @@ begin
       I := Stream.Read(Buffer^, BufferSize);
       if I < 1 then
         Exit(True);
+      //S := StrCopyData(Buffer, I);
+
+      BytesWritten := BytesWritten + I;
+      System.WriteLn('BytesWritten ', I);
+      System.WriteLn('Hash ', HashBuffer(hashMD5, Buffer^, I).AsHex);
       if WriteAll(Buffer, I) then
       begin
         if IsCancelled then
