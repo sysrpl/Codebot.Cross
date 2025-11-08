@@ -29,6 +29,7 @@ uses
   Codebot.Controls.Colors,
   Codebot.Controls.Scrolling,
   Codebot.Controls.Sliders,
+  Codebot.Process,
   Codebot.Text.Store;
 
 procedure Register;
@@ -46,7 +47,7 @@ begin
     TIndeterminateProgress, TStepBubbles,
     THuePicker, TSaturationPicker, TBanner, TContentGrid,
     TSizingPanel, THeaderBar, TDrawList, TDrawTextList, TDetailsList, TAnimationTimer,
-    TTextStorage, TCustomSlideEdit]);
+    TTextStorage, TCustomSlideEdit, TExternalCommand]);
   { Property editors }
   {$ifndef lclgtk2}
   RegisterPropertyEditor(TypeInfo(Integer), TThinButton, 'ImageIndex',

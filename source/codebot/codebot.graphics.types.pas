@@ -619,11 +619,14 @@ type
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
+    function GetKerning: Float;
+    procedure SetKerning(Value: Float);
     property Name: string read GetName write SetName;
     property Color: TColorB read GetColor write SetColor;
     property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
     property Size: Float read GetSize write SetSize;
+    property Kerning: Float read GetKerning write SetKerning;
   end;
 
 { IPathData can be obtained by cloning a path }

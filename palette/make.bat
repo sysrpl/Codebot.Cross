@@ -13,4 +13,5 @@ TSizingPanel.bmp ^
 THeaderBar.bmp ^
 TDrawList.bmp ^
 TDrawTextList.bmp ^
-TDetailsList.bmp
+TDetailsList.bmp ^
+TExternalCommand.bmp
