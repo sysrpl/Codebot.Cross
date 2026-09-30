@@ -29,8 +29,8 @@ uses
   Codebot.Controls.Colors,
   Codebot.Controls.Scrolling,
   Codebot.Controls.Sliders,
-  Codebot.Process,
-  Codebot.Text.Store;
+  Codebot.Text.Store,
+  Codebot.Process;
 
 procedure Register;
 
@@ -41,9 +41,9 @@ implementation
 procedure Register;
 begin
   { Components }
-  // TRenderImage, TRenderBox,
+  // TDrawImage, TDrawBox,
   RegisterComponents('Codebot', [TImageStrip, TSlideBar, TThinButton,
-    TRenderImage, TRenderBox,
+    TDrawImage, TDrawBox, TDrawPanel,
     TIndeterminateProgress, TStepBubbles,
     THuePicker, TSaturationPicker, TBanner, TContentGrid,
     TSizingPanel, THeaderBar, TDrawList, TDrawTextList, TDetailsList, TAnimationTimer,
@@ -59,10 +59,10 @@ begin
     TSurfaceBitmapPropertyEditor);
   { Component editors }
   RegisterComponentEditor(TSizingPanel, TSizingPanelEditor);
-  RegisterComponentEditor(TRenderImage, TRenderImageEditor);
+  RegisterComponentEditor(TDrawImage, TRenderImageEditor);
   RegisterComponentEditor(TImageStrip, TImageStripEditor);
   { Custom forms }
-  RegisterForm(TRenderForm, 'Render Form', 'A form with surface and theme support',
+  RegisterForm(TSurfaceForm, 'Render Form', 'A form with surface and theme support',
     'Codebot.Controls');
   RegisterForm(TBannerForm, 'Banner Form', 'A form a customizable header and footer',
     'Codebot.Controls.Banner');

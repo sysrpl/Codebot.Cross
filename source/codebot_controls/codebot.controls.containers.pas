@@ -71,7 +71,7 @@ type
   See also
   <link Overview.Codebot.Controls.Containers.TSizingPanel, TSizingPanel members> }
 
-  TSizingPanel = class(TRenderCustomControl)
+  TSizingPanel = class(TSurfaceCustomControl)
   private
     FBackground: TPanelBackground;
     FImage: TSurfaceBitmap;
@@ -93,7 +93,7 @@ type
     procedure SetSplitter(Value: TSplitter);
     procedure SplitterSized(Size: Integer);
   protected
-    procedure Render; override;
+    procedure Draw; override;
     procedure Resize; override;
     function GetLogicalClientRect: TRect; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
@@ -154,6 +154,7 @@ type
     property OnDblClick;
     property OnDragDrop;
     property OnDragOver;
+    property OnDraw;
     property OnEndDock;
     property OnEndDrag;
     property OnEnter;
@@ -169,7 +170,6 @@ type
     property OnMouseWheelDown;
     property OnMouseWheelUp;
     property OnResize;
-    property OnRender;
     property OnStartDock;
     property OnStartDrag;
     property OnUnDock;
@@ -367,7 +367,7 @@ begin
   end;
 end;
 
-procedure TSizingPanel.Render;
+procedure TSizingPanel.Draw;
 const
   Pad = 1;
 var
@@ -421,7 +421,7 @@ begin
     Surface.FillRect(Brushes.Transparent, R)
   else
     Surface.FillRect(NewBrush(CurrentColor), R);
-  inherited Render;
+  inherited Draw;
   R.Inflate(Pad, Pad);
   if BorderStyle = bsNone then
   begin

@@ -301,7 +301,8 @@ type
     function TextHeight: Integer;
     function TextSize(const Text: string): TPointI;
     procedure DrawDummyBlock(Surface: ISurface; const Rect: TRectI; State: TDrawState);
-    procedure DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Integer);
+    procedure DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Integer); overload;
+    procedure DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Single; Scale: Single); overload;
     procedure DrawCaption(Surface: ISurface; const Caption: string; const Rect: TRectI; Enabled: Boolean = True);
     procedure DrawText(Surface: ISurface; const Text: string; const Rect: TRectI; Direction: TDirection);
     procedure DrawTextState(Surface: ISurface; const Text: string; const Rect: TRectI; State: TDrawState; Radius: Float = 0);
@@ -2535,6 +2536,20 @@ begin
   R.Offset(X, Y);
   Bitmap.Surface.CopyTo(Bitmap.ClientRect, Surface, R);
 end;
+
+procedure TDrawControlHelper.DrawBitmap(Surface: ISurface; Bitmap: IBitmap; X, Y: Single; Scale: Single);
+var
+  R: TRectF;
+begin
+  if Bitmap.Empty then
+    Exit;
+  R := Bitmap.ClientRect;
+  R.Width := R.Width * Scale;
+  R.Height := R.Height * Scale;
+  R.Offset(X, Y);
+  Bitmap.Surface.CopyTo(Bitmap.ClientRect, Surface, R);
+end;
+
 
 procedure TDrawControlHelper.DrawCaption(Surface: ISurface; const Caption: string; const Rect: TRectI; Enabled: Boolean = True);
 var

@@ -27,7 +27,7 @@ type
 
   { TCustomSlideBar }
 
-  TCustomSlideBar = class(TRenderGraphicControl)
+  TCustomSlideBar = class(TSurfaceGraphicControl)
   private
     FChanged: Boolean;
     FKind: TSlideBarKind;
@@ -60,7 +60,7 @@ type
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
     procedure MouseLeave; override;
-    procedure Render; override;
+    procedure Draw; override;
     property Associate: TControl read FAssociate write SetAssociate;
     property Kind: TSlideBarKind read FKind write SetKind;
     property Min: Double read FMin write SetMin;
@@ -261,7 +261,7 @@ begin
   end;
 end;
 
-procedure TCustomSlideBar.Render;
+procedure TCustomSlideBar.Draw;
 var
   R: TRectI;
 begin

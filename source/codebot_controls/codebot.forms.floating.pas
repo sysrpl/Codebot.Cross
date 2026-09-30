@@ -198,6 +198,167 @@ begin
       Visible := not FFaded;
   end;
 end;
+{$elseif defined(linux) and defined(lclgtk3)}
+uses
+  LazGdk3, LazGtk3, Gtk3Widgets,
+  Codebot.Interop.Linux.NetWM;
+
+function floating_region_create: Pointer; cdecl;
+  external 'libcairo.so.2' name 'cairo_region_create';
+procedure floating_region_destroy(region: Pointer); cdecl;
+  external 'libcairo.so.2' name 'cairo_region_destroy';
+function floating_signal_connect(instance: Pointer; signal: PChar; handler: Pointer;
+  data: Pointer; destroy_data: Pointer; flags: LongWord): LongWord; cdecl;
+  external 'libgobject-2.0.so.0' name 'g_signal_connect_data';
+
+procedure FormScreenChanged(widget: PGtkWidget; old_screen: PGdkScreen;
+  userdata: Pointer); cdecl;
+var
+  Visual: PGdkVisual;
+begin
+  Visual := gdk_screen_get_rgba_visual(gtk_widget_get_screen(widget));
+  if Visual <> nil then
+    gtk_widget_set_visual(widget, Visual);
+end;
+
+{ TFloatingForm }
+
+constructor TFloatingForm.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  BorderStyle := bsNone;
+  FOpacity := $FF;
+  FInteractive := True;
+end;
+
+procedure TFloatingForm.Loaded;
+type
+  PFormBorderStyle = ^TFormBorderStyle;
+begin
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+  inherited Loaded;
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+end;
+
+type
+  PFormBorderStyle = ^TFormBorderStyle;
+
+function FormWindow(Form: TFloatingForm): PGdkWindow;
+begin
+  Result := nil;
+  if Form.HandleAllocated then
+    Result := gtk_widget_get_window(PGtkWidget(Form.FWindow));
+end;
+
+procedure TFloatingForm.CreateHandle;
+begin
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+  { The gtk3 widgetset creates an undecorated popup window for borderless
+    forms which do not take focus }
+  ControlStyle := ControlStyle + [csNoFocus];
+  inherited CreateHandle;
+  if not (csDesigning in ComponentState) then
+  begin
+    FWindow := TGtk3Widget(Handle).Widget;
+    gtk_widget_set_app_paintable(PGtkWidget(FWindow), True);
+    floating_signal_connect(FWindow, 'screen-changed', @FormScreenChanged, nil, nil, 0);
+    { The widgetset realizes the window while creating it, and a visual only
+      takes effect before realization, so realize it again with an rgba visual }
+    if gtk_widget_get_realized(PGtkWidget(FWindow)) then
+    begin
+      gtk_widget_unrealize(PGtkWidget(FWindow));
+      FormScreenChanged(PGtkWidget(FWindow), nil, nil);
+      gtk_widget_realize(PGtkWidget(FWindow));
+      gdk_window_set_decorations(gtk_widget_get_window(PGtkWidget(FWindow)), []);
+    end
+    else
+      FormScreenChanged(PGtkWidget(FWindow), nil, nil);
+  end;
+end;
+
+procedure TFloatingForm.SetInteractive(Value: Boolean);
+begin
+  if FInteractive <> Value then
+  begin
+    FInteractive := Value;
+    Invalidate;
+  end;
+end;
+
+procedure TFloatingForm.Paint;
+var
+  Window: PGdkWindow;
+  Region: Pointer;
+begin
+  Window := FormWindow(Self);
+  if Window = nil then
+    Exit;
+  if FInteractive then
+    gdk_window_input_shape_combine_region(Window, nil, 0, 0)
+  else
+  begin
+    { An empty input region lets mouse clicks pass through the window }
+    Region := floating_region_create;
+    gdk_window_input_shape_combine_region(Window, Region, 0, 0);
+    floating_region_destroy(Region);
+  end;
+end;
+
+procedure TFloatingForm.MoveSize(Rect: TRectI);
+begin
+  { Go through the LCL so the gtk3 window and the form bounds stay in sync }
+  SetBounds(Rect.Left, Rect.Top, Rect.Width, Rect.Height);
+end;
+
+procedure TFloatingForm.SetOpacity(Value: Byte);
+begin
+  if Value <> FOpacity then
+  begin
+    if FWindow <> nil then
+      gtk_widget_set_opacity(PGtkWidget(FWindow), Value / $FF);
+    FOpacity := Value;
+  end;
+end;
+
+function TFloatingForm.GetCompositing: Boolean;
+begin
+  Result := (FWindow <> nil) and
+    gdk_screen_is_composited(gtk_widget_get_screen(PGtkWidget(FWindow)));
+end;
+
+procedure FadeTimer(hWnd: HWND; uMsg: UINT; idEvent: UINT_PTR; dwTime: DWORD); stdcall;
+var
+  F: TFloatingForm absolute idEvent;
+begin
+  KillTimer(hWnd, UIntPtr(idEvent));
+  F.FFadeTop := F.Top;
+  F.FFadeMoved := True;
+  F.Top := 30000;
+end;
+
+procedure TFloatingForm.SetFaded(Value: Boolean);
+begin
+  if FFaded <> Value then
+  begin
+    KillTimer(Handle, UIntPtr(Self));
+    if FFadeMoved then
+    begin
+      FFadeMoved := False;
+      Top := FFadeTop;
+    end;
+    FFaded := Value;
+    if WindowManager.Compositing and (WindowManager.Name = 'Compiz') then
+      if FFaded then
+      begin
+        Opacity := 0;
+        SetTimer(Handle, UIntPtr(Self), 750, @FadeTimer);
+      end
+      else
+        Opacity := $FF
+    else
+      Visible := not FFaded;
+  end;
+end;
 {$else}
 function TFloatingForm.GetCompositing: Boolean;
 begin

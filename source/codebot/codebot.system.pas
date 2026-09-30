@@ -369,6 +369,8 @@ function StrSplit(const S, Separator: string): StringArray;
 function StrSplitInt(const S, Separator: string): IntArray;
 { Splits a string into a int64 array using a separator [group string] }
 function StrSplitInt64(const S, Separator: string): Int64Array;
+{ Returns an array of whitespace separated tokens [group string] }
+function StrSplitTokens(const S: string): StringArray;
 { Join a string array into a string using a separator [group string] }
 function StrJoin(const A: StringArray; const Separator: string): string;
 { Join an int array into a string using a separator [group string] }
@@ -519,6 +521,8 @@ type
     function SplitInt(const Separator: string): IntArray;
     { Splits a string into a int64 array using a separator }
     function SplitInt64(const Separator: string): Int64Array;
+    { Splits a string into a series of tokens }
+    function SplitTokens: StringArray;
     { Splits a string into word separated by whitespace }
     function Words(MaxColumns: Integer = 0): StringArray;
     { Returns the first subsection of a string if it were split using a separator }
@@ -1042,12 +1046,16 @@ type
 
 
 {$region threading}
+{ IsMainThread returns true if the current thread is the main application thread }
+function IsMainThread: Boolean;
+
 { IMutex allows threads to wait for an exclusive locked ownership of a mutex ibject
   Note
   On unix systems cthreads must be the first unit in your program source if you want thread support
   See also
   <link Overview.Codebot.System.IMutex, IMutex members> }
 
+type
   IMutex = interface
     { Lock causes the current thread to wait for exclusive ownership of a mutex object }
     function Lock: LongInt;
@@ -1178,6 +1186,11 @@ var
 
 { Retrieve messages from a queue while waiting }
 procedure PumpMessages;
+{$endregion}
+
+{$region writeline}
+procedure WriteDebug(const Line: string); overload;
+procedure WriteDebug(const Line: string; const Args: array of const); overload;
 {$endregion}
 
 implementation
@@ -1738,6 +1751,71 @@ begin
       B := Ord(Current);
       Inc(I, Lookup[B]);
     end;
+  end;
+end;
+
+procedure StrFindNonwhite(S: PChar; out Head, Tail, Seek: Integer);
+begin
+  Head := 0;
+  Tail := 0;
+  Seek := 0;
+  if S = nil then
+    Exit;
+  while S[Seek] <= ' ' do
+  begin
+    if S[Seek] = #0 then
+      Exit;
+    Inc(Head);
+    Inc(Seek);
+  end;
+  while S[Seek] > ' ' do
+  begin
+    Inc(Tail);
+    Inc(Seek);
+  end;
+end;
+
+function StrFindNonwhiteCount(S: PChar): Integer;
+begin
+  Result := 0;
+  if S = nil then
+    Exit;
+  while S^ > #0 do
+  begin
+    while S^ <= ' ' do
+    begin
+      if S^ = #0 then
+        Exit;
+      Inc(S);
+    end;
+    Inc(Result);
+    while S^ > ' ' do
+      Inc(S);
+  end;
+end;
+
+function StrSplitTokens(const S: string): StringArray;
+var
+  Head, Tail, Seek, Total: Integer;
+  P: PChar;
+  I: Integer;
+begin
+  Result := nil;
+  if S = '' then
+    Exit;
+  P := PChar(S);
+  I := 0;
+  Total := 1;
+  Result.Length := StrFindNonwhiteCount(P);
+  while Result.Length > 0 do
+  begin
+    StrFindNonwhite(P, Head, Tail, Seek);
+    Inc(P, Seek);
+    if Tail = 0 then
+      Break;
+    Result[I] := StrCopy(S, Total + Head, Tail);
+    Inc(Total, Seek);
+    Inc(I);
   end;
 end;
 
@@ -2629,6 +2707,11 @@ end;
 function StringHelper.SplitInt64(const Separator: string): Int64Array;
 begin
   Result := StrSplitInt64(Self, Separator);
+end;
+
+function StringHelper.SplitTokens: StringArray;
+begin
+  Result := StrSplitTokens(Self);
 end;
 
 function StringHelper.Words(MaxColumns: Integer = 0): StringArray;
@@ -3691,7 +3774,7 @@ begin
   if FIndex + 1 = FSize then
     raise EStackError.Create(SStackPush);
   Inc(FIndex);
-  FItems[FIndex] := Value
+  FItems[FIndex] := Value;
 end;
 
 function TStack<T>.Pop: T;
@@ -4417,6 +4500,19 @@ begin
 end;
 {$endregion}
 
+procedure WriteDebug(const Line: string);
+begin
+  WriteLn(Line);
+end;
+
+procedure WriteDebug(const Line: string; const Args: array of const);
+var
+  S: string;
+begin
+  S := StrFormat(Line, Args);
+  WriteDebug(S);
+end;
+
 function DefaultStringCompare(constref A, B: string): Integer;
 begin
   Result := StrCompare(A, B);
@@ -4462,7 +4558,16 @@ begin
   Result := FloatToStr(Item);
 end;
 
+threadvar
+  MainThread: Boolean;
+
+function IsMainThread: Boolean;
+begin
+  Result := MainThread;
+end;
+
 initialization
+  MainThread := True;
   @LibraryExceptproc := @LibraryExcept;
   StringArray.DefaultCompare := DefaultStringCompare;
   StringArray.DefaultConvertString := DefaultStringConvertString;

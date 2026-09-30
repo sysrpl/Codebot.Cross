@@ -268,11 +268,11 @@ end;
 
 procedure TRenderImageEditor.Edit;
 var
-  Image: TRenderImage;
+  Image: TDrawImage;
 begin
-  if Component is TRenderImage then
+  if Component is TDrawImage then
   begin
-    Image := Component as TRenderImage;
+    Image := Component as TDrawImage;
     if EditRenderImage(Image) then
       Modified;
     if GlobalDesignHook <> nil then

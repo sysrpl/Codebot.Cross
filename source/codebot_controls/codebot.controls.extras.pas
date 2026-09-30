@@ -14,7 +14,7 @@ unit Codebot.Controls.Extras;
 interface
 
 uses
-  SysUtils, Classes, Graphics, Controls, ExtCtrls, Forms,
+  SysUtils, Classes, Graphics, Controls, ExtCtrls, Forms, LMessages,
   Codebot.System,
   Codebot.Controls,
   Codebot.Graphics,
@@ -35,9 +35,9 @@ type
     { Repeat the image across the client area }
     imTile);
 
-{ TRenderImage }
+{ TDrawImage }
 
-  TRenderImage = class(TRenderGraphicControl)
+  TDrawImage = class(TSurfaceGraphicControl)
   private
     FImage: TSurfaceBitmap;
     FCopy: TSurfaceBitmap;
@@ -59,7 +59,7 @@ type
     procedure SetSharedImage(Value: TSurfaceBitmap);
   protected
     procedure SetColor(Value: TColor); override;
-    procedure Render; override;
+    procedure Draw; override;
     property ComputeImage: TSurfaceBitmap read GetComputeImage;
   public
     constructor Create(AOwner: TComponent); override;
@@ -91,6 +91,7 @@ type
     property OnDragDrop;
     property OnDragOver;
     property OnEndDrag;
+    property OnDraw;
     property OnMouseDown;
     property OnMouseEnter;
     property OnMouseLeave;
@@ -100,7 +101,6 @@ type
     property OnMouseWheelDown;
     property OnMouseWheelUp;
     property OnResize;
-    property OnRender;
     property OnStartDrag;
     property ParentShowHint;
     property PopupMenu;
@@ -108,13 +108,13 @@ type
     property Visible;
   end;
 
-{ TRenderBox }
+{ TDrawBox }
 
-  TRenderBox = class(TRenderGraphicControl)
+  TDrawBox = class(TSurfaceGraphicControl)
   protected
-    procedure Render; override;
+    procedure Draw; override;
   published
-    property OnRender;
+    property OnDraw;
     property Align;
     property Anchors;
     property BorderSpacing;
@@ -144,12 +144,53 @@ type
     property Visible;
   end;
 
+{ TDrawPanel }
+
+  TDrawPanel = class(TSurfaceCustomControl)
+  protected
+    procedure Draw; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+  published
+    property OnDraw;
+    property Align;
+    property Anchors;
+    property BorderSpacing;
+    property Constraints;
+    property DragCursor;
+    property DragMode;
+    property Enabled;
+    property ParentShowHint;
+    property PopupMenu;
+    property ShowHint;
+    property TabStop;
+    property Visible;
+    property OnChangeBounds;
+    property OnClick;
+    property OnDblClick;
+    property OnDragDrop;
+    property OnDragOver;
+    property OnEndDrag;
+    property OnEnter;
+    property OnExit;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnMouseWheel;
+    property OnMouseWheelDown;
+    property OnMouseWheelUp;
+    property OnResize;
+    property OnStartDrag;
+  end;
+
   TProgressStatus = (psNone, psBusy, psReady, psInfo, psHelp, psWarn, psError, psCustom);
   TIconPosition = (icNear, icAbove, icFar, icBelow);
 
 { TIndeterminateProgress }
 
-  TIndeterminateProgress = class(TRenderGraphicControl)
+  TIndeterminateProgress = class(TSurfaceGraphicControl)
   private
     FHelp: string;
     FTimer: TTimer;
@@ -169,7 +210,7 @@ type
     procedure SetIconPosition(Value: TIconPosition);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
-    procedure Render; override;
+    procedure Draw; override;
     procedure FontChanged(Sender: TObject); override;
     procedure TextChanged; override;
   public
@@ -219,37 +260,39 @@ type
 
 { TStepBubbles }
 
-  TStepBubbles = class(TRenderGraphicControl)
+  TStepBubbles = class(TSurfaceGraphicControl)
   private
   end;
 
 implementation
 
-{ TRenderImage }
+{ TDrawImage }
 
-constructor TRenderImage.Create(AOwner: TComponent);
+constructor TDrawImage.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FImage := TSurfaceBitmap.Create;
   FImage.OnChange := ImageChange;
   FSaturation := 1;
+  Width := 256;
+  Height := 256;
 end;
 
-destructor TRenderImage.Destroy;
+destructor TDrawImage.Destroy;
 begin
   inherited Destroy;
   FImage.Free;
   FCopy.Free;
 end;
 
-procedure TRenderImage.UpdateImage;
+procedure TDrawImage.UpdateImage;
 begin
   FCopy.Free;
   FCopy := nil;
   Invalidate;
 end;
 
-function TRenderImage.GetComputeImage: TSurfaceBitmap;
+function TDrawImage.GetComputeImage: TSurfaceBitmap;
 begin
   if FSharedImage <> nil then
     Result := FSharedImage
@@ -257,7 +300,7 @@ begin
     Result := FImage;
 end;
 
-function TRenderImage.GetRenderArea: TRectI;
+function TDrawImage.GetRenderArea: TRectI;
 var
   B: TSurfaceBitmap;
   M: TImageMode;
@@ -302,7 +345,7 @@ begin
   end;
 end;
 
-procedure TRenderImage.Render;
+procedure TDrawImage.Draw;
 var
   NeedsFit: Boolean;
   Bitmap: TSurfaceBitmap;
@@ -311,7 +354,7 @@ var
   R: TRectI;
   M: IMatrix;
 begin
-  inherited Render;
+  inherited Draw;
   if csDesigning in ComponentState then
   begin
     Pen := NewPen(clBlack);
@@ -403,27 +446,27 @@ begin
     Surface.StrokeRect(Pen, ClientRect);
 end;
 
-procedure TRenderImage.ImageChange(Sender: TObject);
+procedure TDrawImage.ImageChange(Sender: TObject);
 begin
   FCopy.Free;
   FCopy := nil;
   Invalidate;
 end;
 
-procedure TRenderImage.SetImage(Value: TSurfaceBitmap);
+procedure TDrawImage.SetImage(Value: TSurfaceBitmap);
 begin
   if FImage = Value then Exit;
   FImage.Assign(Value);
 end;
 
-procedure TRenderImage.SetAngle(Value: Float);
+procedure TDrawImage.SetAngle(Value: Float);
 begin
   if FAngle = Value then Exit;
   FAngle := Value;
   Invalidate;
 end;
 
-procedure TRenderImage.SetColorized(Value: Boolean);
+procedure TDrawImage.SetColorized(Value: Boolean);
 begin
   if FColorized = Value then Exit;
   FColorized := Value;
@@ -432,7 +475,7 @@ begin
   Invalidate;
 end;
 
-procedure TRenderImage.SetMode(Value: TImageMode);
+procedure TDrawImage.SetMode(Value: TImageMode);
 begin
   if FMode = Value then Exit;
   AutoSize := False;
@@ -440,12 +483,12 @@ begin
   Invalidate;
 end;
 
-function TRenderImage.GetOpacity: Byte;
+function TDrawImage.GetOpacity: Byte;
 begin
   Result := ComputeImage.Opacity;
 end;
 
-procedure TRenderImage.SetOpacity(Value: Byte);
+procedure TDrawImage.SetOpacity(Value: Byte);
 begin
   ComputeImage.Opacity := Value;
   if FCopy <> nil then
@@ -453,7 +496,7 @@ begin
   Invalidate;
 end;
 
-procedure TRenderImage.SetSaturation(Value: Float);
+procedure TDrawImage.SetSaturation(Value: Float);
 begin
   Value := Clamp(Value);
   if FSaturation = Value then Exit;
@@ -463,13 +506,13 @@ begin
   Invalidate;
 end;
 
-procedure TRenderImage.SetSharedImage(Value: TSurfaceBitmap);
+procedure TDrawImage.SetSharedImage(Value: TSurfaceBitmap);
 begin
   FSharedImage := Value;
   UpdateImage;
 end;
 
-procedure TRenderImage.SetColor(Value: TColor);
+procedure TDrawImage.SetColor(Value: TColor);
 begin
   if Value = Color then Exit;
   inherited SetColor(Value);
@@ -478,7 +521,7 @@ begin
   Invalidate;
 end;
 
-procedure TRenderImage.GetPreferredSize(var PreferredWidth,
+procedure TDrawImage.GetPreferredSize(var PreferredWidth,
   PreferredHeight: integer; Raw: Boolean; WithThemeSpace: Boolean);
 begin
   if (not FImage.Empty) and (FMode = imCenter) then
@@ -488,19 +531,43 @@ begin
   end;
 end;
 
-{ TRenderBox }
+{ TDrawBox }
 
-procedure TRenderBox.Render;
+procedure TDrawBox.Draw;
 var
   Pen: IPen;
 begin
-  inherited Render;
+  inherited Draw;
   if csDesigning in ComponentState then
   begin
     Pen := NewPen(clBlack);
     Pen.LinePattern := pnDash;
     Surface.StrokeRect(Pen, ClientRect);
   end;
+end;
+
+{ TDrawPanel }
+
+procedure TDrawPanel.Draw;
+var
+  Pen: IPen;
+begin
+  inherited Draw;
+  if csDesigning in ComponentState then
+  begin
+    Pen := NewPen(clBlack);
+    Pen.LinePattern := pnDash;
+    Surface.StrokeRect(Pen, ClientRect);
+  end;
+end;
+
+constructor TDrawPanel.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  TabStop := False;
+  ControlStyle := ControlStyle + [csAcceptsControls, csCaptureMouse,
+    csClickEvents, csDoubleClicks, csReplicatable,
+    csNoFocus, csParentBackground] - [csOpaque];
 end;
 
 { TIndeterminateProgress }
@@ -553,7 +620,7 @@ begin
   inherited Destroy;
 end;
 
-procedure TIndeterminateProgress.Render;
+procedure TIndeterminateProgress.Draw;
 const
   Dir: array[TIconPosition] of TDirection =
     (drLeft, drCenter, drRight, drCenter);
@@ -566,7 +633,7 @@ var
   F: IFont;
   S: string;
 begin
-  inherited Render;
+  inherited Draw;
   Images := nil;
   ComputedStatus := Status;
   if FHelp <> '' then

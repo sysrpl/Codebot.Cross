@@ -76,7 +76,7 @@ type
 
 { THeaderBar }
 
-  THeaderBar = class(TRenderGraphicControl)
+  THeaderBar = class(TSurfaceGraphicControl)
   private
     FColumns: THeaderColumns;
     FOnColumnClick: THeaderColumnEvent;
@@ -102,7 +102,7 @@ type
   protected
     procedure CaptureChanged; override;
     function ThemeAware: Boolean; override;
-    procedure Render; override;
+    procedure Draw; override;
     procedure ColumnClick(Column: THeaderColumn); virtual;
     procedure ColumnResize(Column: THeaderColumn); virtual;
     procedure ColumnSelect(Column: THeaderColumn); virtual;
@@ -148,6 +148,7 @@ type
     property OnDragDrop;
     property OnDragOver;
     property OnEndDrag;
+    property OnDraw;
     property OnMouseDown;
     property OnMouseEnter;
     property OnMouseLeave;
@@ -157,7 +158,6 @@ type
     property OnMouseWheelDown;
     property OnMouseWheelUp;
     property OnResize;
-    property OnRender;
     property OnStartDrag;
   end;
 
@@ -185,7 +185,7 @@ type
 
 { TScrollList is a custom scrolling list control }
 
-  TScrollList = class(TRenderCustomControl)
+  TScrollList = class(TSurfaceCustomControl)
   private
     FCount: Integer;
     FDownIndex: Integer;
@@ -250,8 +250,8 @@ type
     procedure MouseLeave; override;
     function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
     procedure DoScrollLeft; virtual;
-    procedure Render; override;
     procedure Resize; override;
+    procedure Draw; override;
     procedure DrawBackground(const Rect: TRectI); virtual;
     procedure DrawItem(Index: Integer; var Rect: TRectI; State: TDrawState); virtual;
     procedure UpdateScrollRange;
@@ -421,7 +421,7 @@ type
     procedure HandleColumnNotify(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification);
     procedure HandleColumnUpdate(Sender: TObject; Item: TCollectionItem);
   protected
-    procedure Render; override;
+    procedure Draw; override;
     procedure DoHeaderResize; override;
     procedure DoScrollLeft; override;
     procedure DoColumnClick(Sender: TObject; Column: THeaderColumn); virtual;
@@ -818,7 +818,7 @@ begin
     Result[I] := FColumns[I].Width;
 end;
 
-procedure THeaderBar.Render;
+procedure THeaderBar.Draw;
 const
   Margin = -4;
 var
@@ -828,7 +828,7 @@ var
   F: IFont;
   I: Integer;
 begin
-  inherited Render;
+  inherited Draw;
   State := [dsBackground];
   Theme.Select(State);
   Theme.DrawHeaderColumn(ClientRect);
@@ -1167,7 +1167,7 @@ begin
       SB_LINEUP: SetTopIndex(FTopIndex - 1);
       SB_PAGEDOWN: SetTopIndex(FTopIndex + ClientHeight div FItemHeight);
       SB_PAGEUP: SetTopIndex(FTopIndex - ClientHeight div FItemHeight);
-      SB_THUMBTRACK: SetTopIndex(Pos);
+      SB_THUMBTRACK, SB_THUMBPOSITION: SetTopIndex(Pos);
       SB_TOP: SetTopIndex(0);
     end;
 end;
@@ -1181,7 +1181,7 @@ begin
       SB_LINEUP: SetScrollLeft(FScrollLeft - 10);
       SB_PAGEDOWN: SetScrollLeft(FScrollLeft + ClientWidth);
       SB_PAGEUP: SetScrollLeft(FScrollLeft - ClientWidth);
-      SB_THUMBTRACK: SetScrollLeft(Pos);
+      SB_THUMBTRACK, SB_THUMBPOSITION: SetScrollLeft(Pos);
       SB_TOP: SetScrollLeft(0);
     end;
 end;
@@ -1227,10 +1227,27 @@ begin
   inherited KeyDown(Key, Shift);
   FShift := Shift;
   case Key of
-    VK_HOME: ItemIndex := 0;
-    VK_END: ItemIndex := Count - 1;
-    VK_NEXT: SetScrollIndex(ItemIndex + (ClientHeight - FHeaderSize) div FItemHeight);
-    VK_PRIOR: SetScrollIndex(ItemIndex - (ClientHeight - FHeaderSize) div FItemHeight);
+    { Consume paging keys so the widgetset (gtk3) does not scroll a second time }
+    VK_HOME:
+      begin
+        ItemIndex := 0;
+        Key := 0;
+      end;
+    VK_END:
+      begin
+        ItemIndex := Count - 1;
+        Key := 0;
+      end;
+    VK_NEXT:
+      begin
+        SetScrollIndex(ItemIndex + (ClientHeight - FHeaderSize) div FItemHeight);
+        Key := 0;
+      end;
+    VK_PRIOR:
+      begin
+        SetScrollIndex(ItemIndex - (ClientHeight - FHeaderSize) div FItemHeight);
+        Key := 0;
+      end;
     VK_LEFT, VK_RIGHT:
       Key := 0;
     VK_UP:
@@ -1405,7 +1422,7 @@ begin
     FOnScrollLeft(Self);
 end;
 
-procedure TScrollList.Render;
+procedure TScrollList.Draw;
 var
   Clip, Row, R: TRectI;
   I: Integer;
@@ -1916,8 +1933,14 @@ begin
       if FHotIndex > - 1 then
         InvalidateItem(FHotIndex);
     FHotIndex := -1;
+    { Gtk3 reads the range and page fields even when only SIF_POS is set,
+      so fill them with the same values UpdateScrollRange uses }
+    ScrollInfo := Default(TScrollInfo);
     ScrollInfo.cbSize := Sizeof(TScrollInfo);
     ScrollInfo.fMask := SIF_POS;
+    ScrollInfo.nMin := 0;
+    ScrollInfo.nMax := FCount - 1;
+    ScrollInfo.nPage := (ClientHeight - FHeaderSize) div FItemHeight;
     ScrollInfo.nPos := FTopIndex;
     SetScrollInfo(Handle, SB_VERT, ScrollInfo, True);
     Scroll(Delta);
@@ -2131,14 +2154,14 @@ begin
   Invalidate;
 end;
 
-procedure TDetailsList.Render;
+procedure TDetailsList.Draw;
 begin
   if FColumnsChanged then
   begin
     FColumnsChanged := False;
     ScrollWidth := FHeader.ScrollWidth;
   end;
-  inherited Render;
+  inherited Draw;
 end;
 
 procedure TDetailsList.DrawBackground(const Rect: TRectI);

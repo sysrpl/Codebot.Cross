@@ -70,6 +70,8 @@ type
     procedure Render; virtual;
     procedure AfterRender; virtual;
     procedure ClickBox(Index: Integer); virtual;
+    { Color of the resize grips and outline, Sizing is true during a resize }
+    function GripColor(Sizing: Boolean): TColorB; virtual;
     property HotQuad: Integer read FHotQuad write SetHotQuad;
     property OnClickBox: TClickBoxEvent read FOnClickBox write FOnClickBox;
   public
@@ -427,6 +429,14 @@ begin
     FOnClickBox(Self, Index);
 end;
 
+function TWidget.GripColor(Sizing: Boolean): TColorB;
+begin
+  if Sizing then
+    Result := Blend(clHighlight, clBlack, 0.25)
+  else
+    Result := Blend(clHighlight, clWhite, 0.1);
+end;
+
 procedure TWidget.Paint;
 begin
   inherited Paint;
@@ -461,10 +471,7 @@ begin
     Alpha := FGripOpacity;
   if Alpha > 0 then
   begin
-    if FSized then
-      Color := Blend(clHighlight, clBlack, 0.25)
-    else
-      Color := Blend(clHighlight, clWhite, 0.1);
+    Color := GripColor(FSized);
     Surface.StrokeRect(NewPen(Color.Fade(Alpha)), ClientRect);
     Surface.Ellipse(GetSizeRect(0));
     Surface.Ellipse(GetSizeRect(1));

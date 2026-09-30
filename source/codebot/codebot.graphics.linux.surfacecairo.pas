@@ -438,6 +438,8 @@ type
   TSurfaceCairo = class(TInterfacedObject, ISurface)
   private
     FOwned: Boolean;
+    { When true, the cairo state was saved on creation and is restored on release }
+    FRestore: Boolean;
     FCairo: PCairo;
     FPath: IPath;
     FPathCairo: TSurfacePathCairo;
@@ -1373,6 +1375,11 @@ begin
     begin
       cairo_destroy(FCairo);
       FCairo := nil;
+    end
+    else if FRestore then
+    begin
+      cairo_restore(FCairo);
+      FRestore := False;
     end
     else
     begin
@@ -2528,36 +2535,53 @@ end;
 {$endif}
 
 {$ifdef lclgtk3}
+{ The gtk3 widgetset does not translate its cairo context by the window origin.
+  Graphic controls are painted on their parent's context with the origin
+  stored in the device context and applied by LCL drawing calls only, so we
+  apply it ourselves to the surface matrix. The cairo state is saved and later
+  restored so the device context is left as we found it. }
+
+function NewDeviceSurfaceCairo(DC: TGtk3DeviceContext): ISurface;
+var
+  S: TSurfaceCairo;
+  P: PCairo;
+  M: TCairoMatrix;
+begin
+  P := PCairo(DC.pcr);
+  cairo_save(P);
+  { The device context may be left with another operator such as source,
+    but our drawing expects normal alpha blending }
+  cairo_set_operator(P, CAIRO_OPERATOR_OVER);
+  { The widgetset may disable antialiasing for pixel exact LCL drawing }
+  cairo_set_antialias(P, CAIRO_ANTIALIAS_DEFAULT);
+  cairo_get_matrix(P, @M);
+  S := TSurfaceCairo.Create(P);
+  S.FOwned := False;
+  S.FRestore := True;
+  S.FMatrix := TMatrixCairo.Create(M.x0 + DC.LToDX(0), M.y0 + DC.LToDY(0));
+  Result := S;
+end;
+
 function NewSurfaceCairo(Canvas: TCanvas): ISurface;
 var
   Obj: TObject;
-  P: PCairo;
 begin
   Result := nil;
   Obj := TObject(Canvas.Handle);
   if Obj is TGtk3DeviceContext then
-  begin
-    P := PCairo(TGtk3DeviceContext(Obj).pcr);
-    Result := TSurfaceCairo.Create(P);
-    (Result as TSurfaceCairo).FOwned := False;
-  end;
+    Result := NewDeviceSurfaceCairo(TGtk3DeviceContext(Obj));
 end;
 
 function NewSurfaceCairo(Control: TWinControl): ISurface;
 var
   Obj: TObject;
-  P: PCairo;
 begin
   Result := nil;
   if Control is TCustomControl then
   begin
     Obj := TObject(TCustomControl(Control).Canvas.Handle);
     if Obj is TGtk3DeviceContext then
-    begin
-      P := PCairo(TGtk3DeviceContext(Obj).pcr);
-      Result := TSurfaceCairo.Create(P);
-      (Result as TSurfaceCairo).FOwned := False;
-    end
+      Result := NewDeviceSurfaceCairo(TGtk3DeviceContext(Obj));
   end;
 end;
 {$endif}
@@ -2770,9 +2794,180 @@ end;
 {$endif}
 
 {$ifdef lclgtk3}
+type
+  TSplashCairo = class(TInterfacedObject, ISplash)
+  private
+    FClipped: Boolean;
+    FBitmap: IBitmap;
+    FWidget: PGtkWidget;
+    FOpacity: Byte;
+    FVisible: Boolean;
+    FSize: TPointI;
+    procedure Resize;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function GetBitmap: IBitmap;
+    function GetOpacity: Byte;
+    procedure SetOpacity(Value: Byte);
+    function GetVisible: Boolean;
+    procedure SetVisible(Value: Boolean);
+    function GetHandle: IntPtr;
+    procedure Move(X, Y: Integer);
+    procedure Update;
+  end;
+
+{ Declared here with untyped pointers to avoid clashing with the gtk2 era
+  GLib2 and Cairo units used by the rest of this unit }
+
+function splash_signal_connect(instance: Pointer; signal: PChar; handler: Pointer;
+  data: Pointer; destroy_data: Pointer; flags: LongWord): LongWord; cdecl;
+  external 'libgobject-2.0.so.0' name 'g_signal_connect_data';
+function splash_region_create: Pointer; cdecl;
+  external 'libcairo.so.2' name 'cairo_region_create';
+procedure splash_region_destroy(region: Pointer); cdecl;
+  external 'libcairo.so.2' name 'cairo_region_destroy';
+
+procedure SplashScreenChanged(widget: PGtkWidget; old_screen: PGdkScreen;
+  userdata: Pointer); cdecl;
+var
+  Visual: PGdkVisual;
+begin
+  Visual := gdk_screen_get_rgba_visual(gtk_widget_get_screen(widget));
+  if Visual <> nil then
+    gtk_widget_set_visual(widget, Visual);
+end;
+
+procedure Clip(Splash: TSplashCairo; Widget: PGtkWidget);
+var
+  Region: Pointer;
+begin
+  if Splash.FClipped then
+    Exit;
+  Splash.FClipped := True;
+  { An empty input region lets mouse clicks pass through the window }
+  Region := splash_region_create;
+  gdk_window_input_shape_combine_region(gtk_widget_get_window(Widget), Region, 0, 0);
+  splash_region_destroy(Region);
+end;
+
+function SplashDraw(widget: PGtkWidget; cr: Pointer; userdata: Pointer): LongBool; cdecl;
+var
+  Splash: TSplashCairo absolute userdata;
+  BitmapSurface: TBitmapSurfaceCairo;
+  Pattern: PCairoPattern;
+  Dest: PCairo;
+begin
+  Result := True;
+  Clip(Splash, widget);
+  BitmapSurface := Splash.FBitmap.Surface as TBitmapSurfaceCairo;
+  if BitmapSurface.HandleAvailable then
+  begin
+    Dest := PCairo(cr);
+    cairo_save(Dest);
+    Pattern := cairo_pattern_create_for_surface(cairo_get_target(BitmapSurface.FCairo));
+    cairo_set_operator(Dest, CAIRO_OPERATOR_SOURCE);
+    cairo_set_source(Dest, Pattern);
+    cairo_paint(Dest);
+    cairo_pattern_destroy(Pattern);
+    cairo_restore(Dest);
+  end;
+end;
+
+constructor TSplashCairo.Create;
+begin
+  inherited Create;
+  FBitmap := TBitmapCairo.Create;
+  FOpacity := $FF;
+  FWidget := PGtkWidget(gtk_window_new(GTK_WINDOW_POPUP));
+  gtk_window_set_type_hint(PGtkWindow(FWidget), GDK_WINDOW_TYPE_HINT_SPLASHSCREEN);
+  gtk_widget_set_app_paintable(FWidget, True);
+  splash_signal_connect(FWidget, 'draw', @SplashDraw, Self, nil, 0);
+  splash_signal_connect(FWidget, 'screen-changed', @SplashScreenChanged, nil, nil, 0);
+  SplashScreenChanged(FWidget, nil, nil);
+end;
+
+destructor TSplashCairo.Destroy;
+begin
+  gtk_widget_destroy(FWidget);
+  inherited Destroy;
+end;
+
+procedure TSplashCairo.Resize;
+begin
+  if (FBitmap.Width <> FSize.X) or (FBitmap.Height <> FSize.Y) then
+  begin
+    gtk_widget_set_size_request(FWidget, FBitmap.Width, FBitmap.Height);
+    gtk_window_resize(PGtkWindow(FWidget), FBitmap.Width, FBitmap.Height);
+    FSize.X := FBitmap.Width;
+    FSize.Y := FBitmap.Height;
+  end;
+end;
+
+function TSplashCairo.GetBitmap: IBitmap;
+begin
+  Result := FBitmap;
+end;
+
+function TSplashCairo.GetOpacity: Byte;
+begin
+  Result := FOpacity;
+end;
+
+procedure TSplashCairo.SetOpacity(Value: Byte);
+begin
+  if Value <> FOpacity then
+  begin
+    gtk_widget_set_opacity(FWidget, Value / $FF);
+    FOpacity := Value;
+  end;
+end;
+
+function TSplashCairo.GetVisible: Boolean;
+begin
+  Result := FVisible;
+end;
+
+procedure TSplashCairo.SetVisible(Value: Boolean);
+begin
+  Value := Value and (not FBitmap.Empty);
+  if Value <> FVisible then
+  begin
+    FVisible := Value;
+    if FVisible then
+    begin
+      Resize;
+      gtk_widget_show_all(FWidget);
+    end
+    else
+      gtk_widget_hide(FWidget);
+  end;
+end;
+
+function TSplashCairo.GetHandle: IntPtr;
+begin
+  Result := {%H-}IntPtr(FWidget);
+end;
+
+procedure TSplashCairo.Move(X, Y: Integer);
+begin
+  gtk_window_move(PGtkWindow(FWidget), X, Y);
+end;
+
+procedure TSplashCairo.Update;
+begin
+  if FBitmap.Empty then
+    SetVisible(False)
+  else if FVisible then
+  begin
+    Resize;
+    gtk_widget_queue_draw(FWidget);
+  end;
+end;
+
 function NewSplashCairo: ISplash;
 begin
-  Result := nil;
+  Result := TSplashCairo.Create;
 end;
 
 function NewScreenCaptureGtk: IBitmap;

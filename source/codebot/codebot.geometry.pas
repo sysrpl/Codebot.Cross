@@ -192,7 +192,9 @@ type
     class operator Subtract(const A, B: TMatrix4x4): TMatrix4x4;
     class operator Multiply(const A: TMatrix4x4; const B: TVec3): TVec3; overload;
     class operator Multiply(const A, B: TMatrix4x4): TMatrix4x4; overload;
-    class operator Divide(const A, B: TMatrix4x4): TMatrix4x4;
+    class operator Multiply(const A: TMatrix4x4; B: Float): TMatrix4x4; overload;
+    class operator Divide(const A, B: TMatrix4x4): TMatrix4x4; overload;
+    class operator Divide(const A: TMatrix4x4; B: Float): TMatrix4x4; overload;
     function Equals(const Value: TMatrix4x4): Boolean;
     procedure Identity;
     function CanInvert: Boolean;
@@ -205,14 +207,13 @@ type
     procedure Scale(X, Y, Z: Float);
     procedure ScaleAt(X, Y, Z: Float; const Pivot: TVec3);
     procedure Translate(X, Y, Z: Float);
-
     function Transform(const V: TVec2): TVec2; overload;
     function Transform(const V: TVec3): TVec3; overload;
     function Transform(const M: TMatrix4x4): TMatrix4x4; overload;
     procedure Perspective(FoV, AspectRatio, NearPlane, FarPlane: Float);
     procedure Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
+    procedure Ortho(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
     procedure LookAt(Eye, Center, Up: TVec3);
-
     case Integer of
       0: (M: array[0..3, 0..3] of Float);
       1: (M0, M1, M2, M3: array[0..3] of Float);
@@ -903,6 +904,14 @@ begin
         B.M[X, 2] + A.M[3, Y] * B.M[X, 3];
 end;
 
+class operator TMatrix4x4.Multiply(const A: TMatrix4x4; B: Float): TMatrix4x4;
+var
+  I: Integer;
+begin
+  for I := Low(A.V) to High(A.V) do
+    Result.V[I] := A.V[I] * B;
+end;
+
 class operator TMatrix4x4.Divide(const A, B: TMatrix4x4): TMatrix4x4;
 var
   X, Y: Integer;
@@ -911,6 +920,14 @@ begin
     for X := 0 to 3 do
       Result.M[X, Y] := A.M[0, Y] / B.M[X, 0] + A.M[1, Y] / B.M[X, 1] + A.M[2, Y] /
         B.M[X, 2];
+end;
+
+class operator TMatrix4x4.Divide(const A: TMatrix4x4; B: Float): TMatrix4x4;
+var
+  I: Integer;
+begin
+  for I := Low(A.V) to High(A.V) do
+    Result.V[I] := A.V[I] / B;
 end;
 
 function TMatrix4x4.Equals(const Value: TMatrix4x4): Boolean;
@@ -1181,26 +1198,30 @@ procedure TMatrix4x4.Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane: Floa
 var
   F1, F2, F3, F4: Float;
 begin
+  FillChar(V, SizeOf(V), 0);
   F1 := 2.0 * NearPlane;
   F2 := Right - Left;
   F3 := Top - Bottom;
   F4 := FarPlane - NearPlane;
   V[0] := F1 / F2;
-  V[1] := 0;
-  V[2] := 0;
-  V[3] := 0;
-  V[4] := 0;
   V[5] := F1 / F3;
-  V[6] := 0;
-  V[7] := 0;
   V[8] := (Right + Left) / F2;
   V[9] := (Top + Bottom) / F3;
   V[10] := (-FarPlane - NearPlane) / F4;
   V[11] := -1;
-  V[12] := 0;
-  V[13] := 0;
   V[14] := (-F1 * FarPlane) / F4;
-  V[15] := 0;
+end;
+
+procedure TMatrix4x4.Ortho(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
+begin
+  FillChar(V, SizeOf(V), 0);
+  V[0] := 2 / (Right - Left);
+  V[5] := 2 / (Top - Bottom);
+  V[10] := -2 / (FarPlane - NearPlane);
+  V[12] := -(Right + left) / (Right - Left);
+  V[13] := -(Top + Bottom) / (Top - Bottom);
+  V[14] := -(FarPlane + NearPlane) / (FarPlane - NearPlane);
+  V[15] := 1;
 end;
 
 { from https://developer.tizen.org/community/code-snippet/native-code-snippet/set-lookat-matrix-opengl-es-2.0 }
