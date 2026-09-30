@@ -102,19 +102,19 @@ var
   MouseEnters: Integer;
   MouseLeaves: Integer;
 
-{ TRenderGraphicControl is the base class for custom graphic controls
+{ TSurfaceGraphicControl is the base class for custom graphic controls
   which require an ISurface object
   See also
-  <link Overview.Codebot.Controls.TRenderGraphicControl, TRenderGraphicControl members> }
+  <link Overview.Codebot.Controls.TSurfaceGraphicControl, TSurfaceGraphicControl members> }
 
 type
-  TRenderGraphicControl = class(TGraphicControl, IFloatPropertyNotify)
+  TSurfaceGraphicControl = class(TGraphicControl, IFloatPropertyNotify)
   private
     FSurface: ISurface;
     FThemeName: string;
     FAreaStates: TArrayList<TDrawState>;
     FAreaClicked: Integer;
-    FOnRender: TDrawEvent;
+    FOnDraw: TDrawEvent;
     FMousePoint: TPointI;
     FMouseDown: Boolean;
     FMouseTimer: Boolean;
@@ -150,18 +150,18 @@ type
     function ThemeAware: Boolean; virtual;
     { Invoked when the theme is changed }
     procedure ThemeChanged; virtual;
-    { Paint is now final, so use Render to access Surface }
+    { Paint is now final, so use Draw to access Surface }
     procedure Paint; override; final;
-    { While Render is executing Surface refers to a valid ISurface }
-    procedure Render; virtual;
+    { While Draw is executing Surface refers to a valid ISurface }
+    procedure Draw; virtual;
     { Surface is only during while Draw is executing }
     property Surface: ISurface read GetSurface;
     { Visual representation of the control. Is it pressed, hot, checked, ect }
     property DrawState: TDrawState read FDrawState write SetDrawState;
     { Theme name determines the styling for a control }
     property ThemeName: string read FThemeName write SetThemeName;
-    { Render event handler }
-    property OnRender: TDrawEvent read FOnRender write FOnRender;
+    { Draw event handler }
+    property OnDraw: TDrawEvent read FOnDraw write FOnDraw;
     { The point where the mosue was pressing inside the control }
     property MousePoint: TPointI read FMousePoint;
   public
@@ -169,16 +169,16 @@ type
     destructor Destroy; override;
   end;
 
-{ TRenderCustomControl is the base class for custom windowed controls
+{ TSurfaceCustomControl is the base class for custom windowed controls
   which require an ISurface object
   See also
-  <link Overview.Codebot.Controls.TRenderCustomControl, TRenderCustomControl members> }
+  <link Overview.Codebot.Controls.TSurfaceCustomControl, TSurfaceCustomControl members> }
 
-  TRenderCustomControl = class(TCustomControl, IFloatPropertyNotify)
+  TSurfaceCustomControl = class(TCustomControl, IFloatPropertyNotify)
   private
     FSurface: ISurface;
     FThemeName: string;
-    FOnRender: TDrawEvent;
+    FOnDraw: TDrawEvent;
     function GetSurface: ISurface;
     procedure SetDrawState(Value: TDrawState);
     procedure SetThemeName(const Value: string);
@@ -194,26 +194,26 @@ type
     { Paint is now final, so use Render to access Surface }
     procedure Paint; override; final;
     { While Render is executing Surface refers to a valid ISurface }
-    procedure Render; virtual;
+    procedure Draw; virtual;
     { Surface is only during while Draw is executing }
     property Surface: ISurface read GetSurface;
     { Visual representation of the control. Is it pressed, hot, checked, ect }
     property DrawState: TDrawState read FDrawState write SetDrawState;
     { Theme name determines the styling for a control }
     property ThemeName: string read FThemeName write SetThemeName;
-    { Render event handler }
-    property OnRender: TDrawEvent read FOnRender write FOnRender;
+    { Draw event handler }
+    property OnDraw: TDrawEvent read FOnDraw write FOnDraw;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   end;
 
-{ TRenderForm is the base class for custom forms controls which
+{ TSurfaceForm is the base class for custom forms controls which
   require an ISurface object
   See also
   <link Overview.Codebot.Controls.TRenderForm, TRenderForm members> }
 
-  TRenderForm = class(TForm)
+  TSurfaceForm = class(TForm)
   private
     FSurface: ISurface;
     FThemeName: string;
@@ -230,10 +230,10 @@ type
     procedure ThemeChanged; virtual;
     { Allow the form to be drawn at desing time }
     procedure PaintWindow(DC: HDC); override;
-    { Paint is now final, so use Render to access Surface }
+    { Paint is now final, so use Draw to access Surface }
     procedure Paint; override; final;
-    { While Render is executing Surface refers to a valid ISurface }
-    procedure Render; virtual;
+    { While Draw is executing Surface refers to a valid ISurface }
+    procedure Draw; virtual;
     { Surface is only during while Draw is executing }
     property Surface: ISurface read GetSurface;
     { Visual representation of the control. Is it pressed, hot, checked, ect }
@@ -412,23 +412,20 @@ begin
   Change;
 end;
 
-{ TRenderGraphicControl }
+{ TSurfaceGraphicControl }
 
-constructor TRenderGraphicControl.Create(AOwner: TComponent);
+constructor TSurfaceGraphicControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  with GetControlClassDefaultSize do
-  begin
-    Width := cx;
-    Height := cy;
-  end;
+  Width := 160;
+  Height := 80;
   ControlStyle := (ControlStyle +
     [csParentBackground, csClickEvents, csCaptureMouse]) - [csOpaque];
   if ThemeAware then
     ThemeNotifyAdd(ThemeChanged);
 end;
 
-destructor TRenderGraphicControl.Destroy;
+destructor TSurfaceGraphicControl.Destroy;
 begin
   MouseTimer(False);
   if ThemeAware then
@@ -436,13 +433,13 @@ begin
   inherited Destroy;
 end;
 
-class function TRenderGraphicControl.GetControlClassDefaultSize: TSize;
+class function TSurfaceGraphicControl.GetControlClassDefaultSize: TSize;
 begin
   Result.cx := 80;
   Result.cy := 80;
 end;
 
-procedure TRenderGraphicControl.SetParent(NewParent: TWinControl);
+procedure TSurfaceGraphicControl.SetParent(NewParent: TWinControl);
 begin
   MouseTimer(False);
   inherited SetParent(NewParent);
@@ -453,7 +450,7 @@ type
 
 procedure ControlTimer(hWnd: HWND; uMsg: UINT; idEvent: UINT_PTR; dwTime: DWORD); stdcall;
 var
-  C: TRenderGraphicControl absolute idEvent;
+  C: TSurfaceGraphicControl absolute idEvent;
   P: TPointI;
 begin
   if C.FMouseDown then
@@ -468,7 +465,7 @@ begin
   end;
 end;
 
-procedure TRenderGraphicControl.MouseTimer(Enable: Boolean);
+procedure TSurfaceGraphicControl.MouseTimer(Enable: Boolean);
 begin
   if Parent = nil then
     Exit;
@@ -482,7 +479,7 @@ begin
   end;
 end;
 
-function TRenderGraphicControl.InitAreas: Integer;
+function TSurfaceGraphicControl.InitAreas: Integer;
 var
   I: Integer;
 begin
@@ -499,27 +496,27 @@ begin
   end;
 end;
 
-procedure TRenderGraphicControl.AreaClick(Area: Integer);
+procedure TSurfaceGraphicControl.AreaClick(Area: Integer);
 begin
 
 end;
 
-function TRenderGraphicControl.GetAreaCount: Integer;
+function TSurfaceGraphicControl.GetAreaCount: Integer;
 begin
   Result := 1;
 end;
 
-function TRenderGraphicControl.GetAreaRect(Index: Integer): TRectI;
+function TSurfaceGraphicControl.GetAreaRect(Index: Integer): TRectI;
 begin
   Result := ClientRect;
 end;
 
-function TRenderGraphicControl.GetAreaState(Index: Integer): TDrawState;
+function TSurfaceGraphicControl.GetAreaState(Index: Integer): TDrawState;
 begin
   Result := FAreaStates[Index];
 end;
 
-procedure TRenderGraphicControl.MouseDown(Button: TMouseButton; Shift: TShiftState;
+procedure TSurfaceGraphicControl.MouseDown(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 var
   I: Integer;
@@ -545,7 +542,7 @@ begin
   inherited MouseDown(Button, Shift, X, Y)
 end;
 
-procedure TRenderGraphicControl.MouseUp(Button: TMouseButton; Shift: TShiftState;
+procedure TSurfaceGraphicControl.MouseUp(Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 var
   Hot: Boolean;
@@ -590,7 +587,7 @@ begin
   inherited MouseUp(Button, Shift, X, Y)
 end;
 
-procedure TRenderGraphicControl.MouseMove(Shift: TShiftState; X, Y: Integer);
+procedure TSurfaceGraphicControl.MouseMove(Shift: TShiftState; X, Y: Integer);
 var
   D: TDrawState;
   I: Integer;
@@ -613,7 +610,7 @@ begin
   inherited MouseMove(Shift, X, Y);
 end;
 
-procedure TRenderGraphicControl.MouseEnter;
+procedure TSurfaceGraphicControl.MouseEnter;
 var
   P: TPointI;
   I: Integer;
@@ -633,7 +630,7 @@ begin
   inherited MouseEnter;
 end;
 
-procedure TRenderGraphicControl.MouseLeave;
+procedure TSurfaceGraphicControl.MouseLeave;
 var
   I: Integer;
 begin
@@ -649,27 +646,27 @@ begin
   inherited MouseLeave;
 end;
 
-procedure TRenderGraphicControl.IncludeStateItem(Item: TDrawStateItem);
+procedure TSurfaceGraphicControl.IncludeStateItem(Item: TDrawStateItem);
 begin
 
 end;
 
-procedure TRenderGraphicControl.ExcludeStateItem(Item: TDrawStateItem);
+procedure TSurfaceGraphicControl.ExcludeStateItem(Item: TDrawStateItem);
 begin
 
 end;
 
-procedure TRenderGraphicControl.PropChange(Prop: PFloat);
+procedure TSurfaceGraphicControl.PropChange(Prop: PFloat);
 begin
 
 end;
 
-function TRenderGraphicControl.ThemeAware: Boolean;
+function TSurfaceGraphicControl.ThemeAware: Boolean;
 begin
   Result := False;
 end;
 
-procedure TRenderGraphicControl.Render;
+procedure TSurfaceGraphicControl.Draw;
 var
   I: Integer;
 begin
@@ -683,11 +680,11 @@ begin
       FAreaStates[I] := [];
     end;
   end;
-  if Assigned(FOnRender) then
-    FOnRender(Self, Surface);
+  if Assigned(FOnDraw) then
+    FOnDraw(Self, Surface);
 end;
 
-procedure TRenderGraphicControl.Paint;
+procedure TSurfaceGraphicControl.Paint;
 begin
   FSurface := NewSurface(Canvas);
   if FSurface = nil then
@@ -696,7 +693,7 @@ begin
   if ThemeAware then
     Theme.Select(FThemeName);
   try
-    Render;
+    Draw;
   finally
     Theme.Deselect;
     FSurface.Flush;
@@ -704,14 +701,14 @@ begin
   end;
 end;
 
-function TRenderGraphicControl.GetSurface: ISurface;
+function TSurfaceGraphicControl.GetSurface: ISurface;
 begin
   if (FSurface = nil) then
     raise ESurfaceAccessError.CreateFmt(SSurfaceAccess, [ClassName]);
   Result := FSurface;
 end;
 
-procedure TRenderGraphicControl.SetDrawState(Value: TDrawState);
+procedure TSurfaceGraphicControl.SetDrawState(Value: TDrawState);
 var
   I: TDrawStateItem;
 begin
@@ -728,7 +725,7 @@ begin
   end;
 end;
 
-procedure TRenderGraphicControl.SetThemeName(const Value: string);
+procedure TSurfaceGraphicControl.SetThemeName(const Value: string);
 var
   S: string;
 begin
@@ -743,12 +740,12 @@ begin
   end;
 end;
 
-procedure TRenderGraphicControl.ThemeChanged;
+procedure TSurfaceGraphicControl.ThemeChanged;
 begin
   Invalidate;
 end;
 
-procedure TRenderGraphicControl.EnabledChanged;
+procedure TSurfaceGraphicControl.EnabledChanged;
 begin
   inherited EnabledChanged;
   if Enabled then
@@ -760,40 +757,42 @@ begin
   end;
 end;
 
-{ TRenderCustomControl }
+{ TSurfaceCustomControl }
 
-constructor TRenderCustomControl.Create(AOwner: TComponent);
+constructor TSurfaceCustomControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  ControlStyle := (ControlStyle + [csParentBackground]) - [csOpaque];
+  Width := 160;
+  Height := 80;
+  ControlStyle := (ControlStyle + [csParentBackground, csAcceptsControls]) - [csOpaque];
   if ThemeAware then
     ThemeNotifyAdd(ThemeChanged);
 end;
 
-destructor TRenderCustomControl.Destroy;
+destructor TSurfaceCustomControl.Destroy;
 begin
   if ThemeAware then
     ThemeNotifyRemove(ThemeChanged);
   inherited Destroy;
 end;
 
-procedure TRenderCustomControl.PropChange(Prop: PFloat);
+procedure TSurfaceCustomControl.PropChange(Prop: PFloat);
 begin
 
 end;
 
-function TRenderCustomControl.ThemeAware: Boolean;
+function TSurfaceCustomControl.ThemeAware: Boolean;
 begin
   Result := False;
 end;
 
-procedure TRenderCustomControl.Render;
+procedure TSurfaceCustomControl.Draw;
 begin
-  if Assigned(FOnRender) then
-    FOnRender(Self, Surface);
+  if Assigned(FOnDraw) then
+    FOnDraw(Self, Surface);
 end;
 
-procedure TRenderCustomControl.Paint;
+procedure TSurfaceCustomControl.Paint;
 begin
   FSurface := NewSurface(Canvas);
   if FSurface = nil then
@@ -802,7 +801,7 @@ begin
   if ThemeAware then
     Theme.Select(FThemeName);
   try
-    Render;
+    Draw;
   finally
     Theme.Deselect;
     FSurface.Flush;
@@ -810,14 +809,14 @@ begin
   end;
 end;
 
-function TRenderCustomControl.GetSurface: ISurface;
+function TSurfaceCustomControl.GetSurface: ISurface;
 begin
   if (FSurface = nil) then
     raise ESurfaceAccessError.CreateFmt(SSurfaceAccess, [ClassName]);
   Result := FSurface;
 end;
 
-procedure TRenderCustomControl.SetDrawState(Value: TDrawState);
+procedure TSurfaceCustomControl.SetDrawState(Value: TDrawState);
 begin
   if FDrawState <> Value then
   begin
@@ -826,7 +825,7 @@ begin
   end;
 end;
 
-procedure TRenderCustomControl.SetThemeName(const Value: string);
+procedure TSurfaceCustomControl.SetThemeName(const Value: string);
 var
   S: string;
 begin
@@ -841,39 +840,39 @@ begin
   end;
 end;
 
-procedure TRenderCustomControl.ThemeChanged;
+procedure TSurfaceCustomControl.ThemeChanged;
 begin
   Invalidate;
 end;
 
-{ TRenderForm }
+{ TSurfaceForm }
 
-constructor TRenderForm.CreateNew(AOwner: TComponent; Num: Integer = 0);
+constructor TSurfaceForm.CreateNew(AOwner: TComponent; Num: Integer = 0);
 begin
   inherited CreateNew(AOwner, Num);
   if ThemeAware then
     ThemeNotifyAdd(ThemeChanged);
 end;
 
-destructor TRenderForm.Destroy;
+destructor TSurfaceForm.Destroy;
 begin
   if ThemeAware then
     ThemeNotifyRemove(ThemeChanged);
   inherited Destroy;
 end;
 
-function TRenderForm.ThemeAware: Boolean;
+function TSurfaceForm.ThemeAware: Boolean;
 begin
   Result := True;
 end;
 
-procedure TRenderForm.Render;
+procedure TSurfaceForm.Draw;
 begin
   if Assigned(FOnRender) then
     FOnRender(Self, Surface);
 end;
 
-procedure TRenderForm.Paint;
+procedure TSurfaceForm.Paint;
 begin
   FSurface := NewSurface(Canvas);
   if FSurface = nil then
@@ -882,7 +881,7 @@ begin
   if ThemeAware then
     Theme.Select(FThemeName);
   try
-    Render;
+    Draw;
   finally
     Theme.Deselect;
     FSurface.Flush;
@@ -890,7 +889,7 @@ begin
   end;
 end;
 
-procedure TRenderForm.PaintWindow(DC: HDC);
+procedure TSurfaceForm.PaintWindow(DC: HDC);
 begin
   Canvas.Handle := DC;
   try
@@ -901,14 +900,14 @@ begin
   end;
 end;
 
-function TRenderForm.GetSurface: ISurface;
+function TSurfaceForm.GetSurface: ISurface;
 begin
   if (FSurface = nil) then
     raise ESurfaceAccessError.CreateFmt(SSurfaceAccess, [ClassName]);
   Result := FSurface;
 end;
 
-procedure TRenderForm.SetDrawState(Value: TDrawState);
+procedure TSurfaceForm.SetDrawState(Value: TDrawState);
 begin
   if FDrawState <> Value then
   begin
@@ -917,7 +916,7 @@ begin
   end;
 end;
 
-procedure TRenderForm.SetThemeName(const Value: string);
+procedure TSurfaceForm.SetThemeName(const Value: string);
 var
   S: string;
 begin
@@ -932,7 +931,7 @@ begin
   end;
 end;
 
-procedure TRenderForm.ThemeChanged;
+procedure TSurfaceForm.ThemeChanged;
 begin
   Invalidate;
 end;

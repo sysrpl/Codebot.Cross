@@ -33,7 +33,6 @@ type
     FUnitName: string;
   public
     constructor {%H-}Create(FormClass: TCustomFormClass; const Caption, Description, UnitName: string);
-    function GetResourceType: TResourceType; override;
     function GetLocalizedName: string; override;
     function GetLocalizedDescription: string; override;
     function GetInterfaceUsesSection: string; override;
@@ -65,11 +64,6 @@ begin
   Name := Caption;
   RequiredPackages := 'LCL;codebot;codebot_controls';
   UseCreateFormStatements := True;
-end;
-
-function TCustomFormDescriptor.GetResourceType: TResourceType;
-begin
-  Result := rtRes;
 end;
 
 function TCustomFormDescriptor.GetLocalizedName: string;

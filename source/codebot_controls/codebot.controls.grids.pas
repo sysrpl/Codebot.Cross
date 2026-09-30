@@ -47,7 +47,7 @@ type
     property Modified: Boolean read FAdded;
   end;
 
-  TScrollWindow = class(TRenderCustomControl)
+  TScrollWindow = class(TSurfaceCustomControl)
   private
     FScrollData: TScrollData;
     FLineHeight: Integer;
@@ -216,7 +216,7 @@ type
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
     procedure SelectionScroll(DX, DY: Integer); override;
-    procedure Render; override;
+    procedure Draw; override;
     procedure Resize; override;
     procedure DoOnResize; override;
     procedure SetHotTrack(const Value: TGridCoord);
@@ -621,7 +621,7 @@ begin
     SB_LINEUP: ScrollTo(X, Y - FLineHeight);
     SB_PAGEDOWN: ScrollTo(X, Y + ScrollHeight);
     SB_PAGEUP:  ScrollTo(X, Y - ScrollHeight);
-    SB_THUMBTRACK: ScrollTo(X, Msg.Pos);
+    SB_THUMBTRACK, SB_THUMBPOSITION: ScrollTo(X, Msg.Pos);
     SB_TOP: ScrollTo(X, 0);
   end;
 end;
@@ -638,7 +638,7 @@ begin
     SB_LINEUP: ScrollTo(X - FLineWidth, Y);
     SB_PAGEDOWN: ScrollTo(X + ScrollWidth, Y);
     SB_PAGEUP:  ScrollTo(X - ScrollWidth, Y);
-    SB_THUMBTRACK: ScrollTo(Msg.Pos, Y);
+    SB_THUMBTRACK, SB_THUMBPOSITION: ScrollTo(Msg.Pos, Y);
     SB_TOP: ScrollTo(0, Y);
   end;
 end;
@@ -1234,7 +1234,7 @@ begin
   InvalidateCoord(G.X, G.Y);
 end;
 
-procedure TContentGrid.Render;
+procedure TContentGrid.Draw;
 var
   Rect: TRect;
   Min, Max: TGridCoord;

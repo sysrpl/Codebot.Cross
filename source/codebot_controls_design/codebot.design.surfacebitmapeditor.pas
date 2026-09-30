@@ -28,7 +28,7 @@ uses
 type
   TSurfaceBitmapEditor = class(TBannerForm)
     BorderContainer: TSizingPanel;
-    RenderImage: TRenderImage;
+    RenderImage: TDrawImage;
     OKButton: TButton;
     CancelButton: TButton;
     LoadButton: TButton;
@@ -45,7 +45,7 @@ type
   end;
 
 function EditSurfaceBitmap(Bitmap: TSurfaceBitmap): Boolean;
-function EditRenderImage(Image: TRenderImage): Boolean;
+function EditRenderImage(Image: TDrawImage): Boolean;
 
 implementation
 
@@ -74,7 +74,7 @@ begin
   end;
 end;
 
-function EditRenderImage(Image: TRenderImage): Boolean;
+function EditRenderImage(Image: TDrawImage): Boolean;
 var
   F: TSurfaceBitmapEditor;
 begin

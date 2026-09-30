@@ -55,9 +55,19 @@ function HotkeyCapture: THotkeyCapture;
 
 implementation
 
-{$if defined(LCLgtk2) and defined(linux)}
+{$if (defined(LCLgtk2) or defined(LCLgtk3)) and defined(linux)}
+{$ifdef LCLgtk2}
 uses
   X, XLib, Gdk2, Gdk2x, Gtk2Proc, KeySym;
+{$else}
+uses
+  LazGdk3, X, XLib, KeySym;
+
+function gdk_x11_window_get_xid(window: PGdkWindow): TWindow; cdecl;
+  external LazGdk3_library;
+function gdk_x11_display_get_xdisplay(display: PGdkDisplay): PDisplay; cdecl;
+  external LazGdk3_library;
+{$endif}
 
 { TGtk2X11HotkeyCapture
 
@@ -328,8 +338,24 @@ begin
   end;
 end;
 
+function RootXid(Root: PGdkWindow): TWindow;
+begin
+  {$ifdef LCLgtk2}
+  Result := gdk_x11_drawable_get_xid(Root);
+  {$else}
+  Result := gdk_x11_window_get_xid(Root);
+  {$endif}
+end;
+
+{$ifdef LCLgtk2}
 function FilterKeys(AnyEvent: PXAnyEvent; Event: PGdkEvent; Data: Pointer): TGdkFilterReturn; cdecl;
+{$else}
+function FilterKeys(XEvent: PGdkXEvent; Event: PGdkEvent; Data: Pointer): TGdkFilterReturn; cdecl;
+{$endif}
 var
+  {$ifdef LCLgtk3}
+  AnyEvent: PXAnyEvent absolute XEvent;
+  {$endif}
   Capture: TGtk2X11HotkeyCapture absolute Data;
   KeyEvent: PXKeyEvent absolute AnyEvent;
   Sym: TKeySym;
@@ -359,7 +385,11 @@ constructor TGtk2X11HotkeyCapture.Create;
 begin
   inherited Create;
   FRoot := gdk_get_default_root_window;
+  {$ifdef LCLgtk2}
   FDisplay := GDK_WINDOW_XDISPLAY(FRoot);
+  {$else}
+  FDisplay := gdk_x11_display_get_xdisplay(gdk_window_get_display(FRoot));
+  {$endif}
 end;
 
 procedure TGtk2X11HotkeyCapture.DoRegister(Key: Word; ShiftState: TShiftState);
@@ -385,7 +415,7 @@ begin
   Modifier := ShiftToMod(ShiftState);
   KeySym := KeyToSym(Key);
   KeyCode := XKeysymToKeycode(FDisplay, KeySym);
-  Window := gdk_x11_drawable_get_xid(FRoot);
+  Window := RootXid(FRoot);
   CaptureKey(FDisplay, KeyCode, Modifier, Window);
   ShiftSym := XKeycodeToKeysym(FDisplay, KeyCode, 1);
   if KeySym <> ShiftSym then
@@ -417,7 +447,7 @@ begin
   Modifier := ShiftToMod(ShiftState);
   KeySym := KeyToSym(Key);
   KeyCode := XKeysymToKeycode(FDisplay, KeySym);
-  Window := gdk_x11_drawable_get_xid(FRoot);
+  Window := RootXid(FRoot);
   ReleaseKey(FDisplay, KeyCode, Modifier, Window);
   ShiftSym := XKeycodeToKeysym(FDisplay, KeyCode, 1);
   if KeySym <> ShiftSym then
@@ -615,7 +645,7 @@ var
 
 function HotkeyCapture: THotkeyCapture;
 begin
-  {$if defined(linux) and defined(lclgtk2)}
+  {$if defined(linux) and (defined(lclgtk2) or defined(lclgtk3))}
   if InternalCapture = nil then
     InternalCapture := THotkeyCaptureImpl.Create;
   {$endif}

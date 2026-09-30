@@ -23,9 +23,9 @@ uses
 { TCustomRenderEdit }
 
 type
-  TCustomRenderEdit = class(TRenderCustomControl)
+  TCustomRenderEdit = class(TSurfaceCustomControl)
   protected
-    procedure Render; override;
+    procedure Draw; override;
   public
     constructor Create(AOwner: TComponent); override;
   end;
@@ -37,7 +37,7 @@ type
 
   TCustomSlideEdit = class(TCustomEdit)
   private
-    type TSlider = class(TRenderGraphicControl);
+    type TSlider = class(TSurfaceGraphicControl);
     procedure DrawSlider(Sender: TObject; Surface: ISurface);
     procedure SliderMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -105,7 +105,7 @@ begin
   Height := TextHeight + 8;
 end;
 
-procedure TCustomRenderEdit.Render;
+procedure TCustomRenderEdit.Draw;
 begin
 end;
 
@@ -117,7 +117,7 @@ constructor TCustomSlideEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FSlider := TSlider.Create(Self);
-  FSlider.OnRender := DrawSlider;
+  FSlider.OnDraw := DrawSlider;
   FSlider.OnMouseDown := SliderMouseDown;
   FSlider.OnMouseMove := SliderMouseMove;
   FSlider.OnMouseUp := SliderMouseUp;

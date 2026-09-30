@@ -1091,7 +1091,6 @@ end;
 function TAggregateStream.GetSize: Int64;
 var
   S: TStream;
-  I: Integer;
 begin
   if FSize > -1 then
     Exit(FSize);

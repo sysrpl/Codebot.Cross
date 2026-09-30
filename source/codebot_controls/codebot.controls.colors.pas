@@ -23,7 +23,7 @@ uses
   { TCustomColorControl }
 
 type
-  TCustomColorControl = class(TRenderGraphicControl)
+  TCustomColorControl = class(TSurfaceGraphicControl)
   private
     FBitmap: IBitmap;
     FMousePos: TPointI;
@@ -65,7 +65,7 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure Change; override;
     procedure ChangeMouse(X, Y: Integer); override;
-    procedure Render; override;
+    procedure Draw; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -123,7 +123,7 @@ type
     function GetColorValue: TColorB; override;
     procedure SetColorValue(Value: TColorB); override;
     procedure ChangeMouse(X, Y: Integer); override;
-    procedure Render; override;
+    procedure Draw; override;
   public
     constructor Create(AOwner: TComponent); override;
     property ColorValue: TColorB read GetColorValue write SetColorValue;
@@ -317,7 +317,7 @@ begin
   Result := NewBrush(Hue(H));
 end;
 
-procedure THuePicker.Render;
+procedure THuePicker.Draw;
 const
   ArrowSize = 6;
 var
@@ -497,7 +497,7 @@ begin
   Result := NewPen(Hue(H), 3);
 end;
 
-procedure TSaturationPicker.Render;
+procedure TSaturationPicker.Draw;
 const
   CircleSize = 6;
 var

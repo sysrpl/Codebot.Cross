@@ -89,7 +89,7 @@ type
 
 { TBanner }
 
-  TBanner = class(TRenderGraphicControl)
+  TBanner = class(TSurfaceGraphicControl)
   private
     FLogo: TSurfaceBitmap;
     FBackground: TBannerBackground;
@@ -103,7 +103,7 @@ type
     procedure SetShadow(Value: Boolean);
     procedure PartChange(Sender: TObject);
   protected
-    procedure Render; override;
+    procedure Draw; override;
     procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -128,6 +128,7 @@ type
     property ParentShowHint;
     property PopupMenu;
     property Visible;
+    property OnDraw;
     property OnMouseDown;
     property OnMouseEnter;
     property OnMouseLeave;
@@ -136,7 +137,6 @@ type
     property OnMouseWheel;
     property OnMouseWheelDown;
     property OnMouseWheelUp;
-    property OnRender;
     property OnResize;
     property OnChangeBounds;
   end;
@@ -161,7 +161,7 @@ type
   See also
   <link Overview.Codebot.Controls.Banner.TBannerForm, TBannerForm members> }
 
-  TBannerForm = class(TRenderForm)
+  TBannerForm = class(TSurfaceForm)
   private
     FLogo: TSurfaceBitmap;
     FBanner: TBannerBackground;
@@ -182,7 +182,7 @@ type
   protected
     procedure DoShow; override;
     procedure Loaded; override;
-    procedure Render; override;
+    procedure Draw; override;
     function ThemeAware: Boolean; override;
   public
     constructor CreateNew(AOwner: TComponent; Num: Integer = 0); override;
@@ -503,7 +503,7 @@ begin
   Invalidate;
 end;
 
-procedure TBanner.Render;
+procedure TBanner.Draw;
 const
   Margin = 8;
 var
@@ -558,7 +558,7 @@ begin
     Pen.LinePattern := pnDash;
     Surface.StrokeRect(Pen, ClientRect);
   end;
-  inherited Render;
+  inherited Draw;
 end;
 
 procedure TBanner.SetBackground(Value: TBannerBackground);
@@ -681,7 +681,7 @@ begin
   ClientHeight := Boundary.Y + Margin;
 end;
 
-procedure TBannerForm.Render;
+procedure TBannerForm.Draw;
 const
   Margin = 8;
 var
@@ -733,9 +733,10 @@ begin
   end;
   if boFooterShadow in Options then
     Theme.DrawFooter;
-  if boFooterGrip in Options then
+  { Only show a size grip when the form can actually be resized }
+  if (boFooterGrip in Options) and (BorderStyle in [bsSizeable, bsSizeToolWin]) then
     Theme.DrawFooterGrip;
-  inherited Render;
+  inherited Draw;
 end;
 
 function TBannerForm.ThemeAware: Boolean;

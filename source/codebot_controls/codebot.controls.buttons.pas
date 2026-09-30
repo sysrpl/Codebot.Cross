@@ -26,7 +26,7 @@ type
   TButtonKind = (bkButton, bkDropDown, bkDialog, bkSpin, bkSplitter);
 
 type
-  TCustomThinButton = class(TRenderGraphicControl)
+  TCustomThinButton = class(TSurfaceGraphicControl)
   private
     FKind: TButtonKind;
     FImages: TImageStrip;
@@ -58,7 +58,7 @@ type
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseEnter; override;
     procedure MouseLeave; override;
-    procedure Render; override;
+    procedure Draw; override;
     property Down: Boolean read FDown write SetDown;
     property Kind: TButtonKind read FKind write SetKind default bkButton;
     property OnDrawButton: TDrawStateEvent read FOnDrawButton write FOnDrawButton;
@@ -339,7 +339,7 @@ begin
   inherited MouseLeave;
 end;
 
-procedure TCustomThinButton.Render;
+procedure TCustomThinButton.Draw;
 var
   Size: TPointF;
   D: TDrawState;
@@ -351,7 +351,7 @@ var
   I: Integer;
   C: TPointI;
 begin
-  inherited Render;
+  inherited Draw;
   R := GetAreaRect(0);
   if FKind = bkSplitter then
   begin
