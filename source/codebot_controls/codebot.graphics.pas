@@ -531,7 +531,7 @@ function ResampleBitmap(Bitmap: IBitmap; Width, Height: Integer;
   Filter: TSamplingFilter = DefaultCubicFilter; WrapEdges:
   Boolean = False): IBitmap; overload;
 
-{ The name of the drawing backend in use, such as Cairo, Direct2D, or GDI+ }
+{ The name of the drawing backend in use, Cairo or Direct2D }
 function GraphicsEngine: string;
 
 implementation
@@ -630,75 +630,50 @@ end;
 uses
   Codebot.Platform.LCL,
   Codebot.Graphics.Windows.InterfacedBitmap,
-  Codebot.Graphics.Windows.SurfaceD2D,
-  Codebot.Graphics.Windows.SurfaceGdiPlus;
+  Codebot.Graphics.Windows.SurfaceD2D;
 
 function NewMatrix: IMatrix;
 begin
-  if LoadD2D then
-    Result := NewMatrixD2D
-  else
-    Result := NewMatrixGdi;
+  Result := NewMatrixD2D;
 end;
 
 function NewPen(Brush: IBrush; Width: Float = 1; Join: TLineJoin = jnMiter): IPen;
 begin
-  if LoadD2D then
-    Result := NewPenD2D(Brush, Width)
-  else
-    Result := NewPenGdi(Brush, Width);
+  Result := NewPenD2D(Brush, Width);
   Result.LineJoin := Join;
   Result.LineCap := JoinCaps[Join];
 end;
 
 function NewPen(Color: TColorB; Width: Float = 1; Join: TLineJoin = jnMiter): IPen;
 begin
-  if LoadD2D then
-    Result := NewPenD2D(Color, Width)
-  else
-    Result := NewPenGdi(Color, Width);
+  Result := NewPenD2D(Color, Width);
   Result.LineJoin := Join;
   Result.LineCap := JoinCaps[Join];
 end;
 
 function NewBrush(Color: TColorB): ISolidBrush;
 begin
-  if LoadD2D then
-    Result := NewSolidBrushD2D(Color)
-  else
-    Result := NewSolidBrushGdi(Color);
+  Result := NewSolidBrushD2D(Color);
 end;
 
 function NewBrush(Bitmap: IBitmap): IBitmapBrush;
 begin
-  if LoadD2D then
-    Result := NewBitmapBrushD2D(Bitmap)
-  else
-    Result := NewBitmapBrushGdi(Bitmap);
+  Result := NewBitmapBrushD2D(Bitmap);
 end;
 
 function NewBrush(X1, Y1, X2, Y2: Float): ILinearGradientBrush;
 begin
-  if LoadD2D then
-    Result := NewLinearGradientBrushD2D(X1, Y1, X2, Y2)
-  else
-    Result := NewLinearGradientBrushGdi(X1, Y1, X2, Y2);
+  Result := NewLinearGradientBrushD2D(X1, Y1, X2, Y2);
 end;
 
 function NewBrush(const A, B: TPointF): ILinearGradientBrush;
 begin
-  if LoadD2D then
-    Result := NewLinearGradientBrushD2D(A, B)
-  else
-    Result := NewLinearGradientBrushGdi(A, B);
+  Result := NewLinearGradientBrushD2D(A, B);
 end;
 
 function NewBrush(const Rect: TRectF): IRadialGradientBrush;
 begin
-  if LoadD2D then
-    Result := NewRadialGradientBrushD2D(Rect)
-  else
-    Result := NewRadialGradientBrushGdi(Rect);
+  Result := NewRadialGradientBrushD2D(Rect);
 end;
 
 function NewFont(const FontName: string; FontSize: Integer = 10): IFont;
@@ -717,34 +692,22 @@ end;
 
 function NewFont(Font: TFont): IFont;
 begin
-  if LoadD2D then
-    Result := NewFontD2D(Font)
-  else
-    Result := NewFontGdi(Font);
+  Result := NewFontD2D(Font);
 end;
 
 function NewSurface(Canvas: TCanvas): ISurface;
 begin
-  if LoadD2D then
-    Result := NewSurfaceD2D(Canvas)
-  else
-    Result := NewSurfaceGdi(Canvas);
+  Result := NewSurfaceD2D(Canvas);
 end;
 
 function NewSurface(Control: TWinControl): ISurface;
 begin
-  if LoadD2D then
-    Result := NewSurfaceD2D(Control)
-  else
-    Result := NewSurfaceGdi(Control);
+  Result := NewSurfaceD2D(Control);
 end;
 
 function NewBitmap(Width: Integer = 0; Height: Integer = 0): IBitmap;
 begin
-  if LoadD2D then
-    Result := NewBitmapD2D(Width, Height)
-  else
-    Result := NewBitmapGdi(Width, Height);
+  Result := NewBitmapD2D(Width, Height);
 end;
 
 function NewBitmapD2DStub: IBitmap;
@@ -752,23 +715,15 @@ begin
   Result := NewBitmapD2D(0, 0);
 end;
 
-function NewBitmapGdiStub: IBitmap;
-begin
-  Result := NewBitmapGdi(0, 0);
-end;
-
 function NewSplash: ISplash;
 begin
-  if LoadD2D then
-    NewBitmapProc := NewBitmapD2DStub
-  else
-    NewBitmapProc := NewBitmapGdiStub;
+  NewBitmapProc := NewBitmapD2DStub;
   Result := NewSplashWin;
 end;
 
 function NewScreenCapture: IBitmap;
 begin
-  Result := nil;
+  Result := NewScreenCaptureD2D;
 end;
 {$endif}
 
@@ -3780,10 +3735,7 @@ begin
   Result := 'Cairo';
   {$endif}
   {$ifdef windows}
-  if LoadD2D then
-    Result := 'Direct2D'
-  else
-    Result := 'GDI+';
+  Result := 'Direct2D';
   {$endif}
 end;
 

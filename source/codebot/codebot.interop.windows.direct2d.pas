@@ -282,6 +282,7 @@ const
   SID_IDWritePixelSnapping        = '{EAF3A2DA-ECF4-4D24-B644-B34F6842024B}';
   SID_IDWriteTextRenderer         = '{EF8A8135-5CC6-45FE-8825-C5A0724EB819}';
   SID_IDWriteTextLayout           = '{53737037-6D14-410B-9BFE-0B182BB70961}';
+  SID_IDWriteTextLayout1          = '{9064D822-80A7-465C-A986-DF65F78B8FEB}';
   SID_IDWriteBitmapRenderTarget   = '{5E5A32A3-8DFF-4773-9FF6-0696EAB77267}';
   SID_IDWriteGdiInterop           = '{1EDD9491-9853-4299-898F-6432983B6F3A}';
   SID_IDWriteGlyphRunAnalysis     = '{7D97DBF7-E085-42D4-81E3-6A883BDED118}';
@@ -310,6 +311,7 @@ const
   IID_IDWritePixelSnapping        : TGUID = SID_IDWritePixelSnapping;
   IID_IDWriteTextRenderer         : TGUID = SID_IDWriteTextRenderer;
   IID_IDWriteTextLayout           : TGUID = SID_IDWriteTextLayout;
+  IID_IDWriteTextLayout1          : TGUID = SID_IDWriteTextLayout1;
   IID_IDWriteBitmapRenderTarget   : TGUID = SID_IDWriteBitmapRenderTarget;
   IID_IDWriteGdiInterop           : TGUID = SID_IDWriteGdiInterop;
   IID_IDWriteGlyphRunAnalysis     : TGUID = SID_IDWriteGlyphRunAnalysis;
@@ -2355,6 +2357,23 @@ type
       originX: Single; originY: Single; var hitTestMetrics: TDWriteHitTestMetrics;
       maxHitTestMetricsCount: Cardinal;
       var actualHitTestMetricsCount: Cardinal): HResult; stdcall;
+  end;
+
+{ IDWriteTextLayout1 requires Windows 8 or later }
+
+  IDWriteTextLayout1 = interface(IDWriteTextLayout)
+  [SID_IDWriteTextLayout1]
+    function SetPairKerning(isPairKerningEnabled: BOOL;
+      textRange: TDWriteTextRange): HResult; stdcall;
+    function GetPairKerning(currentPosition: Cardinal;
+      out isPairKerningEnabled: BOOL;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
+    function SetCharacterSpacing(leadingSpacing: Single; trailingSpacing: Single;
+      minimumAdvanceWidth: Single; textRange: TDWriteTextRange): HResult; stdcall;
+    function GetCharacterSpacing(currentPosition: Cardinal;
+      out leadingSpacing: Single; out trailingSpacing: Single;
+      out minimumAdvanceWidth: Single;
+      var textRange: DWRITE_TEXT_RANGE): HResult; stdcall;
   end;
 
 { IDWriteBitmapRenderTarget }

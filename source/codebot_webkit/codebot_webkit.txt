@@ -1,4 +1,4 @@
-The codebot_webkit package provides a web browser as an LCL control. It embeds WebKitGTK, which is built for GTK3, so the package only builds with the GTK3 widgetset. The package requires codebot_controls and the LCL.
+The codebot_webkit package provides a web browser as an LCL control. On Linux it embeds WebKitGTK, which is built for GTK3, and on Windows it embeds Microsoft Edge WebView2. The package builds with the GTK3 and Win32 widgetsets. The package requires codebot_controls and the LCL.
 
 ## Browser
 
@@ -20,7 +20,15 @@ Codebot.WebKit.Controls.Extras defines controls that work alongside a browser. T
 
 | Unit | Description |
 | --- | --- |
-| Codebot.WebKit.Controls.Gtk3 | The widgetset classes, which create the web view and the inspector and pass their signals on to the controls. |
+| Codebot.WebKit.Controls.Gtk3 | The GTK3 widgetset classes, which create the web view and the inspector and pass their signals on to the controls. |
 | Codebot.Interop.WebKit | The part of the WebKitGTK C API that the package uses. |
+| Codebot.WebKit.Controls.Win | The Win32 widgetset classes, which create a WebView2 web view and pass its events on to the controls. |
+| Codebot.Interop.WebView2 | The part of the WebView2 API that the package uses. |
 
-The WebKitGTK library is loaded when InitWebKit is called, rather than being linked when the program is built. This allows a program to start normally and report that WebKitGTK is not installed. The controls have no web view at design time, or when the library is missing.
+The web view library is loaded when InitWebKit is called, rather than being linked when the program is built. This allows a program to start normally and report that the library is not installed. The controls have no web view at design time, or when the library is missing.
+
+## Windows
+
+On Windows a program using the browser needs WebView2Loader.dll next to it. A copy is in the win64 folder of this package. The WebView2 runtime itself is part of Windows 11 and is installed on nearly all Windows 10 systems.
+
+Some features differ on Windows. Only one step back or forward in history is possible, HistoryItem returns false, ZoomTextOnly has no effect, and the progress of a load advances in steps. TWebInspector shows the developer tools page served by the WebView2 debugging server, which listens only on the local computer and is started only when a TWebInspector is created before the first web view. Without one, the developer tools open in a window of their own.

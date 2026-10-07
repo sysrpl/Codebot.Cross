@@ -36,7 +36,7 @@ resourcestring
   SSynchronizeError = 'An error occured with thread syncrhonziation';
   SInvalidGraphicFormat = 'Invalid graphic format';
   SInvalidGraphicSize = 'Invalid graphic size';
-  SCouldNotLockBits = 'Could not lock bits';
+  SImagingUnavailable = 'The Windows imaging component is not available';
   SScanLine = 'Scan line access error';
   SSurfaceAccess = 'Surface is only available during the Render method of %s';
 

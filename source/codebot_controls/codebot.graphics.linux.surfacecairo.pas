@@ -1820,7 +1820,8 @@ begin
   if Font.Kerning <> 0 then
   begin
     L := pango_attr_list_new;
-    A := pango_attr_letter_spacing_new(Round(Font.Kerning));
+    { Letter spacing is measured in Pango units }
+    A := pango_attr_letter_spacing_new(Round(Font.Kerning * PANGO_SCALE));
     pango_attr_list_insert(L, A);
     pango_layout_set_attributes(FLayout, L)
   end;
@@ -1841,7 +1842,11 @@ begin
   else
     pango_cairo_layout_path(FCairo, FLayout);
   if Font.Kerning <> 0 then
+  begin
+    { Remove the letter spacing so it does not affect later text on this layout }
+    pango_layout_set_attributes(FLayout, nil);
     pango_attr_list_unref(L);
+  end;
   cairo_set_matrix(FCairo, @M);
   cairo_font_options_destroy(Options);
 end;

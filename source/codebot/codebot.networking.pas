@@ -377,7 +377,9 @@ begin
     end;
     if Address.Host <> '' then
       SSL_set_tlsext_host_name(FSSLSocket, PChar(Address.Host));
-    if SSL_set_fd(FSSLSocket, FHandle) <> 1 then
+    { OpenSSL takes the socket as an int. Windows socket values fit in an int,
+      which OpenSSL itself relies on. }
+    if SSL_set_fd(FSSLSocket, LongInt(FHandle)) <> 1 then
     begin
       Close;
       Exit(False);
@@ -484,12 +486,19 @@ begin
   Result := True;
 end;
 
+{$ifdef windows}
+function GetErrno: Integer;
+begin
+  Result := WSAGetLastError;
+end;
+{$else}
 function __errno_location: PInteger; cdecl; external 'c' name '__errno_location';
 
 function GetErrno: Integer;
 begin
   Result := __errno_location^;
 end;
+{$endif}
 
 function TSocket.DoRead(var Buffer; BufferSize: LongWord): Integer;
 var

@@ -41,7 +41,7 @@ Finally, codebot declares the interfaces that other packages implement. Codebot.
 
 ## Controls and vector graphics: codebot_controls
 
-The codebot_controls package brings the library to the LCL. Its most important unit is Codebot.Graphics, which implements the drawing interfaces of codebot using Cairo on Linux and Direct2D or GDI+ on Windows. The result is a single drawing API, ISurface, that produces antialiased vector graphics on every platform.
+The codebot_controls package brings the library to the LCL. Its most important unit is Codebot.Graphics, which implements the drawing interfaces of codebot using Cairo on Linux and Direct2D on Windows. The result is a single drawing API, ISurface, that produces antialiased vector graphics on every platform.
 
 The controls in this package are drawn using that API rather than the native widgets of the platform, which gives them a consistent look and lets them be themed. The collection includes color pickers, slide bars and slide edits, flat thin buttons, banners, scrolling lists with column headers, content grids, sizing panels, step indicators, and animated progress icons. The base classes TSurfaceGraphicControl, TSurfaceCustomControl, and TSurfaceForm make it easy to write your own controls that draw on a surface in the same way.
 
@@ -100,7 +100,7 @@ Most of the library is plain Pascal, but some features are built on well known C
 | OpenSSL | Secure sockets and hashing | codebot |
 | libxml2 | XML documents on Linux | codebot |
 | Cairo and GTK | Vector graphics on Linux | codebot_controls |
-| Direct2D, GDI+, and WIC | Vector graphics and images on Windows | codebot_controls |
+| Direct2D and WIC | Vector graphics and images on Windows | codebot_controls |
 | SDL2 and SDL2_image | Windows, OpenGL contexts, input, audio, and images | codebot_render |
 | Chipmunk2D | 2D physics, linked statically | codebot_render |
 | minimp3, vorbisfile, and libxmp | Decoding audio, linked statically from libcodebotaudio.a | codebot_render |

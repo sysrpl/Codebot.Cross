@@ -16,6 +16,7 @@ unit Codebot.Interop.WebKit;
 
 interface
 
+{$ifdef lclgtk3}
 uses
   Codebot.Core;
 
@@ -171,8 +172,11 @@ const
 
 function InitWebKit(ThrowExceptions: Boolean = False): Boolean;
 
+{$endif}
+
 implementation
 
+{$ifdef lclgtk3}
 var
   LoadedWebKit: Boolean;
   InitializedWebKit: Boolean;
@@ -283,5 +287,7 @@ begin
     TryLoad('webkit_script_dialog_prompt_set_text', @webkit_script_dialog_prompt_set_text);
   InitializedWebKit := Result;
 end;
+
+{$endif}
 
 end.

@@ -12,7 +12,7 @@ uses
   Codebot.Cryptography, Codebot.Geometry, 
   Codebot.Platform, Codebot.Graphics.Types, Codebot.Interop.Linux.Xml2, 
   Codebot.Interop.OpenSSL, Codebot.Interop.Sockets, 
-  Codebot.Interop.Windows.Direct2D, Codebot.Interop.Windows.GdiPlus, 
+  Codebot.Interop.Windows.Direct2D, 
   Codebot.Interop.Windows.ImageCodecs, Codebot.Interop.Windows.Msxml, 
   Codebot.Networking.Ftp, Codebot.Networking.Storage, Codebot.Networking.Unix, 
   Codebot.Networking.Web, Codebot.System, Codebot.Support, 

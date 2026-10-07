@@ -102,6 +102,7 @@ begin
     if FRunning then
 	    PumpMessages;
   end;
+  FArguments.Free;
   FOutput.Free;
 	inherited Destroy;
 end;
@@ -118,21 +119,27 @@ begin
 	    P.Parameters.Assign(FArguments);
     P.Options := [poUsePipes, poStderrToOutPut];
     P.Execute;
-    while (not FThread.Terminated) and P.Running do
-      while (not FThread.Terminated) and (P.Output.NumBytesAvailable > 0) do
+    FLine := '';
+    { Keep reading after the program exits until its output is drained }
+    while not FThread.Terminated do
+      if P.Output.NumBytesAvailable > 0 then
       begin
-        FLine := '';
-        repeat
-          C := Char(P.Output.ReadByte);
-          if C = #13 then
-          	Continue;
-          if C = #10 then
-        	  Break;
+        C := Char(P.Output.ReadByte);
+        if C = #10 then
+        begin
+          Thread.Synchronize(SyncLineRead);
+          FLine := '';
+        end
+        else if C <> #13 then
           FLine := FLine + C;
-        until P.Output.NumBytesAvailable = 0;
-        if not FThread.Terminated then
-				  Thread.Synchronize(SyncLineRead);
-      end;
+      end
+      else if P.Running then
+        Sleep(10)
+      else
+        Break;
+    { Output may end without a final line break }
+    if (FLine <> '') and (not FThread.Terminated) then
+      Thread.Synchronize(SyncLineRead);
     if FThread.Terminated then
 	    P.Terminate(0);
     if not FThread.Terminated then
@@ -177,7 +184,7 @@ end;
 
 procedure TExternalCommand.SetArguments(Value: TStrings);
 begin
-	FOutput.Assign(Value);
+	FArguments.Assign(Value);
 end;
 
 { RunCommand }
@@ -216,21 +223,29 @@ begin
 	    P.Parameters.Add(Arg2);
     P.Options := [poUsePipes, poStderrToOutPut];
     P.Execute;
-    while P.Running do
-      while P.Output.NumBytesAvailable > 0 do
+    S := '';
+    { Keep reading after the program exits until its output is drained }
+    repeat
+      if P.Output.NumBytesAvailable > 0 then
       begin
-        S := '';
-        repeat
-          C := Char(P.Output.ReadByte);
-          if C = #13 then
-          	Continue;
-          if C = #10 then
-        	  Break;
+        C := Char(P.Output.ReadByte);
+        if C = #10 then
+        begin
+          if Output <> nil then
+            Output.Add(S);
+          S := '';
+        end
+        else if C <> #13 then
           S := S + C;
-        until P.Output.NumBytesAvailable = 0;
-        if Output <> nil then
-          Output.Add(S);
-      end;
+      end
+      else if P.Running then
+        Sleep(10)
+      else
+        Break;
+    until False;
+    { Output may end without a final line break }
+    if (S <> '') and (Output <> nil) then
+      Output.Add(S);
   finally
     P.Free;
   end;

@@ -1500,6 +1500,7 @@ var
   C: Char;
 begin
   Result := '';
+  C := ' ';
   while Stream.Read(C, 1) = 1 do Result := Result + C;
 end;
 

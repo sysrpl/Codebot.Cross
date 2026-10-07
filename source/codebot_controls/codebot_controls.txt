@@ -10,7 +10,6 @@ Codebot.Graphics selects the drawing backend for the platform:
 | --- | --- | --- |
 | Linux | Cairo | Codebot.Graphics.Linux.SurfaceCairo |
 | Windows | Direct2D | Codebot.Graphics.Windows.SurfaceD2D |
-| Windows | GDI+ | Codebot.Graphics.Windows.SurfaceGdiPlus |
 
 On Windows, bitmaps and image files are handled by Codebot.Graphics.Windows.ImageBitmap and Codebot.Graphics.Windows.InterfacedBitmap.
 

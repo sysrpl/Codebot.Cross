@@ -10,10 +10,10 @@ uses
   Codebot.Graphics,
   Codebot.Graphics.Types;
 
-{ TForm1 }
+{ TPanDragForm }
 
 type
-  TForm1 = class(TForm)
+  TPanDragForm = class(TForm)
     procedure FormMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -29,7 +29,7 @@ type
   end;
 
 var
-  Form1: TForm1;
+  PanDragForm: TPanDragForm;
 
 implementation
 
@@ -41,7 +41,7 @@ var
   Drag: Boolean;
   DragPoint: TPointF;
 
-procedure TForm1.FormMouseDown(Sender: TObject; Button: TMouseButton;
+procedure TPanDragForm.FormMouseDown(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   Drag := Button = mbLeft;
@@ -52,7 +52,7 @@ begin
   end;
 end;
 
-procedure TForm1.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
+procedure TPanDragForm.FormMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
   if Drag then
@@ -65,14 +65,14 @@ begin
   end;
 end;
 
-procedure TForm1.FormMouseUp(Sender: TObject; Button: TMouseButton;
+procedure TPanDragForm.FormMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if Button = mbLeft then
     Drag := False;
 end;
 
-procedure TForm1.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+procedure TPanDragForm.FormMouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 var
   Z: Float;
@@ -90,7 +90,7 @@ begin
   end;
 end;
 
-procedure TForm1.FormPaint(Sender: TObject);
+procedure TPanDragForm.FormPaint(Sender: TObject);
 const
   Margin = -8;
   Help = 'Pan using the left mouse button, zoom using the mouse wheel';

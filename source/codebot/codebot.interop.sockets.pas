@@ -20,11 +20,16 @@ interface
   {$define libsocket := external 'libc.so'}
 {$endif}
 {$ifdef windows}
-  {$define libsocket := external 'wsock32.dll'}
+  {$define libsocket := external 'ws2_32.dll'}
 {$endif}
 
 type
+  { A Windows SOCKET is an unsigned pointer sized value }
+  {$ifdef windows}
+  TSocketHandle = PtrUInt;
+  {$else}
   TSocketHandle = LongInt;
+  {$endif}
 
 const
   FD_SETSIZE = 64;
@@ -80,7 +85,7 @@ type
   PSockAddr = ^TSockAddr;
   TSockAddr = TSockAddrIn;
 
-  {$ifdef unix}
+  { Unix domain socket address, also supported on Windows 10 1803 and later }
   TUnixAddrIn = packed record
     family: Word;
     path: array[0..107] of AnsiChar;
@@ -88,7 +93,6 @@ type
 
   PUnixAddr = ^TUnixAddr;
   TUnixAddr = TUnixAddrIn;
-  {$endif}
 
   PHostEnt = ^THostEnt;
   THostEnt = record
@@ -488,7 +492,7 @@ function fcntl(s: TSocketHandle; cmd, arg: LongInt): LongInt; apicall; libsocket
 
 function socket(af, struct, protocol: LongInt): TSocketHandle; apicall; libsocket;
 function shutdown(s: TSocketHandle; how: LongInt): LongInt; apicall; libsocket;
-function connect(s: TSocketHandle; addr: PSockAddr; namelen: LongInt): TSocketHandle; apicall; libsocket; overload;
+function connect(s: TSocketHandle; addr: PSockAddr; namelen: LongInt): LongInt; apicall; libsocket; overload;
 function bind(s: TSocketHandle; addr: PSockAddr; namelen: LongInt): LongInt; apicall; libsocket;
 function listen(s: TSocketHandle; backlog: LongInt): LongInt; apicall; libsocket;
 function accept(s: TSocketHandle; addr: PSockAddr; var addrlen: LongInt): TSocketHandle; apicall; libsocket;
@@ -526,14 +530,23 @@ const
 
 type
   PWSAData = ^TWSAData;
+  { The field order of WSADATA differs between 32 and 64 bit Windows }
   TWSAData = record
     wVersion: Word;
     wHighVersion: Word;
+    {$ifdef cpu64}
+    iMaxSockets: Word;
+    iMaxUdpDg: Word;
+    lpVendorInfo: PAnsiChar;
+    szDescription: array[0..WSADESCRIPTION_LEN] of AnsiChar;
+    szSystemStatus: array[0..WSASYS_STATUS_LEN] of AnsiChar;
+    {$else}
     szDescription: array[0..WSADESCRIPTION_LEN] of AnsiChar;
     szSystemStatus: array[0..WSASYS_STATUS_LEN] of AnsiChar;
     iMaxSockets: Word;
     iMaxUdpDg: Word;
     lpVendorInfo: PAnsiChar;
+    {$endif}
   end;
 
 function WSAStartup(version: Word; out WSData: TWSAData): LongInt; apicall; libsocket;
@@ -556,9 +569,8 @@ var
 begin
   if Initialized then
     Exit(True);
-  Initialized := True;
-  WSAStartup($0202, Data);
-  Result := True;
+  Initialized := WSAStartup($0202, Data) = 0;
+  Result := Initialized;
 end;
 {$else}
 

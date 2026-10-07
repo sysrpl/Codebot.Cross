@@ -96,6 +96,59 @@ begin
   FDefaultFont.Name := Items.Join(' ');
   Result := FDefaultFont;
 end;
+{$elseif defined(windows)}
+uses
+  Windows;
+
+class procedure FormManager.Activate(Form: TCustomForm);
+begin
+  if (Form = nil) or (not Form.HandleAllocated) then
+    Exit;
+  if IsIconic(Form.Handle) then
+    ShowWindow(Form.Handle, SW_RESTORE);
+  SetForegroundWindow(Form.Handle);
+end;
+
+class function FormManager.GetCurrent: TCustomForm;
+var
+  Window: HWND;
+  Form: TCustomForm;
+  I: Integer;
+begin
+  Window := GetForegroundWindow;
+  for I := 0 to Screen.CustomFormCount - 1 do
+  begin
+    Form := Screen.CustomForms[I];
+    if Form.HandleAllocated and (Form.Handle = Window) then
+      Exit(Form);
+  end;
+  Result := nil;
+end;
+
+class function FormManager.GetDefaultFont: Graphics.TFont;
+var
+  Metrics: TNonClientMetrics;
+begin
+  Result := FDefaultFont;
+  if Result <> nil then
+    Exit;
+  FDefaultFont := Graphics.TFont.Create;
+  { The message font is the font Windows uses for dialogs and messages }
+  FillChar(Metrics, SizeOf(Metrics), 0);
+  Metrics.cbSize := SizeOf(Metrics);
+  if SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(Metrics), @Metrics, 0) then
+  begin
+    FDefaultFont.Name := Metrics.lfMessageFont.lfFaceName;
+    FDefaultFont.Size := Round(Abs(Metrics.lfMessageFont.lfHeight) * 72 /
+      Screen.PixelsPerInch);
+  end
+  else
+  begin
+    FDefaultFont.Name := 'Segoe UI';
+    FDefaultFont.Size := 9;
+  end;
+  Result := FDefaultFont;
+end;
 {$else}
 class function FormManager.GetCurrent: TCustomForm;
 begin

@@ -8,7 +8,7 @@
 
 { Codebot.Platform.LCL provides the Codebot.Platform interfaces using the LCL.
   Bitmaps are created by Codebot.Graphics, which uses Cairo on Linux and
-  Direct2D or GDI+ on Windows. Dialogs are the standard LCL dialogs. It takes
+  Direct2D on Windows. Dialogs are the standard LCL dialogs. It takes
   the place of Codebot.Platform.SDL in programs which use the LCL.
 
   Scenes run on the render thread of a TGraphicsBox while the LCL may only be

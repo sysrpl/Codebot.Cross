@@ -19,7 +19,7 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="30">
+    <Files Count="29">
       <Item1>
         <Filename Value="codebot.controls.banner.pas"/>
         <UnitName Value="Codebot.Controls.Banner"/>
@@ -133,13 +133,9 @@
         <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
       </Item28>
       <Item29>
-        <Filename Value="codebot.graphics.windows.surfacegdiplus.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
-      </Item29>
-      <Item30>
         <Filename Value="codebot.forms.colordialog.pas"/>
         <UnitName Value="Codebot.Forms.ColorDialog"/>
-      </Item30>
+      </Item29>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">

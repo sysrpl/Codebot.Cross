@@ -10,7 +10,7 @@ interface
 uses
   Codebot.Interop.WebKit, Codebot.WebKit.Controls,
   Codebot.WebKit.Controls.Gtk3, Codebot.WebKit.Controls.Extras,
-  LazarusPackageIntf;
+  Codebot.Interop.WebView2, Codebot.WebKit.Controls.Win, LazarusPackageIntf;
 
 implementation
 

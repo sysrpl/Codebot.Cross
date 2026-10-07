@@ -6,7 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
-{ <include docs/codebot.interop.windows.imagebitmap.txt> }
+{ <include docs/codebot.graphics.windows.imagebitmap.txt> }
 unit Codebot.Graphics.Windows.ImageBitmap;
 
 {$i ../codebot/codebot.inc}
@@ -17,8 +17,72 @@ interface
 uses
   Windows, ActiveX, ComObj, SysUtils, Classes, Graphics,
   Codebot.System,
-  Codebot.Interop.Windows.ImageCodecs,
-  Codebot.Interop.Windows.GdiPlus;
+  Codebot.Interop.Windows.ImageCodecs;
+
+const
+  AC_SRC_OVER = $00;
+  AC_SRC_ALPHA = $01;
+
+type
+  TBlendFunction = packed record
+    BlendOp: Byte;
+    BlendFlags: Byte;
+    SourceConstantAlpha: Byte;
+    AlphaFormat: Byte;
+  end;
+
+function AlphaBlend(dest: HDC; xoriginDest, yoriginDest, wDest, hDest: Integer;
+  src: HDC; xoriginSrc, yoriginSrc, wSrc, hSrc: Integer;
+  func: TBlendFunction): BOOL; stdcall;
+
+function HeightOf(const Rect: TRect): Integer; inline;
+function WidthOf(const Rect: TRect): Integer; inline;
+
+{ TFastBitmap is a GDI device independent bitmap selected into its own
+  device context }
+
+type
+  TPixelDepth = (pd24, pd32);
+
+  TFastBitmap = record
+    DC: HDC;
+    Handle: HBITMAP;
+    OldBitmap: HBITMAP;
+    Bits: Pointer;
+    Width: Integer;
+    Height: Integer;
+    Depth: TPixelDepth;
+    procedure Create(Width, Height: Integer; Depth: TPixelDepth = pd24); overload;
+    procedure Create(const Rect: TRect; Depth: TPixelDepth = pd24); overload;
+    procedure Destroy;
+    procedure Draw(DC: HDC; X, Y: Integer; Opacity: Byte = $FF); overload;
+    procedure Draw(DC: HDC; const Rect: TRect; Opacity: Byte = $FF); overload;
+    procedure Clear;
+    function ClientRect: TRect;
+    function IsEmpty: Boolean;
+  end;
+  PFastBitmap = ^TFastBitmap;
+
+{ TFastBitmap routines }
+
+{ Create a fast bitmap, use a negative height for a top down bitmap }
+function CreateFastBitmap(Width, Height: Integer; Depth: TPixelDepth = pd24): TFastBitmap; overload;
+function CreateFastBitmap(const Rect: TRect; Depth: TPixelDepth = pd24): TFastBitmap; overload;
+procedure DestroyFastBitmap(var Bitmap: TFastBitmap);
+procedure ClearFastBitmap(const Bitmap: TFastBitmap);
+function IsEmptyFastBitmap(const Bitmap: TFastBitmap): Boolean;
+function IsFastBitmap(const Bitmap: TFastBitmap): Boolean;
+{ Return a resized copy of a bitmap using the Windows imaging component. Quality
+  0 is nearest neighbor, 1 is linear, and 2 is bicubic. The result is empty if
+  the bitmap could not be resized. }
+function BitmapResize(Bitmap: TFastBitmap; Width, Height: Integer; Quality: Integer = 2): TFastBitmap;
+{ The number of bytes in a row of pixels }
+function ScanlineStride(const Bitmap: TFastBitmap): Integer;
+
+{ Drawing routines }
+
+procedure AlphaDraw(DC: HDC; X, Y: Integer; const Bitmap: TFastBitmap; Opacity: Byte = $FF); overload;
+procedure AlphaDraw(DC: HDC; const Rect: TRect; const Bitmap: TFastBitmap; Opacity: Byte = $FF); overload;
 
 { TImageBitmapFormat is the name of an image file format }
 
@@ -39,9 +103,6 @@ var
   DefaultFormat: TImageBitmapFormat = PngFormat;
 
 type
-  { TResizeQuality is the filtering used when resizing an image }
-  TResizeQuality = (rzNormal, rzNearest, rzBicibic);
-
 { TImageBitmap is a 32 bit alpha blended graphic which loads and saves
   images using the Windows imaging component }
 
@@ -84,7 +145,6 @@ type
     constructor Create; override; overload;
     constructor Create(Bitmap: TFastBitmap); overload;
     destructor Destroy; override;
-    procedure DisableCodecs;
     procedure RequestBitmap(out Bitmap: TFastBitmap; Acquire: Boolean = False);
     procedure Assign(Source: TPersistent); override;
     procedure Blit(DC: HDC; const Rect: TRect; Opacity: Byte = $FF); overload;
@@ -146,6 +206,280 @@ begin
   raise EInvalidGraphicOperation.CreateRes(Str);
 end;
 
+function AlphaBlend; external 'msimg32.dll';
+
+{ Create a Windows imaging component factory. COM is initialized for the main
+  thread by ComObj, but other threads must initialize it themselves. }
+
+function CreateImagingFactory(out Factory: IWICImagingFactory): Boolean;
+const
+  CO_E_NOTINITIALIZED = HRESULT($800401F0);
+var
+  H: HRESULT;
+begin
+  Factory := nil;
+  if not WinCodecsInit then
+    Exit(False);
+  H := CoCreateInstance(CLSID_WICImagingFactory, nil, CLSCTX_INPROC_SERVER,
+    IID_IWICImagingFactory, Factory);
+  if H = CO_E_NOTINITIALIZED then
+  begin
+    CoInitializeEx(nil, COINIT_APARTMENTTHREADED);
+    H := CoCreateInstance(CLSID_WICImagingFactory, nil, CLSCTX_INPROC_SERVER,
+      IID_IWICImagingFactory, Factory);
+  end;
+  Result := (H = S_OK) and (Factory <> nil);
+  if not Result then
+    Factory := nil;
+end;
+
+function HeightOf(const Rect: TRect): Integer;
+begin
+  Result := Rect.Bottom - Rect.Top;
+end;
+
+function WidthOf(const Rect: TRect): Integer;
+begin
+  Result := Rect.Right - Rect.Left;
+end;
+
+{ TFastBitmap }
+
+const
+  Depths: array[TPixelDepth] of Integer = (24, 32);
+
+procedure TFastBitmap.Create(Width, Height: Integer; Depth: TPixelDepth = pd24);
+begin
+  Self := CreateFastBitmap(Width, Height, Depth);
+end;
+
+procedure TFastBitmap.Create(const Rect: TRect; Depth: TPixelDepth = pd24);
+begin
+  Self := CreateFastBitmap(WidthOf(Rect), HeightOf(Rect), Depth);
+end;
+
+procedure TFastBitmap.Destroy;
+begin
+  DestroyFastBitmap(Self);
+end;
+
+procedure TFastBitmap.Draw(DC: HDC; X, Y: Integer; Opacity: Byte = $FF);
+begin
+  AlphaDraw(DC, X, Y, Self, Opacity);
+end;
+
+procedure TFastBitmap.Draw(DC: HDC; const Rect: TRect; Opacity: Byte = $FF);
+begin
+  AlphaDraw(DC, Rect, Self, Opacity);
+end;
+
+procedure TFastBitmap.Clear;
+begin
+  ClearFastBitmap(Self);
+end;
+
+function TFastBitmap.ClientRect: TRect;
+begin
+  Result.Left := 0;
+  Result.Top := 0;
+  Result.Right := Width;
+  Result.Bottom := Height;
+end;
+
+function TFastBitmap.IsEmpty: Boolean;
+begin
+  Result := IsEmptyFastBitmap(Self);
+end;
+
+{ TFastBitmap routines }
+
+function CreateFastBitmap(Width, Height: Integer; Depth: TPixelDepth = pd24): TFastBitmap;
+var
+  BitmapInfo: TBitmapInfo;
+begin
+  FillChar(Result, SizeOf(Result), #0);
+  FillChar(BitmapInfo, SizeOf(BitmapInfo), #0);
+  if (Width < 1) or (Height = 0) then
+    Exit;
+  Result.DC := CreateCompatibleDC(0);
+  with BitmapInfo.bmiHeader do
+  begin
+    biSize := SizeOf(BitmapInfo.bmiHeader);
+    biWidth := Width;
+    biHeight := Height;
+    biPlanes := 1;
+    biBitCount := Depths[Depth];
+    biCompression := BI_RGB;
+  end;
+  with Result do
+    Handle := CreateDIBSection(DC, BitmapInfo, DIB_RGB_COLORS, Bits, 0, 0);
+  Result.Width := Width;
+  Result.Height := Height;
+  if Result.Height < 0 then
+    Result.Height := -Result.Height;
+  Result.Depth := Depth;
+  with Result do
+    OldBitmap := SelectObject(DC, Handle);
+end;
+
+function CreateFastBitmap(const Rect: TRect; Depth: TPixelDepth = pd24): TFastBitmap;
+begin
+  Result := CreateFastBitmap(WidthOf(Rect), HeightOf(Rect), Depth);
+end;
+
+procedure DestroyFastBitmap(var Bitmap: TFastBitmap);
+begin
+  if Bitmap.DC <> 0 then
+  begin
+    SelectObject(Bitmap.DC, Bitmap.OldBitmap);
+    DeleteObject(Bitmap.Handle);
+    DeleteDC(Bitmap.DC);
+    FillChar(Bitmap, SizeOf(Bitmap), #0);
+  end;
+end;
+
+procedure ClearFastBitmap(const Bitmap: TFastBitmap);
+begin
+  if Bitmap.DC <> 0 then
+    FillChar(Bitmap.Bits^, ScanlineStride(Bitmap) * Bitmap.Height, #0);
+end;
+
+function IsFastBitmap(const Bitmap: TFastBitmap): Boolean;
+begin
+  Result := Bitmap.DC <> 0;
+end;
+
+function IsEmptyFastBitmap(const Bitmap: TFastBitmap): Boolean;
+begin
+  Result := Bitmap.DC = 0;
+end;
+
+function BitmapResize(Bitmap: TFastBitmap; Width, Height: Integer; Quality: Integer = 2): TFastBitmap;
+var
+  Factory: IWICImagingFactory;
+  PixelFormat: TGUID;
+  Mode: WICBitmapInterpolationMode;
+  Source: IWICBitmap;
+  Scaler: IWICBitmapScaler;
+  B: TFastBitmap;
+begin
+  FillChar(Result, SizeOf(Result), #0);
+  if not IsFastBitmap(Bitmap) then
+    Exit;
+  if (Width < 1) or (Height < 1) then
+    Exit;
+  if not CreateImagingFactory(Factory) then
+    Exit;
+  { 32 bit bitmaps are stored with premultiplied alpha }
+  if Bitmap.Depth = pd32 then
+    PixelFormat := GUID_WICPixelFormat32bppPBGRA
+  else
+    PixelFormat := GUID_WICPixelFormat24bppBGR;
+  case Quality of
+    0: Mode := WICBitmapInterpolationModeNearestNeighbor;
+    1: Mode := WICBitmapInterpolationModeLinear;
+  else
+    Mode := WICBitmapInterpolationModeCubic;
+  end;
+  if Factory.CreateBitmapFromMemory(Bitmap.Width, Bitmap.Height, PixelFormat,
+    ScanlineStride(Bitmap), ScanlineStride(Bitmap) * Bitmap.Height,
+    Bitmap.Bits, Source) <> S_OK then
+    Exit;
+  if Factory.CreateBitmapScaler(Scaler) <> S_OK then
+    Exit;
+  if Scaler.Initialize(Source, Width, Height, Mode) <> S_OK then
+    Exit;
+  B := CreateFastBitmap(Width, -Height, Bitmap.Depth);
+  if Scaler.CopyPixels(nil, ScanlineStride(B), ScanlineStride(B) * Height,
+    B.Bits) <> S_OK then
+  begin
+    DestroyFastBitmap(B);
+    Exit;
+  end;
+  Result := B;
+end;
+
+function ScanlineStride(const Bitmap: TFastBitmap): Integer;
+const
+  Bit24Size = 3;
+  Bit32Size = 4;
+begin
+  if Bitmap.Depth = pd24 then
+    Result := Bitmap.Width * Bit24Size
+  else
+    Result := Bitmap.Width * Bit32Size;
+  if Result mod SizeOf(DWORD) > 0 then
+    Inc(Result, SizeOf(DWORD) - Result mod SizeOf(DWORD));
+end;
+
+{ Drawing routines }
+
+procedure AlphaDraw(DC: HDC; X, Y: Integer; const Bitmap: TFastBitmap; Opacity: Byte = $FF);
+var
+  Func: TBlendFunction;
+begin
+  if IsFastBitmap(Bitmap) then
+    if (Bitmap.Depth = pd32) and (Opacity > 0) then
+    begin
+      Func.BlendOp := AC_SRC_OVER;
+      Func.BlendFlags := 0;
+      Func.SourceConstantAlpha := Opacity;
+      Func.AlphaFormat := AC_SRC_ALPHA;
+      AlphaBlend(DC, X, Y, Bitmap.Width, Bitmap.Height,
+        Bitmap.DC, 0, 0, Bitmap.Width, Bitmap.Height, Func);
+    end
+    else if Bitmap.Depth = pd24 then
+      BitBlt(DC, X, Y, Bitmap.Width, Bitmap.Height, Bitmap.DC, 0, 0, SRCCOPY);
+end;
+
+procedure AlphaDraw(DC: HDC; const Rect: TRect; const Bitmap: TFastBitmap; Opacity: Byte = $FF);
+var
+  Func: TBlendFunction;
+begin
+  if IsFastBitmap(Bitmap) then
+    if (Bitmap.Depth = pd32) and (Opacity > 0) then
+    begin
+      Func.BlendOp := AC_SRC_OVER;
+      Func.BlendFlags := 0;
+      Func.SourceConstantAlpha := Opacity;
+      Func.AlphaFormat := AC_SRC_ALPHA;
+      AlphaBlend(DC, Rect.Left, Rect.Top, WidthOf(Rect), HeightOf(Rect),
+        Bitmap.DC, 0, 0, Bitmap.Width, Bitmap.Height, Func);
+    end
+    else if Bitmap.Depth = pd24 then
+      StretchBlt(DC, Rect.Left, Rect.Top, WidthOf(Rect), HeightOf(Rect),
+        Bitmap.DC, 0, 0, Bitmap.Width, Bitmap.Height, SRCCOPY);
+end;
+
+{ Set the alpha of every pixel to opaque if no pixel has an alpha value }
+
+procedure MakeOpaque(const Bitmap: TFastBitmap);
+const
+  AlphaOffset = 3;
+var
+  P: PByte;
+  I, Count: Integer;
+begin
+  if not IsFastBitmap(Bitmap) or (Bitmap.Depth <> pd32) then
+    Exit;
+  Count := Bitmap.Width * Bitmap.Height;
+  P := Bitmap.Bits;
+  Inc(P, AlphaOffset);
+  for I := 0 to Count - 1 do
+  begin
+    if P^ <> 0 then
+      Exit;
+    Inc(P, 4);
+  end;
+  P := Bitmap.Bits;
+  Inc(P, AlphaOffset);
+  for I := 0 to Count - 1 do
+  begin
+    P^ := $FF;
+    Inc(P, 4);
+  end;
+end;
+
 { TImageBitmapCanvas }
 
 type
@@ -174,9 +508,7 @@ end;
 constructor TImageBitmap.Create;
 begin
   inherited Create;
-  if WinCodecsInit then
-    CoCreateInstance(CLSID_WICImagingFactory, nil, CLSCTX_INPROC_SERVER,
-      IID_IWICImagingFactory, FFactory);
+  CreateImagingFactory(FFactory);
   FFormat := DefaultFormat;
   FPixelDepth := pd32;
   FScaleX := 1;
@@ -187,20 +519,20 @@ end;
 constructor TImageBitmap.Create(Bitmap: TFastBitmap);
 begin
   Create;
+  if not IsFastBitmap(Bitmap) then
+    Exit;
   FBitmap := Bitmap;
   FWidth := FBitmap.Width;
   FHeight := FBitmap.Height;
+  FPixelDepth := FBitmap.Depth;
+  FStride := ScanlineStride(FBitmap);
 end;
 
 destructor TImageBitmap.Destroy;
 begin
   DestroyHandle;
+  FCanvas.Free;
   inherited Destroy;
-end;
-
-procedure TImageBitmap.DisableCodecs;
-begin
-  FFactory := nil;
 end;
 
 procedure TImageBitmap.HandleNeeded(AllowChange: Boolean = True);
@@ -244,8 +576,10 @@ begin
     else
     begin
       HandleNeeded;
-      Move(Image.FBitmap.Bits^, FBitmap.Bits^, FStride * FHeight);
-      // alternate Canvas.Draw(0, 0, Image);
+      { A source without a handle has no pixels yet, and a new handle is
+        already cleared }
+      if IsFastBitmap(Image.FBitmap) then
+        Move(Image.FBitmap.Bits^, FBitmap.Bits^, FStride * FHeight);
     end;
   end
   else if Source is TGraphic then
@@ -256,7 +590,12 @@ begin
     PixelDepth := pd32;
     Opacity := $FF;
     Format := PngFormat;
+    if Empty then
+      Exit;
     Canvas.Draw(0, 0, Graphic);
+    { GDI drawing leaves the alpha channel at zero, which would make the image
+      invisible. Unless the graphic wrote alpha values, make it opaque. }
+    MakeOpaque(FBitmap);
   end
   else
     inherited Assign(Source);
@@ -294,8 +633,13 @@ begin
 end;
 
 procedure TImageBitmap.Draw(ACanvas: TCanvas; const Rect: TRect);
+var
+  Func: TBlendFunction;
 begin
-  Blit(ACanvas.Handle, Rect);
+  { Stretch the image to fill the rect, as TCanvas.StretchDraw expects }
+  if AllowBlit(Func, $FF) then
+    AlphaBlend(ACanvas.Handle, Rect.Left, Rect.Top, WidthOf(Rect), HeightOf(Rect),
+      FBitmap.DC, 0, 0, FWidth, FHeight, Func);
 end;
 
 function TImageBitmap.AllowBlit(out Func: TBlendFunction; Opacity: Byte): Boolean;
@@ -391,13 +735,11 @@ begin
 end;
 
 procedure TImageBitmap.Resize(AWidth, AHeight: Integer);
-const
-  Formats: array[Boolean] of DWORD =
-    (PixelFormat24bppRGB, PixelFormat32bppARGB);
 var
   B: TFastBitmap;
-  G: IGdiGraphics;
-  S: IGdiBitmap;
+  PixelFormat: TGUID;
+  Source: IWICBitmap;
+  Scaler: IWICBitmapScaler;
 begin
   if Empty then
     Exit;
@@ -405,25 +747,37 @@ begin
     Exit;
   if (AWidth < 1) or (AHeight < 1) then
     InvalidOperation(@SInvalidGraphicSize);
+  if FFactory = nil then
+    InvalidOperation(@SImagingUnavailable);
   HandleNeeded(False);
-  B := CreateFastBitmap(AWidth, -AHeight, FPixelDepth);
+  { Loaded 32 bit images are stored with premultiplied alpha }
+  if FBitmap.Depth = pd32 then
+    PixelFormat := GUID_WICPixelFormat32bppPBGRA
+  else
+    PixelFormat := GUID_WICPixelFormat24bppBGR;
+  B := CreateFastBitmap(AWidth, -AHeight, FBitmap.Depth);
   try
-    G := NewGdiGraphics(B.DC);
-    G.CompositingMode := CompositingModeSourceOver;
-    G.InterpolationMode := InterpolationModeHighQualityBicubic;
-    G.SmoothingMode := SmoothingModeHighQuality;
-    G.PixelOffsetMode := PixelOffsetModeHighQuality;
-    S := NewGdiBitmap(Width, Height, ScanlineStride(FBitmap),
-      Formats[FBitmap.Depth = pd32], FBitmap.Bits);
-    G.DrawImage(S, 0, 0, B.Width, B.Height);
-  finally
-    DestroyFastBitmap(FBitmap);
-    FBitmap := B;
-    FCanvas.Handle := FBitmap.DC;
-    FWidth := B.Width;
-    FHeight := B.Height;
-    FStride := ScanlineStride(B);
+    { Scale the image with bicubic interpolation using the imaging component }
+    OleCheck(FFactory.CreateBitmapFromMemory(FWidth, FHeight, PixelFormat,
+      ScanlineStride(FBitmap), ScanlineStride(FBitmap) * FHeight,
+      FBitmap.Bits, Source));
+    OleCheck(FFactory.CreateBitmapScaler(Scaler));
+    OleCheck(Scaler.Initialize(Source, AWidth, AHeight,
+      WICBitmapInterpolationModeCubic));
+    OleCheck(Scaler.CopyPixels(nil, ScanlineStride(B),
+      ScanlineStride(B) * AHeight, B.Bits));
+  except
+    { Keep the original image if resizing failed }
+    DestroyFastBitmap(B);
+    raise;
   end;
+  DestroyFastBitmap(FBitmap);
+  FBitmap := B;
+  if FCanvas <> nil then
+    FCanvas.Handle := FBitmap.DC;
+  FWidth := B.Width;
+  FHeight := B.Height;
+  FStride := ScanlineStride(B);
   Changed(Self);
 end;
 
@@ -452,49 +806,6 @@ type
     Blue, Green, Red, Alpha: Byte;
   end;
   PRGBA = ^TRGBA;
-
-procedure Premultiply(const Bitmap: TFastBitmap);
-var
-  Mix: Boolean;
-  W, H: Integer;
-  P: PRGBA;
-  R: Single;
-begin
-  if IsFastBitmap(Bitmap) and (Bitmap.Depth = pd32) then
-  begin
-    Mix := False;
-    for H := 0 to Bitmap.Height - 1 do
-    begin
-      P := Bitmap.Bits;
-      Inc(P, H * Bitmap.Width);
-      for W := 0 to Bitmap.Width - 1 do
-      begin
-        Mix := ((P.Blue + P.Green + P.Red > 0) and (P.Alpha = 0)) or
-          (P.Blue > P.Alpha) or (P.Green > P.Alpha) or (P.Red > P.Alpha);
-        if Mix then Break;
-        Inc(P);
-      end;
-      if Mix then Break;
-    end;
-    if Mix then
-      for H := 0 to Bitmap.Height - 1 do
-      begin
-        P := Bitmap.Bits;
-        Inc(P, H * Bitmap.Width);
-        for W := 0 to Bitmap.Width - 1 do
-        begin
-          if P.Alpha < $FF then
-          begin
-            R := P.Alpha / $FF;
-            P.Blue := Round(P.Blue * R);
-            P.Green := Round(P.Green * R);
-            P.Red := Round(P.Red * R);
-          end;
-          Inc(P);
-        end;
-      end;
-  end;
-end;
 
 type
   TSharedStream = class(TStream)
@@ -564,8 +875,8 @@ begin
       end;
     soFromEnd:
       begin
-        if Position + Offset < FStart then
-          Offset := FStart - Position;
+        if FStream.Size + Offset < FStart then
+          Offset := FStart - FStream.Size;
         Result := FStream.Seek(Offset, Origin) - FStart;
       end;
   else
@@ -593,8 +904,8 @@ begin
       end;
     soEnd:
       begin
-        if FStream.Position + O < FStart then
-          O := FStart - FStream.Position;
+        if FStream.Size + O < FStart then
+          O := FStart - FStream.Size;
         Result := FStream.Seek(O, Origin) - FStart;
       end;
   else
@@ -609,12 +920,10 @@ var
   Factory: IWICImagingFactory;
   BitmapDecoder: IWICBitmapDecoder;
 begin
-  if WinCodecsInit then
+  if CreateImagingFactory(Factory) then
   begin
     Share := TSharedStream.Create(Stream);
     Adapter := TStreamAdapter.Create(Share, soOwned);
-    OleCheck(CoCreateInstance(CLSID_WICImagingFactory, nil, CLSCTX_INPROC_SERVER,
-      IID_IWICImagingFactory, Factory));
     OleCheck(Factory.CreateDecoderFromStream(Adapter, nil,
       WICDecodeMetadataCacheOnLoad, BitmapDecoder));
     OleCheck(BitmapDecoder.GetFrameCount(Result));
@@ -640,12 +949,13 @@ var
       WICDecodeMetadataCacheOnLoad, BitmapDecoder));
     OleCheck(BitmapDecoder.GetFrame(0, BitmapFrameDecode));
     OleCheck(BitmapFrameDecode.GetPixelFormat(G));
-    if IsGuidEqual(G, GUID_WICPixelFormat32bppBGRA) then
+    { Images are stored with premultiplied alpha, which the converter computes }
+    if IsGuidEqual(G, GUID_WICPixelFormat32bppPBGRA) then
       Source := BitmapFrameDecode
     else
     begin
       OleCheck(FFactory.CreateFormatConverter(Converter));
-      OleCheck(Converter.Initialize(BitmapFrameDecode, GUID_WICPixelFormat32bppBGRA,
+      OleCheck(Converter.Initialize(BitmapFrameDecode, GUID_WICPixelFormat32bppPBGRA,
         WICBitmapDitherTypeNone, nil, 0, WICBitmapPaletteTypeCustom));
       Source := Converter;
     end;
@@ -657,31 +967,11 @@ var
       OleCheck(Source.CopyPixels(nil, FStride, FStride * FHeight, FBitmap.Bits))
   end;
 
-  procedure LoadGdiBitmap;
-  var
-    GdiBitmap: IGdiBitmap;
-    Rect: TGdiRectI;
-    Data: TBitmapData;
-  begin
-    GdiBitmap := NewGdiBitmap(Adapter);
-    if GdiBitmap.LastStatus <> Ok then
-      Exit;
-    Rect.X := 0;
-    Rect.Y := 0;
-    Rect.Width := GdiBitmap.Width;
-    Rect.Height := GdiBitmap.Height;
-    FWidth := Rect.Width;
-    FHeight := Rect.Height;
-    HandleNeeded(False);
-    if GdiBitmap.LockBits(Rect, ImageLockModeRead, PixelFormat32bppARGB, Data) <> Ok then
-      InvalidOperation(@SCouldNotLockBits);
-    Move(Data.Scan0^, FBitmap.Bits^, FStride *  FHeight);
-    GdiBitmap.UnlockBits(Data);
-  end;
-
 var
   Share: TSharedStream;
 begin
+  if FFactory = nil then
+    InvalidOperation(@SImagingUnavailable);
   DestroyHandle;
   FPixelDepth := pd32;
   FWidth := 0;
@@ -690,13 +980,8 @@ begin
   Format := LowerCase(AFormat);
   Share := TSharedStream.Create(Stream);
   Adapter := TStreamAdapter.Create(Share, soOwned);
-  if FFactory <> nil then
-    LoadWicBitmap
-  else
-    LoadGdiBitmap;
-  if IsFastBitmap(FBitmap) then
-    Premultiply(FBitmap)
-  else
+  LoadWicBitmap;
+  if not IsFastBitmap(FBitmap) then
   begin
     FHeight := 0;
     FWidth := 0;
@@ -728,10 +1013,7 @@ begin
     end
     else
       Adapter := TStreamAdapter.Create(Stream);
-    if FFactory <> nil then
-      LoadWicBitmap
-    else
-      LoadGdiBitmap;
+    LoadWicBitmap;
   finally
     Memory.Free;
   end;
@@ -764,8 +1046,10 @@ var
     S: WideString;
     G: TGUID;
   begin
+    { 32 bit pixels are stored with premultiplied alpha, and the converter
+      below changes them to the format the encoder wants }
     if PixelDepth = pd32 then
-      PixelFormat := GUID_WICPixelFormat32bppBGRA
+      PixelFormat := GUID_WICPixelFormat32bppPBGRA
     else
       PixelFormat := GUID_WICPixelFormat24bppBGR;
     OleCheck(FFactory.CreateBitmapFromMemory(FWidth, FHeight,
@@ -805,41 +1089,17 @@ var
     OleCheck(BitmapEncoder.Commit);
   end;
 
-  procedure SaveGdiBitmap;
-  const
-    Formats: array[Boolean] of DWORD =
-      (PixelFormat24bppRGB, PixelFormat32bppARGB);
-  var
-    B: IGdiBitmap;
-    G: TGUID;
-  begin
-    B := NewGdiBitmap(FWidth, FHeight, ScanlineStride(FBitmap),
-      Formats[PixelDepth = pd32], FBitmap.Bits);
-    if GetEncoderClsid('image/' + Format, G) then
-      B.Save(Adapter, G)
-    else
-      InvalidOperation(@SInvalidGraphicFormat);
-  end;
-
 begin
   if Empty then Exit;
+  if FFactory = nil then
+    InvalidOperation(@SImagingUnavailable);
   HandleNeeded(False);
   Adapter := TStreamAdapter.Create(Stream);
   FFormat := LowerCase(AFormat);
   if FFormat = 'ico' then
     FFormat := 'png';
-  if FFactory <> nil then
-    SaveWicBitmap
-  else
-    SaveGdiBitmap;
+  SaveWicBitmap;
 end;
-
-    { Using LockBits
-    if GdiBitmap.LockBits(Rect, ImageLockModeRead, , Data) <> Ok then
-      InvalidOperation(@SCouldNotLockBits);
-    Move(FBitmap.Bits^, Data.Scan0^,  * FHeight);
-    GdiBitmap.UnlockBits(Data);
-    }
 
 procedure TImageBitmap.LoadFromStream(Stream: TStream);
 begin
@@ -920,7 +1180,7 @@ end;
 
 procedure TImageBitmap.SetTransparent(Value: Boolean);
 begin
-  Value := True;
+  { Image bitmaps are always transparent }
 end;
 
 function TImageBitmap.GetEmpty: Boolean;
@@ -1023,20 +1283,35 @@ end;
 function ImageBitmapFromFile(const FileName: string): TImageBitmap;
 begin
   Result := TImageBitmap.Create;
-  Result.LoadFromFile(FileName);
+  try
+    Result.LoadFromFile(FileName);
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 function ImageBitmapFromStream(Stream: TStream; Format: TImageBitmapFormat): TImageBitmap;
 begin
   Result := TImageBitmap.Create;
-  Result.Load(Stream, Format);
+  try
+    Result.Load(Stream, Format);
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 function ImageBitmapFromResourceId(ResId: Integer; Format: TImageBitmapFormat): TImageBitmap;
 begin
   Result := TImageBitmap.Create;
-  Result.Format := Format;
-  Result.LoadFromResourceID(HInstance, ResId);
+  try
+    Result.Format := Format;
+    Result.LoadFromResourceID(HInstance, ResId);
+  except
+    Result.Free;
+    raise;
+  end;
 end;
 
 { Extensible bitmap operations ... removed for now }

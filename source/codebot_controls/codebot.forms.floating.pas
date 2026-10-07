@@ -28,8 +28,11 @@ type
     FWindow: Pointer;
     FOpacity: Byte;
     FFaded: Boolean;
+    {$ifdef linux}
+    { Used by the fade on Linux, which moves the faded form offscreen }
     FFadeTop: Integer;
     FFadeMoved: Boolean;
+    {$endif}
     function GetCompositing: Boolean;
     procedure SetFaded(Value: Boolean);
     procedure SetInteractive(Value: Boolean);
@@ -40,6 +43,10 @@ type
     procedure Loaded; override;
     procedure Paint; override;
     {doc on}
+    { Return true if the form provides its own per pixel alpha. On Windows such
+      a form shows its content with UpdateLayeredWindow, and Opacity is applied
+      when the content is updated. The default is false. }
+    function PerPixelAlpha: Boolean; virtual;
   public
     { Create a new floating form }
     constructor Create(AOwner: TComponent); override;
@@ -368,6 +375,133 @@ begin
       Visible := not FFaded;
   end;
 end;
+{$elseif defined(windows)}
+uses
+  Windows;
+
+{ TFloatingForm }
+
+constructor TFloatingForm.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  BorderStyle := bsNone;
+  FOpacity := $FF;
+  FInteractive := True;
+end;
+
+procedure TFloatingForm.Loaded;
+type
+  PFormBorderStyle = ^TFormBorderStyle;
+begin
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+  inherited Loaded;
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+end;
+
+{ Apply the extended window styles and the opacity to a floating form.
+  WS_EX_LAYERED allows the opacity to be set, WS_EX_TOOLWINDOW keeps the form
+  off the taskbar, and WS_EX_TRANSPARENT lets mouse input pass through.
+  A form with per pixel alpha shows its content with UpdateLayeredWindow,
+  which stops working once SetLayeredWindowAttributes is called. }
+
+procedure ApplyWindowStyle(Form: TFloatingForm);
+var
+  Wnd: HWND;
+  Style: LONG;
+begin
+  if not Form.HandleAllocated then
+    Exit;
+  if csDesigning in Form.ComponentState then
+    Exit;
+  Wnd := Form.Handle;
+  Style := GetWindowLong(Wnd, GWL_EXSTYLE) or WS_EX_LAYERED or WS_EX_TOOLWINDOW;
+  if Form.FInteractive then
+    Style := Style and (not WS_EX_TRANSPARENT)
+  else
+    Style := Style or WS_EX_TRANSPARENT;
+  SetWindowLong(Wnd, GWL_EXSTYLE, Style);
+  if not Form.PerPixelAlpha then
+    SetLayeredWindowAttributes(Wnd, 0, Form.FOpacity, LWA_ALPHA);
+end;
+
+type
+  PFormBorderStyle = ^TFormBorderStyle;
+
+procedure TFloatingForm.CreateHandle;
+begin
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+  inherited CreateHandle;
+  FWindow := {%H-}Pointer(Handle);
+  ApplyWindowStyle(Self);
+end;
+
+procedure TFloatingForm.SetInteractive(Value: Boolean);
+begin
+  if FInteractive <> Value then
+  begin
+    FInteractive := Value;
+    ApplyWindowStyle(Self);
+  end;
+end;
+
+procedure TFloatingForm.Paint;
+begin
+  inherited Paint;
+end;
+
+procedure TFloatingForm.MoveSize(Rect: TRectI);
+begin
+  SetBounds(Rect.Left, Rect.Top, Rect.Width, Rect.Height);
+end;
+
+procedure TFloatingForm.SetOpacity(Value: Byte);
+begin
+  if Value <> FOpacity then
+  begin
+    FOpacity := Value;
+    { A per pixel alpha form applies the opacity when its content is updated }
+    if PerPixelAlpha then
+      Invalidate
+    else
+      ApplyWindowStyle(Self);
+  end;
+end;
+
+{ Desktop composition is checked through dwmapi.dll, which is loaded when
+  first needed. It is always enabled on Windows 8 and later. }
+
+type
+  TDwmIsCompositionEnabled = function(out Enabled: BOOL): HRESULT; stdcall;
+
+var
+  DwmLoaded: Boolean;
+  DwmIsCompositionEnabled: TDwmIsCompositionEnabled;
+
+function TFloatingForm.GetCompositing: Boolean;
+var
+  Module: HMODULE;
+  Enabled: BOOL;
+begin
+  if not DwmLoaded then
+  begin
+    DwmLoaded := True;
+    Module := LoadLibrary('dwmapi.dll');
+    if Module <> 0 then
+      @DwmIsCompositionEnabled := GetProcAddress(Module, 'DwmIsCompositionEnabled');
+  end;
+  Result := False;
+  if Assigned(DwmIsCompositionEnabled) then
+    Result := (DwmIsCompositionEnabled(Enabled) = S_OK) and Enabled;
+end;
+
+procedure TFloatingForm.SetFaded(Value: Boolean);
+begin
+  if FFaded <> Value then
+  begin
+    FFaded := Value;
+    Visible := not FFaded;
+  end;
+end;
 {$else}
 function TFloatingForm.GetCompositing: Boolean;
 begin
@@ -414,5 +548,10 @@ begin
 
 end;
 {$endif}
+
+function TFloatingForm.PerPixelAlpha: Boolean;
+begin
+  Result := False;
+end;
 
 end.

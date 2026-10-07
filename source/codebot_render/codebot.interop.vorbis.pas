@@ -80,19 +80,14 @@ function ov_pcm_tell(vf: TOggVorbisFile): cint64; cdecl; external;
 
 implementation
 
+uses
+  { On Windows the C runtime is linked by Codebot.Interop.MinGW }
+  Codebot.Interop.MinGW;
+
 {$linklib libcodebotaudio.a}
 {$ifdef unix}
   {$linklib m}
   {$linklib c}
-{$endif}
-{ On Windows the C runtime comes from the MinGW-w64 libraries which are
-  copied next to libcodebotaudio.a }
-{$ifdef windows}
-  {$linklib libmingwex.a}
-  {$linklib libmingw32.a}
-  {$linklib libucrt.a}
-  {$linklib libgcc.a}
-  {$linklib libkernel32.a}
 {$endif}
 
 const

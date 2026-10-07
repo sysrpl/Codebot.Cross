@@ -14,7 +14,7 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="5">
+    <Files Count="7">
       <Item1>
         <Filename Value="webkit.inc"/>
         <Type Value="Include"/>
@@ -35,6 +35,14 @@
         <Filename Value="codebot.webkit.controls.extras.pas"/>
         <UnitName Value="Codebot.WebKit.Controls.Extras"/>
       </Item5>
+      <Item6>
+        <Filename Value="codebot.interop.webview2.pas"/>
+        <UnitName Value="Codebot.Interop.WebView2"/>
+      </Item6>
+      <Item7>
+        <Filename Value="codebot.webkit.controls.win.pas"/>
+        <UnitName Value="Codebot.WebKit.Controls.Win"/>
+      </Item7>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">
