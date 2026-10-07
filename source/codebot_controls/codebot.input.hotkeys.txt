@@ -1,0 +1,1 @@
+The Codebot.Input.Hotkeys unit provides HotkeyCapture, which registers hotkeys that work across the whole system, even when the program is not in the foreground. Each hotkey is a key and shift state paired with an event that is invoked when the hotkey is pressed.

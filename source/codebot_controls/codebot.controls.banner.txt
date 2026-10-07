@@ -1,0 +1,1 @@
+The Codebot.Controls.Banner unit defines TBanner, which is a control that draws a background, a logo, a title, and a subtitle. It also defines TBannerForm, a form that shows a banner across its top, above the rest of its controls.

@@ -39,21 +39,49 @@ type
     property Height: Integer read FHeight;
   end;
 {$endregion}
+
+{$region shadow buffer}
+{ TShadowBuffer records depth into a square depth texture for shadow mapping.
+  The texture compares depths when sampled, so shaders read it using a
+  sampler2DShadow which returns how lit a point is from 0 to 1 with filtered
+  edges. Points outside the texture are lit. }
+
+  TShadowBuffer = class(TContextManagedObject)
+  private
+    FFrameBuffer: Integer;
+    FTexture: Integer;
+    FSize: Integer;
+    FPriorFrameBuffer: Integer;
+  public
+    { Create a shadow buffer using a size in pixels }
+    constructor Create(Size: Integer = 2048);
+    destructor Destroy; override;
+    { Start recording depth. Nothing is drawn to color, and depths are offset
+      slightly to prevent surfaces from shadowing themselves. }
+    procedure StartRecording;
+    { Stop recording, restoring the prior frame buffer and viewport }
+    procedure StopRecording;
+    { The depth texture }
+    property Texture: Integer read FTexture;
+    { The width and height of the depth texture in pixels }
+    property Size: Integer read FSize;
+  end;
+{$endregion}
 {$endif}
 
 {$region vertex buffers}
 { TBaseBuffer is the base class for both static and dynamic buffers }
 
   TBaseBuffer = class(TContextManagedObject)
-  private
-    class var LastBuffer: TObject;
-    class var LastAttribArrayCount: Integer;
   protected
-    procedure ResetLast; virtual;
+    { Changed is called whenever the contents of the buffer change }
+    procedure Changed; virtual;
   public
+    { Create a buffer with room for N items }
     constructor Create(N: Integer = 0); virtual;
   end;
 
+  { The class of a buffer }
   TBufferClass = class of TBaseBuffer;
 
 { TDataBuffer\<T\> is a class for incrementally adding large amounts of
@@ -107,7 +135,10 @@ type
 
     WordArray = TArrayList<Word>;
 
-{ TDrawingBuffer\<T\> is the abstract base class for drawing vertex arrays }
+{ TDrawingBuffer\<T\> is the abstract base class for drawing vertex arrays.
+  Vertices are kept in memory and uploaded to an OpenGL buffer object the
+  next time the buffer is drawn after a change. Each drawing buffer owns its
+  buffer objects and, when the API supports them, a vertex array object. }
 
   TDrawingBuffer<T> = class(TDataBuffer<T>)
   private type
@@ -121,14 +152,23 @@ type
     FMark: TBufferMark;
     FMarkers: TBufferMarkers;
     FProg: Integer;
+    FArrayBuffer: Integer;
+    FIndexBuffer: Integer;
+    FVertexArray: Integer;
+    FUploaded: Boolean;
   private
     function GetMarkCount: Integer;
     procedure DrawQuads(Start: Integer; Length: Integer);
+    procedure BeginDraw;
+    procedure EndDraw;
   protected
-    procedure ResetLast; override;
+    procedure Changed; override;
     procedure Added(N: Integer); override;
+    { CountAttributes returns the number of vertex attributes in T }
     function CountAttributes: Integer; virtual; abstract;
-    procedure BindAttributes(var Vertex: T); virtual; abstract;
+    { BindAttributes describes the fields of T as offsets into the bound
+      array buffer using glVertexAttribPointer }
+    procedure BindAttributes; virtual; abstract;
   public
     { Create a new data buffer optionally allocating room for a N number
       of future vertices }
@@ -163,98 +203,132 @@ type
 
 {$region vertex types}
 type
+  { TFlatVertex is a 2D position }
   TFlatVertex = record
     Vertex: TVec2;
   end;
 
+  { TVertex is a 3D position }
   TVertex = record
     Vertex: TVec3;
   end;
 
+  { TColorVertex is a position and a color }
   TColorVertex = record
     Vertex: TVec3;
     Color: TVec4;
   end;
 
+  { TColorTexVertex is a position, a texture coordinate, and a color }
   TColorTexVertex = record
     Vertex: TVec3;
     TexCoord: TVec2;
     Color: TVec4;
   end;
 
+  { TLitColorVertex is a position, a color, and a normal for lighting }
   TLitColorVertex = record
     Vertex: TVec3;
     Color: TVec3;
     Normal: TVec3;
   end;
 
+  { TTexVertex is a position and a texture coordinate }
   TTexVertex = record
     Vertex: TVec3;
     TexCoord: TVec2;
   end;
 
+  { TLitTexVertex is a position, a texture coordinate, and a normal for
+    lighting }
   TLitTexVertex = record
     Vertex: TVec3;
     TexCoord: TVec2;
     Normal: TVec3;
   end;
+
+  { TSkinVertex is a lit textured vertex moved by up to four bones. Bones holds
+    bone indices stored as floats and Weights holds their weights. }
+  TSkinVertex = record
+    Vertex: TVec3;
+    Normal: TVec3;
+    TexCoord: TVec2;
+    Bones: TVec4;
+    Weights: TVec4;
+  end;
 {$endregion}
 
 {$region specilized data buffers}
-  { TFlatVertexBuffer }
+  { TFlatVertexBuffer is a buffer of 2D positions }
 
   TFlatVertexBuffer = class(TDrawingBuffer<TFlatVertex>)
   protected
     function CountAttributes: Integer; override;
-    procedure BindAttributes(var Vertex: TFlatVertex); override;
+    procedure BindAttributes; override;
   public
+    { Add a vertex, returning the buffer so calls can be chained }
     function Add(const V: TVec2): TFlatVertexBuffer; overload;
     function Add(X, Y: Float): TFlatVertexBuffer; overload;
   end;
 
-  { TVertexBuffer }
+  { TVertexBuffer is a buffer of 3D positions }
 
   TVertexBuffer = class(TDrawingBuffer<TVertex>)
   protected
     function CountAttributes: Integer; override;
-    procedure BindAttributes(var Vertex: TVertex); override;
+    procedure BindAttributes; override;
   public
+    { Add a vertex, returning the buffer so calls can be chained }
     function Add(const V: TVec3): TVertexBuffer; overload;
     function Add(X, Y, Z: Float): TVertexBuffer; overload;
   end;
 
-  { TColorVertexBuffer }
+  { TColorVertexBuffer is a buffer of colored vertices }
 
   TColorVertexBuffer = class(TDrawingBuffer<TColorVertex>)
   protected
     function CountAttributes: Integer; override;
-    procedure BindAttributes(var Vertex: TColorVertex); override;
+    procedure BindAttributes; override;
   public
+    { Add a vertex, returning the buffer so calls can be chained }
     function Add(const V: TVec3; const C: TVec4): TColorVertexBuffer; overload;
     function Add(X, Y, Z, R, G, B, A: Float): TColorVertexBuffer; overload;
   end;
 
-  { TTexVertexBuffer }
+  { TTexVertexBuffer is a buffer of textured vertices }
 
   TTexVertexBuffer = class(TDrawingBuffer<TTexVertex>)
   protected
     function CountAttributes: Integer; override;
-    procedure BindAttributes(var Vertex: TTexVertex); override;
+    procedure BindAttributes; override;
   public
+    { Add a vertex, returning the buffer so calls can be chained }
     function Add(const V: TVec3; const P: TVec2): TTexVertexBuffer; overload;
     function Add(X, Y, Z, PX, PY: Float): TTexVertexBuffer; overload;
   end;
 
-  { TColorTexVertexBuffer }
+  { TColorTexVertexBuffer is a buffer of colored and textured vertices }
 
   TColorTexVertexBuffer = class(TDrawingBuffer<TColorTexVertex>)
   protected
     function CountAttributes: Integer; override;
-    procedure BindAttributes(var Vertex: TColorTexVertex); override;
+    procedure BindAttributes; override;
   public
+    { Add a vertex, returning the buffer so calls can be chained }
     function Add(const V: TVec3; const Tex: TVec2; Color: TVec4): TColorTexVertexBuffer;
       overload;
     function Add(X, Y, Z, U, V, R, G, B, A: Float): TColorTexVertexBuffer; overload;
+  end;
+
+  { TSkinVertexBuffer is a buffer of vertices moved by bones }
+
+  TSkinVertexBuffer = class(TDrawingBuffer<TSkinVertex>)
+  protected
+    function CountAttributes: Integer; override;
+    procedure BindAttributes; override;
+  public
+    { Add a vertex, returning the buffer so calls can be chained }
+    function Add(const V, N: TVec3; const Tex: TVec2; const Bones, Weights: TVec4): TSkinVertexBuffer; overload;
   end;
 {$endregion}
 
@@ -262,7 +336,13 @@ implementation
 
 uses
   Codebot.Render.Shaders,
-  Codebot.GLES;
+  Codebot.OpenGL;
+
+{ Vertex array objects are part of desktop OpenGL 3.0 and OpenGL ES 3.0 }
+
+{$if defined(gl30) or defined(gles30)}
+  {$define glvertexarray}
+{$endif}
 
 {$ifdef glframebuffer}
 {$region texture buffer}
@@ -333,6 +413,68 @@ begin
   Ctx.Identity;
 end;
 {$endregion}
+
+{$region shadow buffer}
+{ TShadowBuffer }
+
+constructor TShadowBuffer.Create(Size: Integer = 2048);
+begin
+  inherited Create(nil);
+  if Size < 16 then
+    Size := 16;
+  FSize := Size;
+  glGenTextures(1, @FTexture);
+  Ctx.PushTexture(FTexture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, FSize, FSize, 0,
+    GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, nil);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+  Ctx.PopTexture;
+  glGenFramebuffers(1, @FFrameBuffer);
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, @FPriorFrameBuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, FFrameBuffer);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, FTexture, 0);
+  {$ifndef glesapi}
+  { Desktop OpenGL requires that a frame buffer without color draws nothing }
+  glDrawBuffer(GL_NONE);
+  glReadBuffer(GL_NONE);
+  {$endif}
+  if glCheckFramebufferStatus(GL_FRAMEBUFFER) <> GL_FRAMEBUFFER_COMPLETE then
+  begin
+    glBindFramebuffer(GL_FRAMEBUFFER, FPriorFrameBuffer);
+    raise EContextError.Create('The shadow buffer could not be created');
+  end;
+  glBindFramebuffer(GL_FRAMEBUFFER, FPriorFrameBuffer);
+end;
+
+destructor TShadowBuffer.Destroy;
+begin
+  glDeleteFramebuffers(1, @FFrameBuffer);
+  glDeleteTextures(1, @FTexture);
+  inherited Destroy;
+end;
+
+procedure TShadowBuffer.StartRecording;
+begin
+  glGetIntegerv(GL_FRAMEBUFFER_BINDING, @FPriorFrameBuffer);
+  glBindFramebuffer(GL_FRAMEBUFFER, FFrameBuffer);
+  Ctx.PushViewport(0, 0, FSize, FSize);
+  glClear(GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(2, 4);
+end;
+
+procedure TShadowBuffer.StopRecording;
+begin
+  glDisable(GL_POLYGON_OFFSET_FILL);
+  glBindFramebuffer(GL_FRAMEBUFFER, FPriorFrameBuffer);
+  Ctx.PopViewport;
+end;
+{$endregion}
 {$endif}
 
 {$region vertex buffers}
@@ -343,7 +485,7 @@ begin
   inherited Create(nil);
 end;
 
-procedure TBaseBuffer.ResetLast;
+procedure TBaseBuffer.Changed;
 begin
 end;
 
@@ -387,7 +529,6 @@ const
 var
   C: Integer;
 begin
-  ResetLast;
   if N < 1 then
     Exit;
   if N < 16 then
@@ -423,7 +564,7 @@ end;
 
 procedure TDataBuffer<T>.Clear(N: Integer = 0);
 begin
-  ResetLast;
+  Changed;
   FCount := 0;
   if N = 0 then
   begin
@@ -446,6 +587,7 @@ begin
   for J := 0 to I - 1 do
     FBuffer.Items[FCount + J] := Range[J];
   Inc(FCount, I);
+  Changed;
   Added(I);
 end;
 
@@ -454,6 +596,7 @@ begin
   Grow(1);
   FBuffer.Items[FCount] := Item;
   Inc(FCount);
+  Changed;
   Added(1);
 end;
 
@@ -470,6 +613,7 @@ end;
 procedure TDataBuffer<T>.SetItem(Index: Integer; Value: T);
 begin
   FBuffer.Items[Index] := Value;
+  Changed;
 end;
 
 { TDrawingBuffer<T> }
@@ -481,8 +625,15 @@ end;
 
 destructor TDrawingBuffer<T>.Destroy;
 begin
+  {$ifdef glvertexarray}
+  if FVertexArray <> 0 then
+    glDeleteVertexArrays(1, @FVertexArray);
+  {$endif}
+  if FIndexBuffer <> 0 then
+    glDeleteBuffers(1, @FIndexBuffer);
+  if FArrayBuffer <> 0 then
+    glDeleteBuffers(1, @FArrayBuffer);
   inherited Destroy;
-  ResetLast;
 end;
 
 procedure TDrawingBuffer<T>.SetProgram(Prog: Integer);
@@ -512,17 +663,76 @@ begin
   Result := Copy;
 end;
 
-procedure TDrawingBuffer<T>.ResetLast;
+procedure TDrawingBuffer<T>.Changed;
 begin
-  if LastBuffer = Self then
+  FUploaded := False;
+end;
+
+{ BeginDraw binds the vertex data, uploading it if it has changed, and
+  activates the shader program }
+
+procedure TDrawingBuffer<T>.BeginDraw;
+var
+  I: Integer;
+  S: string;
+begin
+  if FArrayBuffer = 0 then
   begin
-    LastBuffer := nil;
-    while LastAttribArrayCount > 0 do
-    begin
-      Dec(LastAttribArrayCount);
-      glDisableVertexAttribArray(LastAttribArrayCount);
-    end;
+    glGenBuffers(1, @FArrayBuffer);
+    {$ifdef glvertexarray}
+    { The vertex array records the attribute layout once }
+    glGenVertexArrays(1, @FVertexArray);
+    glBindVertexArray(FVertexArray);
+    glBindBuffer(GL_ARRAY_BUFFER, FArrayBuffer);
+    for I := 0 to CountAttributes - 1 do
+      glEnableVertexAttribArray(I);
+    BindAttributes;
+    {$endif}
   end;
+  {$ifdef glvertexarray}
+  glBindVertexArray(FVertexArray);
+  {$endif}
+  glBindBuffer(GL_ARRAY_BUFFER, FArrayBuffer);
+  if not FUploaded then
+  begin
+    glBufferData(GL_ARRAY_BUFFER, FCount * SizeOf(T), @FBuffer.Items[0],
+      GL_DYNAMIC_DRAW);
+    FUploaded := True;
+  end;
+  {$ifndef glvertexarray}
+  for I := 0 to CountAttributes - 1 do
+    glEnableVertexAttribArray(I);
+  BindAttributes;
+  {$endif}
+  if FProg = 0 then
+  begin
+    S := ClassName;
+    S := S.ToLower.Copy(2);
+    FProg := Ctx.Shaders[S].Handle;
+  end;
+  if FProg > -1 then
+  begin
+    Ctx.PushProgram(FProg);
+    Ctx.SetProgramMatrix;
+  end;
+end;
+
+procedure TDrawingBuffer<T>.EndDraw;
+{$ifndef glvertexarray}
+var
+  I: Integer;
+{$endif}
+begin
+  if FProg > -1 then
+    Ctx.PopProgram;
+  {$ifdef glvertexarray}
+  glBindVertexArray(0);
+  {$else}
+  for I := 0 to CountAttributes - 1 do
+    glDisableVertexAttribArray(I);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  {$endif}
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
 end;
 
 procedure TDrawingBuffer<T>.Added(N: Integer);
@@ -619,9 +829,6 @@ begin
 end;
 
 procedure TDrawingBuffer<T>.Draw(Mode: TVertMode; Start: Integer; Length: Integer = 0);
-var
-  I, J: Integer;
-  S: string;
 begin
   if Start < 0 then
     Exit;
@@ -636,69 +843,29 @@ begin
     DrawQuads(Start, Length);
     Exit;
   end;
-  if LastBuffer <> Self then
-  begin
-    LastBuffer := Self;
-    for J := 0 to LastAttribArrayCount - 1 do
-      glDisableVertexAttribArray(J);
-    LastAttribArrayCount := CountAttributes;
-    I := LastAttribArrayCount;
-    for J := 0 to I - 1 do
-      glEnableVertexAttribArray(J);
-    BindAttributes(FBuffer.Items[0]);
-  end;
-  if FProg = 0 then
-  begin
-    S := ClassName;
-    S := S.ToLower.Copy(2);
-    FProg := Ctx.Shaders[S].Handle;
-  end;
-  if FProg > -1 then
-  begin
-    Ctx.PushProgram(FProg);
-    Ctx.SetProgramMatrix;
-  end;
+  BeginDraw;
   glDrawArrays(GLenum(Mode), Start, Length);
-  if FProg > -1 then
-    Ctx.PopProgram;
+  EndDraw;
 end;
 
 procedure TDrawingBuffer<T>.Draw(Mode: TVertMode; Indices: WordArray);
-var
-  I, J: Integer;
-  S: string;
 begin
-  if FCount < 0 then
+  if FCount < 1 then
     Exit;
   if Indices.IsEmpty then
     Exit;
-  if LastBuffer <> Self then
-  begin
-    LastBuffer := Self;
-    for J := 0 to LastAttribArrayCount - 1 do
-      glDisableVertexAttribArray(J);
-    LastAttribArrayCount := CountAttributes;
-    I := LastAttribArrayCount;
-    for J := 0 to I - 1 do
-      glEnableVertexAttribArray(J);
-    BindAttributes(FBuffer.Items[0]);
-  end;
-  if FProg = 0 then
-  begin
-    S := ClassName;
-    S := S.ToLower.Copy(2);
-    FProg := Ctx.Shaders[S].Handle;
-  end;
-  if FProg > -1 then
-  begin
-    Ctx.PushProgram(FProg);
-    Ctx.SetProgramMatrix;
-  end;
   if Mode = vertQuads then
     Mode := vertTriangles;
-  glDrawElements(GL_TRIANGLES, Indices.Length, GL_UNSIGNED_SHORT, @Indices.Items[0]);
-  if FProg > -1 then
-    Ctx.PopProgram;
+  BeginDraw;
+  { Indices are streamed through an element buffer, which the vertex array
+    records while it is bound }
+  if FIndexBuffer = 0 then
+    glGenBuffers(1, @FIndexBuffer);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, FIndexBuffer);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, Indices.Length * SizeOf(Word),
+    @Indices.Items[0], GL_STREAM_DRAW);
+  glDrawElements(GLenum(Mode), Indices.Length, GL_UNSIGNED_SHORT, nil);
+  EndDraw;
 end;
 
 function TDrawingBuffer<T>.GetMarkCount: Integer;
@@ -711,6 +878,14 @@ end;
 {$endregion}
 
 {$region specilized data buffers}
+{ Offset returns the position of a field within a vertex record as an offset
+  into the bound array buffer }
+
+function Offset(Vertex, Field: Pointer): Pointer; inline;
+begin
+  Result := Pointer(PtrUInt(Field) - PtrUInt(Vertex));
+end;
+
 { TFlatVertex }
 
 function TFlatVertexBuffer.CountAttributes: Integer;
@@ -718,9 +893,11 @@ begin
   Result := 1;
 end;
 
-procedure TFlatVertexBuffer.BindAttributes(var Vertex: TFlatVertex);
+procedure TFlatVertexBuffer.BindAttributes;
+var
+  V: TFlatVertex;
 begin
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, SizeOf(TVec2), @Vertex);
+  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Vertex));
 end;
 
 function TFlatVertexBuffer.Add(X, Y: Float): TFlatVertexBuffer;
@@ -749,9 +926,11 @@ begin
   Result := 1;
 end;
 
-procedure TVertexBuffer.BindAttributes(var Vertex: TVertex);
+procedure TVertexBuffer.BindAttributes;
+var
+  V: TVertex;
 begin
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, SizeOf(TVec3), @Vertex);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Vertex));
 end;
 
 function TVertexBuffer.Add(X, Y, Z: Float): TVertexBuffer;
@@ -781,10 +960,12 @@ begin
   Result := 2;
 end;
 
-procedure TColorVertexBuffer.BindAttributes(var Vertex: TColorVertex);
+procedure TColorVertexBuffer.BindAttributes;
+var
+  V: TColorVertex;
 begin
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, SizeOf(TColorVertex), @Vertex.Vertex);
-  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, SizeOf(TColorVertex), @Vertex.Color);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Vertex));
+  glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Color));
 end;
 
 function TColorVertexBuffer.Add(const V: TVec3; const C: TVec4): TColorVertexBuffer;
@@ -814,10 +995,12 @@ begin
   Result := 2;
 end;
 
-procedure TTexVertexBuffer.BindAttributes(var Vertex: TTexVertex);
+procedure TTexVertexBuffer.BindAttributes;
+var
+  V: TTexVertex;
 begin
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, SizeOf(TTexVertex), @Vertex.Vertex);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, SizeOf(TTexVertex), @Vertex.TexCoord);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Vertex));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.TexCoord));
 end;
 
 function TTexVertexBuffer.Add(const V: TVec3; const P: TVec2): TTexVertexBuffer;
@@ -847,14 +1030,13 @@ begin
   Result := 3;
 end;
 
-procedure TColorTexVertexBuffer.BindAttributes(var Vertex: TColorTexVertex);
+procedure TColorTexVertexBuffer.BindAttributes;
+var
+  V: TColorTexVertex;
 begin
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, SizeOf(TColorTexVertex),
-    @Vertex.Vertex);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, SizeOf(TColorTexVertex),
-    @Vertex.TexCoord);
-  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, SizeOf(TColorTexVertex),
-    @Vertex.Color);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Vertex));
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.TexCoord));
+  glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Color));
 end;
 
 function TColorTexVertexBuffer.Add(const V: TVec3; const Tex: TVec2;
@@ -877,6 +1059,37 @@ begin
   Item.Vertex := Vec3(X, Y, Z);
   Item.TexCoord := Vec2(U, V);
   Item.Color := Vec4(R, G, B, A);
+  AddItem(Item);
+  Result := Self;
+end;
+
+{ TSkinVertexBuffer }
+
+function TSkinVertexBuffer.CountAttributes: Integer;
+begin
+  Result := 5;
+end;
+
+procedure TSkinVertexBuffer.BindAttributes;
+var
+  V: TSkinVertex;
+begin
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Vertex));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Normal));
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.TexCoord));
+  glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Bones));
+  glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, SizeOf(V), Offset(@V, @V.Weights));
+end;
+
+function TSkinVertexBuffer.Add(const V, N: TVec3; const Tex: TVec2; const Bones, Weights: TVec4): TSkinVertexBuffer;
+var
+  Item: TSkinVertex;
+begin
+  Item.Vertex := V;
+  Item.Normal := N;
+  Item.TexCoord := Tex;
+  Item.Bones := Bones;
+  Item.Weights := Weights;
   AddItem(Item);
   Result := Self;
 end;

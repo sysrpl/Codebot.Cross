@@ -1,0 +1,1 @@
+The Codebot.Networking unit provides network sockets. TAddressName resolves a host name to an internet address, and TSocket is a simple object oriented interface to sockets, which can optionally use a secure connection and includes events that report the progress of reading and writing. For quick tasks, SocketSend sends data to a port on a host.

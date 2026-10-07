@@ -1,0 +1,56 @@
+The codebot_controls package provides LCL controls, forms, and 2D graphics. Instead of using the native widgets of the platform, its controls draw themselves on a surface using antialiased vector graphics and a theme. The package requires codebot and the LCL.
+
+## Graphics
+
+Codebot.Graphics creates the drawing objects declared in Codebot.Graphics.Types of the codebot package, including surfaces, bitmaps, pens, solid, gradient, and bitmap brushes, fonts, and matrices. It also defines TSurfaceBitmap, which is a graphic that holds a bitmap, TImageStrip, which is a component that holds a strip of images, the themes used to draw controls, splash windows, and screen capture.
+
+Codebot.Graphics selects the drawing backend for the platform:
+
+| Platform | Backend | Units |
+| --- | --- | --- |
+| Linux | Cairo | Codebot.Graphics.Linux.SurfaceCairo |
+| Windows | Direct2D | Codebot.Graphics.Windows.SurfaceD2D |
+| Windows | GDI+ | Codebot.Graphics.Windows.SurfaceGdiPlus |
+
+On Windows, bitmaps and image files are handled by Codebot.Graphics.Windows.ImageBitmap and Codebot.Graphics.Windows.InterfacedBitmap.
+
+## Controls
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Controls | The base classes TSurfaceGraphicControl, TSurfaceCustomControl, and TSurfaceForm, which draw on a surface. |
+| Codebot.Controls.Banner | TBanner and TBannerForm, which show a header with a title and a description. |
+| Codebot.Controls.Buttons | TThinButton, a flat button that can show an image. |
+| Codebot.Controls.Colors | THuePicker, TSaturationPicker, TAlphaPicker, TAnglePicker, and TColorSlideEdit, which pick colors and angles. |
+| Codebot.Controls.Containers | TSizingPanel, which is resized by dragging, and TCaptionBox, a panel with a caption. |
+| Codebot.Controls.Edits | TSlideEdit, an edit with a slide bar that pops up, and THotkey. |
+| Codebot.Controls.Extras | TDrawImage, TDrawBox, TDrawPanel, TIndeterminateProgress, and TStepBubbles. |
+| Codebot.Controls.Grids | TScrollWindow and TContentGrid, a grid of cells drawn by the program. |
+| Codebot.Controls.Scrolling | THeaderBar, TDrawList, TDrawTextList, and TDetailsList, which are lists that scroll. |
+| Codebot.Controls.Sliders | TSlideBar, a track bar. |
+| Codebot.Controls.Highlighter | TControlHighlighter, which draws an animated outline around a control. |
+| Codebot.Controls.Tooltips | Tipify, which shows hints in a fading window. |
+
+## Forms
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Forms.Floating | TFloatingForm, a borderless form that can be transparent or let the mouse pass through it. |
+| Codebot.Forms.Popup | TPopupForm, a form shown below a control, such as a drop down list. |
+| Codebot.Forms.Widget | TWidget, a floating form that the user moves and resizes by dragging. |
+| Codebot.Forms.ColorDialog | TAdvancedColorDialog, a dialog for choosing a color and its opacity. |
+| Codebot.Forms.Management | FormManager, which finds and activates forms. |
+
+## Input and the window system
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Input.Hotkeys | Hotkeys that work across the whole system, even when the program is not in the foreground. |
+| Codebot.Input.MouseMonitor | Reports mouse activity anywhere on the screen. |
+| Codebot.Interop.Linux.NetWM | Part of the NetWM protocol used by X11 window managers. |
+
+## Other units
+
+Codebot.Platform.LCL provides the Codebot.Platform interfaces of the codebot package using the LCL, including bitmaps, the clipboard, windows, and message, file, and picture dialogs. Scenes from the codebot_render package use it when they run inside an LCL form.
+
+Codebot.Debug provides Bugout, which sends lines of text to another program, and TDebugServer, which receives them.

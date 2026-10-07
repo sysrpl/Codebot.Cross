@@ -1,0 +1,1 @@
+The Codebot.Interop.Linux.Xml2 unit declares the C API of the libxml2 library on Linux. The library is loaded when Xml2Init is called. This unit is used by Codebot.Text.Xml to read and write XML documents on Linux.

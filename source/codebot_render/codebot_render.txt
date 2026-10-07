@@ -1,0 +1,78 @@
+The codebot_render package is a cross platform graphics and game library drawn using OpenGL. It covers rendering, scenes, widgets, physics, audio, and input, and none of it depends on the LCL, so the same scene can run in an LCL form or in an SDL window. The package requires only codebot.
+
+A host package supplies the window that a scene runs in:
+
+| Host package | Window |
+| --- | --- |
+| codebot_render_controls | An LCL form |
+| codebot_render_sdl | An SDL window, without the LCL |
+
+## OpenGL
+
+Codebot.OpenGL declares the OpenGL API for versions 3.0 through 4.6 and OpenGL ES 2.0 through 3.2, along with the context and information interfaces used for rendering. The version is chosen by a define in render.inc, and OpenGL 3.3 is used if no version is chosen. Codebot.OpenGL.SDL creates every OpenGL context using SDL, for both hosts.
+
+## Rendering
+
+Codebot.Render.Contexts defines TRenderContext, which is accessed through Ctx. A render context holds the matrix stacks, finds asset files, and owns the managed objects that need a context, freeing any that the program does not free itself. The managed objects are defined in these units:
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Render.Shaders | Shaders and shader programs. |
+| Codebot.Render.Textures | Textures. |
+| Codebot.Render.Buffers | Texture and shadow buffers that are rendered to, and vertex buffers for several vertex layouts. |
+| Codebot.Render.Fonts | Fonts kept in a texture atlas, and blocks of text. |
+| Codebot.Render.World | A 3D world with a camera and a skybox. |
+
+## Vector graphics
+
+Codebot.Render.Graphics provides 2D vector graphics through the ICanvas interface, which draws paths, images, sprites, and text using pens, brushes, and fonts. It is built on the following units:
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Render.NanoVG | A Pascal port of NanoVG, which draws the canvas. |
+| Codebot.Render.FontStash | A Pascal port of fontstash, which lays out text. |
+| Codebot.Render.TrueType | A Pascal port of stb_truetype, which makes the glyphs. |
+
+Codebot.Render.SVG reads an SVG document into a tree of shapes and draws it on a canvas.
+
+## Scenes
+
+Codebot.Render.Scenes defines TScene, which a program descends from to draw each frame and to handle keyboard, text, mouse, and wheel input. It also defines TSceneHost, the base class of whatever runs a scene, which provides the scene with the canvas, a default font, the window, and the clipboard.
+
+- TWidgetScene in Codebot.Render.Scenes.Widgets adds widgets to a scene.
+- TPhysicsScene in Codebot.Render.Scenes.Physics adds a physics space, which is stepped at a fixed rate on its own thread.
+
+## Widgets
+
+Codebot.Render.Widgets is a user interface drawn on a canvas inside a scene. It includes windows, horizontal and vertical boxes, labels, edits, memos, push and glyph buttons, check boxes, sliders, spin boxes, list boxes, and scrolling grids.
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Render.Widgets.Themes | Draws the widgets in one of several themes: Arc Dark, Chicago, Graphite, Experience, Vista, and Cupertino. |
+| Codebot.Render.Widgets.Custom | Widgets that draw themselves, including a scrolling line graph, a graph of frames per second, and a label that shows markdown. |
+| Codebot.Render.Widgets.Dialogs | File and picture dialogs made from widgets, for hosts that have none of their own. |
+| Codebot.Render.Widgets.Video | TVideoWidget, which plays video using libmpv when videowidget is defined in render.inc. |
+
+## Physics
+
+Codebot.Physics wraps the Chipmunk2D physics library in records for spaces, bodies, shapes, joints, and collisions. Codebot.Interop.Chipmunk2D declares the library itself, which is linked statically and must be built at single precision using Chipmunk2D/build-single.sh.
+
+## Hardware
+
+Codebot.Hardware plays audio and reads the keyboard, mouse, and joysticks using SDL alone, so it works the same way on both hosts. Audio is held in memory as named sources and is played in banks that are mixed together on the audio thread. The supported audio formats are MP3, Ogg Vorbis, uncompressed WAV, and tracker music.
+
+## Bindings to C libraries
+
+| Unit | Library |
+| --- | --- |
+| Codebot.Interop.SDL2 | SDL2 |
+| Codebot.Interop.Chipmunk2D | Chipmunk2D, for physics |
+| Codebot.Interop.Assimp | assimp, which loads 3D model formats |
+| Codebot.Interop.MPV | libmpv, which plays video |
+| Codebot.Interop.MiniMp3 | minimp3, which decodes MP3 audio |
+| Codebot.Interop.Vorbis | vorbisfile, which decodes Ogg Vorbis audio |
+| Codebot.Interop.Xmp | libxmp, which plays tracker music |
+
+The three audio libraries are linked statically from libcodebotaudio.a, which is built by audio/build.sh.
+
+See goal.txt in this folder for the design of the package and its hosts.

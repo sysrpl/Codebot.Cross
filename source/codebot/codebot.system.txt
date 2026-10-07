@@ -1,0 +1,13 @@
+The Codebot.System unit defines the types and routines used throughout the library. It declares Float, which is the floating point type used by the library, along with the other basic types and TArray<T>. It also loads dynamic libraries and identifies which platform the program is running on.
+
+The unit includes the following:
+
+- TArrayList<T>, an extension of dynamic arrays that can sort, search, and filter its items, and TStack<T>, a fixed size stack, along with the compare and convert function types they use.
+- Math, time, string, and file management routines.
+- Helpers that add methods to strings, numbers, and TStrings.
+- Named values and named strings, which are simple dictionaries keyed by name.
+- Delegates, which publish an event to any number of subscribers, and TChangeNotifier, which notifies owners when something changes.
+- A null stream, which counts the bytes written to it without storing them.
+- Threading support, including mutexes, events, asynchronous tasks, TSimpleThread, and routines that wait.
+
+Finally, WriteLine writes formatted text to the console.

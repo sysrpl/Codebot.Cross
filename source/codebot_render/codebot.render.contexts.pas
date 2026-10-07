@@ -7,9 +7,9 @@ interface
 uses
   SysUtils, Classes,
   Codebot.System,
-  Codebot.Graphics,
+  Codebot.Platform,
   Codebot.Graphics.Types,
-  Codebot.GLES,
+  Codebot.OpenGL,
   Codebot.Geometry;
 
 type
@@ -22,7 +22,56 @@ type
 
 { TContextManagedObject provides a way to manage the lifetime of objects such as shaders,
   textures, and vertex buffers. If no collection is given to the constructor create then
-  the object will be maintained by Ctx.Objects. }
+  the object will be maintained by Ctx.Objects.
+
+  Managed objects require a render context, so they must be created on a thread
+  with a current render context, such as in the OnRenderStart, OnRender, or
+  OnRenderStop events of TGraphicsBox. Any objects not freed by the user are
+  freed when the render context is destroyed. A managed object which owns other
+  managed objects should free them using FreeManaged in its destructor. These
+  are the managed objects defined by the library:
+
+  Codebot.Render.Shaders
+    TVertexShader, TFragmentShader compile a single shader stage from source
+    TShaderProgram links a vertex and fragment shader into a program. It can be
+      created from source, files, or assets, and is made current with Push/Pop.
+    Ctx.Shaders is a TShaderCollection which finds programs by name, loading
+      name.vert and name.frag from the assets/shaders folder when they do not
+      exist. Sources without a #version directive are given one matching the
+      API selected in render.inc.
+
+  Codebot.Render.Textures
+    TTexture is a 2D texture loaded from a bitmap, stream, file, or RGBA pixel
+      data with filter, wrap, and mipmap settings. It is bound to a texture
+      slot with Push/Pop.
+    Ctx.Textures is a TTextureCollection which finds textures by name, loading
+      them from the assets/textures folder when they do not exist
+
+  Codebot.Render.Buffers
+    TFlatVertexBuffer, TVertexBuffer, TColorVertexBuffer, TTexVertexBuffer,
+      TColorTexVertexBuffer, and TSkinVertexBuffer hold vertices in memory and
+      upload them to an OpenGL buffer when drawn after a change. Their fields
+      are vertex attributes 0, 1, 2, and so on in order. Without SetProgram
+      they draw using a program from
+      Ctx.Shaders named after the class, such as 'texvertexbuffer'.
+    TTextureBuffer renders to a texture through a framebuffer with a depth buffer
+      between StartRecording and StopRecording
+
+  Codebot.Render.World
+    TWorld maps a 2D virtual resolution onto a 3D perspective. It is returned by
+      Ctx.World and optionally provides a camera, a skybox, and a ground grid.
+    TCamera holds a position and direction applied to the modelview matrix
+    TSkybox draws an inward facing textured cube around the camera. Its texture
+      must be loaded by the user.
+
+  Codebot.Render.Fonts
+    TFont renders the glyphs of a TrueType font at a pixel size into a texture
+      atlas and lays out text as quads in a TColorTexVertexBuffer
+    Ctx.Fonts is a TFontCollection which finds fonts by name, loading name.ttf
+      from the assets/fonts folder when they do not exist. Its DefaultFont is
+      the roboto font provided with the library assets.
+    TTextBlock draws a string with a font, position, scale, and color,
+      rebuilding its vertices only when they change }
 
   TContextManagedObject = class(IInterface)
   private
@@ -34,6 +83,11 @@ type
     function QueryInterface(constref Iid: TGuid; out Obj): LongInt; apicall;
     function _AddRef: LongInt; apicall;
     function _Release: LongInt; apicall;
+    { FreeManaged frees a managed object owned by this object and sets it to
+      nil. While the render context is being destroyed it only sets it to nil,
+      as the render context frees every managed object itself. Use it in place
+      of Free in destructors. }
+    procedure FreeManaged(var Obj);
   public
     { Create a new item managing its lifetime with a collection and name. If no
       collection is given it will be maintained by Ctx.Objects. }
@@ -76,13 +130,14 @@ type
     property Objects; default;
   end;
 
-{ The TContext class provides an interface to all rendering in this library }
+{ The TRenderContext class provides an interface to all rendering in this library }
 
-  TContext = class
+  TRenderContext = class
   private type
     TTextureItem = record
       Texture: Integer;
       Slot: Integer;
+      Previous: Integer;
     end;
     TTextureStack = TStack<TTextureItem>;
     TMatrixStack = TStack<TMatrix>;
@@ -111,6 +166,7 @@ type
     FProjectionCurrent: TMatrix;
     FMatrixChange: Boolean;
     FWorld: TContextManagedObject;
+    FDestroying: Boolean;
   private
     { Add a collection or raise an EContextCollectionError exeption if the
       name is blank or already exists }
@@ -119,8 +175,6 @@ type
     constructor Create;
     destructor Destroy; override;
     {$region general context methods and rendering options}
-    { Make the context current or not current }
-    procedure MakeCurrent(Current: Boolean);
     { Set the color to use when cleared }
     procedure SetClearColor(R, G, B, A: Float);
     { Clear the color and depth buffer bits }
@@ -152,7 +206,7 @@ type
     { Set the world for this context }
     procedure SetWorld(Value: TContextManagedObject);
     { Save the current viewport contents to a bitmap }
-    procedure SaveToBitmap(Bitmap: IBitmap);
+    procedure SaveToBitmap(Bitmap: IBitmapData);
     { Save the current viewport contents to a bitmap stream }
     procedure SaveToStream(Stream: TStream);
     { Save the current viewport contents to a bitmap file }
@@ -165,6 +219,9 @@ type
     { Search upwards for an asset returning the valid filename or raise
       an EContextAssetError exception }
     function GetAssetFile(const FileName: string): string;
+    { Search upwards for an asset the same way as GetAssetFile, returning
+      False instead of raising an exception if it cannot be found }
+    function FindAssetFile(const FileName: string; out Path: string): Boolean;
     { Set the asset folder name, which defaults to 'assets' }
     procedure SetAssetFolder(const Folder: string);
     { Returns a collection by name }
@@ -257,9 +314,13 @@ type
     {$endregion}
   end;
 
-{ Ctx returns the current TContext or throws EContextError if there is none }
+{ Ctx returns the render context of the calling thread or throws EContextError
+  if there is none. A render context becomes the context of the thread which
+  creates it, and stops being its context when destroyed. TGraphicsBox creates
+  a render context on its render thread before OnRenderStart and destroys it
+  after OnRenderStop. }
 
-function Ctx: TContext;
+function Ctx: TRenderContext;
 
 resourcestring
   SNoOpenGL = 'The OpenGL library could not be loaded';
@@ -272,14 +333,16 @@ resourcestring
 
 implementation
 
-var
+{ Each render thread has its own render context }
+
+threadvar
   InternalContext: TObject;
 
-function Ctx: TContext;
+function Ctx: TRenderContext;
 begin
   if InternalContext = nil then
     raise EContextError.Create(SNoContext);
-  Result := TContext(InternalContext);
+  Result := TRenderContext(InternalContext);
 end;
 
 { TContextManagedObject }
@@ -313,22 +376,32 @@ end;
 
 destructor TContextManagedObject.Destroy;
 var
-  C, N: TContextManagedObject;
+  P: ^TContextManagedObject;
 begin
-  C := FCollection.FNext;
-  if C = nil then
-    Exit;
-  N := nil;
-  while C <> Self do
-  begin
-    N := C;
-    C := N.FNext;
-  end;
-  if N = nil then
-    FCollection.FNext := FNext
-  else
-    N.FNext := FNext;
+  { Unlink from the collection }
+  P := @FCollection.FNext;
+  while P^ <> nil do
+    if P^ = Self then
+    begin
+      P^ := FNext;
+      Break;
+    end
+    else
+      P := @P^.FNext;
   inherited Destroy;
+end;
+
+procedure TContextManagedObject.FreeManaged(var Obj);
+var
+  Item: TObject;
+begin
+  Item := TObject(Obj);
+  TObject(Obj) := nil;
+  if Item = nil then
+    Exit;
+  if (InternalContext <> nil) and TRenderContext(InternalContext).FDestroying then
+    Exit;
+  Item.Free;
 end;
 
 procedure TContextManagedObject.SetName(const Value: string);
@@ -358,17 +431,10 @@ begin
 end;
 
 destructor TContextCollection.Destroy;
-var
-  C, N: TContextManagedObject;
 begin
-  C := FNext;
-  FNext := nil;
-  while C <> nil do
-  begin
-    N := C.FNext;
-    C.Free;
-    C := N;
-  end;
+  { Each item unlinks itself when freed }
+  while FNext <> nil do
+    FNext.Free;
   inherited Destroy;
 end;
 
@@ -387,9 +453,9 @@ begin
   Result := nil;
 end;
 
-{ TContext }
+{ TRenderContext }
 
-constructor TContext.Create;
+constructor TRenderContext.Create;
 const
   StackSize = 100;
 begin
@@ -421,22 +487,26 @@ begin
   FProjectionStack := TMatrixStack.Create(StackSize);
 end;
 
-destructor TContext.Destroy;
+destructor TRenderContext.Destroy;
 var
   C, N: TContextCollection;
 begin
-  InternalContext := nil;
+  { Ctx remains valid while managed objects are freed }
+  FDestroying := True;
   C := FCollection;
+  FCollection := nil;
   while C <> nil do
   begin
     N := C.FNextCollection;
     C.Free;
     C := N;
   end;
+  if InternalContext = Self then
+    InternalContext := nil;
   inherited Destroy;
 end;
 
-procedure TContext.AddCollection(Collection: TContextCollection);
+procedure TRenderContext.AddCollection(Collection: TContextCollection);
 var
   C: TContextCollection;
 begin
@@ -458,25 +528,17 @@ begin
 end;
 
 {$region general context methods}
-procedure TContext.MakeCurrent(Current: Boolean);
-begin
-  if Current then
-    InternalContext := Self
-  else
-    InternalContext := nil;
-end;
-
-procedure TContext.SetClearColor(R, G, B, A: Float);
+procedure TRenderContext.SetClearColor(R, G, B, A: Float);
 begin
   glClearColor(R, G, B, A);
 end;
 
-procedure TContext.Clear;
+procedure TRenderContext.Clear;
 begin
   glClear(GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
 end;
 
-procedure TContext.PushCulling(Cull: Boolean);
+procedure TRenderContext.PushCulling(Cull: Boolean);
 begin
   FCullStack.Push(FCull);
   FCull := Cull;
@@ -486,7 +548,7 @@ begin
     glDisable(GL_CULL_FACE);
 end;
 
-procedure TContext.PopCulling;
+procedure TRenderContext.PopCulling;
 begin
   if FCullStack.Index < 0 then
     Exit;
@@ -497,7 +559,7 @@ begin
     glDisable(GL_CULL_FACE);
 end;
 
-procedure TContext.PushDepthTesting(DepthTest: Boolean);
+procedure TRenderContext.PushDepthTesting(DepthTest: Boolean);
 begin
   FDepthTestStack.Push(FDepthTest);
   FDepthTest := DepthTest;
@@ -507,7 +569,7 @@ begin
     glDisable(GL_DEPTH_TEST);
 end;
 
-procedure TContext.PopDepthTesting;
+procedure TRenderContext.PopDepthTesting;
 begin
   if FDepthTestStack.Index < 0 then
     Exit;
@@ -518,7 +580,7 @@ begin
     glDisable(GL_DEPTH_TEST);
 end;
 
-procedure TContext.PushDepthWriting(DepthWriting: Boolean);
+procedure TRenderContext.PushDepthWriting(DepthWriting: Boolean);
 begin
   FDepthWritingStack.Push(FDepthWriting);
   FDepthWriting := DepthWriting;
@@ -528,7 +590,7 @@ begin
     glDepthMask(GL_FALSE);
 end;
 
-procedure TContext.PopDepthWriting;
+procedure TRenderContext.PopDepthWriting;
 begin
   if FDepthWritingStack.Index < 0 then
     Exit;
@@ -539,25 +601,25 @@ begin
     glDepthMask(GL_FALSE);
 end;
 
-function TContext.GetViewport: TRectI;
+function TRenderContext.GetViewport: TRectI;
 begin
   Result := FViewport;
 end;
 
-procedure TContext.SetViewport(X, Y, W, H: Integer);
+procedure TRenderContext.SetViewport(X, Y, W, H: Integer);
 begin
   FViewport := TRectI.Create(X, Y, W, H);
   glViewport(X, Y, W, H);
 end;
 
-procedure TContext.PushViewport(X, Y, W, H: Integer);
+procedure TRenderContext.PushViewport(X, Y, W, H: Integer);
 begin
   FViewportStack.Push(FViewport);
   FViewport := TRectI.Create(X, Y, W, H);
   glViewport(X, Y, W, H);
 end;
 
-procedure TContext.PopViewport;
+procedure TRenderContext.PopViewport;
 begin
   if FViewportStack.Index < 0 then
     Exit;
@@ -565,45 +627,76 @@ begin
   glViewport(FViewport.X, FViewport.Y, FViewport.Width, FViewport.Height);
 end;
 
-function TContext.GetWorld: TContextManagedObject;
+function TRenderContext.GetWorld: TContextManagedObject;
 begin
   Result := FWorld;
 end;
 
-procedure TContext.SetWorld(Value: TContextManagedObject);
+procedure TRenderContext.SetWorld(Value: TContextManagedObject);
 begin
   FWorld := Value;
 end;
 
-procedure TContext.SaveToBitmap(Bitmap: IBitmap);
+{ OpenGL returns rows of RGBA bottom to top while bitmaps store rows of
+  premultiplied BGRA top to bottom, so the rows are flipped and the pixels are
+  converted as they are copied. This is the reverse of TTexture.LoadFromBitmap. }
+
+procedure TRenderContext.SaveToBitmap(Bitmap: IBitmapData);
+var
+  Data: array of Byte;
+  W, H, A, X, Y: Integer;
+  Source: PByte;
+  Dest: PPixel;
 begin
-  Bitmap.SetSize(FViewport.Width, FViewport.Height);
-  glReadPixels(FViewport.X, FViewport.Y, FViewport.Width, FViewport.Height,
-    GL_UNSIGNED_BYTE, GL_RGBA, Bitmap.Pixels);
+  W := FViewport.Width;
+  H := FViewport.Height;
+  Bitmap.SetSize(W, H);
+  if (W < 1) or (H < 1) then
+    Exit;
+  SetLength(Data, W * H * 4);
+  glPixelStorei(GL_PACK_ALIGNMENT, 4);
+  glReadPixels(FViewport.X, FViewport.Y, W, H, GL_RGBA, GL_UNSIGNED_BYTE,
+    @Data[0]);
+  Dest := Bitmap.Pixels;
+  for Y := H - 1 downto 0 do
+  begin
+    Source := @Data[Y * W * 4];
+    for X := 0 to W - 1 do
+    begin
+      A := Source[3];
+      Dest.Red := (Source[0] * A + $7F) div $FF;
+      Dest.Green := (Source[1] * A + $7F) div $FF;
+      Dest.Blue := (Source[2] * A + $7F) div $FF;
+      Dest.Alpha := A;
+      Inc(Source, 4);
+      Inc(Dest);
+    end;
+  end;
 end;
 
-procedure TContext.SaveToStream(Stream: TStream);
+{ A new bitmap saves to a stream as a png }
+
+procedure TRenderContext.SaveToStream(Stream: TStream);
 var
-  B: IBitmap;
+  B: IBitmapData;
 begin
-  B := NewBitmap;
+  B := NewBitmapData;
   SaveToBitmap(B);
-  B.Format := fmPng;
   B.SaveToStream(Stream);
 end;
 
-procedure TContext.SaveToFile(const FileName: string);
+procedure TRenderContext.SaveToFile(const FileName: string);
 var
-  B: IBitmap;
+  B: IBitmapData;
 begin
-  B := NewBitmap;
+  B := NewBitmapData;
   SaveToBitmap(B);
   B.SaveToFile(FileName);
 end;
 {$endregion}
 
 {$region assets and collections}
-function TContext.GetAssetStream(const Name: string): TStream;
+function TRenderContext.GetAssetStream(const Name: string): TStream;
 var
   S: string;
 begin
@@ -613,31 +706,37 @@ begin
   Result := TFileStream.Create(S, fmOpenRead);
 end;
 
-function TContext.GetAssetFile(const FileName: string): string;
+function TRenderContext.FindAssetFile(const FileName: string; out Path: string): Boolean;
 var
   S: string;
   I: Integer;
 begin
-  Result := '';
+  Path := '';
   S := PathCombine(FAssetFolder, FileName);
-  I := 0;
-  while I < 10 do
+  for I := 0 to 9 do
+  begin
     if FileExists(S) then
-      Exit(S)
-    else
     begin
-      Inc(I);
-      S := PathCombine('..', S);
+      Path := S;
+      Exit(True);
     end;
-  raise EContextAssetError.CreateFmt(SAssetNotFound, [FileName]);
+    S := PathCombine('..', S);
+  end;
+  Result := False;
 end;
 
-procedure TContext.SetAssetFolder(const Folder: string);
+function TRenderContext.GetAssetFile(const FileName: string): string;
+begin
+  if not FindAssetFile(FileName, Result) then
+    raise EContextAssetError.CreateFmt(SAssetNotFound, [FileName]);
+end;
+
+procedure TRenderContext.SetAssetFolder(const Folder: string);
 begin
   FAssetFolder := Folder;
 end;
 
-function TContext.GetCollection(const Name: string): TContextCollection;
+function TRenderContext.GetCollection(const Name: string): TContextCollection;
 var
   C: TContextCollection;
 begin
@@ -653,7 +752,7 @@ end;
 const
   SManagedObjectCollection = 'objects';
 
-function TContext.Objects: TManagedObjectCollection;
+function TRenderContext.Objects: TManagedObjectCollection;
 begin
   if FObjects = nil then
     FObjects := TManagedObjectCollection.Create(SManagedObjectCollection);
@@ -663,12 +762,12 @@ end;
 {$endregion}
 
 {$region program shader stack}
-function TContext.GetProgram: Integer;
+function TRenderContext.GetProgram: Integer;
 begin
   glGetIntegerv(GL_CURRENT_PROGRAM, @Result);
 end;
 
-procedure TContext.PushProgram(Prog: Integer);
+procedure TRenderContext.PushProgram(Prog: Integer);
 begin
   if (FProgramStack.IsEmpty) or (Prog <> FProgramStack.Last) then
   begin
@@ -681,7 +780,7 @@ begin
     FProgramCount.Last := FProgramCount.Last + 1;
 end;
 
-procedure TContext.PopProgram;
+procedure TRenderContext.PopProgram;
 begin
   if FProgramStack.IsEmpty then
     Exit;
@@ -698,13 +797,13 @@ begin
   end;
 end;
 
-function TContext.GetUniform(Prog: Integer; Name: string; out Location: Integer): Boolean;
+function TRenderContext.GetUniform(Prog: Integer; Name: string; out Location: Integer): Boolean;
 begin
   Location := glGetUniformLocation(Prog, PChar(Name));
   Result := (Location > -1) and (Location < GL_INVALID_ENUM);
 end;
 
-function TContext.GetUniform(const Name: string; out Location: Integer): Boolean;
+function TRenderContext.GetUniform(const Name: string; out Location: Integer): Boolean;
 var
   I: Integer;
 begin
@@ -718,7 +817,7 @@ begin
   Result := (Location > -1) and (Location < GL_INVALID_ENUM);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const B: Boolean);
+procedure TRenderContext.SetUniform(Location: Integer; const B: Boolean);
 begin
   if B then
     SetUniform(Location, 1)
@@ -726,7 +825,7 @@ begin
     SetUniform(Location, 0);
 end;
 
-procedure TContext.SetUniform(const Name: string; const B: Boolean);
+procedure TRenderContext.SetUniform(const Name: string; const B: Boolean);
 begin
   if B then
     SetUniform(Name, 1)
@@ -734,12 +833,12 @@ begin
     SetUniform(Name, 0);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const I: Integer);
+procedure TRenderContext.SetUniform(Location: Integer; const I: Integer);
 begin
   glUniform1i(Location, I);
 end;
 
-procedure TContext.SetUniform(const Name: string; const I: Integer);
+procedure TRenderContext.SetUniform(const Name: string; const I: Integer);
 var
   L: Integer;
 begin
@@ -747,12 +846,12 @@ begin
     glUniform1i(L, I);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const X: Float);
+procedure TRenderContext.SetUniform(Location: Integer; const X: Float);
 begin
   glUniform1f(Location, X);
 end;
 
-procedure TContext.SetUniform(const Name: string; const X: Float);
+procedure TRenderContext.SetUniform(const Name: string; const X: Float);
 var
   L: Integer;
 begin
@@ -760,12 +859,12 @@ begin
     glUniform1f(L, X);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const A: TArray<Float>);
+procedure TRenderContext.SetUniform(Location: Integer; const A: TArray<Float>);
 begin
   glUniform1fv(Location, Length(A), @A[0]);
 end;
 
-procedure TContext.SetUniform(const Name: string; const A: TArray<Float>);
+procedure TRenderContext.SetUniform(const Name: string; const A: TArray<Float>);
 var
   L: Integer;
 begin
@@ -773,12 +872,12 @@ begin
     glUniform1fv(L, Length(A), @A[0]);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const X, Y: Float);
+procedure TRenderContext.SetUniform(Location: Integer; const X, Y: Float);
 begin
   glUniform2f(Location, X, Y);
 end;
 
-procedure TContext.SetUniform(const Name: string; const X, Y: Float);
+procedure TRenderContext.SetUniform(const Name: string; const X, Y: Float);
 var
   L: Integer;
 begin
@@ -786,12 +885,12 @@ begin
     glUniform2f(L, X, Y);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const X, Y, Z: Float);
+procedure TRenderContext.SetUniform(Location: Integer; const X, Y, Z: Float);
 begin
   glUniform3f(Location, X, Y, Z);
 end;
 
-procedure TContext.SetUniform(const Name: string; const X, Y, Z: Float);
+procedure TRenderContext.SetUniform(const Name: string; const X, Y, Z: Float);
 var
   L: Integer;
 begin
@@ -799,12 +898,12 @@ begin
     glUniform3f(L, X, Y, Z);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const X, Y, Z, W: Float);
+procedure TRenderContext.SetUniform(Location: Integer; const X, Y, Z, W: Float);
 begin
   glUniform4f(Location, X, Y, Z, W);
 end;
 
-procedure TContext.SetUniform(const Name: string; const X, Y, Z, W: Float);
+procedure TRenderContext.SetUniform(const Name: string; const X, Y, Z, W: Float);
 var
   L: Integer;
 begin
@@ -812,42 +911,42 @@ begin
     glUniform4f(L, X, Y, Z, W);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const V: TVec2);
+procedure TRenderContext.SetUniform(Location: Integer; const V: TVec2);
 begin
   SetUniform(Location, V.X, V.Y);
 end;
 
-procedure TContext.SetUniform(const Name: string; const V: TVec2); overload;
+procedure TRenderContext.SetUniform(const Name: string; const V: TVec2); overload;
 begin
   SetUniform(Name, V.X, V.Y);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const V: TVec3); overload;
+procedure TRenderContext.SetUniform(Location: Integer; const V: TVec3); overload;
 begin
   SetUniform(Location, V.X, V.Y, V.Z);
 end;
 
-procedure TContext.SetUniform(const Name: string; const V: TVec3); overload;
+procedure TRenderContext.SetUniform(const Name: string; const V: TVec3); overload;
 begin
   SetUniform(Name, V.X, V.Y, V.Z);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const V: TVec4); overload;
+procedure TRenderContext.SetUniform(Location: Integer; const V: TVec4); overload;
 begin
   SetUniform(Location, V.X, V.Y, V.Z, V.W);
 end;
 
-procedure TContext.SetUniform(const Name: string; const V: TVec4); overload;
+procedure TRenderContext.SetUniform(const Name: string; const V: TVec4); overload;
 begin
   SetUniform(Name, V.X, V.Y, V.Z, V.W);
 end;
 
-procedure TContext.SetUniform(Location: Integer; const M: TMatrix); overload;
+procedure TRenderContext.SetUniform(Location: Integer; const M: TMatrix); overload;
 begin
   glUniformMatrix4fv(Location, 1, GL_FALSE, @M);
 end;
 
-procedure TContext.SetUniform(const Name: string; const M: TMatrix); overload;
+procedure TRenderContext.SetUniform(const Name: string; const M: TMatrix); overload;
 var
   L: Integer;
 begin
@@ -857,33 +956,35 @@ end;
 {$endregion}
 
 {$region textures}
-function TContext.GetTextureSlot: Integer;
+function TRenderContext.GetTextureSlot: Integer;
 begin
   glGetIntegerv(GL_ACTIVE_TEXTURE, @Result);
 end;
 
-procedure TContext.SetTextureSlot(Slot: Integer);
+procedure TRenderContext.SetTextureSlot(Slot: Integer);
 begin
   glActiveTexture(GL_TEXTURE0 + Slot);
 end;
 
-function TContext.GetTexture: Integer;
+function TRenderContext.GetTexture: Integer;
 begin
   glGetIntegerv(GL_TEXTURE_BINDING_2D, @Result);
 end;
 
-procedure TContext.PushTexture(Texture: Integer; Slot: Integer = 0);
+procedure TRenderContext.PushTexture(Texture: Integer; Slot: Integer = 0);
 var
   Item: TTextureItem;
 begin
   Item.Texture := Texture;
   Item.Slot := Slot;
-  FTextureStack.Push(Item);
   glActiveTexture(GL_TEXTURE0 + Slot);
+  { Remember the texture bound to the slot so it can be restored }
+  glGetIntegerv(GL_TEXTURE_BINDING_2D, @Item.Previous);
+  FTextureStack.Push(Item);
   glBindTexture(GL_TEXTURE_2D, Texture);
 end;
 
-procedure TContext.PopTexture;
+procedure TRenderContext.PopTexture;
 var
   Item: TTextureItem;
 begin
@@ -891,30 +992,34 @@ begin
     Exit;
   Item := FTextureStack.Pop;
   glActiveTexture(GL_TEXTURE0 + Item.Slot);
-  glBindTexture(GL_TEXTURE_2D, Item.Texture);
+  glBindTexture(GL_TEXTURE_2D, Item.Previous);
+  { Leave the first slot active as is expected by code which binds textures
+    without a slot }
+  if Item.Slot <> 0 then
+    glActiveTexture(GL_TEXTURE0);
 end;
 {$endregion}
 
 {$region matrix stacks}
-procedure TContext.SetModelview(constref M: TMatrix);
+procedure TRenderContext.SetModelview(constref M: TMatrix);
 begin
   FModelviewCurrent := M;
   FMatrixChange := True;
 end;
 
-function TContext.GetModelview: TMatrix;
+function TRenderContext.GetModelview: TMatrix;
 begin
   Result := FModelviewCurrent;
 end;
 
-procedure TContext.PushModelview(const M: TMatrix);
+procedure TRenderContext.PushModelview(const M: TMatrix);
 begin
   FModelviewCurrent := M;
   FModelviewStack.Push(M);
   FMatrixChange := True;
 end;
 
-procedure TContext.PopModelview;
+procedure TRenderContext.PopModelview;
 begin
   if FModelviewStack.IsEmpty then
     Exit;
@@ -922,61 +1027,61 @@ begin
   FMatrixChange := True;
 end;
 
-procedure TContext.LookAt(Eye, Center, Up: TVec3);
+procedure TRenderContext.LookAt(Eye, Center, Up: TVec3);
 begin
   FModelviewCurrent.LookAt(Eye, Center, Up);
   FMatrixChange := True;
 end;
 
-procedure TContext.Identity;
+procedure TRenderContext.Identity;
 begin
   FModelviewCurrent.Identity;
   FMatrixChange := True;
 end;
 
-procedure TContext.Transform(constref T: TMatrix);
+procedure TRenderContext.Transform(constref T: TMatrix);
 begin
   FModelviewCurrent := FModelviewCurrent * T;
   FMatrixChange := True;
 end;
 
-procedure TContext.Translate(X, Y, Z: Float);
+procedure TRenderContext.Translate(X, Y, Z: Float);
 begin
   FModelviewCurrent.Translate(X, Y, Z);
   FMatrixChange := True;
 end;
 
-procedure TContext.Rotate(X, Y, Z: Float; Order: TRotationOrder = roZXY);
+procedure TRenderContext.Rotate(X, Y, Z: Float; Order: TRotationOrder = roZXY);
 begin
   FModelviewCurrent.Rotate(X, Y, Z, Order);
   FMatrixChange := True;
 end;
 
-procedure TContext.Scale(X, Y, Z: Float);
+procedure TRenderContext.Scale(X, Y, Z: Float);
 begin
   FModelviewCurrent.Scale(X, Y, Z);
   FMatrixChange := True;
 end;
 
-procedure TContext.SetProjection(constref M: TMatrix);
+procedure TRenderContext.SetProjection(constref M: TMatrix);
 begin
   FProjectionCurrent := M;
   FMatrixChange := True;
 end;
 
-function TContext.GetProjection: TMatrix;
+function TRenderContext.GetProjection: TMatrix;
 begin
   Result := FProjectionCurrent;
 end;
 
-procedure TContext.PushProjection(const M: TMatrix);
+procedure TRenderContext.PushProjection(const M: TMatrix);
 begin
   FProjectionCurrent := M;
   FProjectionStack.Push(M);
   FMatrixChange := True;
 end;
 
-procedure TContext.PopProjection;
+procedure TRenderContext.PopProjection;
 begin
   if FProjectionStack.IsEmpty then
     Exit;
@@ -984,19 +1089,19 @@ begin
   FMatrixChange := True;
 end;
 
-procedure TContext.Perspective(FoV, AspectRatio, NearPlane, FarPlane: Float);
+procedure TRenderContext.Perspective(FoV, AspectRatio, NearPlane, FarPlane: Float);
 begin
   FProjectionCurrent.Perspective(FoV, AspectRatio, NearPlane, FarPlane);
   FMatrixChange := True;
 end;
 
-procedure TContext.Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
+procedure TRenderContext.Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
 begin
   FProjectionCurrent.Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane);
   FMatrixChange := True;
 end;
 
-procedure TContext.SetProgramMatrix;
+procedure TRenderContext.SetProgramMatrix;
 begin
   if FProgramChange or FMatrixChange then
   begin

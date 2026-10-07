@@ -1,0 +1,1 @@
+The Codebot.Unique unit ensures that only one instance of a program runs at a time. TUniqueInstance detects whether another instance is already running by listening on a local port, and the original instance receives any messages sent by later instances. To use it, call UniqueInstance with a key, or with a string that is hashed into a key, when the program starts.

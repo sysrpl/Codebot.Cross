@@ -48,12 +48,15 @@ type
 
 { TList\<TItem\> is a generic growable list of items
   See also
-  <link Overview.Codebot.Types.TList, TList members> }
+  <link Overview.Codebot.Collections.TList, TList\<TItem\> members> }
 
   TList<TItem> = class(TObject)
   public
+    { The type of items held by the list }
     type ItemType = TItem;
+    { A pointer to an item }
     type PItemType = ^TItem;
+    { The function used to compare items when sorting or searching }
     type TListCompare = TCompare<TItem>;
     { Get the enumerator for the list }
     function GetEnumerator: IEnumerator<ItemType>;
@@ -83,6 +86,7 @@ type
     { Request room for at least a minimum number of items }
     procedure Grow(MinCapacity: Integer);
   public
+    { Clear the list and destroy it }
     destructor Destroy; override;
     { Add an item to the end of the list }
     procedure Add(const Item: ItemType);
@@ -92,7 +96,7 @@ type
     procedure Move(OldIndex, NewIndex: Integer);
     { Exchange positions of two items in the list }
     procedure Exchange(A, B: Integer);
-    { Remove all items from the list setting capcity and count to zero }
+    { Remove all items from the list setting capacity and count to zero }
     procedure Clear;
     { Reclaim unused capacity }
     procedure Compact;
@@ -112,18 +116,18 @@ type
       Remarks
       When setting the existing item will be deleted }
     property Item[Index: Integer]: ItemType read GetItem write SetItem; default;
-    { Retreive a direct reference to the item }
+    { Retrieve a direct reference to the item }
     property Direct[Index: Integer]: PItemType read GetDirect;
   end;
 
-{ TListDuplicates allows, ignores, or generates errors which a matching value is
+{ TListDuplicates allows, ignores, or generates errors when a matching value is
   added to an indexed list }
 
   TListDuplicates = (duplicateAllow, duplicateIgnore, duplicateError);
 
 { TIndexedList\<TItem\> allows for search and removing of items by value
   See also
-  <link Overview.Codebot.Types.TIndexedList, TCollection members> }
+  <link Overview.Codebot.Collections.TIndexedList, TIndexedList\<TItem\> members> }
 
   TIndexedList<TItem> = class(TList<TItem>)
   private
@@ -134,17 +138,17 @@ type
     { Allow, ignore, or error on adding a matching item }
     property Duplicates: TListDuplicates read FDuplicates write FDuplicates;
   public
-    { Returns true it the list contains item }
+    { Returns true if the list contains item }
     function Contains(const Item: ItemType): Boolean;
     { Returns the index of the item or -1 if it cannot be found }
     function IndexOf(const Item: ItemType): Integer; virtual; abstract;
-    { Return the item by value }
+    { Remove the item by value returning true if it was found }
     function Remove(const Item: ItemType): Boolean;
   end;
 
 { TObjectList\<TItem\> holds objects and can optionally be set to manage their life
   See also
-  <link Overview.Codebot.Types.TObjectList, TObjectList\<TItem\> members> }
+  <link Overview.Codebot.Collections.TObjectList, TObjectList\<TItem\> members> }
 
   TObjectList<TItem: TObject> = class(TIndexedList<TItem>)
   private
@@ -167,13 +171,13 @@ type
 
 { TDictionary\<K, V\> holds key value pairs allowing items to be indexed by a key
   See also
-  <link Overview.Bare.Types.TDictionary, TDictionary\<K, V\> members> }
+  <link Overview.Codebot.Collections.TDictionary, TDictionary\<K, V\> members> }
 
   TDictionary<K, V> = class(TObject)
   public
-    { TDictionary\<K, V\>.TKeyValue holds a key value pairs
+    { TDictionary\<K, V\>.TKeyValue holds a key value pair
       See also
-      <link Overview.Bare.Types.TDictionary.TKeyValue, TDictionary\<K, V\>.TKeyValue members> }
+      <link Overview.Codebot.Collections.TDictionary.TKeyValue, TDictionary\<K, V\>.TKeyValue members> }
 
     type
       TKeyValue = class
@@ -181,6 +185,7 @@ type
         FKey: K;
         FValue: V;
       public
+        { Create a key value pair given a key }
         constructor Create(const Key: K);
         { The key }
         property Key: K read FKey;
@@ -202,9 +207,13 @@ type
     function GetValue(const Key: K): V;
     procedure SetValue(const Key: K; const Value: V);
   protected
+    { Add a new key value pair to the dictionary }
     procedure AddKeyValue(KeyValue: TKeyValue); virtual;
+    { Create a new key value pair for a key }
     function CreateKeyValue(const Key: K): TKeyValue; virtual;
+    { Destroy a key value pair when it is removed }
     procedure DestroyKeyValue(KeyValue: TKeyValue); virtual;
+    { Change the value of an existing key value pair }
     procedure ChangeKeyValue(KeyValue: TKeyValue; Value: V); virtual;
     { Return a default value if no key exists }
     function DefaultValue: V; virtual;
@@ -214,8 +223,9 @@ type
   public
     { Create the dictionary }
     constructor Create;
+    { Clear the dictionary and destroy it }
     destructor Destroy; override;
-    { Remove an item by key index }
+    { Remove an item by key }
     procedure Remove(const Key: K);
     { Remove all items from the dictionary }
     procedure Clear;
@@ -233,45 +243,72 @@ type
     property Count: Integer read GetCount;
   end;
 
-{ IList<T> }
+{ TFindProc\<T\> is used by IList\<T\>.Find to test if an item matches }
 
   TFindProc<T> = function(Item: T; var Match): Boolean;
 
+{ IList\<T\> is a reference counted list of objects or interfaces
+  See also
+  <link Overview.Codebot.Collections.IList, IList\<T\> members> }
+
   IList<T> = interface(IEnumerable<T>)
   ['{79BFA1EC-6CEA-42FA-A602-2FC727436CC0}']
+    {doc off}
     function GetCapacity: Integer;
     procedure SetCapacity(NewCapacity: Integer);
     function GetCount: Integer;
     function Get(I: Integer): T;
     procedure Put(I: Integer; Item: T);
+    {doc on}
+    { Remove all items from the list }
     procedure Clear;
+    { Delete an item by index }
     procedure Delete(Index: Integer);
+    { Sort the list using a comparer }
     procedure Sort(Compare: TCompare<T>);
+    { Exchange positions of two items in the list }
     procedure Exchange(Index1, Index2: Integer);
+    { The first item in the list }
     function First: T;
+    { Return the first item for which FindProc returns true }
     function Find(FindProc: TFindProc<T>; var Match): T;
+    { Returns the index of the item or -1 if it cannot be found }
     function IndexOf(Item: T): Integer;
+    { Add an item returning its index }
     function Add(Item: T): Integer;
+    { The last item in the list }
     function Last: T;
+    { Remove an item returning the index it had or -1 if it was not found }
     function Remove(Item: T): Integer;
+    { Address of the first item }
     function Data: Pointer;
+    { Allocated space in terms of number of items }
     property Capacity: Integer read GetCapacity write SetCapacity;
+    { Number of items in the list }
     property Count: Integer read GetCount;
+    { Get or set an item in the list }
     property Items[Index: Integer]: T read Get write Put; default;
   end;
 
-{ TReferences<T> }
+{ TReferences\<T\> is the base class implementing IList\<T\> for reference
+  types. Descendants decide what happens when items are added or removed. }
 
   TReferences<T> = class(TInterfacedObject, IList<T>)
   private
     FList: TList<T>;
   protected
+    { Convert an item to a pointer }
     function AsPointer(Item: T): Pointer; virtual; abstract;
+    { Invoked when an item is added }
     procedure AddItem(P: Pointer); virtual; abstract;
+    { Invoked when an item is removed }
     procedure RemoveItem(P: Pointer); virtual; abstract;
   public
+    { Create an empty list }
     constructor Create;
+    { Remove all items and destroy the list }
     destructor Destroy; override;
+    {doc off}
     function GetEnumerator: IEnumerator<T>;
     function GetCapacity: Integer;
     procedure SetCapacity(NewCapacity: Integer);
@@ -289,10 +326,13 @@ type
     function Last: T;
     function Remove(Item: T): Integer;
     function Data: Pointer;
+    {doc on}
+    { Get or set an item in the list }
     property Item[Index: Integer]: T read Get write Put; default;
   end;
 
-{ TObjects<T> where T is TObject }
+{ TObjects\<T\> is an IList\<T\> of objects which optionally frees items
+  when they are removed }
 
   TObjects<T: TObject> = class(TReferences<T>)
   private
@@ -302,11 +342,14 @@ type
     procedure AddItem(P: Pointer); override;
     procedure RemoveItem(P: Pointer); override;
   public
+    { Create the list optionally owning objects added to it }
     constructor Create(OwnsObjects: Boolean = False);
+    { Returns the index of the object or -1 if it cannot be found }
     function IndexOf(Item: T): Integer; override;
   end;
 
-{ TInterfaces<T> where T is IInterface }
+{ TInterfaces\<T\> is an IList\<T\> of interfaces which holds a reference
+  to each item until it is removed }
 
   TInterfaces<T: IInterface> = class(TReferences<T>)
   protected
@@ -314,10 +357,12 @@ type
     procedure AddItem(P: Pointer); override;
     procedure RemoveItem(P: Pointer); override;
   public
+    { Returns the index of the interface or -1 if it cannot be found }
     function IndexOf(Item: T): Integer; override;
   end;
 
-{ TAggregateStream }
+{ TAggregateStream reads a series of text, files, and streams as if they
+  were one continuous stream }
 
   TAggregateStream = class(TStream)
   private
@@ -329,19 +374,26 @@ type
   protected
     function  GetSize: Int64; override;
   public
+    { Create an empty aggregate stream }
     constructor Create;
+    { Destroy the aggregate stream and any streams it owns }
     destructor Destroy; override;
+    { Remove all streams }
     procedure Clear;
+    { Add a block of text to the end }
     procedure AddText(const Text: string);
+    { Add the contents of a file to the end }
     procedure AddFile(const FileName: string);
+    { Add a stream to the end optionally taking ownership of it }
     procedure AddStream(Stream: TStream; OwnsStream: Boolean = True);
+    { Read bytes moving through each stream in order }
     function Read(var Buffer; Count: Longint): Longint; override;
   end;
 
-{docignore}
-
+{doc off}
 function FindObject(constref A, B: TObject): Integer;
 function FindInterface(constref A, B: IInterface): Integer;
+{doc on}
 
 implementation
 

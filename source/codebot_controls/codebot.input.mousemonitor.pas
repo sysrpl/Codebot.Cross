@@ -19,25 +19,34 @@ uses
   Codebot.System;
 
 type
+  { TMouseNotifyKind is the kind of mouse activity reported }
   TMouseNotifyKind = (nkMove, nkButtonDown, nkButtonUp);
 
+  { TMouseNotifyEvent receives mouse activity in screen coordinates }
   TMouseNotifyEvent = procedure(Kind: TMouseNotifyKind;
     Button: TMouseButton; X, Y: Integer) of object;
 
+  { Mouse event publisher }
   TMouseDelegate = TDelegate<TMouseNotifyEvent>;
 
-{ TMouseMonitor }
+{ TMouseMonitor reports mouse activity anywhere on the screen, even outside
+  the windows of the program. Use the MouseMonitor function to access it. }
 
   TMouseMonitor = class
   private
     FThread: TThread;
     FEvents: TMouseDelegate;
   public
+    { Stop monitoring and destroy the object }
     destructor Destroy; override;
+    { Subscribe to mouse activity, starting the monitor if needed }
     procedure Add(Notify: TMouseNotifyEvent);
+    { Unsubscribe from mouse activity, stopping the monitor if there are no
+      more subscribers }
     procedure Remove(Notify: TMouseNotifyEvent);
   end;
 
+{ Returns the global mouse monitor instance }
 function MouseMonitor: TMouseMonitor;
 
 implementation

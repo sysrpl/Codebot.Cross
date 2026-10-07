@@ -20,9 +20,13 @@ uses
   Codebot.Graphics.Types,
   Codebot.Forms.Management;
 
+{ When true controls show their hints using Tipify instead of the default
+  hint window }
 var
   UseTipify: Boolean = False;
 
+{ Show the hint of a control in a fading tooltip window. Pass nil to hide
+  the tooltip. }
 procedure Tipify(HintControl: TControl);
 
 implementation

@@ -1,0 +1,6 @@
+The Codebot.Controls.Extras unit defines a collection of useful controls.
+
+- TDrawImage shows an image centered, fit, filled, stretched, or tiled, and can desaturate or colorize it.
+- TDrawBox and TDrawPanel are a graphic control and a windowed control that draw nothing on their own and are instead drawn by an event handler.
+- TIndeterminateProgress shows an animated status icon beside its caption while work is in progress.
+- TStepBubbles shows the steps of a process, such as the pages of a wizard.

@@ -36,7 +36,7 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="40">
+    <Files Count="35">
       <Item1>
         <Filename Value="codebot.animation.pas"/>
         <UnitName Value="Codebot.Animation"/>
@@ -62,147 +62,127 @@
         <UnitName Value="Codebot.Geometry"/>
       </Item6>
       <Item7>
-        <Filename Value="codebot.graphics.linux.surfacecairo.pas"/>
-        <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
+        <Filename Value="codebot.platform.pas"/>
+        <UnitName Value="Codebot.Platform"/>
       </Item7>
       <Item8>
-        <Filename Value="codebot.graphics.pas"/>
-        <UnitName Value="Codebot.Graphics"/>
-      </Item8>
-      <Item9>
         <Filename Value="codebot.graphics.types.pas"/>
         <UnitName Value="Codebot.Graphics.Types"/>
-      </Item9>
-      <Item10>
-        <Filename Value="codebot.graphics.windows.imagebitmap.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.ImageBitmap"/>
-      </Item10>
-      <Item11>
-        <Filename Value="codebot.graphics.windows.interfacedbitmap.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.InterfacedBitmap"/>
-      </Item11>
-      <Item12>
-        <Filename Value="codebot.graphics.windows.surfaced2d.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
-      </Item12>
-      <Item13>
-        <Filename Value="codebot.graphics.windows.surfacegdiplus.pas"/>
-        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
-      </Item13>
-      <Item14>
+      </Item8>
+      <Item9>
         <Filename Value="codebot.inc"/>
         <Type Value="Include"/>
-      </Item14>
-      <Item15>
+      </Item9>
+      <Item10>
         <Filename Value="codebot.interop.linux.xml2.pas"/>
         <UnitName Value="Codebot.Interop.Linux.Xml2"/>
-      </Item15>
-      <Item16>
+      </Item10>
+      <Item11>
         <Filename Value="codebot.interop.openssl.pas"/>
         <UnitName Value="Codebot.Interop.OpenSSL"/>
-      </Item16>
-      <Item17>
+      </Item11>
+      <Item12>
         <Filename Value="codebot.interop.sockets.pas"/>
         <UnitName Value="Codebot.Interop.Sockets"/>
-      </Item17>
-      <Item18>
+      </Item12>
+      <Item13>
         <Filename Value="codebot.interop.windows.direct2d.pas"/>
         <UnitName Value="Codebot.Interop.Windows.Direct2D"/>
-      </Item18>
-      <Item19>
+      </Item13>
+      <Item14>
         <Filename Value="codebot.interop.windows.gdiplus.pas"/>
         <UnitName Value="Codebot.Interop.Windows.GdiPlus"/>
-      </Item19>
-      <Item20>
+      </Item14>
+      <Item15>
         <Filename Value="codebot.interop.windows.imagecodecs.pas"/>
         <UnitName Value="Codebot.Interop.Windows.ImageCodecs"/>
-      </Item20>
-      <Item21>
+      </Item15>
+      <Item16>
         <Filename Value="codebot.interop.windows.msxml.pas"/>
         <UnitName Value="Codebot.Interop.Windows.Msxml"/>
-      </Item21>
-      <Item22>
+      </Item16>
+      <Item17>
         <Filename Value="codebot.lpk"/>
         <Type Value="Text"/>
-      </Item22>
-      <Item23>
+      </Item17>
+      <Item18>
         <Filename Value="codebot.networking.ftp.pas"/>
         <UnitName Value="Codebot.Networking.Ftp"/>
-      </Item23>
-      <Item24>
+      </Item18>
+      <Item19>
         <Filename Value="codebot.networking.pas"/>
         <AddToUsesPkgSection Value="False"/>
         <UnitName Value="Codebot.Networking"/>
-      </Item24>
-      <Item25>
+      </Item19>
+      <Item20>
         <Filename Value="codebot.networking.storage.pas"/>
         <UnitName Value="Codebot.Networking.Storage"/>
-      </Item25>
-      <Item26>
+      </Item20>
+      <Item21>
         <Filename Value="codebot.networking.unix.pas"/>
         <UnitName Value="Codebot.Networking.Unix"/>
-      </Item26>
-      <Item27>
+      </Item21>
+      <Item22>
         <Filename Value="codebot.networking.web.pas"/>
         <UnitName Value="Codebot.Networking.Web"/>
-      </Item27>
-      <Item28>
+      </Item22>
+      <Item23>
         <Filename Value="codebot.pas"/>
         <UnitName Value="codebot"/>
-      </Item28>
-      <Item29>
+      </Item23>
+      <Item24>
         <Filename Value="codebot.system.pas"/>
         <UnitName Value="Codebot.System"/>
-      </Item29>
-      <Item30>
+      </Item24>
+      <Item25>
         <Filename Value="codebot.support.pas"/>
         <UnitName Value="Codebot.Support"/>
-      </Item30>
-      <Item31>
+      </Item25>
+      <Item26>
         <Filename Value="codebot.text.formats.pas"/>
         <UnitName Value="Codebot.Text.Formats"/>
-      </Item31>
-      <Item32>
+      </Item26>
+      <Item27>
         <Filename Value="codebot.text.json.pas"/>
         <UnitName Value="Codebot.Text.Json"/>
-      </Item32>
-      <Item33>
+      </Item27>
+      <Item28>
         <Filename Value="codebot.text.pas"/>
         <UnitName Value="Codebot.Text"/>
-      </Item33>
-      <Item34>
+      </Item28>
+      <Item29>
         <Filename Value="codebot.text.xml.linux.inc"/>
         <Type Value="Include"/>
-      </Item34>
-      <Item35>
+      </Item29>
+      <Item30>
         <Filename Value="codebot.text.xml.pas"/>
         <UnitName Value="Codebot.Text.Xml"/>
-      </Item35>
-      <Item36>
+      </Item30>
+      <Item31>
         <Filename Value="codebot.text.xml.windows.inc"/>
         <Type Value="Include"/>
-      </Item36>
-      <Item37>
+      </Item31>
+      <Item32>
         <Filename Value="codebot.text.store.pas"/>
         <UnitName Value="Codebot.Text.Store"/>
-      </Item37>
-      <Item38>
+      </Item32>
+      <Item33>
         <Filename Value="codebot.io.serialport.pas"/>
         <UnitName Value="Codebot.IO.SerialPort"/>
-      </Item38>
-      <Item39>
+      </Item33>
+      <Item34>
         <Filename Value="codebot.unique.pas"/>
         <UnitName Value="Codebot.Unique"/>
-      </Item39>
-      <Item40>
+      </Item34>
+      <Item35>
         <Filename Value="codebot.process.pas"/>
         <UnitName Value="codebot.process"/>
-      </Item40>
+      </Item35>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">
       <Item1>
-        <PackageName Value="LCL"/>
+        <PackageName Value="LazUtils"/>
       </Item1>
     </RequiredPkgs>
     <UsageOptions>

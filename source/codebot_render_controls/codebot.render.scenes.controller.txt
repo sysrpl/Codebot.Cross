@@ -1,0 +1,3 @@
+The Codebot.Render.Scenes.Controller unit defines TSceneController, which runs a scene inside a TGraphicsBox and acts as the scene host for LCL programs. It hooks the render events of the graphics box, and creates, updates, and frees the scene on the render thread with the OpenGL context made current. OpenScene requests a scene class from the main thread. Keyboard and mouse input comes from the SDL window of the graphics box and is delivered to the scene on the render thread.
+
+The controller provides scenes with the canvas of the graphics box, a default font, and the form holding the graphics box as their window. Scenes use the clipboard and dialogs provided by Codebot.Platform.LCL.

@@ -1,6 +1,6 @@
 unit Codebot.Render.World;
 
-{$i codebot.inc}
+{$i render.inc}
 
 interface
 
@@ -8,7 +8,7 @@ uses
   Codebot.System,
   Codebot.Animation,
   Codebot.Geometry,
-  Codebot.Graphics,
+  Codebot.Platform,
   Codebot.Graphics.Types,
   Codebot.Render.Contexts,
   Codebot.Render.Textures,
@@ -127,7 +127,7 @@ type
 
 { TWorldExtension adds the function World to the current context }
 
-  TWorldExtension = class helper for TContext
+  TWorldExtension = class helper for TRenderContext
   public
     { Returns the world for the current context }
     function World: TWorld;
@@ -294,8 +294,8 @@ end;
 
 destructor TSkybox.Destroy;
 begin
-  FBoxBuffer.Free;
-  FTexture.Free;
+  FreeManaged(FBoxBuffer);
+  FreeManaged(FTexture);
   inherited Destroy;
 end;
 
@@ -431,35 +431,39 @@ end;
 
 procedure TWorld.DrawGrid;
 
-  function GenerateBitmap: IBitmap;
+  { The grid texture is white, fading in from the top edge and out to the
+    bottom edge. Its pixels are premultiplied, so each color equals alpha. }
+
+  function GenerateBitmap: IBitmapData;
   const
     TexSize = 128;
+    Opaque = $A0;
   var
-    R: TRectI;
-    G: IGradientBrush;
-    C: TColorB;
     P: PPixel;
-    I: Integer;
+    T: Float;
+    A: Byte;
+    X, Y: Integer;
   begin
-    R := TRectI.Create(TexSize, TexSize);
-    Result := NewBitmap(R.Width, R.Height);
-    G := NewBrush(R.TopLeft, R.BottomLeft);
-    C := $FFFFFF;
-    C.Alpha := 0;
-    G.AddStop(C, 0);
-    C.Alpha := $A0;
-    G.AddStop(C, 0.2);
-    G.AddStop(C, 0.8);
-    C.Alpha := 0;
-    G.AddStop(C, 1);
-    Result.Surface.FillRect(G, R);
+    Result := NewBitmapData;
+    Result.SetSize(TexSize, TexSize);
     P := Result.Pixels;
-    for I := 1 to R.Width * R.Height do
+    for Y := 0 to TexSize - 1 do
     begin
-      P.Red := $FF;
-      P.Green := $FF;
-      P.Blue := $FF;
-      Inc(P);
+      T := (Y + 0.5) / TexSize;
+      if T < 0.2 then
+        A := Round(Opaque * T / 0.2)
+      else if T > 0.8 then
+        A := Round(Opaque * (1 - T) / 0.2)
+      else
+        A := Opaque;
+      for X := 0 to TexSize - 1 do
+      begin
+        P.Red := A;
+        P.Green := A;
+        P.Blue := A;
+        P.Alpha := A;
+        Inc(P);
+      end;
     end;
   end;
 
@@ -509,6 +513,8 @@ begin
     end;
     FGrid.EndBuffer(False);
     FGridTexture := TTexture.Create;
+    FGridTexture.MagFilter := tfLinear;
+    FGridTexture.MinFilter := tfLinear;
     FGridTexture.LoadFromBitmap(GenerateBitmap);
     FGridTexture.GenerateMipmaps;
   end;

@@ -8,13 +8,18 @@
       <SearchPaths>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Linking>
+        <Debugging>
+          <DebugInfoType Value="dsDwarf3"/>
+        </Debugging>
+      </Linking>
       <Other>
         <CompilerMessages>
           <IgnoredMessages idx6060="True" idx5026="True"/>
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="22">
+    <Files Count="30">
       <Item1>
         <Filename Value="codebot.controls.banner.pas"/>
         <UnitName Value="Codebot.Controls.Banner"/>
@@ -103,6 +108,38 @@
         <Filename Value="codebot.controls.extras.pas"/>
         <UnitName Value="Codebot.Controls.Extras"/>
       </Item22>
+      <Item23>
+        <Filename Value="codebot.graphics.pas"/>
+        <UnitName Value="Codebot.Graphics"/>
+      </Item23>
+      <Item24>
+        <Filename Value="codebot.platform.lcl.pas"/>
+        <UnitName Value="Codebot.Platform.LCL"/>
+      </Item24>
+      <Item25>
+        <Filename Value="codebot.graphics.linux.surfacecairo.pas"/>
+        <UnitName Value="Codebot.Graphics.Linux.SurfaceCairo"/>
+      </Item25>
+      <Item26>
+        <Filename Value="codebot.graphics.windows.imagebitmap.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.ImageBitmap"/>
+      </Item26>
+      <Item27>
+        <Filename Value="codebot.graphics.windows.interfacedbitmap.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.InterfacedBitmap"/>
+      </Item27>
+      <Item28>
+        <Filename Value="codebot.graphics.windows.surfaced2d.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceD2D"/>
+      </Item28>
+      <Item29>
+        <Filename Value="codebot.graphics.windows.surfacegdiplus.pas"/>
+        <UnitName Value="Codebot.Graphics.Windows.SurfaceGdiPlus"/>
+      </Item29>
+      <Item30>
+        <Filename Value="codebot.forms.colordialog.pas"/>
+        <UnitName Value="Codebot.Forms.ColorDialog"/>
+      </Item30>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">

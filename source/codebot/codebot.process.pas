@@ -18,13 +18,17 @@ uses
   Classes,
   Codebot.System;
 
-{ TExternalCommand provides a simplified way to run external programs
-where you want to record their output and detect when they have completed }
+{ TLineReadEvent is invoked when a line of output is read from a program }
 
 type
   TLineReadEvent = procedure(Sender: TObject; const Line: string) of object;
 
+{ EExternalCommandException is raised when an external command cannot be run }
+
   EExternalCommandException = class(Exception);
+
+{ TExternalCommand provides a simplified way to run external programs
+  where you want to record their output and detect when they have completed }
 
   TExternalCommand = class(TComponent)
 	private
@@ -42,13 +46,15 @@ type
     procedure ThreadRun(Thread: TSimpleThread);
     procedure SetArguments(Value: TStrings);
 	public
+    { Create a new external command }
     constructor Create(AOwner: TComponent); override;
+    { Kill the program if it is running and destroy the command }
     destructor Destroy; override;
     { Run begins execution of the external program }
     procedure Run;
     { Kill aborts execution of the external program }
     procedure Kill;
-    { Output contains all liens read from the program }
+    { Output contains all lines read from the program }
     property Output: TStrings read FOutput;
     { Running is true while the external program is executing }
     property Running: Boolean read FRunning;
@@ -61,10 +67,12 @@ type
     property BufferOutput: Boolean read FBufferOutput write FBufferOutput default True;
     { OnLineRead is fired each time a complete line is read from the running program }
     property OnLineRead: TLineReadEvent read FOnLineRead write FOnLineRead;
-    { OnComplete is fire when the program completes }
+    { OnComplete is fired when the program completes }
     property OnComplete: TNotifyEvent read FOnComplete write FOnComplete;
   end;
 
+{ Run a program with up to three arguments and wait for it to complete,
+  optionally capturing its output }
 procedure RunCommand(const Command: string; Output: TStrings = nil); overload;
 procedure RunCommand(const Command: string; const Arg0: string; Output: TStrings = nil); overload;
 procedure RunCommand(const Command: string; const Arg0, Arg1: string; Output: TStrings = nil); overload;

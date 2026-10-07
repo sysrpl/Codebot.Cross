@@ -1,0 +1,1 @@
+The Codebot.Interop.Assimp unit declares the C API of the Open Asset Import Library, version 5.4. Assimp loads many 3D model formats into a common scene made up of meshes, materials, bones, animations, cameras, and lights. The library is loaded when InitAssimp is called.

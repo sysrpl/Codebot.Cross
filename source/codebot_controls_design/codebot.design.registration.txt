@@ -1,0 +1,6 @@
+The Codebot.Design.Registration unit registers the codebot_controls package with the Lazarus IDE. It adds the following:
+
+- The components of the package, on the Codebot Controls page of the component palette.
+- The property and component editors of those components.
+- The Render Form and Banner Form kinds of form.
+- The Application Explorer item in the menu of the IDE.

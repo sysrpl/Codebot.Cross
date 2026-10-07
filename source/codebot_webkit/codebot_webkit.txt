@@ -1,0 +1,26 @@
+The codebot_webkit package provides a web browser as an LCL control. It embeds WebKitGTK, which is built for GTK3, so the package only builds with the GTK3 widgetset. The package requires codebot_controls and the LCL.
+
+## Browser
+
+Codebot.WebKit.Controls defines TWebBrowser, which is a control that shows web pages. It can do the following:
+
+- Load a location or a string of HTML.
+- Stop and reload a page.
+- Go back and forward in its history.
+- Run JavaScript.
+- Zoom, and make the page editable.
+
+Its events report the location, title, progress, and status of a page as it loads, as well as errors, what is under the mouse, context menus, and the alert, confirm, and prompt dialogs of JavaScript. An event can also allow or deny a navigation. Files that the browser downloads are TWebDownload objects, and TWebInspector is a control that shows the developer tools of a browser.
+
+## Extras
+
+Codebot.WebKit.Controls.Extras defines controls that work alongside a browser. TWebAddressBar has an edit that shows the current location and buttons for back, forward, home, refresh, history, the inspector, print, capture, downloads, and settings. TWebStatusIndicator shows the status of a browser.
+
+## Other units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.WebKit.Controls.Gtk3 | The widgetset classes, which create the web view and the inspector and pass their signals on to the controls. |
+| Codebot.Interop.WebKit | The part of the WebKitGTK C API that the package uses. |
+
+The WebKitGTK library is loaded when InitWebKit is called, rather than being linked when the program is built. This allows a program to start normally and report that WebKitGTK is not installed. The controls have no web view at design time, or when the library is missing.

@@ -5,20 +5,130 @@ unit Codebot.Render.Scenes;
 interface
 
 uses
-  LCLIntf,
+  Classes,
   Codebot.System,
-  Codebot.Render.Contexts;
+  Codebot.Platform,
+  Codebot.Hardware,
+  Codebot.Render.Contexts,
+  Codebot.Render.Graphics;
 
-{ TScene }
+{ TShiftKeys is the set of modifier keys held down during an input event }
 
 type
   TShiftKeys = set of (skAlt, skCtrl, skShift);
+  { TMouseAction is what the mouse did in a mouse event }
   TMouseAction = (maPress, maMove, maRelease);
 
+{ Input arguments sent to scenes. Key codes are the VK_ virtual key codes
+  declared in Codebot.Platform. Setting Handled to True stops an event from being passed on. }
+
+  TSceneKeyArgs = record
+    { The virtual key code }
+    Key: Word;
+    { State of the modifier keys }
+    Shift: TShiftKeys;
+    { True when the key is repeating while held down }
+    Repeated: Boolean;
+    Handled: Boolean;
+  end;
+
+  { The arguments of a mouse button or mouse move event }
+  TSceneMouseArgs = record
+    { The button causing the event, buttonNone for moves }
+    Button: TSceneButton;
+    { The mouse position and its change since the last mouse event }
+    X, Y, XRel, YRel: Float;
+    { State of the modifier keys }
+    Shift: TShiftKeys;
+    Handled: Boolean;
+  end;
+
+  { The arguments of a mouse wheel event }
+  TSceneWheelArgs = record
+    { The number of wheel notches turned, positive away from the user }
+    Delta: Integer;
+    { The mouse position }
+    X, Y: Float;
+    { State of the modifier keys }
+    Shift: TShiftKeys;
+    Handled: Boolean;
+  end;
+
+  { The arguments of a text input event }
+  TSceneTextArgs = record
+    { The UTF-8 text typed, without control characters }
+    Text: string;
+    Handled: Boolean;
+  end;
+
+  { TSceneKeyEvent is an event for a key going down or up }
+  TSceneKeyEvent = procedure(Sender: TObject; var Args: TSceneKeyArgs) of object;
+  { TSceneMouseEvent is an event for a mouse button or a mouse move }
+  TSceneMouseEvent = procedure(Sender: TObject; var Args: TSceneMouseArgs) of object;
+
+{ TSceneHost runs scenes and provides what they share. A host makes itself
+  current on its render thread with SetSceneHost, and scenes created on that
+  thread use it. All of its properties are used from the render thread.
+
+  A host calls PlatformDispatch from Codebot.Platform once a frame before
+  updating its scene, so dialogs executed by the scene deliver their OnClose
+  events on the render thread. }
+
+  TSceneHost = class(TComponent)
+  protected
+    FCanvas: ICanvas;
+    FFont: IFont;
+    FTimer: IStopwatch;
+    FTime: Double;
+    FFrameRate: Integer;
+    FMouseX: Float;
+    FMouseY: Float;
+    FWindow: IWindow;
+    FVSync: Boolean;
+    { The clipboard is PlatformClipboard unless a host overrides it }
+    function GetClipboard: string; virtual;
+    procedure SetClipboard(const Value: string); virtual;
+    { Hosts which own an OpenGL context apply VSync to it }
+    function GetVSync: Boolean; virtual;
+    procedure SetVSync(Value: Boolean); virtual;
+  public
+    { The canvas used for vector graphics, sharing Ctx with the scenes }
+    property Canvas: ICanvas read FCanvas;
+    { The default font, which may be nil if it could not be loaded }
+    property Font: IFont read FFont;
+    { The timer shared by all scenes, calculated once at the start of a frame }
+    property Timer: IStopwatch read FTimer;
+    { The time of the current frame }
+    property Time: Double read FTime;
+    { Frames rendered in the last second }
+    property FrameRate: Integer read FFrameRate;
+    { The position of the last mouse event }
+    property MouseX: Float read FMouseX;
+    property MouseY: Float read FMouseY;
+    { Text on the clipboard, read and written from the render thread }
+    property Clipboard: string read GetClipboard write SetClipboard;
+    { The window showing the scenes, which may be nil if the host has none }
+    property Window: IWindow read FWindow;
+    { When VSync is True each frame waits for the vertical sync of the
+      display. It is used from the render thread. }
+    property VSync: Boolean read GetVSync write SetVSync;
+  end;
+
+{ The scene host which is current on the calling thread }
+
+function SceneHost: TSceneHost;
+{ Make a scene host current on the calling thread }
+procedure SetSceneHost(Host: TSceneHost);
+
+{ TScene is the base class of everything a host shows. Override Initialize,
+  Logic, and Render to make a scene. }
+
+type
   TScene = class
   private
     FAnimated: Boolean;
-    FContext: TContext;
+    FHost: TSceneHost;
+    FContext: TRenderContext;
     FBaseTime: Double;
     FTime: Double;
     FWidth: Integer;
@@ -26,10 +136,13 @@ type
     FLogicPhase: Boolean;
     FLogicTime: Double;
     function GetTime: Double;
+    function GetCanvas: ICanvas;
+    function GetFont: IFont;
   protected
     { Resize sets the viewport but you might use it to change the perspective matrix }
     procedure Resize; virtual;
   public
+    { Create a scene of a size using the scene host of the calling thread }
     constructor Create(Width, Height: Integer); virtual;
     destructor Destroy; override;
     { Name of the scene }
@@ -38,6 +151,15 @@ type
     procedure KeyEvent(KeyCode: Integer; Shift: TShiftKeys); virtual;
     { MouseEvent is fired when a mouse action occurs }
     procedure MouseEvent(X, Y: Integer; Action: TMouseAction); virtual;
+    { Input events sent by the host. By default key up calls KeyEvent and the
+      mouse button and move events call MouseEvent. }
+    procedure DoKeyDown(var Args: TSceneKeyArgs); virtual;
+    procedure DoKeyUp(var Args: TSceneKeyArgs); virtual;
+    procedure DoMouseDown(var Args: TSceneMouseArgs); virtual;
+    procedure DoMouseMove(var Args: TSceneMouseArgs); virtual;
+    procedure DoMouseUp(var Args: TSceneMouseArgs); virtual;
+    procedure DoMouseWheel(var Args: TSceneWheelArgs); virtual;
+    procedure DoTextInput(var Args: TSceneTextArgs); virtual;
     { Update causes a and Logic, Resize, and Render methods to be invoked in
       that order }
     procedure Update(Width, Height: Integer; Time: Double);
@@ -49,10 +171,23 @@ type
     procedure Logic; virtual;
     { Render phase allows you render and has a current context }
     procedure Render; virtual;
+    { StepInterval is the time in seconds between calls to Step made by a step
+      thread the host runs for the scene, or 0 when the scene does not need a
+      step thread. It is read once after the scene is created. }
+    function StepInterval: Double; virtual;
+    { Step is called on the step thread at a fixed rate when StepInterval is
+      greater than 0. It runs at the same time as Logic and Render, so data
+      they share must be protected. It has no current context. }
+    procedure Step(DeltaTime: Double); virtual;
     { When Animated is True update is called continously }
     property Animated: Boolean read FAnimated write FAnimated;
     { Context associated with the scene }
-    property Context: TContext read FContext;
+    property Context: TRenderContext read FContext;
+    { The host running the scene, or nil if the scene was created without one }
+    property Host: TSceneHost read FHost;
+    { The canvas and default font of the host }
+    property Canvas: ICanvas read GetCanvas;
+    property Font: IFont read GetFont;
     { Time that can be used during Logic or Render }
     property Time: Double read GetTime;
     { Width is updated immediately before Render }
@@ -61,159 +196,68 @@ type
     property Height: Integer read FHeight;
   end;
 
+  { The class of a scene }
   TSceneClass = class of TScene;
-
-const
-  VK_LBUTTON    = 1;
-  VK_RBUTTON    = 2;
-  VK_CANCEL     = 3;
-  VK_MBUTTON    = 4;
-  VK_XBUTTON1   = 5;
-  VK_XBUTTON2   = 6;
-  VK_BACK       = 8;
-  VK_TAB        = 9;
-  VK_CLEAR      = 12;
-  VK_RETURN     = 13;
-  VK_SHIFT      = 16;
-  VK_CONTROL    = 17;
-  VK_MENU       = 18;
-  VK_PAUSE      = 19;
-  VK_CAPITAL    = 20;
-  VK_KANA       = 21;
-  VK_HANGUL     = 21;
-  VK_JUNJA      = 23;
-  VK_FINAL      = 24;
-  VK_HANJA      = 25;
-  VK_KANJI      = 25;
-  VK_ESCAPE     = 27;
-  VK_CONVERT    = 28;
-  VK_NONCONVERT = 29;
-  VK_ACCEPT     = 30;
-  VK_MODECHANGE = 31;
-  VK_SPACE      = 32;
-  VK_PRIOR      = 33;
-  VK_NEXT       = 34;
-  VK_END        = 35;
-  VK_HOME       = 36;
-  VK_LEFT       = 37;
-  VK_UP         = 38;
-  VK_RIGHT      = 39;
-  VK_DOWN       = 40;
-  VK_SELECT     = 41;
-  VK_PRINT      = 42;
-  VK_EXECUTE    = 43;
-  VK_SNAPSHOT   = 44;
-  VK_INSERT     = 45;
-  VK_DELETE     = 46;
-  VK_HELP       = 47;
-  VK_0          = $30;
-  VK_1          = $31;
-  VK_2          = $32;
-  VK_3          = $33;
-  VK_4          = $34;
-  VK_5          = $35;
-  VK_6          = $36;
-  VK_7          = $37;
-  VK_8          = $38;
-  VK_9          = $39;
-  VK_A          = $41;
-  VK_B          = $42;
-  VK_C          = $43;
-  VK_D          = $44;
-  VK_E          = $45;
-  VK_F          = $46;
-  VK_G          = $47;
-  VK_H          = $48;
-  VK_I          = $49;
-  VK_J          = $4A;
-  VK_K          = $4B;
-  VK_L          = $4C;
-  VK_M          = $4D;
-  VK_N          = $4E;
-  VK_O          = $4F;
-  VK_P          = $50;
-  VK_Q          = $51;
-  VK_R          = $52;
-  VK_S          = $53;
-  VK_T          = $54;
-  VK_U          = $55;
-  VK_V          = $56;
-  VK_W          = $57;
-  VK_X          = $58;
-  VK_Y          = $59;
-  VK_Z          = $5A;
-  VK_LWIN       = $5B;
-  VK_RWIN       = $5C;
-  VK_APPS       = $5D;
-  VK_SLEEP      = $5F;
-  VK_NUMPAD0    = 96;
-  VK_NUMPAD1    = 97;
-  VK_NUMPAD2    = 98;
-  VK_NUMPAD3    = 99;
-  VK_NUMPAD4    = 100;
-  VK_NUMPAD5    = 101;
-  VK_NUMPAD6    = 102;
-  VK_NUMPAD7    = 103;
-  VK_NUMPAD8    = 104;
-  VK_NUMPAD9    = 105;
-  VK_MULTIPLY   = 106;
-  VK_ADD        = 107;
-  VK_SEPARATOR  = 108;
-  VK_SUBTRACT   = 109;
-  VK_DECIMAL    = 110;
-  VK_DIVIDE     = 111;
-  VK_F1         = 112;
-  VK_F2         = 113;
-  VK_F3         = 114;
-  VK_F4         = 115;
-  VK_F5         = 116;
-  VK_F6         = 117;
-  VK_F7         = 118;
-  VK_F8         = 119;
-  VK_F9         = 120;
-  VK_F10        = 121;
-  VK_F11        = 122;
-  VK_F12        = 123;
-  VK_NUMLOCK    = $90;
-  VK_SCROLL     = $91;
-  VK_LSHIFT     = $A0;
-  VK_RSHIFT     = $A1;
-  VK_LCONTROL   = $A2;
-  VK_RCONTROL   = $A3;
-  VK_LMENU      = $A4;
-  VK_RMENU      = $A5;
-
-{ IsKeyDown returns true if the virtual key is down }
-
-function IsKeyDown(KeyCode: Integer): Boolean;
 
 const
   SceneLogicStep = Double(1 / 100);
 
 implementation
 
+threadvar
+  CurrentHost: TSceneHost;
+
+function SceneHost: TSceneHost;
+begin
+  Result := CurrentHost;
+end;
+
+procedure SetSceneHost(Host: TSceneHost);
+begin
+  CurrentHost := Host;
+end;
+
+{ TSceneHost }
+
+function TSceneHost.GetClipboard: string;
+begin
+  Result := PlatformClipboard.Text;
+end;
+
+procedure TSceneHost.SetClipboard(const Value: string);
+begin
+  PlatformClipboard.Text := Value;
+end;
+
+function TSceneHost.GetVSync: Boolean;
+begin
+  Result := FVSync;
+end;
+
+procedure TSceneHost.SetVSync(Value: Boolean);
+begin
+  FVSync := Value;
+end;
+
 { TScene }
 
 constructor TScene.Create(Width, Height: Integer);
 begin
   inherited Create;
+  FHost := CurrentHost;
   FAnimated := True;
   FWidth := Width;
   FHeight := Height;
-  FContext := TContext.Create;
-  FContext.MakeCurrent(True);
+  { Scenes use the render context of the render thread }
+  FContext := Ctx;
   FContext.SetViewport(0, 0, Width, Height);
   Initialize;
   Resize;
-  FContext.MakeCurrent(False);
 end;
 
 destructor TScene.Destroy;
 begin
-  FContext.MakeCurrent(True);
   Finalize;
-  FContext.MakeCurrent(False);
-  FContext.Free;
   inherited Destroy;
 end;
 
@@ -235,6 +279,54 @@ procedure TScene.MouseEvent(X, Y: Integer; Action: TMouseAction);
 begin
 end;
 
+procedure TScene.DoKeyDown(var Args: TSceneKeyArgs);
+begin
+end;
+
+procedure TScene.DoKeyUp(var Args: TSceneKeyArgs);
+begin
+  KeyEvent(Args.Key, Args.Shift);
+end;
+
+procedure TScene.DoMouseDown(var Args: TSceneMouseArgs);
+begin
+  MouseEvent(Round(Args.X), Round(Args.Y), maPress);
+end;
+
+procedure TScene.DoMouseMove(var Args: TSceneMouseArgs);
+begin
+  MouseEvent(Round(Args.X), Round(Args.Y), maMove);
+end;
+
+procedure TScene.DoMouseUp(var Args: TSceneMouseArgs);
+begin
+  MouseEvent(Round(Args.X), Round(Args.Y), maRelease);
+end;
+
+procedure TScene.DoMouseWheel(var Args: TSceneWheelArgs);
+begin
+end;
+
+procedure TScene.DoTextInput(var Args: TSceneTextArgs);
+begin
+end;
+
+function TScene.GetCanvas: ICanvas;
+begin
+  if FHost <> nil then
+    Result := FHost.Canvas
+  else
+    Result := nil;
+end;
+
+function TScene.GetFont: IFont;
+begin
+  if FHost <> nil then
+    Result := FHost.Font
+  else
+    Result := nil;
+end;
+
 procedure TScene.Update(Width, Height: Integer; Time: Double);
 begin
   if FBaseTime = 0 then
@@ -242,9 +334,10 @@ begin
   FTime := Time - FBaseTime;
   FLogicPhase := True;
   if FAnimated then
+    { Logic runs once for every whole step of time that has passed }
     while FLogicTime < FTime do
     begin
-      FLogicTime := FTime + SceneLogicStep;
+      FLogicTime := FLogicTime + SceneLogicStep;
       Logic;
     end
   else
@@ -253,7 +346,6 @@ begin
     Logic;
   end;
   FLogicPhase := False;
-  FContext.MakeCurrent(True);
   if (Width <> FWidth) or (FHeight <> Height) then
   begin
     FWidth := Width;
@@ -261,10 +353,18 @@ begin
     Resize;
   end;
   Render;
-  FContext.MakeCurrent(True);
 end;
 
 procedure TScene.Logic;
+begin
+end;
+
+function TScene.StepInterval: Double;
+begin
+  Result := 0;
+end;
+
+procedure TScene.Step(DeltaTime: Double);
 begin
 end;
 
@@ -289,11 +389,6 @@ begin
     Result := FLogicTime
   else
     Result := FTime;
-end;
-
-function IsKeyDown(KeyCode: Integer): Boolean;
-begin
-  Result := GetKeyState(KeyCode) and $80 <> 0;
 end;
 
 end.

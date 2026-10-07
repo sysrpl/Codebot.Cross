@@ -48,9 +48,13 @@ type
     FNode: TJsonNode;
     FIndex: Integer;
   public
+    { Prepare to enumerate the children of a node }
     procedure Init(Node: TJsonNode);
+    { Return the current child node }
     function GetCurrent: TJsonNode;
+    { Advance to the next child returning false when there are no more }
     function MoveNext: Boolean;
+    { The current child node }
     property Current: TJsonNode read GetCurrent;
   end;
 
@@ -58,13 +62,16 @@ type
   You should only create and free the root node of your document. The root
   node will manage the lifetime of all children through methods such as Add,
   Delete, and Clear.
+
   When you create a TJsonNode node it will have no parent and is considered to
   be the root node. The root node must be either an array or an object. Attempts
   to convert a root to anything other than array or object will raise an
   exception.
+
   Note: The parser supports unicode by converting unicode characters escaped as
   values such as \u20AC. If your json string has an escaped unicode character it
   will be unescaped when converted to a pascal string.
+
   See also:
   JsonStringDecode to convert a JSON string to a normal string
   JsonStringEncode to convert a normal string to a JSON string }
@@ -105,10 +112,13 @@ type
     destructor Destroy; override;
     { GetEnumerator adds 'for ... in' statement support }
     function GetEnumerator: TJsonNodeEnumerator;
-    { Loading and saving methods }
+    { Load json from a stream }
     procedure LoadFromStream(Stream: TStream);
+    { Save json to a stream }
     procedure SaveToStream(Stream: TStream);
+    { Load json from a file }
     procedure LoadFromFile(const FileName: string);
+    { Save json to a file }
     procedure SaveToFile(const FileName: string);
     { Convert a json string into a value or a collection of nodes. If the
       current node is root then the json must be an array or object. }
@@ -148,7 +158,7 @@ type
     function Force(const Path: string): TJsonNode;
     { Format the node and all its children as json }
     function ToString: string; override;
-    { Root node is read only. A node the root when it has no parent. }
+    { Root node is read only. A node is the root when it has no parent. }
     property Root: TJsonNode read GetRoot;
     { Parent node is read only }
     property Parent: TJsonNode read FParent;
@@ -164,7 +174,7 @@ type
     property Count: Integer read GetCount;
     { AsJson is the more efficient version of Value. Text returned from AsJson
       is the most compact representation of the node in json form.
-      Note: If you are writing a services to transmit or receive json data then
+      Note: If you are writing a service to transmit or receive json data then
       use AsJson. If you want friendly human readable text use Value. }
     property AsJson: string read GetAsJson write Parse;
     { Convert the node to an array }

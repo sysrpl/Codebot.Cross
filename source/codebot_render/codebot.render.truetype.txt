@@ -1,0 +1,1 @@
+The Codebot.Render.TrueType unit is a Pascal port of stb_truetype 1.26 by Sean Barrett. Only the parts needed for font rendering are ported, which include loading fonts, finding glyphs, reading metrics and kerning, reading the shapes of glyphs in TrueType and CFF fonts, and the antialiased rasterizer.

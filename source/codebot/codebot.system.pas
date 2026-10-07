@@ -21,29 +21,64 @@ uses
 
 {$region types}
 type
+  { Float is the default floating point type used throughout the library }
   Float = Single;
+  { Pointer to a Float }
   PFloat = ^Float;
+  { LargeInt is a signed 64 bit integer }
   LargeInt = Int64;
+  { Pointer to a LargeInt }
   PLargeInt = ^LargeInt;
+  { LargeWord is an unsigned 64 bit integer }
   LargeWord = QWord;
+  { Pointer to a LargeWord }
   PLargeWord = ^LargeWord;
+  { SysInt is a signed integer the size of a pointer on the target platform }
   SysInt = NativeInt;
+  { Pointer to a SysInt }
   PSysInt = ^SysInt;
+  { HFile is an opaque handle to an operating system file }
   HFile = Pointer;
+
+{ TMatrixOrder determines if a matrix operation is applied before (prepend)
+  or after (append) the existing transform }
+
+  TMatrixOrder = (moPrepend, moAppend);
 {$endregion}
 
 {$region dynamic library support}
 type
+  { HModule is a handle to a loaded dynamic library }
   HModule = Codebot.Core.HModule;
 
 const
+  { ModuleNil is the value of an HModule which refers to no library }
   ModuleNil = Codebot.Core.ModuleNil;
+  { SharedSuffix is the file extension of a dynamic library on the current
+    operating system, such as 'so', 'dylib', or 'dll' }
   SharedSuffix = Codebot.Core.SharedSuffix;
+  { The largest value a byte can hold }
   HiByte = High(Byte);
 
+{ Load a dynamic library by name returning ModuleNil if it could not be loaded
+  See also
+  <link Codebot.System.LibraryUnload, LibraryUnload function>
+  <link Codebot.System.LibraryGetProc, LibraryGetProc function> }
 function LibraryLoad(const Name: string): HModule;
+{ Unload a dynamic library returning true if it was unloaded
+  See also
+  <link Codebot.System.LibraryLoad, LibraryLoad function> }
 function LibraryUnload(Module: HModule): Boolean;
+{ Return the address of an exported function in a dynamic library or nil if
+  the function could not be found
+  See also
+  <link Codebot.System.LibraryLoad, LibraryLoad function> }
 function LibraryGetProc(Module: HModule; const ProcName: string): Pointer;
+
+{ ELibraryException is raised when a dynamic library or one of its functions
+  could not be loaded
+  See also
+  <link Overview.Codebot.System.ELibraryException, ELibraryException members> }
 
 type
   ELibraryException = class(Exception)
@@ -51,26 +86,36 @@ type
     FModuleName: string;
     FProcName: string;
   public
+    { Create the exception with a message built from the module and function
+      name. Pass an empty ProcName when the library itself failed to load. }
     constructor Create(const ModuleName, ProcName: string);
+    { The name of the dynamic library }
     property ModuleName: string read FModuleName;
+    { The name of the function which could not be loaded or empty if the
+      library itself could not be loaded }
     property ProcName: string read FProcName;
   end;
 
+{ TPlatform identifies the operating system family the program is running on }
+
   TPlatform = (platformLinux, platformMac, platformWindowsXP, platformWindows);
 
+{ Returns the operating system family the program is running on. On Windows
+  versions prior to Vista platformWindowsXP is returned. }
 function GetPlatform: TPlatform;
 {$endregion}
+
+{ TArray\<T\> is a shortcut to a typed dynamic array }
 
 type
   TArray<T> = array of T;
 
 {$region system}
+{ Fill a block of memory of a given size with zeros }
 procedure FillZero(out Buffer; Size: UIntPtr);
 {$endregion}
 
 {$region generic containers}
-{ TArray<T> is a shortcut to a typed dynamic array }
-
 type
 { TCompare\<T\> is used to compare two items }
   TCompare<T> = function(constref A, B: T): Integer;
@@ -79,7 +124,7 @@ type
 { TConvertString\<T\> is used to convert a type to a string }
   TConvertString<TItem> = function(constref Item: TItem): string;
 
-{ TFilterFunc\<T\> is used to test if and item passes a test }
+{ TFilterFunc\<T\> is used to test if an item passes a test }
 
   TFilterFunc<T> = function(constref Value: T): Boolean;
 
@@ -108,7 +153,7 @@ type
   end;
 {doc on}
 
-{ TSortingOrder can be used to a sort items forward, backwards, or not at all }
+{ TSortingOrder can be used to sort items forward, backwards, or not at all }
 
   TSortingOrder = (soAscend, soDescend, soNone);
 
@@ -135,11 +180,15 @@ type
       function GetItem(Index: Integer): T;
     procedure SetItem(Index: Integer; const Value: T);
   public
+    { The comparer used by Sort and IndexOf when no comparer is given }
     class var DefaultCompare: TCompare<T>;
+    { The converter used by Join when no converter is given }
     class var DefaultConvertString: TConvertString<T>;
     { The array acting as a list }
     var Items: TArray<T>;
+    { Create a list containing a copy of an open array of items }
     class function ArrayOf(const Items: array of T): TArrayList<T>; static;
+    { Returns a new empty list }
     class function Convert: TArrayList<T>; static;
     { Convert a list to an array }
     class operator Implicit(const Value: TArrayList<T>): TArray<T>;
@@ -155,11 +204,11 @@ type
     function Lo: Integer;
     { Returns the upper bounds of the list }
     function Hi: Integer;
-    { Reverses theitems in the list }
+    { Reverses the items in the list }
     procedure Reverse;
     { Swap two items in the list }
     procedure Exchange(A, B: Integer);
-    { Adds and item to the end of the list }
+    { Adds an item to the end of the list }
     procedure Push(const Item: T);
     { Appends an array of items to the list }
     procedure PushRange(const Collection: array of T);
@@ -169,9 +218,9 @@ type
     function PopRandom: T;
     { Return a copy of the list with items passing through a filter }
     function Filter(Func: TFilterFunc<T>): TArrayList<T>;
-    { Resurn the first item matching a condition }
+    { Return the first item matching a condition }
     function FirstOf(Func: TFilterFunc<T>): T;
-    { Removes an item by index from the list and decresaes the count by one }
+    { Removes an item by index from the list and decreases the count by one }
     procedure Delete(Index: Integer);
     { Removes all items setting the count of the list to 0 }
     procedure Clear;
@@ -179,9 +228,9 @@ type
     procedure Sort(Order: TSortingOrder = soAscend; Comparer: TCompare<T> = nil);
     { Attempt to find the item using DefaultCompare }
     function IndexOf(const Item: T): Integer;
-    { Join a the array into a string using a separator }
+    { Join the array into a string using a separator }
     function Join(const Separator: string; Convert: TConvertString<T> = nil): string;
-    { Returns true if ther are no items in the list }
+    { Returns true if there are no items in the list }
     property IsEmpty: Boolean read GetIsEmpty;
     { First item in the list }
     property First: T read GetFirst write SetFirst;
@@ -189,7 +238,7 @@ type
     property Last: T read GetLast write SetLast;
     { Number of items in the list }
     property Length: Integer read GetLength write SetLength;
-    { Address where to the first item is located }
+    { Address where the first item is located }
     property Data: Pointer read GetData;
     { Get or set an item }
     property Item[Index: Integer]: T read GetItem write SetItem; default;
@@ -212,16 +261,25 @@ function DefaultFloatCompare(constref A, B: Float): Integer;
 function DefaultFloatConvertString(constref Item: Float): string;
 {doc on}
 
+{doc off}
 resourcestring
   SStackSize = 'Cannot create a stack of size less than 1';
   SStackPush = 'Stack push would overflow';
   SStackPop = 'Stack pop would underflow';
   SStackEmpty = 'Stack does not contain any items';
 
+{doc on}
+
+{ EStackError is raised when a TStack\<T\> is created with an invalid size,
+  overflows, underflows, or is accessed while empty }
+
 type
   EStackError = class(Exception);
 
-{ TStack\<T\> }
+{ TStack\<T\> is a fixed size last in first out collection of items. Pushing
+  onto a full stack or popping from an empty stack raises an EStackError.
+  See also
+  <link Overview.Codebot.System.TStack, TStack\<T\> members> }
 
   TStack<T> = record
   private
@@ -234,7 +292,7 @@ type
     function GetLast: T;
     procedure SetLast(const Value: T);
   public
-    { Create a stack with room for size items }
+    { Create a stack with room for size items. Size must be at least 1. }
     class function Create(Size: Integer): TStack<T>; static;
     { Push a new item on the stack }
     procedure Push(const Value: T);
@@ -253,6 +311,7 @@ type
 
 {$region math routines}
 const
+  { The largest integer value used to represent an unbounded amount }
   Infinity = High(Integer);
 
 { A positive wrapping modulus }
@@ -265,11 +324,11 @@ function Remainder(const Quotient, Divisor: Extended): Extended;
 function Ceil(const Value: Extended): Extended;
 { Return the lower most value }
 function Floor(const Value: Extended): Extended;
-{ Tanget trigometric function }
+{ Tangent trigonometric function }
 function Tan(const X: Extended): Extended;
-{ Combined sine and cosine single trigometric function }
+{ Combined sine and cosine single trigonometric function }
 procedure SinCos(const X: Single; out S, C: Single); overload;
-{ Combined sine and cosine dobule trigometric function }
+{ Combined sine and cosine double trigonometric function }
 procedure SinCos(constref X: Double; out S, C: Double); overload;
 { Bind a value between 0 and 1 }
 function Clamp(Percent: Float): Float;
@@ -338,8 +397,8 @@ function StrCopy(const S: string; Start: Integer; Len: Integer = 0): string;
 function StrCopyData(P: Pointer; Len: Integer): string;
 { Inserts a substring into a string at a position [group string] }
 function StrInsert(const S, SubStr: string; Position: Integer): string;
-{ Compares two strings optionally ignoring case returning -1 if A comes before
-  before B, 1 if A comes after b, ord 0 if A and B are equal [group string] }
+{ Compares two strings optionally ignoring case returning -1 if A comes
+  before B, 1 if A comes after B, or 0 if A and B are equal [group string] }
 function StrCompare(const A, B: string; IgnoreCase: Boolean = False): Integer;
 { Searches a string for a substring optionally ignoring case [group string] }
 function StrFind(const S, SubStr: string; IgnoreCase: Boolean = False): Integer; overload;
@@ -353,13 +412,13 @@ function StrFindIndex(const S, SubStr: string; IgnoreCase: Boolean = False): Int
 function StrReplace(const S, OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;
 { Replaces the first instance of a pattern in a string [group string] }
 function StrReplaceOne(const S, OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;
-{ Replaces everything aftger the first instance of a pattern in a string [group string] }
+{ Replaces everything after the first instance of a pattern in a string [group string] }
 function StrReplaceAfter(const S, OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;
 { Trims white space from both sides of a string [group string] }
 function StrTrim(const S: string): string;
 { Returns true if a case insensitive string matches a value [group string] }
 function StrEquals(const S: string; Value: string): Boolean; overload;
-{ Returns true if a case insensitive string matches a set of value [group string] }
+{ Returns true if a case insensitive string matches any in a set of values [group string] }
 function StrEquals(const S: string; const Values: array of string): Boolean; overload;
 { Returns the index of a string in a string array or -1 if there is no match [group string] }
 function StrIndex(const S: string; const Values: array of string): Integer;
@@ -407,9 +466,9 @@ function StrLineBreakStyle(const S: string): TTextLineBreakStyle;
 function StrAdjustLineBreaks(const S: string; Style: TTextLineBreakStyle): string; overload;
 { Converts the line break style of a block of text using the system defined style [group string] }
 function StrAdjustLineBreaks(const S: string): string; overload;
-{ Convert a string to a wide string }
+{ Convert a string to a wide string [group string] }
 function StrToWide(const S: string): WideString;
-{ Convert a wide string to string }
+{ Convert a wide string to string [group string] }
 function WideToStr(const S: WideString): string;
 
 { Returns true if a program has a matching switch
@@ -417,12 +476,12 @@ function WideToStr(const S: WideString): string;
   <link Codebot.System.SwitchIndex, SwitchIndex function>
   <link Codebot.System.SwitchValue, SwitchValue function> [group string] }
 function SwitchExists(const Switch: string): Boolean;
-{ Returns the index if of a program's matching switch or -1 if no match was found
+{ Returns the index of a program's matching switch or -1 if no match was found
   See also
   <link Codebot.System.SwitchExists, SwitchExists function>
   <link Codebot.System.SwitchValue, SwitchValue function> [group string] }
 function SwitchIndex(const Switch: string): Integer;
-{ Returns the value if of a program's switch
+{ Returns the value of a program's switch
   See also
   <link Codebot.System.SwitchExists, SwitchExists function>
   <link Codebot.System.SwitchIndex, SwitchIndex function> [group string] }
@@ -445,16 +504,18 @@ function FloatToCommas(Value: Extended; Decimals: Integer = 0): string;
 function StrToFloat(const S: string): Extended;
 { Convert a string a float. Returns a default value if conversion cannot be done. [group string] }
 function StrToFloatDef(const S: string; Default: Extended): Extended;
-{ Search for and return a named environment variable }
+{ Search for and return a named environment variable [group string] }
 function StrEnvironmentVariable(const Name: string): string;
-{ Formats a series of argument into a string [group string] }
+{ Formats a series of arguments into a string [group string] }
 function StrFormat(const S: string; Args: array of const): string;
-{ Retrieve the compoent heirarchy [group string] }
+{ Retrieve the component hierarchy as a path of component names [group string] }
 function StrCompPath(Component: TComponent): string;
 {$endregion}
 
 {$region helpers}
-{ StringHelper }
+{ StringHelper adds methods and properties to the string type
+  See also
+  <link Overview.Codebot.System.StringHelper, StringHelper members> }
 
 type
   StringHelper = record helper for string
@@ -470,7 +531,7 @@ type
     function ToString: string;
     { Make a string unique, reducing its reference count to one }
     procedure Unique;
-    { Repeat a character a given length a into string }
+    { Repeat a character a given length into the string }
     procedure CharInto(C: Char; Len: Integer);
     { Copy a memory buffer into string }
     procedure CopyInto(P: Pointer; Len: Integer);
@@ -480,8 +541,8 @@ type
     function Equals(const Value: string; IgnoreCase: Boolean = False): Boolean; overload;
     { Returns true if a string matches any in a set of case insensitive values }
     function Equals(const Values: array of string; IgnoreCase: Boolean = False): Boolean; overload;
-    { Compares two strings optionally ignoring case returning -1 if string comes before
-      before value, 1 if string comes after value, ord 0 if string and value are equal }
+    { Compares two strings optionally ignoring case returning -1 if string comes
+      before value, 1 if string comes after value, or 0 if string and value are equal }
     function Compare(const Value: string; IgnoreCase: Boolean = False): Integer;
     { Convert a string to uppercase }
     function ToUpper: string;
@@ -499,13 +560,13 @@ type
     function MatchCount(const SubStr: string; IgnoreCase: Boolean = False): Integer;
     { Returns an array of indices of a substring matches within a string }
     function Matches(const SubStr: string; IgnoreCase: Boolean = False): IntArray;
-    { Removes the last occurance of a substring }
+    { Removes the last occurrence of a substring }
     function RemoveLast(const SubStr: string; IgnoreCase: Boolean = False): string;
     { Replaces every instance of a pattern in a string }
     function Replace(const OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;
     { Replaces the first instance of a pattern in a string }
     function ReplaceOne(const OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;
-    { Replaces everything aftger the first instance of a pattern in a string }
+    { Replaces everything after the first instance of a pattern in a string }
     function ReplaceAfter(const OldPattern, NewPattern: string; IgnoreCase: Boolean = False): string;
     { Trims white space from both sides of a string }
     function Trim: string;
@@ -523,7 +584,8 @@ type
     function SplitInt64(const Separator: string): Int64Array;
     { Splits a string into a series of tokens }
     function SplitTokens: StringArray;
-    { Splits a string into word separated by whitespace }
+    { Splits a string into words separated by whitespace optionally wrapping
+      at a maximum number of columns }
     function Words(MaxColumns: Integer = 0): StringArray;
     { Returns the first subsection of a string if it were split using a separator }
     function FirstOf(const Separator: string): string;
@@ -549,15 +611,15 @@ type
     function PadRight(C: Char; Len: Integer): string;
     { Returns a string surrounded by quotes if it contains whitespace }
     function Quote: string;
-    { Formats a series of argument into a string }
+    { Formats a series of arguments into a string }
     function Format(Args: array of const): string;
     { Analyze a string and find its line break style }
     function LineBreakStyle: TTextLineBreakStyle;
-    { Converts the line break style of a string to a the desired style }
+    { Converts the line break style of a string to the desired style }
     function AdjustLineBreaks(Style: TTextLineBreakStyle): string; overload;
     { Converts the line break style of a string to the system preferred defined style }
     function AdjustLineBreaks: string; overload;
-    { Gets true if a string contains only whitespace characters }
+    { Gets true if a string has a length of zero }
     property IsEmpty: Boolean read GetIsEmpty;
     { Gets true if a string contains only whitespace characters }
     property IsWhitespace: Boolean read GetIsWhitespace;
@@ -565,106 +627,114 @@ type
     property IsIdentifier: Boolean read GetIsIdentifier;
     { Gets true if a string matches to rules of an attribute }
     property IsAttribute: Boolean read GetIsAttribute;
-    {  Gets or sets the length allocated for the string }
+    { Gets or sets the length allocated for the string }
     property Length: Integer read GetLength write SetLength;
   end;
 
-{ IntHelper }
+{ IntHelper adds methods to the integer type }
 
   IntHelper = record helper for Integer
   public
     { Convert to a string representation }
     function ToString: string;
-    { Check if a number is inclusively between a range}
+    { Check if a number is inclusively between a range }
     function Between(Low, High: Integer): Boolean;
   end;
 
-{ TDateTimeHelper }
+{ TDateTimeHelper adds methods to the TDateTime type }
 
   TDateTimeHelper = record helper for TDateTime
   public
     { Convert to a string representation }
     function ToString(Format: string = ''): string;
-    { Convert to a string representation }
+    { Returns the date and time offset by a number of minutes }
     function AddMinutes(const A: Integer): TDateTime;
     { Return the year portion of the date }
     function Year: Word;
     { Return the month portion of the date }
     function Month: Word;
-    { Return the day  portion of the date }
+    { Return the day portion of the date }
     function Day: Word;
   end;
 
-{ TStringsHelper }
+{ TStringsHelper adds methods to the TStrings class }
 
   TStringsHelper = class helper for TStrings
   public
+    { Add an empty line }
     procedure AddLine;
+    { Add a line formatted from a series of arguments }
     procedure AddFormat(const S: string; const Args: array of const);
+    { Returns true if the text of the strings contains a substring optionally
+      ignoring case }
     function Contains(const S: string; IgnoreCase: Boolean = False): Boolean;
   end;
 
 { Returns the current date and time }
 
 function Now: TDateTime;
+
+{ Returns the current time of day }
+
+procedure NowTime(out Hour, Min, Sec, MSec: Word);
 {$endregion}
 
 {$region file management routines}
 { These file management routines support UTF8 file operations (needs testing) }
 
-{ Delete a file }
+{ Delete a file [group files]}
 function FileDelete(const FileName: string): Boolean;
 { Copy a file optionally preserving file time }
 // function FileCopy(const SourceName, DestName: string; PreserveTime: Boolean = False): Boolean;
-{ Rename a file }
+{ Rename a file [group files]}
 function FileRename(const OldName, NewName: String): Boolean;
-{ Determine if a file exists }
+{ Determine if a file exists [group files]}
 function FileExists(const FileName: string): Boolean;
-{ Get the size of a file in bytes }
+{ Get the size of a file in bytes [group files]}
 function FileSize(const FileName: string): LargeWord;
-{ Get the modified date of a file in bytes }
+{ Get the modified date of a file [group files]}
 function FileDate(const FileName: string): TDateTime;
 { Extract the name portion of a file name [group files] }
 function FileExtractName(const FileName: string): string;
-{ Extract the name portion of a file name [group files] }
+{ Extract the name portion of a file name without its extension [group files] }
 function FileExtractNameOnly(const FileName: string): string;
 { Extract the extension portion of a file name [group files] }
 function FileExtractExt(const FileName: string): string;
 { Change the extension portion of a file name [group files] }
 function FileChangeExt(const FileName, Extension: string): string;
-{ Extract the path of a file or directory }
+{ Extract the path of a file or directory [group files]}
 function FileExtractPath(const FileName: string): string;
-{ Write the contents of a file }
+{ Write the contents of a file [group files]}
 procedure FileWriteStr(const FileName: string; const Contents: string);
-{ Read the contents of a file }
+{ Read the contents of a file [group files]}
 function FileReadStr(const FileName: string): string;
-{ Write a line to a file }
+{ Write a line to a file [group files]}
 procedure FileWriteLine(const FileName: string; const Line: string);
-{ Create a directory }
+{ Create a directory [group files]}
 function DirCreate(const Dir: string): Boolean;
-{ Change to a new directory }
+{ Change to a new directory [group files]}
 procedure DirChange(const Dir: string);
-{ Get the current working directory }
+{ Get the current working directory [group files]}
 function DirGetCurrent: string;
-{ Set the current working directory }
+{ Set the current working directory [group files]}
 function DirSetCurrent(const Dir: string): Boolean;
-{ Get the temporary directory }
+{ Get the temporary directory [group files]}
 function DirGetTemp(Global: Boolean = False): string;
-{ Delete a directory or optionaly only its contents }
+{ Delete a directory or optionally only its contents [group files]}
 function DirDelete(const Dir: string; OnlyContents: Boolean = False): Boolean;
-{ Determine if a directory exists }
+{ Determine if a directory exists [group files]}
 function DirExists(const Dir: string): Boolean;
-{ Force a directory to exist }
+{ Force a directory to exist [group files]}
 function DirForce(const Dir: string): Boolean;
 { Change path delimiter to match system settings [group files] }
 function PathAdjustDelimiters(const Path: string): string;
-{ Combine two paths }
+{ Combine two paths [group files]}
 function PathCombine(const A, B: string; IncludeDelimiter: Boolean = False): string;
-{ Expand a path to the absolute path }
+{ Expand a path to the absolute path [group files]}
 function PathExpand(const Path: string): string;
-{ Include the end delimiter for a path }
+{ Include the end delimiter for a path [group files]}
 function PathIncludeDelimiter(const Path: string): string;
-{ Exclude the end delimiter for a path }
+{ Exclude the end delimiter for a path [group files]}
 function PathExcludeDelimiter(const Path: string): string;
 { Read all the content of a stream as text }
 function StreamReadStr(Stream: TStream): string;
@@ -678,8 +748,11 @@ function ResSaveData(const ResName, FileName: string): Boolean;
 function ConfigAppFile(Global: Boolean; CreateDir: Boolean = False): string;
 { Returns the location of the application configuration directory }
 function ConfigAppDir(Global: Boolean; CreateDir: Boolean = False): string;
-{ Find files from ParamStr at start index returning a strings object }
+{ Find files from ParamStr at start index returning a strings object. The
+  caller is responsible for freeing FileParams. [group findfiles]}
 procedure FindFileParams(StartIndex: Integer; out FileParams: TStrings);
+
+{ File attributes used by FindOpen and FindFiles [group findfiles]}
 
 const
   faReadOnly  = $00000001;
@@ -691,12 +764,13 @@ const
   faSymLink   = $00000040;
   faAnyFile   = $0000003f;
 
-{ FindOpen corrects path delimiters and convert search to an output parameter }
+{ FindOpen corrects path delimiters and convert search to an output parameter[group findfiles]}
 function FindOpen(const Path: string; Attr: Longint; out Search: TSearchRec): LongInt;
-{ Find file system items from a path outputting to a TStrings object }
+{ Find file system items from a path outputting to a TStrings object. The
+  caller is responsible for freeing FileSearch.[group findfiles]}
 procedure FindFiles(const Path: string; out FileSearch: TStrings; Attributes: Integer = 0); overload;
 
-{ TFileSearchItem }
+{ TFileSearchItem holds the details of one file or directory found by FindFiles [group findfiles]}
 
 type
   TFileSearchItem = record
@@ -711,10 +785,14 @@ type
     Attributes: Integer;
   end;
 
+{ TFileSearch is a list of items found by FindFiles [group findfiles]}
+
   TFileSearch = type TArrayList<TFileSearchItem>;
 
-{ Find file system items from a path outputting to a TFileSearch array }
+{ Find file system items from a path outputting to a TFileSearch array [group findfiles]}
 procedure FindFiles(const Path: string; out FileSearch: TFileSearch; Attributes: Integer = 0); overload;
+
+{ TFileSearchHelper adds sorting methods to TFileSearch [group findfiles]}
 
 type
   TFileSearchHelper = record helper for TFileSearch
@@ -748,9 +826,9 @@ type
   public
     { Adds or replace a named value in the dictionary }
     procedure Add(const Name: string; const Value: T);
-    { Removed a named value from the dictionary }
+    { Remove a named value from the dictionary }
     procedure Remove(const Name: string);
-    { Removes an item by index from the dictionary and decresaes the count by one }
+    { Removes an item by index from the dictionary and decreases the count by one }
     procedure Delete(Index: Integer);
     { Removes all named values setting the count of the dictionary to 0 }
     procedure Clear;
@@ -778,23 +856,36 @@ type
     function GetEnumerator: IEnumerator<string>;
   end;
 
-{ INamedValues<T> is a reference type for TNamedValues<T> }
+{ INamedValues\<T\> is a reference counted version of TNamedValues\<T\>
+  See also
+  <link Overview.Codebot.System.INamedValues, INamedValues\<T\> members> }
 
   INamedValues<T> = interface(IEnumerable<T>)
     ['{D228ADD8-4C4E-4C6C-A6F6-FA17FC307253}']
+    {doc off}
     function GetCount: Integer;
     function GetEmpty: Boolean;
     function GetName(Index: Integer): string;
     function GetValue(const Name: string): T;
     function GetValueByIndex(Index: Integer): T;
+    {doc on}
+    { Adds or replace a named value in the dictionary }
     procedure Add(const Name: string; const Value: T);
+    { Remove a named value from the dictionary }
     procedure Remove(const Name: string);
+    { Removes an item by index from the dictionary and decreases the count by one }
     procedure Delete(Index: Integer);
+    { Removes all named values setting the count of the dictionary to 0 }
     procedure Clear;
+    { The number of key value pairs in the dictionary }
     property Count: Integer read GetCount;
+    { Returns true if there are no named values in the dictionary }
     property Empty: Boolean read GetEmpty;
+    { Names indexed by an integer }
     property Names[Index: Integer]: string read GetName;
+    { Values indexed by a named key }
     property Values[Name: string]: T read GetValue; default;
+    { Values indexed by an integer }
     property ValueByIndex[Index: Integer]: T read GetValueByIndex;
   end;
 
@@ -802,18 +893,21 @@ type
 
   TNamedStrings = TNamedValues<string>;
 
-{ INamedStrings is a reference type for TNamedStrings }
+{ INamedStrings is a reference counted version of TNamedStrings }
 
   INamedStrings = interface(INamedValues<string>)
     ['{C03EF776-46AC-4757-8654-F31EC34E67A7}']
   end;
 
-{ TNamedValuesIntf<T> exposes INamedValues<T> }
+{ TNamedValuesIntf\<T\> implements INamedValues\<T\> using a TNamedValues\<T\>
+  See also
+  <link Codebot.System.INamedValues, INamedValues\<T\> interface> }
 
   TNamedValuesIntf<T> = class(TInterfacedObject, IEnumerable<T>, INamedValues<T>)
   private
     FData: TNamedValues<T>;
   public
+    {doc off}
     { IEnumerable<T> }
     function GetEnumerator: IEnumerator<string>;
     { INamedValues<T> }
@@ -826,34 +920,39 @@ type
     procedure Remove(const Name: string);
     procedure Delete(Index: Integer);
     procedure Clear;
+    {doc on}
   end;
 
-{ TNamedStringsIntf exposes INamedStrings }
+{ TNamedStringsIntf implements INamedStrings }
 
   TNamedStringsIntf = class(TNamedValuesIntf<string>, INamedStrings)
   end;
 
 { TInterfacedFree creates a connection between an interface and a component.
   When your interface is destroyed first then ReleaseComponent is invoked. You
-  may override ReleaseComponent to perform househeeping tasks such as
+  may override ReleaseComponent to perform housekeeping tasks such as
   unsubscribing from events on component. If the component is destroyed first
   then the corresponding component field automatically becomes nil.
 
   Note:
 
   If you override ReleaseComponent be sure to call the inherited method after
-  you complete your housheeping tasks. }
+  you complete your housekeeping tasks. }
 
   TInterfacedFree = class(TInterfacedObject)
   private
     FNotify: TObject;
     procedure NotifyFree(Sender: TObject);
   protected
+    { Invoked when the interface is destroyed before the component. Override
+      to unsubscribe from component events and call inherited last. }
     procedure ReleaseComponent; virtual;
   public
     { Holds a reference to a component until it is destroyed }
     Component: TComponent;
+    { Create a connection to a component and begin watching for its destruction }
     constructor Create(AComponent: TComponent); virtual;
+    { Calls ReleaseComponent if the component still exists }
     destructor Destroy; override;
   end;
 
@@ -964,7 +1063,7 @@ type
     procedure PropChange(Prop: PFloat);
   end;
 
-{ Compare two block of memory returning true if they are the same }
+{ Compare two blocks of memory returning true if they are the same }
 function MemCompare(const A, B; Size: LongWord): Boolean;
 {$endregion}
 
@@ -995,13 +1094,13 @@ type
     FSeconds: LongWord;
     FResult: TNullResult;
   public
-    { Resets the counting and return a recording of bytes transfered per second }
+    { Resets the counting and return a recording of bytes transferred per second }
     function Reset: TNullResult;
-    { Thread safe total bytes transfered  }
+    { Thread safe total bytes transferred }
     property Bytes: LongWord read FBytes;
-    { Thread safe realtime estimate of bytes transfered this second }
+    { Thread safe realtime estimate of bytes transferred this second }
     property Rate: LongWord read FRate;
-    { Thread safe realtime average bytes transfered in total }
+    { Thread safe realtime average bytes transferred per second }
     property Avergage: LongWord read FAvergage;
     { Thread safe number of seconds since the last reset }
     property Seconds: LongWord read FSeconds;
@@ -1024,16 +1123,17 @@ type
   public
     { Create a new null stream }
     constructor Create;
+    { Destroy the null stream and its read and write info }
     destructor Destroy; override;
     { Ignores buffer and records count read bytes
       Remarks
       If two seconds or more have passed since the last read the null stream
-      will automatically read reset }
+      will automatically reset its read info }
     function Read(var Buffer; Count: Longint): Longint; override;
     { Ignores buffer and records count written bytes
       Remarks
       If two seconds or more have passed since the last write the null stream
-      will automatically write reset }
+      will automatically reset its write info }
     function Write(const Buffer; Count: Longint): Longint; override;
     { Does nothing and returns zero }
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
@@ -1049,7 +1149,7 @@ type
 { IsMainThread returns true if the current thread is the main application thread }
 function IsMainThread: Boolean;
 
-{ IMutex allows threads to wait for an exclusive locked ownership of a mutex ibject
+{ IMutex allows threads to wait for an exclusive locked ownership of a mutex object
   Note
   On unix systems cthreads must be the first unit in your program source if you want thread support
   See also
@@ -1074,7 +1174,7 @@ type
     procedure Reset;
     { Signals threads waiting for the event object to continue }
     procedure Signal;
-    { Wait causes the current thread to suspsend execution until the event object is signaled }
+    { Wait causes the current thread to suspend execution until the event object is signaled }
     procedure Wait;
   end;
 
@@ -1093,6 +1193,8 @@ function EventCreate: IEvent;
 type
   TAsyncStatus = (asyncBusy, asyncSuccess, asyncFail, asyncCanceled);
 
+{ EAsyncException is raised when an async task is used incorrectly }
+
   EAsyncException = class(Exception);
 
 { IAsyncTask is used to perform cancellable tasks in background threads. When
@@ -1103,12 +1205,14 @@ type
 
   IAsyncTask = interface
   ['{C51218C0-526D-4167-B778-3018E5C00509}']
+    {doc off}
     function GetCancelled: Boolean;
     function GetData: TObject;
     function GetProgress: Int64;
     function GetStartTime: TDateTime;
     function GetDuration: Double;
     function GetStatus: TAsyncStatus;
+    {doc on}
     { Cancel marks the task as cancelled }
     procedure Cancel;
     { Waits for the task to complete }
@@ -1117,7 +1221,7 @@ type
     property Cancelled: Boolean read GetCancelled;
     { Data can be set to be owned by the task }
     property Data: TObject read GetData;
-    { Progress is a number to indicating the amount of work done }
+    { Progress is a number indicating the amount of work done }
     property Progress: Int64 read GetProgress;
     { Start time is a record of when the task began }
     property StartTime: TDateTime read GetStartTime;
@@ -1167,10 +1271,18 @@ type
 
   TThreadExecuteProc = procedure(Thread: TSimpleThread);
 
-{ Execute a procedure inside a simple thread }
+{ Execute a method inside a simple thread
+  See also
+  <link Codebot.System.TSimpleThread, TSimpleThread class> }
 
 function ThreadExecute(ThreadMethod: TThreadExecuteMethod): TSimpleThread; overload;
+
+{ Execute a procedure taking the thread as an argument inside a simple thread }
+
 function ThreadExecute(ThreadProc: TThreadExecuteProc): TSimpleThread; overload;
+
+{ Execute a procedure without arguments inside a simple thread }
+
 function ThreadExecute(Proc: TProcedure): TSimpleThread; overload;
 
 { Sleep for a given number of milliseconds }
@@ -1180,16 +1292,20 @@ procedure Sleep(Milliseconds: Cardinal);
 {$endregion}
 
 {$region waiting routines}
-{ Definable message pump }
+{ Definable message pump. A widgetset or application can assign this to
+  process pending messages while waiting. }
 var
   PumpMessagesProc: procedure of object;
 
-{ Retrieve messages from a queue while waiting }
+{ Retrieve messages from a queue while waiting by invoking PumpMessagesProc
+  if it is assigned }
 procedure PumpMessages;
 {$endregion}
 
 {$region writeline}
+{ Write a line of text to standard output }
 procedure WriteDebug(const Line: string); overload;
+{ Write a line formatted from a series of arguments to standard output }
 procedure WriteDebug(const Line: string; const Args: array of const); overload;
 {$endregion}
 
@@ -1274,7 +1390,7 @@ begin
   Exit(PlatformState);
   {$endif}
   {$ifdef darwin}
-  Exit(platformLinux);
+  Exit(platformMac);
   {$endif}
   {$ifdef linux}
   Exit(platformLinux);
@@ -1408,33 +1524,41 @@ end;
 {$ifdef unix}
 
 type
-  TTimeVal = packed record
+  TTimeSpec = record
     Sec: SysInt;  { Seconds }
-    MSec: SysInt; { Microseconds }
+    NSec: SysInt; { Nanoseconds }
   end;
-  PTimeVal = ^TTimeVal;
 
 const
 {$ifdef linux}
   libc = 'libc.so.6';
+  CLOCK_MONOTONIC = 1;
 {$endif}
 {$ifdef darwin}
   libc = 'libSystem.dylib';
+  CLOCK_MONOTONIC = 6;
 {$endif}
-function gettimeofday(out TimeVal: TTimeVal; TimeZone: PTimeVal): Integer; apicall; external libc;
+function clock_gettime(ClockId: Integer; out TimeSpec: TTimeSpec): Integer; apicall; external libc;
 
 var
   TimeSec: SysInt;
+  TimeStarted: Boolean;
+
+{ The monotonic clock counts from an arbitrary point, usually boot, and is not
+  changed when the system clock is set. Times are kept relative to the first
+  query so the fraction keeps its full precision in a Double. }
 
 function TimeQuery: Double;
 var
-  TimeVal: TTimeVal;
+  TimeSpec: TTimeSpec;
 begin
-  gettimeofday(TimeVal, nil);
-  if TimeSec = 0 then
-    TimeSec := TimeVal.Sec;
-  TimeVal.Sec := TimeVal.Sec - TimeSec;
-  Result := TimeVal.Sec + TimeVal.MSec / 1000000;
+  clock_gettime(CLOCK_MONOTONIC, TimeSpec);
+  if not TimeStarted then
+  begin
+    TimeSec := TimeSpec.Sec;
+    TimeStarted := True;
+  end;
+  Result := (TimeSpec.Sec - TimeSec) + TimeSpec.NSec / 1000000000;
 end;
 {$endif}
 
@@ -2930,6 +3054,11 @@ end;
 function Now: TDateTime;
 begin
   Result := SysUtils.Now;
+end;
+
+procedure NowTime(out Hour, Min, Sec, MSec: Word);
+begin
+  DecodeTime(SysUtils.Now, Hour, Min, Sec, MSec);
 end;
 
 { TStringsHelper }

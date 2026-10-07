@@ -1,0 +1,3 @@
+The Codebot.Platform unit declares the interfaces that scenes and applications need from the platform they run on, without depending on the LCL, SDL, or any other backend. It defines the VK_ virtual key codes, IBitmapData, IClipboard, and IWindow, as well as the dialogs IMessageDialog, IFileDialog, and IPictureDialog. Each dialog has a base class that holds its properties, which a backend can descend from.
+
+The routines that create these objects are assigned when the unit of a backend is initialized, which is either Codebot.Platform.LCL or Codebot.Platform.SDL. Until then, safe defaults are used. PlatformDispatch delivers the OnClose events of dialogs that were closed on another thread.

@@ -1,0 +1,65 @@
+The codebot package contains the core units of the Codebot library, and every other Codebot package is built on top of it. It provides the basic types, collections, text and data formats, geometry, animation, and networking, along with the types and interfaces used for graphics and for the platform a program runs on. Because the package does not use the LCL, it can be used by programs that have no forms. The only package it requires is LazUtils.
+
+## System
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Core | Loads dynamic libraries and finds the routines they export. |
+| Codebot.System | The types and routines used throughout the library, including Float, array lists, string and file routines, named values, delegates that publish events to subscribers, change notification, stopwatches, mutexes, events, threads, and asynchronous tasks. |
+| Codebot.Collections | Generic lists, object lists, dictionaries, and reference counted lists of objects and interfaces. |
+| Codebot.Support | The classes that run asynchronous tasks on threads and report their progress and result. |
+| Codebot.Constants | The error messages shared by the units of the library. |
+| Codebot.Process | TExternalCommand and RunCommand, which run another program and read its output one line at a time. |
+| Codebot.Unique | TUniqueInstance, which detects whether the program is already running and sends messages to that instance. |
+
+## Text and data
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Text | UTF-8 routines, memory buffers, and hexadecimal and base64 encoding. |
+| Codebot.Text.Json | TJsonNode, which parses, builds, and writes JSON. |
+| Codebot.Text.Xml | XML documents, nodes, and node lists as interfaces, and filers that read and write settings. It uses libxml2 on Linux and MSXML on Windows. |
+| Codebot.Text.Formats | Routines that tell JSON from XML and convert between the two. |
+| Codebot.Text.Store | TTextStorage, a component that holds named blocks of text. |
+| Codebot.Cryptography | MD5, SHA1, SHA256, and SHA512 hashes of strings, buffers, streams, and files, keyed hashes for authentication, and simple encryption. |
+
+## Math and animation
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Geometry | Vectors of two, three, and four components, matrices, and the other types used for 2D and 3D math. |
+| Codebot.Animation | Easing functions, interpolation, vector properties that can be animated, TAnimationTimer, and the Animator, which animates properties over time. |
+
+## Graphics and the platform
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Graphics.Types | Colors, points, rectangles, color names and conversions, and the drawing interfaces IMatrix, IPen, IBrush, IFont, IPath, ISurface, IBitmap, and ISplash. These interfaces are implemented by Codebot.Graphics in the codebot_controls package. |
+| Codebot.Platform | The interfaces for what scenes and applications need from a backend, including virtual key codes, bitmap data, the clipboard, windows, message, file, and picture dialogs, and system colors. They are provided by Codebot.Platform.LCL in codebot_controls or by Codebot.Platform.SDL in codebot_render_sdl, and safe defaults are used until one of those is initialized. |
+
+## Networking and devices
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Networking | TAddressName, which resolves host names, and TSocket, a client or server socket that can be secured using OpenSSL. |
+| Codebot.Networking.Web | TUrl, THttpClient, THttpPost, and the WebGet and WebPost routines. |
+| Codebot.Networking.Ftp | TFtpClient, a client for FTP servers. |
+| Codebot.Networking.Storage | Access to cloud storage held by Amazon S3 and compatible providers. |
+| Codebot.Networking.Unix | TUnixClientSocket, which connects to a Unix domain socket. |
+| Codebot.IO.SerialPort | TSerialPort, which reads and writes serial ports on Linux. |
+
+## Bindings to system libraries
+
+| Unit | Library |
+| --- | --- |
+| Codebot.Interop.Sockets | The sockets API of the operating system |
+| Codebot.Interop.OpenSSL | OpenSSL |
+| Codebot.Interop.Linux.Xml2 | libxml2 |
+| Codebot.Interop.Windows.Msxml | MSXML |
+| Codebot.Interop.Windows.Direct2D | Direct2D and DirectWrite |
+| Codebot.Interop.Windows.GdiPlus | GDI+ |
+| Codebot.Interop.Windows.ImageCodecs | The Windows Imaging Component |
+
+## Compiler settings
+
+Every unit of the library includes codebot.inc, which sets the Delphi mode of the compiler, turns on macros, and defines the calling convention of the platform.

@@ -1,0 +1,1 @@
+The Codebot.Interop.Vorbis unit declares the part of the vorbisfile C API used to decode Ogg Vorbis audio. The library is linked statically from libcodebotaudio.a, which is built by audio/build.sh.

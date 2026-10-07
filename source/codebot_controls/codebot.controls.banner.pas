@@ -20,6 +20,7 @@ uses
   Codebot.Graphics.Types,
   Codebot.Controls;
 
+{doc off}
 type
   TAnchorStash = record
     Anchors: TAnchors;
@@ -27,10 +28,11 @@ type
   end;
 
   TAnchorStashes = TArrayList<TAnchorStash>;
+{doc on}
 
 { TBannerText is used to render titles and descriptions inside a banner
   See also
-  <link Overview.Codebot.Banner.TBannerText, TBannerText members> }
+  <link Overview.Codebot.Controls.Banner.TBannerText, TBannerText members> }
 
 type
   TBannerText = class(TChangeNotifier)
@@ -47,13 +49,19 @@ type
     procedure SetFY(Value: Integer);
     procedure FontChange(Sender: TObject);
   public
+    { Create new banner text }
     constructor Create;
     destructor Destroy; override;
   published
+    { When true the font of the owning control is used }
     property ParentFont: Boolean read FParentFont write SetParentFont;
+    { The font used to draw the text }
     property Font: TFont read FFont write SetFont;
+    { The text to draw }
     property Text: string read FText write SetText;
+    { Horizontal offset of the text }
     property X: Integer read FX write SetFX;
+    { Vertical offset of the text }
     property Y: Integer read FY write SetFY;
   end;
 
@@ -76,18 +84,25 @@ type
     procedure SetImage(Value: TSurfaceBitmap);
     procedure SetImageBalance(Value: Float);
   public
+    { Create a new banner background }
     constructor Create;
     destructor Destroy; override;
+    { Draw the background on a surface }
     procedure Draw(Surface: ISurface);
   published
+    { The background color, or the color used to tint the image }
     property Color: TColor read FColor write SetColor;
+    { Darken the color below 0.5 or lighten it above 0.5 }
     property ColorBalance: Float read FColorBalance write SetColorBalance;
+    { The height of the background when there is no image }
     property Height: Integer read FHeight write SetHeight;
+    { An optional background image }
     property Image: TSurfaceBitmap read FImage write SetImage;
+    { Darken the image below 0.5 or lighten it above 0.5 }
     property ImageBalance: Float read FImageBalance write SetImageBalance;
   end;
 
-{ TBanner }
+{ TBanner is a control which draws a background, logo, title, and subtitle }
 
   TBanner = class(TSurfaceGraphicControl)
   private
@@ -106,13 +121,19 @@ type
     procedure Draw; override;
     procedure Loaded; override;
   public
+    { Create a new banner }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
+    { The image drawn at the left of the banner }
     property Logo: TSurfaceBitmap read FLogo write SetLogo;
+    { The background of the banner }
     property Background: TBannerBackground read FBackground write SetBackground;
+    { The title text }
     property Title: TBannerText read FTitle write SetTitle;
+    { The subtitle text drawn below the title }
     property TitleSub: TBannerText read FTitleSub write SetTitleSub;
+    { When true a shadow is drawn below the banner }
     property Shadow: Boolean read FShadow write SetShadow default True;
     property Action;
     property Align;
@@ -147,7 +168,7 @@ type
   <link Overview.Codebot.Controls.Banner.TBannerForm, TBannerForm class> }
 
   TBannerFormOptions = set of (
-    { Reanchor all controls after reszing to boundary }
+    { Size the form to fit its controls, then restore their anchors when shown }
     boReanchor,
     { Render a shadow underneath the banner }
     boBannerShadow,
@@ -185,17 +206,25 @@ type
     procedure Draw; override;
     function ThemeAware: Boolean; override;
   public
+    { Create a new banner form }
     constructor CreateNew(AOwner: TComponent; Num: Integer = 0); override;
     destructor Destroy; override;
     property ClientHandle;
     property DockManager;
   published
+    { Options controlling layout and decorations }
     property Options: TBannerFormOptions read FOptions write SetOptions;
+    { A picture stored with the form, currently unused when drawing }
     property Picture: TPicture read FPicture write SetPicture;
+    { The image drawn at the left of the banner }
     property Logo: TSurfaceBitmap read FLogo write SetLogo;
+    { The background of the banner }
     property Banner: TBannerBackground read FBanner write SetBanner;
+    { The title text }
     property Title: TBannerText read FTitle write SetTitle;
+    { The subtitle text drawn below the title }
     property TitleSub: TBannerText read FTitleSub write SetTitleSub;
+    { A control marking the layout boundary, currently unused }
     property Boundary: TControl read FBoundary write SetBoundary;
     property Action;
     property ActiveControl;
@@ -377,8 +406,9 @@ begin
         C := C.Darken((0.5 - FColorBalance) * 2);
       R := TRectI.Create(5000, FHeight);
       FillRectColor(Surface, R, C);
-    end;
-    if Theme.Selected then
+    end
+    else if Theme.Selected then
+      { The theme header is only drawn when no color is set }
       Theme.DrawHeader(FHeight);
   end
   else
@@ -470,17 +500,21 @@ begin
   FLogo := TSurfaceBitmap.Create;
   FLogo.SetSize(1, 1);
   FLogo.OnChange := PartChange;
+  { Banners default to a white background with black text }
   FBackground := TBannerBackground.Create;
+  FBackground.Color := clWhite;
   FBackground.OnChange.Add(PartChange);
   FTitle := TBannerText.Create;
   FTitle.Text := 'Your title here';
   FTitle.ParentFont := False;
   FTitle.Font.Size := 20;
   FTitle.Font.Style := [fsBold];
+  FTitle.Font.Color := clBlack;
   FTitle.OnChange.Add(PartChange);
   FTitleSub := TBannerText.Create;
   FTitleSub.Text := 'Your description here';
   FTitleSub.ParentFont := True;
+  FTitleSub.Font.Color := clBlack;
   FTitleSub.OnChange.Add(PartChange);
   FShadow := True;
 end;

@@ -1,0 +1,323 @@
+Our goal is to create a cross platform graphics and game library that can
+target both platform independent LCL desktop game applications, and platform
+independent SDL game applications.
+
+We will try to maintain rendering, physics, scenes and OpenGL contexts in a
+way that they do not depend on either backend, and either can be swapped out
+with as little effort by the end user as possible.
+
+
+Platform work
+=============
+
+Packages
+--------
+
+  codebot                  Core units. Requires LazUtils only, not the LCL.
+  codebot_controls         LCL controls and LCL graphics. Requires codebot and
+                           the LCL.
+  codebot_render           Rendering, OpenGL, scenes, widgets, physics. Requires
+                           codebot only, so it has no LCL dependency.
+  codebot_render_controls  The LCL host: TGraphicsBox, which holds an SDL
+                           window, and TSceneController. Requires
+                           codebot_render, codebot_controls, and the LCL.
+  codebot_render_sdl       The SDL host: TApplication. Requires
+                           codebot_render.
+  codebot_render_design    Registers TGraphicsBox in the IDE. Requires
+                           codebot_render_controls.
+
+The packages were renamed from codebot_rendering, codebot_rendering_sdl, and
+codebot_rendering_design. The Lazarus config was updated to match.
+
+Moved to keep the core free of the LCL:
+
+  - Codebot.Graphics, the Cairo surface, and the Direct2D, GDI+, and WIC
+    bitmap units moved from codebot to codebot_controls.
+  - TGraphicsBox, the scene controller, and Codebot.OpenGL.Linux and
+    Codebot.OpenGL.Windows moved from codebot_render to
+    codebot_render_controls.
+  - Codebot.Interop.SDL2, the SDL bindings copied from Tiny Sim, stays in
+    codebot_render since it is only bindings.
+
+Codebot.Platform
+----------------
+
+Codebot.Platform in codebot defines the interfaces for everything scenes and
+applications need from a backend. It does not use the LCL or SDL.
+
+  VK_ constants      Virtual key codes, moved here from Codebot.Render.Scenes.
+  IBitmapData        Width, Height, Pixels, SetSize, and loading and saving.
+                     Pixels are premultiplied BGRA, rows top to bottom.
+                     IBitmap in Codebot.Graphics.Types extends it.
+  IClipboard         Text and HasText.
+  IWindow            Title, Fullscreen, Scale, and Close.
+  IDialog            The base dialog. Execute(OnClose) returns immediately so
+                     the scene keeps running. OnClose is called on the thread
+                     which called Execute.
+  IMessageDialog     Message, Kind, Buttons, ButtonIndex.
+  IFileDialog        Open or save, FileName, Files, Filter, FilterIndex,
+                     InitialDir, DefaultExt, MultiSelect.
+  IPictureDialog     A file dialog for images with LoadBitmap.
+
+The backend assigns these when it is initialized:
+
+  NewBitmapData, NewMessageDialog, NewFileDialog, NewPictureDialog,
+  PlatformClipboard, SystemColorToRGB
+
+Until then defaults are used: bitmaps hold pixels but cannot load or save,
+the clipboard is kept in memory, dialogs close as soon as they are shown, and
+system colors come from a table of Windows defaults.
+
+TCustomDialog, TCustomMessageDialog, TCustomFileDialog, and
+TCustomPictureDialog hold the dialog properties. A backend overrides Show and
+calls Close when the user is done. Hosts call PlatformDispatch once a frame
+to deliver OnClose for dialogs which closed on another thread.
+
+Backends
+--------
+
+Codebot.Platform.LCL in codebot_controls:
+
+  - Bitmaps from Codebot.Graphics (Cairo on Linux, Direct2D or GDI+ on
+    Windows).
+  - The clipboard and window reads wait for the main thread with Synchronize.
+    Window changes and dialogs are queued to the main thread.
+  - NewWindowLCL(Control) is the form holding a control.
+  - Message dialogs use MessageDlg and QuestionDlg. File dialogs use
+    TOpenDialog and TSaveDialog. Picture dialogs use TOpenPictureDialog and
+    TSavePictureDialog.
+  - SystemColorToRGB uses the LCL ColorToRGB.
+  - Codebot.Graphics and Codebot.Render.Controls use it, so LCL programs get
+    it automatically.
+
+Codebot.Platform.SDL in codebot_render_sdl:
+
+  - Bitmaps are TBitmapDataSDL, loaded and saved with SDL_image through a
+    TStream adapter.
+  - The SDL clipboard, or memory while SDL video is not running.
+  - NewWindowSDL(Window) posts a quit event to close.
+  - Message dialogs use SDL message boxes.
+  - File and picture dialogs are made from widgets, in
+    Codebot.Render.Widgets.Dialogs. They are shown in the main widget of the
+    first widget scene, and close without being accepted if there is none.
+  - Codebot.Render.Application uses it, so SDL programs get it
+    automatically.
+
+Colors
+------
+
+Codebot.Graphics.Types no longer uses the LCL Graphics unit. TColor is
+declared from GraphType in LazUtils, TFontStyles and TFontQuality come from
+System.UITypes, and the standard colors are declared with the LCL values.
+System colors such as clBtnFace are converted through SystemColorToRGB.
+
+The Tiny Sim named colors, colorAliceBlue through colorYellowGreen, are
+declared in Codebot.Graphics.Types as TColorB constants, which convert to
+TColorF. The ColorBlack and ColorWhite TColorF constants were removed from
+Codebot.Render.Graphics in their favor.
+
+Other additions
+---------------
+
+  - TPointF has the Tiny Sim methods Rotate(Angle), Distance, Distance(P),
+    and Normalize. Rotate turns counterclockwise on the screen for a
+    positive angle, as in Tiny Sim.
+  - Codebot.System has NowTime, which returns the hour, minute, second, and
+    millisecond of the time of day.
+  - TRenderContext.FindAssetFile looks for an asset like GetAssetFile but
+    returns False instead of raising an exception. The hosts use it to load
+    the default font, so a scene without an assets folder starts quietly.
+
+Scenes and hosts
+----------------
+
+  - IsKeyDown is in Codebot.Hardware and asks SDL.
+  - TSceneHost.Clipboard uses PlatformClipboard.
+  - TSceneHost.Window is the IWindow showing the scene. Scenes close or go
+    full screen through Host.Window instead of an LCL form.
+  - TSceneController sets Window to the form holding its box and calls
+    PlatformDispatch each frame.
+  - TApplication (SDL) sets Window to its SDL window, calls CheckSynchronize
+    and PlatformDispatch each frame, and its Title and Fullscreen go through
+    the window.
+  - Codebot.Render.Application masks floating point exceptions in its
+    initialization section, as the LCL widgetsets do. libxml2, Chipmunk2D,
+    and OpenGL drivers expect it.
+  - TSceneHost.VSync waits for the vertical sync of the display. TApplication
+    applies it to its context, and TSceneController to the context of its
+    box. F2 switches it in an SDL application unless the scene handles F2.
+  - TApplication no longer has its own MessageBox routines. Scenes use
+    NewMessageDialog from Codebot.Platform.
+
+Rendering
+---------
+
+  - Contexts, Textures, NanoVG, and World use IBitmapData and NewBitmapData
+    instead of Codebot.Graphics.
+  - The TWorld grid texture is filled pixel by pixel instead of drawn with an
+    LCL gradient brush.
+  - TRenderContext.SaveToBitmap reads pixels with the correct glReadPixels
+    arguments, flips the rows, and converts RGBA to premultiplied BGRA.
+
+Fixes
+-----
+
+  - SDL_Surface, SDL_PixelFormat, and SDL_Palette in Codebot.Interop.SDL2
+    were packed records, which put their pointers in the wrong place on 64
+    bit systems. Images loaded with SDL came out empty and textures were
+    black. They now follow C alignment.
+  - Codebot.Platform.LCL lists SyncObjs after LCLType, which declares a
+    different TCriticalSection.
+  - codebot_controls uses DWARF 3 debug information like codebot, which fixed
+    a link error after the Cairo unit moved into it.
+
+Projects
+--------
+
+Chase, Cube, JointDemo, PhysicsDemo, SvgDemo, and WidgetDemo define usesdl at
+the top of their program file. When it is defined they run in an SDL window
+with Codebot.Render.Application instead of the LCL form in Main. Each demo is
+a scene, and its form only opens the scene in a TGraphicsBox with a
+TSceneController. Scenes close and change full screen through Host.Window, so
+the same scene runs on both. Programs list Codebot.System first instead of
+cthreads. See guide.txt in the Codebot folder.
+
+  - Cube was moved from form events into TCubeScene, and Chase into
+    TChaseScene. Their shaders are string constants in the scene units
+    instead of TTextStorage components on the form.
+  - Chase lists its animations in a TListBox widget inside a TWindow placed
+    on the left with Sector 4, sized each frame to fill the height.
+  - Cube has an assets folder with the default fonts.
+  - MegaDemo is the Tiny Sim drawing demo ported to codebot_render, with
+    Atomic Dots, Crowd Walk, Fire Sparks, Light Beams, Mouse Track, Text
+    Brush, Vector Clock, Synthwave, and Asteroids. Demo.Scene gives the demos
+    the studio, fixed rate simulation, mouse, and keyboard of Tiny Sim, and
+    TDemoViewer, a TWidgetScene, runs the selected demo in its own canvas
+    frame below the widgets. The toolbar picks a demo, shows information,
+    switches vertical sync and full screen, shows a performance graph, and
+    exits. The information window chooses any of the six widget themes from a
+    drop down list. The vector clocks were retiled so the scrolling grid
+    repeats without gaps as it turns.
+
+Widgets
+-------
+
+  - TListBox was added to Codebot.Render.Widgets. It has Items, ItemIndex,
+    OnChange, keyboard and mouse selection, a vertical scroll bar, and wheel
+    scrolling. Each theme draws its frame the same as a memo and the shared
+    DrawListBoxItems draws the items.
+  - TScrollGrid columns can each have a width of their own with ColWidths.
+    HeaderRow shows a header above the cells, which is not one of the rows,
+    with a title for each column from ColTitles. Each theme draws the header
+    cells with DrawHeaderCell, hot under the mouse and pressed while held.
+    Clicking one fires OnHeaderClick, and SortCol and SortDescending place
+    the sort arrow. ColSizing lets the right edge of a header cell be
+    dragged to resize its column. Both are off by default.
+  - The file and picture dialogs made from widgets list the name, size,
+    type, and date modified in columns under a header. Clicking a header
+    cell sorts by that column and clicking it again reverses the order,
+    with folders kept above files. The columns can be resized.
+
+Hardware
+--------
+
+Audio, the keyboard, the mouse, and joysticks are always handled by SDL on
+both backends, so they are not part of Codebot.Platform. They are all in
+Codebot.Hardware in codebot_render. LCL programs which use it need the SDL2
+library.
+
+  - Audio is the Tiny Sim audio engine: the Audio function, sources held in
+    memory, and 32 banks mixed on the SDL audio thread. It plays mp3, ogg
+    vorbis, uncompressed wav, and tracker music. Every source must be stereo
+    with 16 bit samples at 44100 Hz. SDL_mixer is not used. A bank can fade
+    in with FadeIn or the FadeIn option of Audio.Play, which also takes the
+    number of times to play, and fade out to a
+    pause with FadeOut. A bank which plays its source again fills the rest
+    of the last block from the start of the source, so loops have no gap. Audio.OnMix is called on
+    the audio thread for each block, so a program can generate samples of its
+    own, which are mixed with the banks.
+  - Joysticks is the Tiny Sim joystick collection: axes, buttons, hats, and
+    trackballs by number. A joystick SDL knows as a gamepad also has the same
+    named buttons and axes as every other gamepad.
+  - Keyboard has Key, Pressed, and Released by VK_ code, and Mouse has the
+    position and movement, Button, Pressed, and Released by TSceneButton, and
+    Captured, Visible, and Cursor. IsKeyDown asks SDL for a key or mouse
+    button as it is now, not as it was at the last scan.
+  - Audio and joysticks use only the audio, joystick, and game controller
+    subsystems of SDL and need no window made by SDL. The keyboard and mouse
+    are read from a window made by SDL, which both hosts now have.
+  - ScanHardware scans the keyboard, mouse, and joysticks, each only once a
+    scene has used it. Scenes cannot scan, so a frame is never scanned
+    twice. TApplication calls it after it reads the events of SDL.
+    TGraphicsBox calls it on the render thread before each frame.
+  - An LCL program has no event loop of SDL. Codebot.Render.Controls sets
+    ScanHardwarePumps, so ScanHardware reads the events of SDL itself once
+    the keyboard, mouse, or joysticks have been used. The box also reads
+    them before every frame with PumpHardware, as scenes need key and mouse
+    events whether or not they use Codebot.Hardware. On Windows neither
+    reads anything, as the SDL window gets its messages from the message
+    loop of the LCL.
+  - The decoders are minimp3, libogg and libvorbis, and libxmp, with their
+    sources in the audio folder beside Chipmunk2D. audio/build.sh builds
+    them into one static library, libcodebotaudio.a, for the host or for 64
+    bit Windows with MinGW-w64. Codebot.Interop.MiniMp3, Codebot.Interop.Vorbis,
+    and Codebot.Interop.Xmp declare what the engine uses. libxmp is built
+    without its depackers and ProWizard loaders.
+
+OpenGL and the SDL child window
+-------------------------------
+
+SDL creates every window which is rendered to and every OpenGL context.
+Codebot.OpenGL.Linux and Codebot.OpenGL.Windows, the GLX and WGL code, were
+removed, and Codebot.OpenGL.SDL moved from codebot_render_sdl to
+codebot_render so both hosts use it.
+
+  - TGraphicsBox creates an SDL window when it is first shown and places it
+    inside its own window, where it fills the control.
+    Codebot.Render.Controls.Child does this with XReparentWindow on X11 and
+    SetParent on Windows, as SDL has no child windows of its own. The
+    widgetset units only supply the native window of the control and of its
+    form. Nothing is created at design time.
+  - The SDL window covers the box, so the LCL does not see the keyboard or
+    mouse over it. An event filter gives each SDL event to the box whose
+    window it belongs to. Before each frame the render thread calls the LCL
+    key and mouse events of the box on the main thread with Synchronize and
+    waits for them, then calls OnInput for each SDL event on the render
+    thread. It only waits when one of the LCL events has a handler, or a
+    button went down, which gives the box the focus. OnMouseEnter and
+    OnMouseLeave do not occur.
+  - TSceneController converts those events for the scene, the same as
+    TApplication does. It no longer queues LCL events from the main thread.
+    Its window is the form, for the title, full screen, and closing.
+  - The window system only sends keys to the window with the keyboard
+    focus. The box gives the focus to its SDL window when the LCL gives the
+    box the focus or when it is clicked, and gives it back to the form when
+    the box loses the focus. While the SDL window has it the LCL does not
+    see keys, so the tab key and form shortcuts are not processed.
+  - The keyboard interface and the window cursor were removed from
+    Codebot.Platform and its two backends, as SDL provides both on either
+    host. IsKeyDown and Mouse.Cursor in Codebot.Hardware take their place.
+    In an LCL program IsKeyDown only sees keys typed while the SDL window of
+    a box has the focus.
+  - Wayland is not supported. Files dropped on a box are not reported.
+
+Still to do
+-----------
+
+  - Compile and test the file and picture dialogs made from widgets, which
+    were written but have not been through the compiler.
+  - Compile and test Codebot.Hardware and the three audio interop units,
+    which were written but have not been through the compiler.
+  - Compile and test TGraphicsBox with its SDL window, on GTK3 and on
+    Windows. It was written without a compiler. The parts most likely to
+    need work are the keyboard focus moving between the form and the SDL
+    window, and on Windows whether SDL handling the paint and cursor
+    messages of its window causes trouble.
+  - Port the Tiny Sim InputDown, InputPressed, and InputAxis routines which
+    read the keyboard and a joystick together. MegaDemo reads only the
+    keyboard until then.
+  - SDL_CreateRGBSurfaceFrom in Codebot.Interop.SDL2 is missing its pitch
+    parameter, so calling it would crash. Nothing uses it yet.
+  - The other packed records in Codebot.Interop.SDL2, such as the haptic
+    records, have not been checked for 64 bit alignment. They are not used
+    yet. Codebot.Hardware uses none of them.

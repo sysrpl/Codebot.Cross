@@ -1,0 +1,1 @@
+The Codebot.Forms.Widget unit defines TWidget, which is a floating form drawn using a surface. The user can drag a widget to move it and resize it by its corners. A widget can keep its aspect ratio and can contain click boxes that report when they are clicked. To draw a widget, override its Render method.

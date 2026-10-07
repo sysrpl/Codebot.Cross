@@ -1,0 +1,5 @@
+The Codebot.OpenGL unit declares the OpenGL API for versions 3.0 through 4.6 and OpenGL ES 2.0 through 3.2, along with the context and information interfaces used for rendering. The version is chosen by a define in render.inc, and only the functions of that version are declared and loaded.
+
+- OpenGLContextCreate creates a context for a window.
+- OpenGLLoad loads the OpenGL functions.
+- OpenGLInfo reports what the graphics hardware supports.

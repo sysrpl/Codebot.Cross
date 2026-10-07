@@ -1,0 +1,3 @@
+The Codebot.Render.Application unit runs scenes in an SDL2 window without using the LCL. TApplication is the scene host of the window and is accessed through the global Application function. A program using this unit creates no forms. Instead, it sets the properties of the window and calls Run with a scene class.
+
+Everything runs on the thread that calls Run. That thread creates the window, the OpenGL context, and the canvas, and then on each frame it delivers the window events to the scene as input, updates the scene, and swaps the buffers. Unless the scene handles these keys itself, F1 toggles full screen and F2 toggles vertical sync.

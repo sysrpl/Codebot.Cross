@@ -1,0 +1,22 @@
+The codebot_terminal package provides a terminal emulator as an LCL control. It uses the VTE library from the GNOME terminal, which is a GTK widget, so the package only builds with the GTK2 and GTK3 widgetsets. The package requires codebot and the LCL.
+
+## Terminal control
+
+Codebot.Terminal.Controls defines TTerminal, which is a control that runs the shell of the user. The shell starts when the control is first shown.
+
+- OnReady is invoked once the shell has written its prompt.
+- OnTerminate is invoked when the shell ends.
+- Restart clears the terminal and starts the shell again.
+
+The control has a font, an optional vertical scroll bar, and colors for its text, background, bold and dim text, cursor, and selection. While the control is being designed in the IDE there is no running terminal, so it paints a prompt and a cursor instead.
+
+Codebot.Terminal.Types holds what the control shares with the units that implement it, which includes the parts of a terminal that have their own color and the palettes of the sixteen numbered colors: Tango, Linux, Xterm, and Solarized.
+
+## Widgetsets
+
+| Unit | Widgetset | VTE version | Build requirement |
+| --- | --- | --- | --- |
+| Codebot.Terminal.Controls.Gtk3 | GTK3 | 2.91 | libvte-2.91-dev |
+| Codebot.Terminal.Controls.Gtk2 | GTK2 | 0.28 | libvte-dev |
+
+The VTE library is linked when a program is built, so the development package for the chosen widgetset must be installed.

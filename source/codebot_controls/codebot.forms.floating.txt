@@ -1,0 +1,1 @@
+The Codebot.Forms.Floating unit defines TFloatingForm, which is a borderless form that can be made transparent or faded. It can also be set to let mouse input pass through it to whatever is behind it.

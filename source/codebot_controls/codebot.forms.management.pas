@@ -17,7 +17,7 @@ uses
   Classes, SysUtils, Graphics, Controls, Forms,
   Codebot.System;
 
-{ FormManager }
+{ FormManager provides access to the active form and default font }
 
 type
   FormManager = record
@@ -26,9 +26,13 @@ type
     class function GetCurrent: TCustomForm; static;
     class function GetDefaultFont: TFont; static;
   public
+    { Bring a form to the foreground and activate it }
     class procedure Activate(Form: TCustomForm); static;
+    { Return the form containing a control or nil if there is none }
     class function ParentForm(Control: TControl): TCustomForm; static;
+    { The form in the foreground or nil if it does not belong to this program }
     class property Current: TCustomForm read GetCurrent;
+    { The default font used by forms }
     class property DefaulFont: TFont read GetDefaultFont;
   end;
 

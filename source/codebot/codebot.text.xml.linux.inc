@@ -932,7 +932,7 @@ begin
       begin
         A := xmlGetAttributeChild(FNode, Index);
         if (A <> nil) then
-          Result := TNode.Create(N);
+          Result := TNode.Create(xmlNodePtr(A));
       end;
   else
     // Do nothing ...

@@ -1,0 +1,1 @@
+The Codebot.Controls.Grids unit defines TScrollWindow, which is a control with a scrollable area. TContentGrid descends from it and shows a grid of cells that are drawn by event handlers, while TGridCellManager keeps track of the column widths and row heights of the grid. The unit also defines TImageListGridProvider, which shows the images of an image strip in a content grid.

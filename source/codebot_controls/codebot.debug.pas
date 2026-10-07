@@ -18,17 +18,24 @@ uses
   Codebot.System,
   Codebot.Networking;
 
+{ TShutdownThread is a thread which can be asked to stop and free itself }
+
 type
   TShutdownThread = class(TThread)
   public
+    { Stop the thread }
     procedure Shutdown; virtual; abstract;
   end;
 
+  { TDebugEvent receives a line of text sent by Bugout }
   TDebugEvent = procedure(const Text: string) of object;
+  { Debug event publisher }
   TDebugDelegate = TDelegate<TDebugEvent>;
+  { Debug event subscriber }
   IDebugDelegate = IDelegate<TDebugEvent>;
 
-{ TDebugServer }
+{ TDebugServer listens on a local port for lines of text sent by Bugout from
+  another program and passes them to OnDebug subscribers on the main thread }
 
   TDebugServer = class
   private
@@ -38,11 +45,16 @@ type
     function GetRunning: Boolean;
     procedure SetRunning(Value: Boolean);
   public
+    { Stop the server and destroy it }
     destructor Destroy; override;
+    { Start or stop listening for debug text }
     property Running: Boolean read GetRunning write SetRunning;
+    { Subscribe to receive debug text }
     property OnDebug: IDebugDelegate read GetOnDebug;
   end;
 
+{ Send a line of text, a formatted string, or a number to a TDebugServer
+  running on the local machine }
 procedure Bugout(const S: string); overload;
 procedure Bugout(const S: string; Args: array of const); overload;
 procedure Bugout(I: Integer); overload;

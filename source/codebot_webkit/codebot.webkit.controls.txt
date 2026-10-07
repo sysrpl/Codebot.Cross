@@ -1,0 +1,3 @@
+The Codebot.WebKit.Controls unit defines TWebBrowser, which is a web browser control that embeds WebKitGTK. It can load a location or a string of HTML, stop and reload a page, go back and forward, run JavaScript, and zoom. Its events report the location, title, progress, and status of a page as it loads, as well as errors, what is under the mouse, context menus, JavaScript dialogs, and downloads. An event can also allow or deny a navigation.
+
+The unit also defines TWebDownload, which is a file downloaded by a browser, and TWebInspector, which is a control that hosts the inspector of a browser.

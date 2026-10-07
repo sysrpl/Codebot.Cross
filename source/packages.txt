@@ -1,0 +1,132 @@
+# The Codebot Library
+
+The Codebot library is a collection of Free Pascal and Lazarus packages for building desktop applications, tools, and games. It began as a set of general purpose units shared between projects and has grown into a complete toolkit, covering everything from string handling and JSON parsing to antialiased vector graphics, custom controls, OpenGL rendering, 2D physics, audio, an embedded terminal, and a web browser control.
+
+The library is written in Delphi mode, and works on Linux with the GTK3 widgetset as its primary platform, with Windows supported throughout the core and graphics units. It is released under the GNU General Public License, version 3.
+
+This document is a tour of the library. It explains how the packages fit together, what each one is for, and which ones you need for the kind of program you want to write. Each package and each unit also has its own description, in a text file beside it with the same name, for when you want the details.
+
+## How the library is organized
+
+The library is split into packages so that a program only pulls in what it uses. The most important line in that split is the one between code that needs the LCL and code that does not. The core of the library, and the whole rendering engine, can be used without the LCL at all, which means a command line tool or a full screen SDL game never has to carry the weight of a form designer it does not use.
+
+You can think of the packages as a set of layers, each one built on the ones beneath it:
+
+```
+codebot                      the core, which needs only LazUtils
+ ├── codebot_controls        LCL controls and 2D vector graphics
+ │    ├── codebot_webkit     a web browser control
+ │    └── codebot_render_controls
+ ├── codebot_render          OpenGL rendering, scenes, widgets, physics, audio
+ │    ├── codebot_render_controls   runs scenes inside an LCL form
+ │    └── codebot_render_sdl        runs scenes in an SDL window
+ └── codebot_terminal        a terminal emulator control
+```
+
+Alongside these runtime packages are the design time packages, whose names end in _design. They are installed in the Lazarus IDE to place components on the component palette and to provide editors for their properties, and they are never used by the programs you build.
+
+## The core: codebot
+
+Every other package is built on codebot, and it is the package you will use most. It requires nothing but LazUtils, so it can be used in any kind of program.
+
+At its heart is Codebot.System, which defines the types and routines that the rest of the library is written in. Float is the floating point type used everywhere, and TArrayList<T> extends dynamic arrays so that they can sort, search, and filter their items. There are routines for strings, files, math, and time, helpers that add methods to strings and numbers, delegates that let an event have any number of subscribers, and the building blocks of threading, such as mutexes, events, threads, and asynchronous tasks. Codebot.Collections adds generic lists and dictionaries for when an array list is not enough.
+
+The package also handles text and data. Codebot.Text.Json reads, builds, and writes JSON documents, and Codebot.Text.Xml does the same for XML, using libxml2 on Linux and MSXML on Windows. Codebot.Text provides UTF-8 routines along with hexadecimal and base64 encoding, and Codebot.Cryptography computes MD5, SHA1, SHA256, and SHA512 hashes.
+
+For math there is Codebot.Geometry, with vectors, matrices, quaternions, and bezier curves for both 2D and 3D, and Codebot.Animation, which moves values toward their targets over time using easing functions.
+
+Networking is covered by Codebot.Networking, whose TSocket can be secured with OpenSSL, and by the units built on it for HTTP requests, FTP, and S3 compatible cloud storage.
+
+Finally, codebot declares the interfaces that other packages implement. Codebot.Graphics.Types describes 2D drawing, with surfaces, pens, brushes, fonts, paths, and bitmaps, and Codebot.Platform describes what a program needs from the system it runs on, such as the clipboard, windows, and file dialogs. Because these are only interfaces, code written against them works the same no matter which package provides the implementation.
+
+## Controls and vector graphics: codebot_controls
+
+The codebot_controls package brings the library to the LCL. Its most important unit is Codebot.Graphics, which implements the drawing interfaces of codebot using Cairo on Linux and Direct2D or GDI+ on Windows. The result is a single drawing API, ISurface, that produces antialiased vector graphics on every platform.
+
+The controls in this package are drawn using that API rather than the native widgets of the platform, which gives them a consistent look and lets them be themed. The collection includes color pickers, slide bars and slide edits, flat thin buttons, banners, scrolling lists with column headers, content grids, sizing panels, step indicators, and animated progress icons. The base classes TSurfaceGraphicControl, TSurfaceCustomControl, and TSurfaceForm make it easy to write your own controls that draw on a surface in the same way.
+
+There are also a number of specialized forms, such as floating forms that can be transparent, popup forms for drop down lists, desktop widgets that the user can move and resize, and an advanced color dialog. Smaller units capture system wide hotkeys, monitor the mouse anywhere on the screen, and send debug messages from a running program to another program.
+
+## Graphics and games: codebot_render
+
+The codebot_render package is a cross platform graphics and game engine drawn using OpenGL. Like the core, it does not depend on the LCL, and this is a deliberate part of its design. The same scene can run inside a form of a desktop application or in a full screen SDL window, without changing a line of its code.
+
+Rendering starts with Codebot.OpenGL, which declares OpenGL from version 3.0 up to 4.6 and OpenGL ES from 2.0 up to 3.2, with the version chosen by a define in render.inc. On top of that, a render context owns the shaders, textures, vertex buffers, and fonts your program creates, and frees whatever your program forgets to.
+
+For 2D drawing, Codebot.Render.Graphics provides a canvas built on a Pascal port of NanoVG, with paths, gradients, images, sprites, and text. There are also Pascal ports of fontstash and stb_truetype for rendering text, and an SVG reader that draws documents on the canvas.
+
+A program written with codebot_render is made of scenes. A scene draws each frame and handles keyboard and mouse input, and can optionally be stepped at a fixed rate on its own thread. A widget scene adds a complete user interface drawn on the canvas, with windows, buttons, edits, lists, sliders, and file dialogs, styled by a choice of themes ranging from a flat dark look to classic Windows 95. A physics scene adds a 2D physics world powered by Chipmunk2D, which Codebot.Physics wraps in easy to use records.
+
+Codebot.Hardware rounds out the package by playing audio and reading the keyboard, mouse, and joysticks through SDL. It plays MP3, Ogg Vorbis, WAV, and tracker music, all mixed together on the audio thread.
+
+### Choosing a host
+
+A scene needs a host to give it a window, and the library provides two of them. Choose the one that suits your program:
+
+| Host package | Use it when | The scene runs in |
+| --- | --- | --- |
+| codebot_render_controls | You are writing a desktop application and want OpenGL graphics inside a form, alongside regular controls. | A TGraphicsBox control, managed by a TSceneController |
+| codebot_render_sdl | You are writing a game or a full screen application and do not need the LCL. | An SDL window, managed by the global Application |
+
+Both hosts give the scene the same canvas, fonts, input, clipboard, and dialogs, so moving a scene from one host to the other is simply a matter of changing which package your program uses.
+
+## A terminal and a web browser
+
+Two more packages each provide a single, larger control.
+
+The codebot_terminal package defines TTerminal, a terminal emulator that runs the shell of the user inside your form. It uses the VTE library from the GNOME terminal, so it is available with the GTK2 and GTK3 widgetsets. Its design time package also adds a Terminal window to the Lazarus IDE itself.
+
+The codebot_webkit package defines TWebBrowser, a web browser control that embeds WebKitGTK. It can load pages and HTML, run JavaScript, handle downloads, and show the developer tools, and it comes with an address bar and a status indicator. WebKitGTK is loaded when the program starts rather than linked when it is built, so a program that uses the browser still runs, and can say so, on a system where WebKitGTK is not installed.
+
+## Which packages do you need?
+
+| If you are writing | Use these packages |
+| --- | --- |
+| A command line tool or a service | codebot |
+| A desktop application | codebot and codebot_controls |
+| A desktop application with OpenGL graphics | codebot, codebot_controls, codebot_render, and codebot_render_controls |
+| A game or a full screen application without the LCL | codebot, codebot_render, and codebot_render_sdl |
+| A desktop application with a terminal | codebot and codebot_terminal |
+| A desktop application with a web browser | codebot, codebot_controls, and codebot_webkit |
+
+To use the components in the form designer, install the matching design time packages in the Lazarus IDE as well.
+
+## Libraries the packages rely on
+
+Most of the library is plain Pascal, but some features are built on well known C libraries. The interop units that declare them are loaded or linked only by the packages that need them.
+
+| Library | Used for | Package |
+| --- | --- | --- |
+| OpenSSL | Secure sockets and hashing | codebot |
+| libxml2 | XML documents on Linux | codebot |
+| Cairo and GTK | Vector graphics on Linux | codebot_controls |
+| Direct2D, GDI+, and WIC | Vector graphics and images on Windows | codebot_controls |
+| SDL2 and SDL2_image | Windows, OpenGL contexts, input, audio, and images | codebot_render |
+| Chipmunk2D | 2D physics, linked statically | codebot_render |
+| minimp3, vorbisfile, and libxmp | Decoding audio, linked statically from libcodebotaudio.a | codebot_render |
+| assimp | Loading 3D models | codebot_render |
+| libmpv | Playing video, when enabled in render.inc | codebot_render |
+| VTE | The terminal emulator | codebot_terminal |
+| WebKitGTK | The web browser | codebot_webkit |
+
+## A few conventions
+
+Every unit of the library includes codebot.inc, which sets Delphi mode, turns on macros, and defines the calling convention of the platform. The rendering packages also include render.inc, which chooses the OpenGL version and turns optional features, such as the video widget, on or off.
+
+Programs that use the library should list Codebot.System first in their uses clause, instead of the cthreads block that Lazarus generates. Codebot.System brings in the thread manager on Unix before any other unit starts, which the render thread, the step threads, and queued calls to the main thread all depend on.
+
+## The packages
+
+| Package | Description | Requires | Kind |
+| --- | --- | --- | --- |
+| codebot | The core of the library: basic types, collections, text and data formats, geometry, animation, networking, and the interfaces for graphics and the platform. | LazUtils | Runtime |
+| codebot_controls | LCL controls and forms that draw themselves using antialiased vector graphics, and the graphics backends for Linux and Windows. | codebot, LCL | Runtime |
+| codebot_controls_design | Registers the components of codebot_controls with the IDE, along with their property editors and the Application Explorer. | codebot_controls, IDEIntf, RunTimeTypeInfoControls | Design time |
+| codebot_render | A cross platform graphics and game engine drawn using OpenGL, with scenes, widgets, physics, audio, and input. | codebot | Runtime |
+| codebot_render_controls | The LCL host of codebot_render, which runs scenes inside a TGraphicsBox on a form. | codebot_render, codebot_controls, LCL | Runtime |
+| codebot_render_design | Registers TGraphicsBox with the IDE. | codebot_render_controls | Design time |
+| codebot_render_sdl | The SDL host of codebot_render, which runs scenes in an SDL window without the LCL. | codebot_render | Runtime |
+| codebot_terminal | TTerminal, a terminal emulator control built on the VTE library. | codebot, LCL | Runtime |
+| codebot_terminal_design | Registers TTerminal with the IDE and adds a Terminal window to the IDE. | codebot_terminal, IDEIntf | Design time |
+| codebot_webkit | TWebBrowser, a web browser control built on WebKitGTK, with an address bar and a status indicator. | codebot_controls, LCL | Runtime |
+| codebot_webkit_design | Registers the web browser controls with the IDE. | codebot_webkit | Design time |

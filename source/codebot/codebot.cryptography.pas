@@ -52,7 +52,7 @@ function AuthStream(const Key: string; Kind: THashKind; Stream: TStream): TDiges
 { Compute the hmac digest of a file }
 function AuthFile(const Key: string; Kind: THashKind; const FileName: string): TDigest;
 
-{ TDigestHelper }
+{ TDigestHelper adds methods to TDigest }
 
 type
   TDigestHelper = record helper for TDigest
@@ -64,11 +64,11 @@ type
 {$endregion}
 
 {$region encryption}
-{ Encrypt a string }
+{ Encrypt a string using a simple obfuscation which is not cryptographically secure }
 function Encrypt(const S: string): string;
 { Decrypt a string }
 function Decrypt(const S: string): string;
-{ Decrypt a string sequence }
+{ Decrypt a sequence of length prefixed encrypted strings joined together }
 function DecryptSequence(const S: string): string;
 {$endregion}
 

@@ -9,7 +9,7 @@ uses
   Codebot.Render.Contexts,
   Classes;
 
-{ TShaderObject }
+{ TShaderObject is the base class of shaders and shader programs }
 
 type
   TShaderObject = class(TContextManagedObject)
@@ -31,7 +31,7 @@ type
     property Handle: Integer read FHandle;
   end;
 
-{ TShaderSource }
+{ TShaderSource is a shader compiled from source }
 
   TShaderSource = class(TShaderObject)
   private
@@ -39,27 +39,29 @@ type
     FSource: string;
   public
     destructor Destroy; override;
-    { Compile the shader and return the compile status }
+    { Compile the shader and return the compile status. If the source does not
+      begin with a #version directive one is added to match the OpenGL API
+      selected in render.inc, so the same source can target desktop and ES. }
     function Compile(Source: string): Boolean;
     { The source code as stored by the compile method }
     property Source: string read FSource;
   end;
 
-{ TVertexShader }
+{ TVertexShader is a shader which places vertices }
 
   TVertexShader = class(TShaderSource)
   public
     constructor Create;
   end;
 
-{ TFragmentShader }
+{ TFragmentShader is a shader which colors pixels }
 
   TFragmentShader = class(TShaderSource)
   public
     constructor Create;
   end;
 
-{ TShaderProgram }
+{ TShaderProgram is vertex and fragment shaders linked together for drawing }
 
   TShaderProgram = class(TShaderObject)
   private
@@ -110,7 +112,7 @@ type
 
 { TShaderExtension adds the function Shaders to the current context }
 
-  TShaderExtension = class helper for TContext
+  TShaderExtension = class helper for TRenderContext
   public
     { Returns the shader collection for the current context }
     function Shaders: TShaderCollection;
@@ -119,7 +121,7 @@ type
 implementation
 
 uses
-  Codebot.GLES;
+  Codebot.OpenGL;
 
 { TShaderObject }
 
@@ -129,6 +131,21 @@ begin
 end;
 
 { TShaderSource }
+
+{ The version header added to shader sources which do not declare a version.
+  Shaders written in GLSL 3.30 core syntax using in, out, and layout locations
+  compile unchanged on desktop OpenGL 3.3 and later and on OpenGL ES 3.0. }
+
+const
+{$if defined(gles30)}
+  ShaderHeader = '#version 300 es'#10'precision highp float;'#10;
+{$elseif defined(glesapi)}
+  ShaderHeader = '#version 100'#10'precision mediump float;'#10;
+{$elseif defined(gl33)}
+  ShaderHeader = '#version 330 core'#10;
+{$else}
+  ShaderHeader = '#version 140'#10'#extension GL_ARB_explicit_attrib_location : require'#10;
+{$endif}
 
 destructor TShaderSource.Destroy;
 begin
@@ -149,6 +166,8 @@ begin
   FCompiled := True;
   FSource := Source;
   S := Source;
+  if not S.Trim.BeginsWith('#version') then
+    S := ShaderHeader + S;
   P := PChar(S);
   glShaderSource(FHandle, 1, @P, nil);
   glCompileShader(FHandle);
@@ -350,8 +369,8 @@ var
   Item: TContextManagedObject;
   S: string;
 begin
-  Item := GetObject(Name);
-  if Item <> nil then
+  Item := GetObject(AName);
+  if (Item <> nil) and (Item is TShaderSource) then
     Result := TShaderSource(Item)
   else
     Result := nil;
@@ -374,15 +393,17 @@ var
   Item: TContextManagedObject;
   S: string;
 begin
-  Item := GetObject(Name);
+  Item := GetObject(AName);
   if (Item <> nil) and (Item is TShaderProgram) then
     Result := TShaderProgram(Item)
   else
     Result := nil;
   if Result = nil then
   begin
-    S := Ctx.GetAssetFile(PathCombine('shaders', AName));
-    Result := TShaderProgram.CreateFromFile(S);
+    { A program is a pair of files named after the program ending in .vert
+      and .frag }
+    S := Ctx.GetAssetFile(PathCombine('shaders', AName + '.vert'));
+    Result := TShaderProgram.CreateFromFile(FileChangeExt(S, ''));
     Result.Name := AName;
   end;
 end;

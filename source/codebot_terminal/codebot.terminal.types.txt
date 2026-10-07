@@ -1,0 +1,1 @@
+The Codebot.Terminal.Types unit holds what the terminal control shares with the units that implement it for each widgetset. This includes the parts of a terminal that have their own color, the Tango, Linux, Xterm, and Solarized palettes of the sixteen numbered colors, and ITerminalEvents, which tells the control that its terminal is ready or that its program has ended.

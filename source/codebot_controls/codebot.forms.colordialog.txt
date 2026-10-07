@@ -1,0 +1,1 @@
+The Codebot.Forms.ColorDialog unit defines TAdvancedColorDialog, which is a component that shows a dialog for picking a color and its opacity. The dialog uses the hue, saturation, and alpha pickers, along with a grid of color swatches. The unit also includes routines that convert a color to and from text written in the Delphi, HTML, and CSS styles.

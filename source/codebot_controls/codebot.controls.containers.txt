@@ -1,0 +1,1 @@
+The Codebot.Controls.Containers unit defines controls that hold other controls. TSizingPanel pads its edges, paints a background, and includes a splitter that allows the panel to be resized by dragging it with the mouse. TCaptionBox is a panel with a caption area along its top.

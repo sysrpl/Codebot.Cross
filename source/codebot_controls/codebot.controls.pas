@@ -20,17 +20,24 @@ uses
   Codebot.Graphics.Types;
 
 type
+  { TItemUpdateEvent is invoked when an item in a collection changes }
   TItemUpdateEvent = procedure(Sender: TObject; Item: TCollectionItem) of object;
+  { Item update event publisher }
   TItemUpdateDelegate = TDelegate<TItemUpdateEvent>;
+  { Item update event subscriber }
   IItemUpdateDelegate = IDelegate<TItemUpdateEvent>;
 
+  { TItemNotifyEvent is invoked when an item is added to or removed from a
+    collection }
   TItemNotifyEvent = procedure(Sender: TObject; Item: TCollectionItem; Action: TCollectionNotification) of object;
+  { Item notify event publisher }
   TItemNotifyDelegate = TDelegate<TItemNotifyEvent>;
+  { Item notify event subscriber }
   IItemNotifyDelegate = IDelegate<TItemNotifyEvent>;
 
 { TNotifyCollection\<T\> simplifies creating specialized persistent collections
   See also
-  <link Overview.Codebot.Controls.TNotifyCollection\<T\>, TNotifyCollection\<T\> members> }
+  <link Overview.Codebot.Controls.TNotifyCollection, TNotifyCollection\<T\> members> }
 
   TNotifyCollection<T: TCollectionItem> = class(TCollection)
   private
@@ -43,16 +50,25 @@ type
     function GetOnItemUpdate: IItemUpdateDelegate;
   protected
     function GetOwner: TPersistent; override;
+    { Invoke OnItemNotify subscribers }
     procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
+    { Invoke OnItemUpdate subscribers }
     procedure Update(Item: TCollectionItem); override;
   public
+    { Create a collection owned by a persistent object }
     constructor Create(AOwner: TPersistent); virtual;
     destructor Destroy; override;
+    { Copy the items of another collection }
     procedure Assign(Source: TPersistent); override;
+    { Add a new item }
     function Add: T;
+    { The object which owns the collection }
     property Owner: TPersistent read FOwner;
+    { Items indexed by an integer }
     property Items[const Index: Integer]: T read GetItem write SetItem; default;
+    { Subscribe to notifications when items are added or removed }
     property OnItemNotify: IItemNotifyDelegate read GetOnItemNotify;
+    { Subscribe to notifications when items change }
     property OnItemUpdate: IItemUpdateDelegate read GetOnItemUpdate;
   end;
 
@@ -98,9 +114,11 @@ type
   ESurfaceAccessError = class(Exception);
 {doc on}
 
+{doc off}
 var
   MouseEnters: Integer;
   MouseLeaves: Integer;
+{doc on}
 
 { TSurfaceGraphicControl is the base class for custom graphic controls
   which require an ISurface object
@@ -126,10 +144,14 @@ type
   protected
     { Allow controls direct access to draw state }
     FDrawState: TDrawState;
-    { Area related functions }
+    { Areas are clickable regions of a control, such as the arrow of a drop
+      down button. AreaClick is invoked when an area is clicked. }
     procedure AreaClick(Area: Integer); virtual;
+    { Return the number of areas }
     function GetAreaCount: Integer; virtual;
+    { Return the bounds of an area }
     function GetAreaRect(Index: Integer): TRectI; virtual;
+    { Return the draw state of an area }
     function GetAreaState(Index: Integer): TDrawState;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -138,15 +160,18 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseEnter; override;
     procedure MouseLeave; override;
+    { Add an item to the draw state }
     procedure IncludeStateItem(Item: TDrawStateItem);  virtual;
+    { Remove an item from the draw state }
     procedure ExcludeStateItem(Item: TDrawStateItem);  virtual;
+    { Float property change notification }
     procedure PropChange(Prop: PFloat);  virtual;
     procedure SetParent(NewParent: TWinControl); override;
     { Create a default size }
     class function GetControlClassDefaultSize: TSize; override;
     { Update draw state when enabled is changed }
     procedure EnabledChanged; override;
-    { Override ThemeAware and return true to subscribe to glabal theme changes }
+    { Override ThemeAware and return true to subscribe to global theme changes }
     function ThemeAware: Boolean; virtual;
     { Invoked when the theme is changed }
     procedure ThemeChanged; virtual;
@@ -154,17 +179,18 @@ type
     procedure Paint; override; final;
     { While Draw is executing Surface refers to a valid ISurface }
     procedure Draw; virtual;
-    { Surface is only during while Draw is executing }
+    { Surface is only valid while Draw is executing }
     property Surface: ISurface read GetSurface;
-    { Visual representation of the control. Is it pressed, hot, checked, ect }
+    { Visual representation of the control. Is it pressed, hot, checked, etc }
     property DrawState: TDrawState read FDrawState write SetDrawState;
     { Theme name determines the styling for a control }
     property ThemeName: string read FThemeName write SetThemeName;
     { Draw event handler }
     property OnDraw: TDrawEvent read FOnDraw write FOnDraw;
-    { The point where the mosue was pressing inside the control }
+    { The point where the mouse was pressed inside the control }
     property MousePoint: TPointI read FMousePoint;
   public
+    { Create a new control }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   end;
@@ -187,23 +213,24 @@ type
     FDrawState: TDrawState;
     { Float property change notification }
     procedure PropChange(Prop: PFloat);  virtual;
-    { Override ThemeAware and return true to subscribe to glabal theme changes }
+    { Override ThemeAware and return true to subscribe to global theme changes }
     function ThemeAware: Boolean; virtual;
     { Invoked when the theme is changed }
     procedure ThemeChanged; virtual;
-    { Paint is now final, so use Render to access Surface }
+    { Paint is now final, so use Draw to access Surface }
     procedure Paint; override; final;
-    { While Render is executing Surface refers to a valid ISurface }
+    { While Draw is executing Surface refers to a valid ISurface }
     procedure Draw; virtual;
-    { Surface is only during while Draw is executing }
+    { Surface is only valid while Draw is executing }
     property Surface: ISurface read GetSurface;
-    { Visual representation of the control. Is it pressed, hot, checked, ect }
+    { Visual representation of the control. Is it pressed, hot, checked, etc }
     property DrawState: TDrawState read FDrawState write SetDrawState;
     { Theme name determines the styling for a control }
     property ThemeName: string read FThemeName write SetThemeName;
     { Draw event handler }
     property OnDraw: TDrawEvent read FOnDraw write FOnDraw;
   public
+    { Create a new control }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   end;
@@ -211,7 +238,7 @@ type
 { TSurfaceForm is the base class for custom forms controls which
   require an ISurface object
   See also
-  <link Overview.Codebot.Controls.TRenderForm, TRenderForm members> }
+  <link Overview.Codebot.Controls.TSurfaceForm, TSurfaceForm members> }
 
   TSurfaceForm = class(TForm)
   private
@@ -224,36 +251,44 @@ type
   protected
     { Allow controls direct access to draw state }
     FDrawState: TDrawState;
-    { Override ThemeAware and return true to subscribe to glabal theme changes }
+    { Override ThemeAware and return true to subscribe to global theme changes }
     function ThemeAware: Boolean; virtual;
     { Invoked when the theme is changed }
     procedure ThemeChanged; virtual;
-    { Allow the form to be drawn at desing time }
+    { Allow the form to be drawn at design time }
     procedure PaintWindow(DC: HDC); override;
     { Paint is now final, so use Draw to access Surface }
     procedure Paint; override; final;
     { While Draw is executing Surface refers to a valid ISurface }
     procedure Draw; virtual;
-    { Surface is only during while Draw is executing }
+    { Surface is only valid while Draw is executing }
     property Surface: ISurface read GetSurface;
-    { Visual representation of the control. Is it pressed, hot, checked, ect }
+    { Visual representation of the control. Is it pressed, hot, checked, etc }
     property DrawState: TDrawState read FDrawState write SetDrawState;
   public
+    { Create a new form without loading a form resource }
     constructor CreateNew(AOwner: TComponent; Num: Integer = 0); override;
     destructor Destroy; override;
   published
-    { Theme name determines the styling for a control }
+    { Draw event handler }
     property OnRender: TDrawEvent read FOnRender write FOnRender;
     { Theme name determines the styling for a control }
     property ThemeName: string read FThemeName write SetThemeName;
   end;
 
+{ Arrange the controls of a container whose top left corner lies inside
+  bounds in a single row from left to right, centered vertically in bounds.
+  Labels are given extra space on both sides. }
 procedure ArrangeControls(Container: TWinControl; Bounds: TRectI; Offset: Integer = 0);
 
 implementation
 
+{ Codebot.Platform.LCL is used so programs with these controls convert system
+  colors using the LCL }
+
 uses
-  Codebot.Constants;
+  Codebot.Constants,
+  Codebot.Platform.LCL;
 
 constructor TNotifyCollection<T>.Create(AOwner: TPersistent);
 begin
@@ -417,6 +452,7 @@ end;
 constructor TSurfaceGraphicControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FAreaClicked := -1;
   Width := 160;
   Height := 80;
   ControlStyle := (ControlStyle +
@@ -579,7 +615,7 @@ begin
   end;
   if FAreaClicked > -1 then
   begin
-    FAreaStates[I] := [];
+    FAreaStates[FAreaClicked] := [];
     Invalidate;
     AreaClick(FAreaClicked);
     FAreaClicked := -1;

@@ -17,18 +17,30 @@ uses
   SysUtils, Classes, LCLType,
   Codebot.System;
 
-{ THotkeyCapture }
+{ TKeyNotifyEvent is invoked when a registered hotkey is pressed }
 
 type
   TKeyNotifyEvent = procedure(Sender: TObject; Key: Word; Shift: TShiftState) of object;
 
+{ THotkeyNotify associates a key and shift state with an event }
+
   THotkeyNotify = record
+    { The virtual key code }
     Key: Word;
+    { The modifier keys }
     ShiftState: TShiftState;
+    { The event invoked when the hotkey is pressed }
     Notify: TKeyNotifyEvent;
   end;
 
+{ THotkeyList is a list of registered hotkeys }
+
   THotkeyList = TArrayList<THotkeyNotify>;
+
+{ THotkeyCapture registers system wide hotkeys which work even when the
+  program does not have focus. Use the HotkeyCapture function to access it.
+  See also
+  <link Codebot.Input.Hotkeys.HotkeyCapture, HotkeyCapture function> }
 
   THotkeyCapture = class
   private
@@ -36,14 +48,22 @@ type
     function GetNotifier(Index: Integer): THotkeyNotify;
     function GetCount: Integer;
   protected
+    { Return the index of a registered hotkey or -1 if it is not registered }
     function FindHotkey(Key: Word; ShiftState: TShiftState): Integer;
+    { Register a hotkey with the operating system }
     procedure DoRegister(Key: Word; ShiftState: TShiftState); virtual; abstract;
+    { Unregister a hotkey with the operating system }
     procedure DoUnregister(Key: Word; ShiftState: TShiftState); virtual; abstract;
+    { The registered hotkeys }
     property Notifiers[Index: Integer]: THotkeyNotify read GetNotifier; default;
+    { The number of registered hotkeys }
     property Count: Integer read GetCount;
   public
+    { Unregister all hotkeys and destroy the object }
     destructor Destroy; override;
+    { Register a hotkey returning false if it is invalid or already registered }
     function RegisterNotify(Key: Word; ShiftState: TShiftState; Notify: TKeyNotifyEvent): Boolean;
+    { Unregister a hotkey returning false if it was not registered }
     function UnregisterNotify(Key: Word; ShiftState: TShiftState): Boolean;
   end;
 

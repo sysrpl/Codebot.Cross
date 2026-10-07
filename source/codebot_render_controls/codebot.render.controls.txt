@@ -1,0 +1,3 @@
+The Codebot.Render.Controls unit defines TGraphicsBox, which is a windowed LCL control for hosting OpenGL graphics. When the control is first shown, it creates an SDL window that fills it, and SDL creates the OpenGL context for that window. A render thread then calls OnRenderStart, OnRender, and OnRenderStop with the context made current, and a step thread can call OnStep at a fixed rate.
+
+Because the SDL window covers the control, SDL reads the keyboard and mouse input over it. Before each frame, the graphics box passes those events on as its own LCL key and mouse events, and through OnInput. TGraphicsBoxOptions chooses the depth bits, stencil bits, and multisampling of the OpenGL context.

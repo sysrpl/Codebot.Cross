@@ -1,0 +1,1 @@
+The Codebot.Controls.Edits unit defines TSlideEdit, which is an edit control for a number between Min and Max. Its value can be typed in, or changed using a slide bar shown in a popup. The unit also defines THotkey, a component that holds a key combination, and TCustomRenderEdit, an edit control drawn using a surface, which is not yet finished.

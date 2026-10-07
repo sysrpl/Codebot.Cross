@@ -1,0 +1,1 @@
+The Codebot.Design.Forms unit provides RegisterForm, which adds a form class to the Lazarus IDE along with a caption and a description. Once a form class is registered, new forms of that class can be added to a project.

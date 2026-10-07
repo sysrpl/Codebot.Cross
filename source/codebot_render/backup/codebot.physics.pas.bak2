@@ -1,0 +1,4136 @@
+(********************************************************)
+(*                                                      *)
+(*  Codebot Pascal Library                              *)
+(*  http://cross.codebot.org                            *)
+(*  Modified October 2026                               *)
+(*                                                      *)
+(********************************************************)
+
+{ Codebot.Physics assists in understanding and effectively using the
+  Chipmunk2D physics library.
+
+  It exposes the flat Chipmunk2D C style API as a collection of record types.
+  These records directly correspond to the pointer types used by Chipmunk2D,
+  such as cpSpace, cpBody, cpShape, cpConstraint, and cpArbiter. The records
+  convert to and from the Chipmunk2D pointer types implicitly and can be freely
+  interchanged with the functions of Codebot.Interop.Chipmunk2D without penalty.
+
+  Using records in place of traditional class wrappers benefits the user in the
+  following ways. Internally Chipmunk2D dynamically creates and manipulates
+  both the state and relationships between its data structures. The records in
+  this unit allow Chipmunk2D to manage all these things without duplicating
+  them in Pascal.
+
+  Additionally, records group logical concepts into distinct types. Most of
+  the properties and methods on the records map neatly to the Chipmunk2D C
+  style API. There are, however, some enhancements such as for...in
+  enumerators which have been added to make programming more convenient.
+
+  Consider the following Chipmunk2D C style API to create a circle body:
+
+      cpBody* body = cpSpaceAddBody(space, cpBodyNew(0, 0));
+      cpShape* circle = cpSpaceAddShape(space, cpCircleShapeNew(body, radius, cpvzero));
+      cpShapeSetDensity(circle, 1);
+
+  Using records this becomes:
+
+      Space.NewBody.NewCircle(Radius);
+
+  The above code follows exactly the same steps as the C approach, but it
+  greatly simplifies the task of creating a viable circle body. It also does
+  this without creating additional Pascal objects to intermediate this or
+  other tasks. This style of simplification is repeated throughout this unit.
+
+  As a further example, to list all shapes in a space you may write:
+
+      for Shape in Space.Shapes do
+
+  This is much easier to use when compared to the more cumbersome enumeration
+  callbacks forced upon the user by the C API.
+
+  Floating point values are single precision and vectors and matrices are the
+  TVec2 and TMatrix2x3 types from Codebot.Geometry, the same as the static
+  Chipmunk2D library linked by Codebot.Interop.Chipmunk2D. }
+
+unit Codebot.Physics;
+
+{$i render.inc}
+{$pointermath on}
+
+interface
+
+uses
+  Codebot.System,
+  Codebot.Geometry,
+  Codebot.Interop.Chipmunk2D;
+
+type
+  TBitmask = cpBitmask;
+  TCollisionType = cpCollisionType;
+  TCollisionHandler = cpCollisionHandler;
+
+const
+  VectZero: TVec2 = (X: 0; Y: 0);
+  MatrixIdentity: TMatrix2x3 = (A: 1; B: 0; C: 0; D: 1; TX: 0; TY: 0);
+  BoolFlags: array[Boolean] of cpBool = (cpFalse, cpTrue);
+  MaskAll = $FFFFFFFF;
+  { A filter which collides with everything and is used by queries }
+  FilterAll: cpShapeFilter = (group: CP_NO_GROUP; categories: MaskAll; mask: MaskAll);
+
+{ Some prebuilt collision types }
+
+  collideGrab = cpCollisionType($FFFF);
+
+function MaskToStr(M: TBitmask): string;
+function StrToMask(const S: string): TBitmask;
+
+type
+  TShapeKind = cpShapeType;
+
+const
+  shapeCircle = CP_CIRCLE_SHAPE;
+  shapeSegment = CP_SEGMENT_SHAPE;
+  shapePolygon = CP_POLY_SHAPE;
+
+type
+  TBodyKind = cpBodyType;
+
+const
+  bodyDynamic = CP_BODY_TYPE_DYNAMIC;
+  bodyKinematic = CP_BODY_TYPE_KINEMATIC;
+  bodyStatic = CP_BODY_TYPE_STATIC;
+
+type
+  { The kind of a joint, where jointCustom is a constraint not created by
+    Chipmunk2D }
+  TJointKind = (jointPin, jointSlide, jointPivot, jointGroove, jointDampedSpring,
+    jointDampedRotarySpring, jointRotaryLimit, jointRatchet, jointGear, jointMotor,
+    jointCustom);
+
+{ TCircle }
+
+  TCircle = record
+  public
+    Ref: cpCircleShape;
+    class operator Implicit(const Value: TCircle): cpCircleShape; inline;
+    class operator Implicit(const Value: cpCircleShape): TCircle; inline;
+    class operator Implicit(const Value: TCircle): cpShape; inline;
+    class operator Implicit(const Value: cpShape): TCircle; inline;
+  private
+    function GetRadius: Float;
+    procedure SetRadius(const Value: Float);
+    function GetOffset: TVec2;
+    procedure SetOffset(const Value: TVec2);
+  public
+    { Remove the circle from its space and free it }
+    procedure Free;
+    function IsNil: Boolean; inline;
+    procedure Reshape(Radius: Float; const Offset: TVec2);
+    property Radius: Float read GetRadius write SetRadius;
+    { The center of the circle in body coordinates }
+    property Offset: TVec2 read GetOffset write SetOffset;
+  end;
+
+{ TSegment }
+
+  TSegment = record
+  public
+    Ref: cpSegmentShape;
+    class operator Implicit(const Value: TSegment): cpSegmentShape; inline;
+    class operator Implicit(const Value: cpSegmentShape): TSegment; inline;
+    class operator Implicit(const Value: TSegment): cpShape; inline;
+    class operator Implicit(const Value: cpShape): TSegment; inline;
+  private
+    function GetBorder: Float;
+    procedure SetBorder(const Value: Float);
+    function GetA: TVec2;
+    procedure SetA(const Value: TVec2);
+    function GetB: TVec2;
+    procedure SetB(const Value: TVec2);
+    function GetNormal: TVec2;
+  public
+    { Remove the segment from its space and free it }
+    procedure Free;
+    function IsNil: Boolean; inline;
+    { Let Chipmunk2D know about the geometry of adjacent segments to avoid
+      colliding with endcaps }
+    procedure Join(const Prev, Next: TVec2);
+    { The radius of the segment }
+    property Border: Float read GetBorder write SetBorder;
+    property A: TVec2 read GetA write SetA;
+    property B: TVec2 read GetB write SetB;
+    property Normal: TVec2 read GetNormal;
+  end;
+
+{ TPolygon }
+
+  TPolygon = record
+  public
+    Ref: cpPolyShape;
+    class operator Implicit(const Value: TPolygon): cpPolyShape; inline;
+    class operator Implicit(const Value: cpPolyShape): TPolygon; inline;
+    class operator Implicit(const Value: TPolygon): cpShape; inline;
+    class operator Implicit(const Value: cpShape): TPolygon; inline;
+  private
+    function GetBorder: Float;
+    procedure SetBorder(const Value: Float);
+    function GetVert(Index: Integer): TVec2;
+    function GetVertCount: Integer;
+  public
+    { Remove the polygon from its space and free it }
+    procedure Free;
+    function IsNil: Boolean; inline;
+    { Replace the vertices with a convex hull of verts }
+    procedure Reshape(Verts: PVec2; Count: Integer; Transform: PMatrix2x3 = nil); overload;
+    { Replace the vertices with a box centered on the body }
+    procedure Reshape(const Width, Height: Float; Transform: PMatrix2x3 = nil); overload;
+    { The radius of the rounded corners }
+    property Border: Float read GetBorder write SetBorder;
+    property VertCount: Integer read GetVertCount;
+    property Vert[Index: Integer]: TVec2 read GetVert;
+  end;
+
+{ TShape }
+
+  TShape = record
+  public
+    Ref: cpShape;
+    class operator Implicit(const Value: TShape): cpShape; inline;
+    class operator Implicit(const Value: cpShape): TShape; inline;
+    class operator Equal(const A, B: TShape): Boolean; inline;
+    class operator NotEqual(const A, B: TShape): Boolean; inline;
+  private
+    function GetNext: TShape;
+    function GetKind: TShapeKind;
+    function GetMass: Float;
+    procedure SetMass(Value: Float);
+    function GetDensity: Float;
+    procedure SetDensity(Value: Float);
+    function GetMoment: Float;
+    function GetArea: Float;
+    function GetCenterOfGravity: TVec2;
+    function GetBoundingBox: cpBB;
+    function GetSensor: Boolean;
+    procedure SetSensor(Value: Boolean);
+    function GetElasticity: Float;
+    procedure SetElasticity(Value: Float);
+    function GetFriction: Float;
+    procedure SetFriction(Value: Float);
+    function GetSurfaceVelocity: TVec2;
+    procedure SetSurfaceVelocity(const Value: TVec2);
+    function GetUserData: Pointer;
+    procedure SetUserData(Value: Pointer);
+    function GetFilter: cpShapeFilter;
+    procedure SetFilter(const Value: cpShapeFilter);
+    function GetGroup: Pointer;
+    procedure SetGroup(Value: Pointer);
+    function GetCategory: TBitmask;
+    procedure SetCategory(Value: TBitmask);
+    function GetMask: TBitmask;
+    procedure SetMask(Value: TBitmask);
+    function GetCollisionType: TCollisionType;
+    procedure SetCollisionType(Value: TCollisionType);
+  public
+    { Remove the shape from its space and free it. If the space is locked, such
+      as in a collision callback, this happens after the current step. }
+    procedure Free;
+    function IsNil: Boolean; inline;
+    function AsCircle: TCircle; inline;
+    function AsPolygon: TPolygon; inline;
+    function AsSegment: TSegment; inline;
+    { Find the closest point on the surface of the shape to P. The result is the
+      distance to the point, which is negative if P is inside the shape. }
+    function PointQuery(const P: TVec2; out Info: cpPointQueryInfoStruct): Float;
+    { Test if a segment from A to B with a radius hits the shape }
+    function SegmentQuery(const A, B: TVec2; Radius: Float; out Info: cpSegmentQueryInfoStruct): Boolean;
+    { Return contact information about this shape and another }
+    function Collide(Shape: TShape): cpContactPointSetStruct;
+    { Update, cache, and return the bounding box using the body transform }
+    function CacheBB: cpBB;
+    { Update, cache, and return the bounding box using an explicit transform }
+    function Update(const Transform: TMatrix2x3): cpBB;
+    { The next shape sibling for its body }
+    property Next: TShape read GetNext;
+    { The kind of the shape }
+    property Kind: TShapeKind read GetKind;
+    { Mass and density are mutually exclusive. It's best to set the density and
+      allow the physics engine to determine the mass based on the area of the
+      shape }
+    property Mass: Float read GetMass write SetMass;
+    property Density: Float read GetDensity write SetDensity;
+    { The moment of inertia of the shape }
+    property Moment: Float read GetMoment;
+    property Area: Float read GetArea;
+    property CenterOfGravity: TVec2 read GetCenterOfGravity;
+    property BoundingBox: cpBB read GetBoundingBox;
+    { When a shape is set as a sensor it does not cause changes to physics, but
+      it can be used with cpCollisionHandler beginFunc and separateFunc to
+      detect collisions }
+    property Sensor: Boolean read GetSensor write SetSensor;
+    { The bounciness of a shape is determined by multiplying the elasticity of
+      two shapes. A product of 0 gives no bounce while 1 represents a perfect
+      bounce }
+    property Elasticity: Float read GetElasticity write SetElasticity;
+    { Friction adds dampening to a shape. A value of 0 is frictionless. Total
+      friction is a product of two shapes. }
+    property Friction: Float read GetFriction write SetFriction;
+    { Surface velocity is used in the calculation of moving shape friction,
+      such as a conveyor belt }
+    property SurfaceVelocity: TVec2 read GetSurfaceVelocity write SetSurfaceVelocity;
+    { User definable data associated with the shape }
+    property UserData: Pointer read GetUserData write SetUserData;
+    { Collision filtering explained
+
+      Shapes in the same group do not collide with each other. This overrides
+      the categories and mask properties below.
+
+      By default a shape belongs to the nil group and is eligible to collide
+      with everything. Shapes will only collide if one belongs to a dynamic
+      body, they are in different groups, and the bits of the categories of
+      each shape and the mask of the other are non zero when bitwise `and`ed
+      together. }
+    property Filter: cpShapeFilter read GetFilter write SetFilter;
+    property Group: Pointer read GetGroup write SetGroup;
+    { Bitmask defining which categories a shape belongs.
+      Note: defaults to all or $FFFFFFFF }
+    property Category: TBitmask read GetCategory write SetCategory;
+    { Bitmask defining which categories of other shapes it is allowed to collide.
+      Note: defaults to all or $FFFFFFFF }
+    property Mask: TBitmask read GetMask write SetMask;
+    { See: cpSpaceAddCollisionHandler for more information }
+    property CollisionType: TCollisionType read GetCollisionType write SetCollisionType;
+  end;
+
+{ TBodyShapeEnumerator }
+
+  TBodyShapeEnumerator = record
+  private
+    FBody: cpBody;
+    FStarted: Boolean;
+    FCurrent: TShape;
+  public
+    class function Create(Body: cpBody): TBodyShapeEnumerator; static;
+    function MoveNext: Boolean;
+    property Current: TShape read FCurrent;
+    function GetEnumerator: TBodyShapeEnumerator;
+  end;
+
+{ TBody }
+
+  TBody = record
+  public
+    Ref: cpBody;
+    class operator Implicit(const Value: TBody): cpBody; inline;
+    class operator Implicit(const Value: cpBody): TBody; inline;
+    class operator Equal(const A, B: TBody): Boolean; inline;
+    class operator NotEqual(const A, B: TBody): Boolean; inline;
+  private
+    function AddShape(Shape: cpShape): TShape;
+    function GetKind: TBodyKind;
+    procedure SetKind(Value: TBodyKind);
+    function GetMass: Float;
+    procedure SetMass(Value: Float);
+    function GetMoment: Float;
+    procedure SetMoment(Value: Float);
+    function GetCenterOfGravity: TVec2;
+    procedure SetCenterOfGravity(const Value: TVec2);
+    function GetPosition: TVec2;
+    procedure SetPosition(const Value: TVec2);
+    function GetVelocity: TVec2;
+    procedure SetVelocity(const Value: TVec2);
+    function GetForce: TVec2;
+    procedure SetForce(const Value: TVec2);
+    function GetAngle: Float;
+    procedure SetAngle(const Value: Float);
+    function GetAngularVelocity: Float;
+    procedure SetAngularVelocity(Value: Float);
+    function GetTorque: Float;
+    procedure SetTorque(Value: Float);
+    function GetRotation: TVec2;
+    function GetKineticEnergy: Float;
+    function GetVelocityFunc: cpBodyVelocityFunc;
+    procedure SetVelocityFunc(Value: cpBodyVelocityFunc);
+    function GetPositionFunc: cpBodyPositionFunc;
+    procedure SetPositionFunc(Value: cpBodyPositionFunc);
+    function GetShape: TShape;
+    function GetUserData: Pointer;
+    procedure SetUserData(Value: Pointer);
+    function GetShapes: TBodyShapeEnumerator;
+  public
+    { Remove the body, its shapes, and its joints from its space and free them.
+      If the space is locked, such as in a collision callback, this happens
+      after the current step. Note: The ground body of a space is not freed. }
+    procedure Free;
+    function IsNil: Boolean; inline;
+    { Add shape to the body. Note: A default density of 1 is set on all shapes.
+      As shapes are added to bodies they become a rigid part of the body and
+      do not move or collide in relation to other shapes in the same body.
+      Shape coordinates are relative to the body. }
+    function NewCircle(Radius: Float): TShape; overload;
+    function NewCircle(Radius: Float; const Offset: TVec2): TShape; overload;
+    function NewSegment(const A, B: TVec2; Border: Float = 0): TShape;
+    function NewBox(Width, Height: Float; Border: Float = 0; Transform: PMatrix2x3 = nil): TShape; overload;
+    function NewBox(X, Y, Width, Height: Float; Border: Float = 0; Transform: PMatrix2x3 = nil): TShape; overload;
+    function NewPolygon(Verts: PVec2; Count: Integer; Border: Float = 0; Transform: PMatrix2x3 = nil): TShape;
+    { Force a dynamic body and every other dynamic body it touches to fall
+      asleep immediately. Sleeping bodies do not consume physics calculations
+      unless they are awoken or are hit by a non-sleeping body }
+    procedure Sleep;
+    { Join two groups of dynamic sleeping bodies together }
+    procedure SleepWithGroup(Body: TBody);
+    { Test if a dynamic body is sleeping }
+    function IsSleeping: Boolean;
+    { Wake up this body and anything it touches. Note: Works on non-dynamic
+      bodies as well }
+    procedure WakeUp;
+    { Translate a body point to a world point }
+    function BodyToWorld(const Point: TVec2): TVec2;
+    { Translate a world point to a body point }
+    function WorldToBody(const Point: TVec2): TVec2;
+    { Apply a force to a body at a point in world coordinates }
+    procedure ApplyForceAtWorld(const Force, Point: TVec2);
+    { Apply a force to a body at a point in body coordinates }
+    procedure ApplyForceAtBody(const Force, Point: TVec2);
+    { Apply an impulse to a body at a point in world coordinates }
+    procedure ApplyImpulseAtWorld(const Impulse, Point: TVec2);
+    { Apply an impulse to a body at a point in body coordinates }
+    procedure ApplyImpulseAtBody(const Impulse, Point: TVec2);
+    { The velocity of a point in world coordinates on a body }
+    function VelocityAtWorld(const Point: TVec2): TVec2;
+    { The velocity of a point in body coordinates on a body }
+    function VelocityAtBody(const Point: TVec2): TVec2;
+    { The default velocity integration, which can be called from a custom
+      VelocityFunc }
+    procedure UpdateVelocity(const Gravity: TVec2; Damping, DeltaTime: Float);
+    { The default position integration, which can be called from a custom
+      PositionFunc }
+    procedure UpdatePosition(DeltaTime: Float);
+    { Kind can be either dynamic, kinematic, or static. Note: Kind is set for
+      you automatically during body creation }
+    property Kind: TBodyKind read GetKind write SetKind;
+    { Mass and moment are calculated from the density of the shapes in the
+      body, but may be set directly }
+    property Mass: Float read GetMass write SetMass;
+    property Moment: Float read GetMoment write SetMoment;
+    { The center of gravity in body coordinates }
+    property CenterOfGravity: TVec2 read GetCenterOfGravity write SetCenterOfGravity;
+    property Position: TVec2 read GetPosition write SetPosition;
+    property Velocity: TVec2 read GetVelocity write SetVelocity;
+    { The force applied to the body for the next step, which is reset to zero
+      after each step }
+    property Force: TVec2 read GetForce write SetForce;
+    { Angle of the body in radians }
+    property Angle: Float read GetAngle write SetAngle;
+    property AngularVelocity: Float read GetAngularVelocity write SetAngularVelocity;
+    { The torque applied to the body for the next step, which is reset to zero
+      after each step }
+    property Torque: Float read GetTorque write SetTorque;
+    { The rotation of the body as a unit vector }
+    property Rotation: TVec2 read GetRotation;
+    property KineticEnergy: Float read GetKineticEnergy;
+    { Callbacks which replace the velocity and position integration of the body }
+    property VelocityFunc: cpBodyVelocityFunc read GetVelocityFunc write SetVelocityFunc;
+    property PositionFunc: cpBodyPositionFunc read GetPositionFunc write SetPositionFunc;
+    { The first shape if one exists or a nil reference }
+    property Shape: TShape read GetShape;
+    { User assignable data associated with the body }
+    property UserData: Pointer read GetUserData write SetUserData;
+    { A for...in enumerator for the shapes in this body }
+    property Shapes: TBodyShapeEnumerator read GetShapes;
+  end;
+
+{ TPinJoint keeps the anchors of two bodies at a fixed distance }
+
+  TPinJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TPinJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TPinJoint; inline;
+  private
+    function GetPinA: TVec2;
+    procedure SetPinA(const Value: TVec2);
+    function GetPinB: TVec2;
+    procedure SetPinB(const Value: TVec2);
+    function GetDistance: Float;
+    procedure SetDistance(Value: Float);
+  public
+    { Anchors in body coordinates }
+    property PinA: TVec2 read GetPinA write SetPinA;
+    property PinB: TVec2 read GetPinB write SetPinB;
+    property Distance: Float read GetDistance write SetDistance;
+  end;
+
+{ TSlideJoint keeps the anchors of two bodies within a range of distances }
+
+  TSlideJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TSlideJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TSlideJoint; inline;
+  private
+    function GetPinA: TVec2;
+    procedure SetPinA(const Value: TVec2);
+    function GetPinB: TVec2;
+    procedure SetPinB(const Value: TVec2);
+    function GetMin: Float;
+    procedure SetMin(Value: Float);
+    function GetMax: Float;
+    procedure SetMax(Value: Float);
+  public
+    { Anchors in body coordinates }
+    property PinA: TVec2 read GetPinA write SetPinA;
+    property PinB: TVec2 read GetPinB write SetPinB;
+    property Min: Float read GetMin write SetMin;
+    property Max: Float read GetMax write SetMax;
+  end;
+
+{ TPivotJoint allows two bodies to rotate around a shared point }
+
+  TPivotJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TPivotJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TPivotJoint; inline;
+  private
+    function GetPinA: TVec2;
+    procedure SetPinA(const Value: TVec2);
+    function GetPinB: TVec2;
+    procedure SetPinB(const Value: TVec2);
+  public
+    { Anchors in body coordinates }
+    property PinA: TVec2 read GetPinA write SetPinA;
+    property PinB: TVec2 read GetPinB write SetPinB;
+  end;
+
+{ TGrooveJoint allows an anchor on the second body to slide along a groove on
+  the first body }
+
+  TGrooveJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TGrooveJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TGrooveJoint; inline;
+  private
+    function GetGrooveA: TVec2;
+    procedure SetGrooveA(const Value: TVec2);
+    function GetGrooveB: TVec2;
+    procedure SetGrooveB(const Value: TVec2);
+    function GetPinB: TVec2;
+    procedure SetPinB(const Value: TVec2);
+  public
+    { The groove in the body coordinates of the first body }
+    property GrooveA: TVec2 read GetGrooveA write SetGrooveA;
+    property GrooveB: TVec2 read GetGrooveB write SetGrooveB;
+    { The anchor in the body coordinates of the second body }
+    property PinB: TVec2 read GetPinB write SetPinB;
+  end;
+
+{ TDampedSpringJoint connects the anchors of two bodies with a spring }
+
+  TDampedSpringJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TDampedSpringJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TDampedSpringJoint; inline;
+  private
+    function GetPinA: TVec2;
+    procedure SetPinA(const Value: TVec2);
+    function GetPinB: TVec2;
+    procedure SetPinB(const Value: TVec2);
+    function GetRestLength: Float;
+    procedure SetRestLength(Value: Float);
+    function GetStiffness: Float;
+    procedure SetStiffness(Value: Float);
+    function GetDamping: Float;
+    procedure SetDamping(Value: Float);
+    function GetForceFunc: cpDampedSpringForceFunc;
+    procedure SetForceFunc(Value: cpDampedSpringForceFunc);
+  public
+    { Anchors in body coordinates }
+    property PinA: TVec2 read GetPinA write SetPinA;
+    property PinB: TVec2 read GetPinB write SetPinB;
+    property RestLength: Float read GetRestLength write SetRestLength;
+    property Stiffness: Float read GetStiffness write SetStiffness;
+    property Damping: Float read GetDamping write SetDamping;
+    { A callback which replaces the calculation of the spring force }
+    property ForceFunc: cpDampedSpringForceFunc read GetForceFunc write SetForceFunc;
+  end;
+
+{ TDampedRotarySpringJoint connects the angles of two bodies with a spring }
+
+  TDampedRotarySpringJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TDampedRotarySpringJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TDampedRotarySpringJoint; inline;
+  private
+    function GetRestAngle: Float;
+    procedure SetRestAngle(Value: Float);
+    function GetStiffness: Float;
+    procedure SetStiffness(Value: Float);
+    function GetDamping: Float;
+    procedure SetDamping(Value: Float);
+    function GetTorqueFunc: cpDampedRotarySpringTorqueFunc;
+    procedure SetTorqueFunc(Value: cpDampedRotarySpringTorqueFunc);
+  public
+    property RestAngle: Float read GetRestAngle write SetRestAngle;
+    property Stiffness: Float read GetStiffness write SetStiffness;
+    property Damping: Float read GetDamping write SetDamping;
+    { A callback which replaces the calculation of the spring torque }
+    property TorqueFunc: cpDampedRotarySpringTorqueFunc read GetTorqueFunc write SetTorqueFunc;
+  end;
+
+{ TRotaryLimitJoint keeps the relative angle of two bodies within a range }
+
+  TRotaryLimitJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TRotaryLimitJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TRotaryLimitJoint; inline;
+  private
+    function GetMin: Float;
+    procedure SetMin(Value: Float);
+    function GetMax: Float;
+    procedure SetMax(Value: Float);
+  public
+    property Min: Float read GetMin write SetMin;
+    property Max: Float read GetMax write SetMax;
+  end;
+
+{ TRatchetJoint works like a socket wrench }
+
+  TRatchetJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TRatchetJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TRatchetJoint; inline;
+  private
+    function GetAngle: Float;
+    procedure SetAngle(Value: Float);
+    function GetPhase: Float;
+    procedure SetPhase(Value: Float);
+    function GetRatchet: Float;
+    procedure SetRatchet(Value: Float);
+  public
+    property Angle: Float read GetAngle write SetAngle;
+    property Phase: Float read GetPhase write SetPhase;
+    { The distance between clicks }
+    property Ratchet: Float read GetRatchet write SetRatchet;
+  end;
+
+{ TGearJoint keeps the angular velocity ratio of two bodies constant }
+
+  TGearJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TGearJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TGearJoint; inline;
+  private
+    function GetPhase: Float;
+    procedure SetPhase(Value: Float);
+    function GetRatio: Float;
+    procedure SetRatio(Value: Float);
+  public
+    property Phase: Float read GetPhase write SetPhase;
+    property Ratio: Float read GetRatio write SetRatio;
+  end;
+
+{ TMotorJoint keeps the relative angular velocity of two bodies constant }
+
+  TMotorJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TMotorJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TMotorJoint; inline;
+  private
+    function GetRate: Float;
+    procedure SetRate(Value: Float);
+  public
+    property Rate: Float read GetRate write SetRate;
+  end;
+
+{ TJoint }
+
+  TJoint = record
+  public
+    Ref: cpConstraint;
+    class operator Implicit(const Value: TJoint): cpConstraint; inline;
+    class operator Implicit(const Value: cpConstraint): TJoint; inline;
+    class operator Equal(const A, B: TJoint): Boolean; inline;
+    class operator NotEqual(const A, B: TJoint): Boolean; inline;
+  private
+    function GetKind: TJointKind;
+    function GetA: TBody;
+    function GetB: TBody;
+    function GetCollide: Boolean;
+    procedure SetCollide(Value: Boolean);
+    function GetErrorBias: Float;
+    procedure SetErrorBias(Value: Float);
+    function GetMaxBias: Float;
+    procedure SetMaxBias(Value: Float);
+    function GetMaxForce: Float;
+    procedure SetMaxForce(Value: Float);
+    function GetImpulse: Float;
+    function GetPreSolve: cpConstraintPreSolveFunc;
+    procedure SetPreSolve(Value: cpConstraintPreSolveFunc);
+    function GetPostSolve: cpConstraintPostSolveFunc;
+    procedure SetPostSolve(Value: cpConstraintPostSolveFunc);
+    function GetUserData: Pointer;
+    procedure SetUserData(Value: Pointer);
+  public
+    { Remove the joint from its space and free it. If the space is locked, such
+      as in a collision callback, this happens after the current step. }
+    procedure Free;
+    function IsNil: Boolean; inline;
+    { Returns true if either body has a first shape with the grab collision type }
+    function IsGrab: Boolean;
+    function AsPin: TPinJoint; inline;
+    function AsSlide: TSlideJoint; inline;
+    function AsPivot: TPivotJoint; inline;
+    function AsGroove: TGrooveJoint; inline;
+    function AsDampedSpring: TDampedSpringJoint; inline;
+    function AsDampedRotarySpring: TDampedRotarySpringJoint; inline;
+    function AsRotaryLimit: TRotaryLimitJoint; inline;
+    function AsRatchet: TRatchetJoint; inline;
+    function AsGear: TGearJoint; inline;
+    function AsMotor: TMotorJoint; inline;
+    property Kind: TJointKind read GetKind;
+    { The first body in the joint }
+    property A: TBody read GetA;
+    { The second body in the joint }
+    property B: TBody read GetB;
+    { When collide bodies is set to false A and B will pass through each other }
+    property CollideBodies: Boolean read GetCollide write SetCollide;
+    { The percentage of joint error which remains unfixed after a second }
+    property ErrorBias: Float read GetErrorBias write SetErrorBias;
+    { The maximum speed at which the joint can apply error correction }
+    property MaxBias: Float read GetMaxBias write SetMaxBias;
+    { The maximum force the joint can use to act on the two bodies }
+    property MaxForce: Float read GetMaxForce write SetMaxForce;
+    { The most recent impulse applied by the joint }
+    property Impulse: Float read GetImpulse;
+    { Callbacks invoked before and after the joint is solved }
+    property PreSolve: cpConstraintPreSolveFunc read GetPreSolve write SetPreSolve;
+    property PostSolve: cpConstraintPostSolveFunc read GetPostSolve write SetPostSolve;
+    property UserData: Pointer read GetUserData write SetUserData;
+  end;
+
+{ TBodyJointEnumerator }
+
+  TBodyJointEnumerator = record
+  private
+    FBody: cpBody;
+    FStarted: Boolean;
+    FCurrent: TJoint;
+  public
+    class function Create(Body: cpBody): TBodyJointEnumerator; static;
+    function MoveNext: Boolean;
+    property Current: TJoint read FCurrent;
+    function GetEnumerator: TBodyJointEnumerator;
+  end;
+
+{ TArbiter holds the collision information of two shapes and is passed to the
+  callbacks of a collision handler }
+
+  TArbiter = record
+  public
+    Ref: cpArbiter;
+    class operator Implicit(const Value: TArbiter): cpArbiter; inline;
+    class operator Implicit(const Value: cpArbiter): TArbiter; inline;
+  private
+    function GetRestitution: Float;
+    procedure SetRestitution(Value: Float);
+    function GetFriction: Float;
+    procedure SetFriction(Value: Float);
+    function GetSurfaceVelocity: TVec2;
+    procedure SetSurfaceVelocity(const Value: TVec2);
+    function GetUserData: Pointer;
+    procedure SetUserData(Value: Pointer);
+    function GetContactPointSet: cpContactPointSetStruct;
+    procedure SetContactPointSet(const Value: cpContactPointSetStruct);
+    function GetCount: Integer;
+    function GetNormal: TVec2;
+    function GetPointA(Index: Integer): TVec2;
+    function GetPointB(Index: Integer): TVec2;
+    function GetDepth(Index: Integer): Float;
+    function GetTotalImpulse: TVec2;
+    function GetTotalKineticEnergy: Float;
+  public
+    function IsNil: Boolean; inline;
+    { Ignore the collision until the shapes separate. Returns false so that it
+      can be the result of a begin or presolve callback. }
+    function Ignore: Boolean;
+    { The shapes in the order of the collision handler types }
+    procedure GetShapes(out A, B: TShape);
+    { The bodies in the order of the collision handler types }
+    procedure GetBodies(out A, B: TBody);
+    { Returns true if this is the first step the shapes touched }
+    function IsFirstContact: Boolean;
+    { Returns true in a separate callback when a shape was removed }
+    function IsRemoval: Boolean;
+    { Call the wildcard handlers of the first or second collision type from a
+      handler. Begin and presolve return false if the collision is rejected. }
+    function CallWildcardBeginA(Space: cpSpace): Boolean;
+    function CallWildcardBeginB(Space: cpSpace): Boolean;
+    function CallWildcardPreSolveA(Space: cpSpace): Boolean;
+    function CallWildcardPreSolveB(Space: cpSpace): Boolean;
+    procedure CallWildcardPostSolveA(Space: cpSpace);
+    procedure CallWildcardPostSolveB(Space: cpSpace);
+    procedure CallWildcardSeparateA(Space: cpSpace);
+    procedure CallWildcardSeparateB(Space: cpSpace);
+    { The calculated elasticity of the collision, which may be changed in a
+      presolve callback }
+    property Restitution: Float read GetRestitution write SetRestitution;
+    { The calculated friction of the collision, which may be changed in a
+      presolve callback }
+    property Friction: Float read GetFriction write SetFriction;
+    property SurfaceVelocity: TVec2 read GetSurfaceVelocity write SetSurfaceVelocity;
+    property UserData: Pointer read GetUserData write SetUserData;
+    property ContactPointSet: cpContactPointSetStruct read GetContactPointSet write SetContactPointSet;
+    { The number of contact points }
+    property Count: Integer read GetCount;
+    { The normal of the collision }
+    property Normal: TVec2 read GetNormal;
+    property PointA[Index: Integer]: TVec2 read GetPointA;
+    property PointB[Index: Integer]: TVec2 read GetPointB;
+    property Depth[Index: Integer]: Float read GetDepth;
+    { The impulse applied to resolve the collision in the last step, which
+      should be read in a postsolve callback }
+    property TotalImpulse: TVec2 read GetTotalImpulse;
+    { The energy lost in the collision in the last step }
+    property TotalKineticEnergy: Float read GetTotalKineticEnergy;
+  end;
+
+{ TSpaceBodyEnumerator }
+
+  TSpaceBodyEnumerator = record
+  private
+    FSpace: cpSpace;
+    FIndex: Integer;
+    FSleeping: cpBody;
+    FCurrent: TBody;
+  public
+    class function Create(Space: cpSpace): TSpaceBodyEnumerator; static;
+    function MoveNext: Boolean;
+    property Current: TBody read FCurrent;
+    function GetEnumerator: TSpaceBodyEnumerator;
+  end;
+
+{ TSpaceShapeEnumerator }
+
+  TSpaceShapeEnumerator = record
+  private
+    FSpace: cpSpace;
+    FBodies: TSpaceBodyEnumerator;
+    FGround: Boolean;
+    FCurrent: TShape;
+  public
+    class function Create(Space: cpSpace): TSpaceShapeEnumerator; static;
+    function MoveNext: Boolean;
+    property Current: TShape read FCurrent;
+    function GetEnumerator: TSpaceShapeEnumerator;
+  end;
+
+{ TSpaceJointEnumerator }
+
+  TSpaceJointEnumerator = record
+  private
+    FSpace: cpSpace;
+    FIndex: Integer;
+    FRoused: Integer;
+    FComponent: Integer;
+    FBody: cpBody;
+    FCurrent: TJoint;
+    function NextHiddenBody: Boolean;
+  public
+    class function Create(Space: cpSpace): TSpaceJointEnumerator; static;
+    function MoveNext: Boolean;
+    property Current: TJoint read FCurrent;
+    function GetEnumerator: TSpaceJointEnumerator;
+  end;
+
+{ TSpace contains your physics simulation }
+
+  TSpace = record
+  public
+    Ref: cpSpace;
+    class operator Implicit(const Value: TSpace): cpSpace; inline;
+    class operator Implicit(const Value: cpSpace): TSpace; inline;
+  private
+    function GetGround: TBody;
+    function GetIterations: LongWord;
+    procedure SetIterations(Value: LongWord);
+    function GetDamping: Float;
+    procedure SetDamping(Value: Float);
+    function GetGravity: TVec2;
+    procedure SetGravity(const Value: TVec2);
+    function GetIdleSpeedThreshold: Float;
+    procedure SetIdleSpeedThreshold(Value: Float);
+    function GetSleepTimeThreshold: Float;
+    procedure SetSleepTimeThreshold(Value: Float);
+    function GetCollisionSlop: Float;
+    procedure SetCollisionSlop(Value: Float);
+    function GetCollisionBias: Float;
+    procedure SetCollisionBias(Value: Float);
+    function GetCollisionPersistence: LongWord;
+    procedure SetCollisionPersistence(Value: LongWord);
+    function GetCurrentTimeStep: Float;
+    function GetLocked: Boolean;
+    function GetUserData: Pointer;
+    procedure SetUserData(Value: Pointer);
+    function GetBodies: TSpaceBodyEnumerator;
+    function GetShapes: TSpaceShapeEnumerator;
+    function GetJoints: TSpaceJointEnumerator;
+  public
+    { Free the space and everything in it. Note: This must not be called while
+      the space is locked, such as in a collision callback. }
+    procedure Free;
+    function IsNil: Boolean; inline;
+    { Release all bodies along with their shapes and joints }
+    procedure ReleaseBodies;
+    { Release all joints }
+    procedure ReleaseJoints;
+    { Release all bodies, shapes, and joints in this space. If the space is
+      locked, such as in a collision callback, this happens after the current
+      step. }
+    procedure ReleaseObjects;
+    { Calculate changes to all bodies }
+    procedure Step(DeltaTime: Float);
+
+    {$region Collisions
+      Collision handlers have callbacks which receive a cpArbiter, which can be
+      assigned to a TArbiter. The handler for a pair of collision types is
+      called before the wildcard handlers of each type, which are called before
+      the default handler. }
+    { Add a custom collision handler for shapes of type A and B }
+    function AddCollisionHandler(A, B: TCollisionType): TCollisionHandler;
+    { Add a collision handler for shapes of type A colliding with anything }
+    function AddWildcardHandler(A: TCollisionType): TCollisionHandler;
+    { Add the handler for collisions not handled by any other handler }
+    function AddDefaultCollisionHandler: TCollisionHandler;
+    { Schedule a callback after the current step, which is where shapes, bodies,
+      and joints may be safely removed or freed. Only one callback is kept per
+      key, and the result is true if the key was not already scheduled. }
+    function AddPostStepCallback(Func: cpPostStepFunc; Key: Pointer; Data: Pointer = nil): Boolean;
+    {$endregion}
+
+    {$region Bodies
+      Create a variety of bodies in this space.
+
+      Note: You are required to add at least one shape to every dynamic body
+      before calling Step or it will have no mass.
+
+      See also: TBody.NewCircle, NewSegment, NewBox and NewPolygon }
+    { Create a dynamic body in this space. A dynamic body reacts to and is
+      updated by physics }
+    function NewBody: TBody;
+    { Create a kinematic body in this space. A kinematic body is one you can
+      move but is not updated by physics }
+    function NewKinematicBody: TBody;
+    { Create a static body in this space. A static body is one you cannot move
+      and is not updated by physics }
+    function NewStaticBody: TBody;
+    {$endregion}
+
+    {$region Create Joints
+      Create a variety of joints in this space.
+
+      Note: Pins and grooves are in body coordinates, but the pivot of NewPivot
+      is in world coordinates. }
+    function NewPin(A, B: TBody; const PinA, PinB: TVec2): TJoint;
+    function NewSlide(A, B: TBody; const PinA, PinB: TVec2; Min, Max: Float): TJoint;
+    function NewPivot(A, B: TBody; const Pivot: TVec2): TJoint; overload;
+    function NewPivot(A, B: TBody; const PinA, PinB: TVec2): TJoint; overload;
+    function NewGroove(A, B: TBody; const GrooveA, GrooveB, PinB: TVec2): TJoint;
+    function NewDampedSpring(A, B: TBody; const PinA, PinB: TVec2; RestLength,
+      Stiffness, Damping: Float): TJoint;
+    function NewDampedRotarySpring(A, B: TBody; RestAngle, Stiffness,
+      Damping: Float): TJoint;
+    function NewRotaryLimit(A, B: TBody; Min, Max: Float): TJoint;
+    function NewRatchet(A, B: TBody; Phase, Ratchet: Float): TJoint;
+    function NewGear(A, B: TBody; Phase, Ratio: Float): TJoint;
+    { To simulate an axle tie one body to a static body such as ground }
+    function NewMotor(A, B: TBody; Rate: Float): TJoint;
+    {$endregion}
+
+    {$region Management
+      Add or remove items to this space. }
+    function Add(Body: TBody): TBody; overload;
+    function Add(Joint: TJoint): TJoint; overload;
+    function Add(Shape: TShape): TShape; overload;
+    { Remove a body and its shapes from the space. Note: Shapes are no longer
+      attached to a body once they are removed from the space. }
+    procedure Remove(Body: TBody); overload;
+    procedure Remove(Joint: TJoint); overload;
+    procedure Remove(Shape: TShape); overload;
+    function Contains(Body: TBody): Boolean; overload;
+    function Contains(Joint: TJoint): Boolean; overload;
+    function Contains(Shape: TShape): Boolean; overload;
+    {$endregion}
+
+    {$region Queries
+      Find shapes in the space using a filter, such as FilterAll. }
+    { All shapes within a distance of a point }
+    function PointQuery(const P: TVec2; MaxDistance: Float;
+      const Filter: cpShapeFilter): TArrayList<cpPointQueryInfoStruct>;
+    { The nearest shape within a distance of a point or a nil shape }
+    function PointQueryNearest(const P: TVec2; MaxDistance: Float;
+      const Filter: cpShapeFilter; out Info: cpPointQueryInfoStruct): TShape;
+    { All shapes hit by a segment with a radius from A to B }
+    function SegmentQuery(const A, B: TVec2; Radius: Float;
+      const Filter: cpShapeFilter): TArrayList<cpSegmentQueryInfoStruct>;
+    { The first shape hit by a segment with a radius from A to B or a nil shape }
+    function SegmentQueryFirst(const A, B: TVec2; Radius: Float;
+      const Filter: cpShapeFilter; out Info: cpSegmentQueryInfoStruct): TShape;
+    { All shapes whose bounding boxes overlap a box }
+    function BoxQuery(const Box: cpBB; const Filter: cpShapeFilter): TArrayList<TShape>;
+    { All shapes overlapping a shape, which does not need to be in the space }
+    function ShapeQuery(Shape: TShape): TArrayList<TShape>;
+    {$endregion}
+
+    {$region Indexing
+      Update the collision detection data after moving static shapes. }
+    procedure ReindexStatic;
+    procedure ReindexShape(Shape: TShape);
+    procedure ReindexBody(Body: TBody);
+    { Switch the space to a spatial hash, which can be faster for many shapes
+      of the same size }
+    procedure UseSpatialHash(Dim: Float; Count: Integer);
+    {$endregion}
+
+    { Draw the space using the callbacks in options }
+    procedure DebugDraw(const Options: cpSpaceDebugDrawOptions);
+
+    { Ground is a built in static body. Note: Do not remove or free this body }
+    property Ground: TBody read GetGround;
+    { The number of iterations in each step. The default value is 10 }
+    property Iterations: LongWord read GetIterations write SetIterations;
+    { Damping on space is a global reduction of movement applied to dynamic
+      bodies with each step }
+    property Damping: Float read GetDamping write SetDamping;
+    { Force applied to all dynamic bodies }
+    property Gravity: TVec2 read GetGravity write SetGravity;
+    { Speed limit under which dynamic bodies are put to sleep. Increasing this
+      value causes bodies to sleep faster }
+    property IdleSpeedThreshold: Float read GetIdleSpeedThreshold write SetIdleSpeedThreshold;
+    { Amount of time when a dynamic body is put to sleep while idle. The default
+      value is infinity, indicating that bodies will never sleep }
+    property SleepTimeThreshold: Float read GetSleepTimeThreshold write SetSleepTimeThreshold;
+    { The amount of overlap allowed between shapes }
+    property CollisionSlop: Float read GetCollisionSlop write SetCollisionSlop;
+    { The percentage of overlap which remains unfixed after a second }
+    property CollisionBias: Float read GetCollisionBias write SetCollisionBias;
+    { The number of steps to keep collision solutions }
+    property CollisionPersistence: LongWord read GetCollisionPersistence write SetCollisionPersistence;
+    { The time step of the current or most recent step }
+    property CurrentTimeStep: Float read GetCurrentTimeStep;
+    { True while the space is stepping, when objects cannot be added or removed }
+    property Locked: Boolean read GetLocked;
+    property UserData: Pointer read GetUserData write SetUserData;
+
+    {$region Enumerators}
+    { A for...in enumerator for all bodies (except ground) inside this space }
+    property Bodies: TSpaceBodyEnumerator read GetBodies;
+    { A for...in enumerator for all shapes inside this space }
+    property Shapes: TSpaceShapeEnumerator read GetShapes;
+    { A for...in enumerator for all joints inside this space, including the
+      joints of sleeping bodies }
+    property Joints: TSpaceJointEnumerator read GetJoints;
+    {$endregion}
+  end;
+
+{ Automatic geometry
+
+  Polylines are lists of vertices which can be traced from an image, simplified,
+  and decomposed into convex hulls suitable for polygon shapes. A polyline is
+  closed when its first and last vertices are equal. Polylines and polyline sets
+  are allocated by Chipmunk2D and must be freed. Polylines inside a set belong
+  to the set and are freed with it. }
+
+{ TPolyline }
+
+  TPolyline = record
+  public
+    Ref: cpPolyline;
+    class operator Implicit(const Value: TPolyline): cpPolyline; inline;
+    class operator Implicit(const Value: cpPolyline): TPolyline; inline;
+  private
+    function GetCount: Integer;
+    function GetVert(Index: Integer): TVec2;
+    function GetVerts: PVec2;
+    function GetClosed: Boolean;
+  public
+    { Create a polyline from points. When closed is true the first point is
+      appended if it is not already the last point. }
+    class function Create(const Points: array of TVec2; Closed: Boolean = False): TPolyline; static;
+    procedure Free;
+    function IsNil: Boolean; inline;
+    { Return a new copy of the polyline }
+    function Copy: TPolyline;
+    { Return a new polyline simplified using the Douglas-Peucker algorithm,
+      which works well on smooth or gently curved shapes. The result is never
+      farther than tol from the original. }
+    function SimplifyCurves(Tol: Float): TPolyline;
+    { Return a new polyline simplified by discarding flat vertices, which works
+      well on straight edged or angular shapes. Tol is the minimum angle in
+      radians of a vertex. }
+    function SimplifyVertexes(Tol: Float): TPolyline;
+    { Return a new closed polyline of the convex hull }
+    function ToConvexHull(Tol: Float = 0): TPolyline;
+    { Return a copy of the vertices }
+    function ToArray: TArray<TVec2>;
+    property Count: Integer read GetCount;
+    property Vert[Index: Integer]: TVec2 read GetVert; default;
+    { The address of the first vertex, which can be passed to NewPolygon }
+    property Verts: PVec2 read GetVerts;
+    property Closed: Boolean read GetClosed;
+  end;
+
+{ TPolylineSetEnumerator }
+
+  TPolylineSetEnumerator = record
+  private
+    FSet: cpPolylineSet;
+    FIndex: Integer;
+    FCurrent: TPolyline;
+  public
+    class function Create(PolylineSet: cpPolylineSet): TPolylineSetEnumerator; static;
+    function MoveNext: Boolean;
+    property Current: TPolyline read FCurrent;
+  end;
+
+{ TMarchSample returns the density of an image at a point, used to trace the
+  contours of an image }
+
+  TMarchSample = function(const P: TVec2): Float of object;
+
+{ TPolylineSet }
+
+  TPolylineSet = record
+  public
+    Ref: cpPolylineSet;
+    class operator Implicit(const Value: TPolylineSet): cpPolylineSet; inline;
+    class operator Implicit(const Value: cpPolylineSet): TPolylineSet; inline;
+  private
+    function GetCount: Integer;
+    function GetLine(Index: Integer): TPolyline;
+  public
+    { Create an empty polyline set }
+    class function Create: TPolylineSet; static;
+    { Create a set of convex hulls which match a concave polygon to within tol.
+      The polygon is closed and its winding corrected if needed. }
+    class function ConvexDecomposition(Polyline: TPolyline; Tol: Float): TPolylineSet; static;
+    { Trace the anti-aliased contours of an image where the samples cross a
+      threshold. The box is sampled in a grid of at least two samples in each
+      direction. }
+    class function MarchSoft(const Box: cpBB; XSamples, YSamples: Integer; Threshold: Float;
+      Sample: TMarchSample): TPolylineSet; overload; static;
+    class function MarchSoft(const Box: cpBB; XSamples, YSamples: Integer; Threshold: Float;
+      Sample: cpMarchSampleFunc; Data: Pointer = nil): TPolylineSet; overload; static;
+    { Trace the aliased contours of an image where the samples cross a
+      threshold }
+    class function MarchHard(const Box: cpBB; XSamples, YSamples: Integer; Threshold: Float;
+      Sample: TMarchSample): TPolylineSet; overload; static;
+    class function MarchHard(const Box: cpBB; XSamples, YSamples: Integer; Threshold: Float;
+      Sample: cpMarchSampleFunc; Data: Pointer = nil): TPolylineSet; overload; static;
+    { Free the set and optionally the polylines it holds }
+    procedure Free(FreeLines: Boolean = True);
+    function IsNil: Boolean; inline;
+    { Add a segment which starts a new polyline, extends or joins polylines,
+      or closes a polyline }
+    procedure AddSegment(const A, B: TVec2);
+    function GetEnumerator: TPolylineSetEnumerator;
+    property Count: Integer read GetCount;
+    property Line[Index: Integer]: TPolyline read GetLine; default;
+  end;
+
+{ TCircleHelper }
+
+  TCircleHelper = record helper for TCircle
+  public
+    function Base: TShape; inline;
+  end;
+
+{ TSegmentHelper }
+
+  TSegmentHelper = record helper for TSegment
+  public
+    function Base: TShape; inline;
+  end;
+
+{ TPolygonHelper }
+
+  TPolygonHelper = record helper for TPolygon
+  public
+    function Base: TShape; inline;
+  end;
+
+{ TShapeHelper }
+
+  TShapeHelper = record helper for TShape
+  public
+    function Body: TBody; inline;
+    function Space: TSpace; inline;
+  end;
+
+{ TPinJointHelper }
+
+  TPinJointHelper = record helper for TPinJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TSlideJointHelper }
+
+  TSlideJointHelper = record helper for TSlideJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TPivotJointHelper }
+
+  TPivotJointHelper = record helper for TPivotJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TGrooveJointHelper }
+
+  TGrooveJointHelper = record helper for TGrooveJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TDampedSpringJointHelper }
+
+  TDampedSpringJointHelper = record helper for TDampedSpringJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TDampedRotarySpringJointHelper }
+
+  TDampedRotarySpringJointHelper = record helper for TDampedRotarySpringJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TRotaryLimitJointHelper }
+
+  TRotaryLimitJointHelper = record helper for TRotaryLimitJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TRatchetJointHelper }
+
+  TRatchetJointHelper = record helper for TRatchetJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TGearJointHelper }
+
+  TGearJointHelper = record helper for TGearJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TMotorJointHelper }
+
+  TMotorJointHelper = record helper for TMotorJoint
+  public
+    function Base: TJoint; inline;
+  end;
+
+{ TJointHelper }
+
+  TJointHelper = record helper for TJoint
+  public
+    function Space: TSpace; inline;
+  end;
+
+{ TBodyHelper }
+
+  TBodyHelper = record helper for TBody
+  private
+    function GetJoints: TBodyJointEnumerator;
+  public
+    function Space: TSpace; inline;
+    { A for...in enumerator for the joints connected to this body }
+    property Joints: TBodyJointEnumerator read GetJoints;
+  end;
+
+{ Create a new empty space }
+function NewSpace: TSpace;
+
+implementation
+
+function MaskToStr(M: TBitmask): string;
+const
+  Bit: array[0..1] of Char = ('0', '1');
+var
+  I: Integer;
+begin
+  Result := '';
+  SetLength(Result, 32);
+  for I := 32 downto 1 do
+  begin
+    Result[I] := Bit[M and 1];
+    M := M shr 1;
+  end;
+end;
+
+function StrToMask(const S: string): TBitmask;
+var
+  I: Integer;
+begin
+  Result := 0;
+  for I := 1 to Length(S) do
+  begin
+    if I = 33 then
+      Exit;
+    Result := Result shl 1;
+    if S[I] <> '0' then
+      Result := Result or 1;
+  end;
+end;
+
+{ Chipmunk2D aborts if an object is removed from a space while the space is
+  locked, such as in a collision callback or query. These post step callbacks
+  are used to remove and free objects after the space unlocks. }
+
+procedure PostShapeFree(space: cpSpace; key, data: Pointer); cdecl;
+begin
+  cpSpaceRemoveShape(space, key);
+  cpShapeFree(key);
+end;
+
+procedure PostConstraintFree(space: cpSpace; key, data: Pointer); cdecl;
+begin
+  cpSpaceRemoveConstraint(space, key);
+  cpConstraintFree(key);
+end;
+
+procedure PostBodyFree(space: cpSpace; key, data: Pointer); cdecl;
+begin
+  cpSpaceRemoveBody(space, key);
+  cpBodyFree(key);
+end;
+
+procedure PostBodyRelease(space: cpSpace; key, data: Pointer); cdecl;
+var
+  B: TBody;
+begin
+  B.Ref := key;
+  B.Free;
+end;
+
+procedure PostReleaseObjects(space: cpSpace; key, data: Pointer); cdecl;
+var
+  S: TSpace;
+begin
+  S.Ref := space;
+  S.ReleaseObjects;
+end;
+
+{ TCircle }
+
+class operator TCircle.Implicit(const Value: TCircle): cpCircleShape;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TCircle.Implicit(const Value: cpCircleShape): TCircle;
+begin
+  Result.Ref := Value;
+end;
+
+class operator TCircle.Implicit(const Value: TCircle): cpShape;
+begin
+  Result := Pointer(Value.Ref);
+end;
+
+class operator TCircle.Implicit(const Value: cpShape): TCircle;
+begin
+  Result.Ref := Pointer(Value);
+end;
+
+procedure TCircle.Free;
+var
+  S: TShape;
+begin
+  S.Ref := Pointer(Ref);
+  S.Free;
+  Ref := nil;
+end;
+
+function TCircle.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+procedure TCircle.Reshape(Radius: Float; const Offset: TVec2);
+begin
+  cpCircleShapeSetRadius(Self, Radius);
+  cpCircleShapeSetOffset(Self, Offset);
+end;
+
+function TCircle.GetRadius: Float;
+begin
+  Result := cpCircleShapeGetRadius(Self);
+end;
+
+procedure TCircle.SetRadius(const Value: Float);
+begin
+  cpCircleShapeSetRadius(Self, Value);
+end;
+
+function TCircle.GetOffset: TVec2;
+begin
+  Result := cpCircleShapeGetOffset(Self);
+end;
+
+procedure TCircle.SetOffset(const Value: TVec2);
+begin
+  cpCircleShapeSetOffset(Self, Value);
+end;
+
+{ TSegment }
+
+class operator TSegment.Implicit(const Value: TSegment): cpSegmentShape;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TSegment.Implicit(const Value: cpSegmentShape): TSegment;
+begin
+  Result.Ref := Value;
+end;
+
+class operator TSegment.Implicit(const Value: TSegment): cpShape;
+begin
+  Result := Pointer(Value.Ref);
+end;
+
+class operator TSegment.Implicit(const Value: cpShape): TSegment;
+begin
+  Result.Ref := Pointer(Value);
+end;
+
+procedure TSegment.Free;
+var
+  S: TShape;
+begin
+  S.Ref := Pointer(Ref);
+  S.Free;
+  Ref := nil;
+end;
+
+function TSegment.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+procedure TSegment.Join(const Prev, Next: TVec2);
+begin
+  cpSegmentShapeSetNeighbors(Self, Prev, Next);
+end;
+
+function TSegment.GetBorder: Float;
+begin
+  Result := cpSegmentShapeGetRadius(Self);
+end;
+
+procedure TSegment.SetBorder(const Value: Float);
+begin
+  cpSegmentShapeSetRadius(Self, Value);
+end;
+
+function TSegment.GetA: TVec2;
+begin
+  Result := cpSegmentShapeGetA(Self);
+end;
+
+procedure TSegment.SetA(const Value: TVec2);
+begin
+  cpSegmentShapeSetEndpoints(Self, Value, cpSegmentShapeGetB(Self));
+end;
+
+function TSegment.GetB: TVec2;
+begin
+  Result := cpSegmentShapeGetB(Self);
+end;
+
+procedure TSegment.SetB(const Value: TVec2);
+begin
+  cpSegmentShapeSetEndpoints(Self, cpSegmentShapeGetA(Self), Value);
+end;
+
+function TSegment.GetNormal: TVec2;
+begin
+  Result := cpSegmentShapeGetNormal(Self);
+end;
+
+{ TPolygon }
+
+class operator TPolygon.Implicit(const Value: TPolygon): cpPolyShape;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TPolygon.Implicit(const Value: cpPolyShape): TPolygon;
+begin
+  Result.Ref := Value;
+end;
+
+class operator TPolygon.Implicit(const Value: TPolygon): cpShape;
+begin
+  Result := Pointer(Value.Ref);
+end;
+
+class operator TPolygon.Implicit(const Value: cpShape): TPolygon;
+begin
+  Result.Ref := Pointer(Value);
+end;
+
+procedure TPolygon.Free;
+var
+  S: TShape;
+begin
+  S.Ref := Pointer(Ref);
+  S.Free;
+  Ref := nil;
+end;
+
+function TPolygon.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+procedure TPolygon.Reshape(Verts: PVec2; Count: Integer; Transform: PMatrix2x3 = nil);
+begin
+  if Transform <> nil then
+    cpPolyShapeSetVerts(Self, Count, Verts, Transform^)
+  else
+    cpPolyShapeSetVerts(Self, Count, Verts, MatrixIdentity);
+end;
+
+procedure TPolygon.Reshape(const Width, Height: Float; Transform: PMatrix2x3 = nil);
+var
+  V: array[0..3] of TVec2;
+begin
+  V[0].X := Width / -2; V[0].Y := Height / -2;
+  V[1].X := V[0].X; V[1].Y := -V[0].Y;
+  V[2].X := -V[0].X; V[2].Y := -V[0].Y;
+  V[3].X := -V[0].X; V[3].Y := V[0].Y;
+  Reshape(@V[0], 4, Transform);
+end;
+
+function TPolygon.GetBorder: Float;
+begin
+  Result := cpPolyShapeGetRadius(Self);
+end;
+
+procedure TPolygon.SetBorder(const Value: Float);
+begin
+  cpPolyShapeSetRadius(Self, Value);
+end;
+
+function TPolygon.GetVertCount: Integer;
+begin
+  Result := cpPolyShapeGetCount(Self);
+end;
+
+function TPolygon.GetVert(Index: Integer): TVec2;
+begin
+  Result := cpPolyShapeGetVert(Self, Index);
+end;
+
+{ TShape }
+
+class operator TShape.Implicit(const Value: TShape): cpShape;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TShape.Implicit(const Value: cpShape): TShape;
+begin
+  Result.Ref := Value;
+end;
+
+class operator TShape.Equal(const A, B: TShape): Boolean;
+begin
+  Result := A.Ref = B.Ref;
+end;
+
+class operator TShape.NotEqual(const A, B: TShape): Boolean;
+begin
+  Result := A.Ref <> B.Ref;
+end;
+
+procedure TShape.Free;
+begin
+  if Ref = nil then
+    Exit;
+  if Ref.space = nil then
+    cpShapeFree(Ref)
+  else if cpSpaceIsLocked(Ref.space) then
+    cpSpaceAddPostStepCallback(Ref.space, PostShapeFree, Ref, nil)
+  else
+    { Removing a shape from its space also removes it from its body }
+    PostShapeFree(Ref.space, Ref, nil);
+  Ref := nil;
+end;
+
+function TShape.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+function TShape.AsCircle: TCircle;
+begin
+  Result.Ref := Pointer(Ref);
+end;
+
+function TShape.AsPolygon: TPolygon;
+begin
+  Result.Ref := Pointer(Ref);
+end;
+
+function TShape.AsSegment: TSegment;
+begin
+  Result.Ref := Pointer(Ref);
+end;
+
+function TShape.PointQuery(const P: TVec2; out Info: cpPointQueryInfoStruct): Float;
+begin
+  Result := cpShapePointQuery(Ref, P, @Info);
+end;
+
+function TShape.SegmentQuery(const A, B: TVec2; Radius: Float; out Info: cpSegmentQueryInfoStruct): Boolean;
+begin
+  Result := cpShapeSegmentQuery(Ref, A, B, Radius, @Info);
+end;
+
+function TShape.Collide(Shape: TShape): cpContactPointSetStruct;
+begin
+  Result := cpShapesCollide(Ref, Shape.Ref);
+end;
+
+function TShape.CacheBB: cpBB;
+begin
+  Result := cpShapeCacheBB(Ref);
+end;
+
+function TShape.Update(const Transform: TMatrix2x3): cpBB;
+begin
+  Result := cpShapeUpdate(Ref, Transform);
+end;
+
+function TShape.GetNext: TShape;
+begin
+  Result.Ref := nil;
+  if IsNil then
+    Exit;
+  Result.Ref := Ref.next;
+end;
+
+function TShape.GetKind: TShapeKind;
+begin
+  Result := Ref.klass.kind;
+end;
+
+function TShape.GetMass: Float;
+begin
+  Result := cpShapeGetMass(Ref);
+end;
+
+procedure TShape.SetMass(Value: Float);
+begin
+  cpShapeSetMass(Ref, Value);
+end;
+
+function TShape.GetDensity: Float;
+begin
+  Result := cpShapeGetDensity(Ref);
+end;
+
+procedure TShape.SetDensity(Value: Float);
+begin
+  cpShapeSetDensity(Ref, Value);
+end;
+
+function TShape.GetMoment: Float;
+begin
+  Result := cpShapeGetMoment(Ref);
+end;
+
+function TShape.GetArea: Float;
+begin
+  Result := cpShapeGetArea(Ref);
+end;
+
+function TShape.GetCenterOfGravity: TVec2;
+begin
+  Result := cpShapeGetCenterOfGravity(Ref);
+end;
+
+function TShape.GetBoundingBox: cpBB;
+begin
+  Result := cpShapeGetBB(Ref);
+end;
+
+function TShape.GetSensor: Boolean;
+begin
+  Result := cpShapeGetSensor(Ref);
+end;
+
+procedure TShape.SetSensor(Value: Boolean);
+begin
+  cpShapeSetSensor(Ref, Value);
+end;
+
+function TShape.GetElasticity: Float;
+begin
+  Result := cpShapeGetElasticity(Ref);
+end;
+
+procedure TShape.SetElasticity(Value: Float);
+begin
+  cpShapeSetElasticity(Ref, Value);
+end;
+
+function TShape.GetFriction: Float;
+begin
+  Result := cpShapeGetFriction(Ref);
+end;
+
+procedure TShape.SetFriction(Value: Float);
+begin
+  cpShapeSetFriction(Ref, Value);
+end;
+
+function TShape.GetSurfaceVelocity: TVec2;
+begin
+  Result := cpShapeGetSurfaceVelocity(Ref);
+end;
+
+procedure TShape.SetSurfaceVelocity(const Value: TVec2);
+begin
+  cpShapeSetSurfaceVelocity(Ref, Value);
+end;
+
+function TShape.GetUserData: Pointer;
+begin
+  Result := cpShapeGetUserData(Ref);
+end;
+
+procedure TShape.SetUserData(Value: Pointer);
+begin
+  cpShapeSetUserData(Ref, Value);
+end;
+
+{ Setting the filter through Chipmunk2D wakes the body of the shape }
+
+function TShape.GetFilter: cpShapeFilter;
+begin
+  Result := cpShapeGetFilter(Ref);
+end;
+
+procedure TShape.SetFilter(const Value: cpShapeFilter);
+begin
+  cpShapeSetFilter(Ref, Value);
+end;
+
+function TShape.GetGroup: Pointer;
+begin
+  Result := Pointer(cpShapeGetFilter(Ref).group);
+end;
+
+procedure TShape.SetGroup(Value: Pointer);
+var
+  F: cpShapeFilter;
+begin
+  F := cpShapeGetFilter(Ref);
+  F.group := cpGroup(Value);
+  cpShapeSetFilter(Ref, F);
+end;
+
+function TShape.GetCategory: TBitmask;
+begin
+  Result := cpShapeGetFilter(Ref).categories;
+end;
+
+procedure TShape.SetCategory(Value: TBitmask);
+var
+  F: cpShapeFilter;
+begin
+  F := cpShapeGetFilter(Ref);
+  F.categories := Value;
+  cpShapeSetFilter(Ref, F);
+end;
+
+function TShape.GetMask: TBitmask;
+begin
+  Result := cpShapeGetFilter(Ref).mask;
+end;
+
+procedure TShape.SetMask(Value: TBitmask);
+var
+  F: cpShapeFilter;
+begin
+  F := cpShapeGetFilter(Ref);
+  F.mask := Value;
+  cpShapeSetFilter(Ref, F);
+end;
+
+function TShape.GetCollisionType: TCollisionType;
+begin
+  Result := cpShapeGetCollisionType(Ref);
+end;
+
+procedure TShape.SetCollisionType(Value: TCollisionType);
+begin
+  cpShapeSetCollisionType(Ref, Value);
+end;
+
+{ TBodyShapeEnumerator }
+
+class function TBodyShapeEnumerator.Create(Body: cpBody): TBodyShapeEnumerator;
+begin
+  Result.FBody := Body;
+  Result.FStarted := False;
+  Result.FCurrent.Ref := nil;
+end;
+
+function TBodyShapeEnumerator.MoveNext: Boolean;
+begin
+  if not FStarted then
+  begin
+    FStarted := True;
+    if FBody <> nil then
+      FCurrent.Ref := FBody.shapeList;
+  end
+  else if FCurrent.Ref <> nil then
+    FCurrent.Ref := FCurrent.Ref.next;
+  Result := FCurrent.Ref <> nil;
+end;
+
+function TBodyShapeEnumerator.GetEnumerator: TBodyShapeEnumerator;
+begin
+  Result := Self;
+end;
+
+{ TBody }
+
+class operator TBody.Implicit(const Value: TBody): cpBody;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TBody.Implicit(const Value: cpBody): TBody;
+begin
+  Result.Ref := Value;
+end;
+
+class operator TBody.Equal(const A, B: TBody): Boolean;
+begin
+  Result := A.Ref = B.Ref;
+end;
+
+class operator TBody.NotEqual(const A, B: TBody): Boolean;
+begin
+  Result := A.Ref <> B.Ref;
+end;
+
+procedure TBody.Free;
+var
+  Joints: TArrayList<TJoint>;
+  Shapes: TArrayList<TShape>;
+  Space: cpSpace;
+  C: cpConstraint;
+  J: TJoint;
+  S: TShape;
+  I: Integer;
+begin
+  if IsNil then
+    Exit;
+  Space := Ref.space;
+  { The ground body belongs to its space }
+  if (Space <> nil) and (Ref = cpSpaceGetStaticBody(Space)) then
+    Exit;
+  if (Space <> nil) and cpSpaceIsLocked(Space) then
+  begin
+    cpSpaceAddPostStepCallback(Space, PostBodyRelease, Ref, nil);
+    Ref := nil;
+    Exit;
+  end;
+  { Joints are only connected to a body while they are in a space }
+  C := Ref.constraintList;
+  while C <> nil do
+  begin
+    J.Ref := C;
+    Joints.Push(J);
+    if C.a = Ref then
+      C := C.next_a
+    else
+      C := C.next_b;
+  end;
+  for I := 0 to Joints.Length - 1 do
+    Joints.Items[I].Free;
+  S.Ref := Ref.shapeList;
+  while S.Ref <> nil do
+  begin
+    Shapes.Push(S);
+    S.Ref := S.Ref.next;
+  end;
+  if Space <> nil then
+  begin
+    { Removing a shape from its space also removes it from its body }
+    for I := 0 to Shapes.Length - 1 do
+      cpSpaceRemoveShape(Space, Shapes.Items[I].Ref);
+    cpSpaceRemoveBody(Space, Ref);
+  end;
+  for I := 0 to Shapes.Length - 1 do
+    cpShapeFree(Shapes.Items[I].Ref);
+  cpBodyFree(Ref);
+  Ref := nil;
+end;
+
+function TBody.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+function TBody.AddShape(Shape: cpShape): TShape;
+begin
+  if Ref.space <> nil then
+    cpSpaceAddShape(Ref.space, Shape);
+  cpShapeSetDensity(Shape, 1);
+  Result.Ref := Shape;
+end;
+
+function TBody.NewCircle(Radius: Float): TShape;
+begin
+  Result := AddShape(cpCircleShapeNew(Ref, Radius, VectZero));
+end;
+
+function TBody.NewCircle(Radius: Float; const Offset: TVec2): TShape;
+begin
+  Result := AddShape(cpCircleShapeNew(Ref, Radius, Offset));
+end;
+
+function TBody.NewSegment(const A, B: TVec2; Border: Float = 0): TShape;
+begin
+  Result := AddShape(cpSegmentShapeNew(Ref, A, B, Border));
+end;
+
+function TBody.NewBox(Width, Height: Float; Border: Float = 0; Transform: PMatrix2x3 = nil): TShape;
+var
+  V: array[0..3] of TVec2;
+begin
+  V[0].X := Width / -2; V[0].Y := Height / -2;
+  V[1].X := V[0].X; V[1].Y := -V[0].Y;
+  V[2].X := -V[0].X; V[2].Y := -V[0].Y;
+  V[3].X := -V[0].X; V[3].Y := V[0].Y;
+  Result := NewPolygon(@V[0], 4, Border, Transform);
+end;
+
+function TBody.NewBox(X, Y, Width, Height: Float; Border: Float = 0; Transform: PMatrix2x3 = nil): TShape;
+var
+  V: array[0..3] of TVec2;
+begin
+  V[0].X := X - Width / 2; V[0].Y := Y - Height / 2;
+  V[1].X := V[0].X; V[1].Y := V[0].Y + Height;
+  V[2].X := V[0].X + Width; V[2].Y := V[0].Y + Height;
+  V[3].X := V[0].X + Width; V[3].Y := V[0].Y;
+  Result := NewPolygon(@V[0], 4, Border, Transform);
+end;
+
+function TBody.NewPolygon(Verts: PVec2; Count: Integer; Border: Float = 0; Transform: PMatrix2x3 = nil): TShape;
+begin
+  if Transform = nil then
+    Result := AddShape(cpPolyShapeNew(Ref, Count, Verts, MatrixIdentity, Border))
+  else
+    Result := AddShape(cpPolyShapeNew(Ref, Count, Verts, Transform^, Border));
+end;
+
+{ Chipmunk2D aborts if a body is put to sleep when it is not dynamic, not in a
+  space, the space is locked, or sleeping is not enabled on the space }
+
+function CanSleep(Body: cpBody): Boolean;
+begin
+  Result := (Body <> nil) and (cpBodyGetType(Body) = CP_BODY_TYPE_DYNAMIC) and
+    (Body.space <> nil) and (not cpSpaceIsLocked(Body.space)) and
+    (cpSpaceGetSleepTimeThreshold(Body.space) < CP_INFINITY);
+end;
+
+procedure TBody.Sleep;
+begin
+  if CanSleep(Ref) then
+    cpBodySleep(Ref);
+end;
+
+procedure TBody.SleepWithGroup(Body: TBody);
+begin
+  { The group must be a sleeping body }
+  if CanSleep(Ref) and Body.IsSleeping then
+    cpBodySleepWithGroup(Ref, Body.Ref);
+end;
+
+function TBody.IsSleeping: Boolean;
+begin
+  if Kind = bodyDynamic then
+    Result := cpBodyIsSleeping(Ref)
+  else
+    Result := False;
+end;
+
+procedure TBody.WakeUp;
+begin
+  { Chipmunk2D aborts if cpBodyActivateStatic is called on a kinematic body }
+  if Kind = bodyStatic then
+    cpBodyActivateStatic(Ref, nil)
+  else
+    cpBodyActivate(Ref);
+end;
+
+function TBody.BodyToWorld(const Point: TVec2): TVec2;
+begin
+  Result := cpBodyLocalToWorld(Ref, Point);
+end;
+
+function TBody.WorldToBody(const Point: TVec2): TVec2;
+begin
+  Result := cpBodyWorldToLocal(Ref, Point);
+end;
+
+procedure TBody.ApplyForceAtWorld(const Force, Point: TVec2);
+begin
+  cpBodyApplyForceAtWorldPoint(Ref, Force, Point);
+end;
+
+procedure TBody.ApplyForceAtBody(const Force, Point: TVec2);
+begin
+  cpBodyApplyForceAtLocalPoint(Ref, Force, Point);
+end;
+
+procedure TBody.ApplyImpulseAtWorld(const Impulse, Point: TVec2);
+begin
+  cpBodyApplyImpulseAtWorldPoint(Ref, Impulse, Point);
+end;
+
+procedure TBody.ApplyImpulseAtBody(const Impulse, Point: TVec2);
+begin
+  cpBodyApplyImpulseAtLocalPoint(Ref, Impulse, Point);
+end;
+
+function TBody.VelocityAtWorld(const Point: TVec2): TVec2;
+begin
+  Result := cpBodyGetVelocityAtWorldPoint(Ref, Point);
+end;
+
+function TBody.VelocityAtBody(const Point: TVec2): TVec2;
+begin
+  Result := cpBodyGetVelocityAtLocalPoint(Ref, Point);
+end;
+
+procedure TBody.UpdateVelocity(const Gravity: TVec2; Damping, DeltaTime: Float);
+begin
+  cpBodyUpdateVelocity(Ref, Gravity, Damping, DeltaTime);
+end;
+
+procedure TBody.UpdatePosition(DeltaTime: Float);
+begin
+  cpBodyUpdatePosition(Ref, DeltaTime);
+end;
+
+function TBody.GetKind: TBodyKind;
+begin
+  Result := cpBodyGetType(Ref);
+end;
+
+procedure TBody.SetKind(Value: TBodyKind);
+begin
+  cpBodySetType(Ref, Value);
+end;
+
+function TBody.GetMass: Float;
+begin
+  Result := cpBodyGetMass(Ref);
+end;
+
+procedure TBody.SetMass(Value: Float);
+begin
+  cpBodySetMass(Ref, Value);
+end;
+
+function TBody.GetMoment: Float;
+begin
+  Result := cpBodyGetMoment(Ref);
+end;
+
+procedure TBody.SetMoment(Value: Float);
+begin
+  cpBodySetMoment(Ref, Value);
+end;
+
+function TBody.GetCenterOfGravity: TVec2;
+begin
+  Result := cpBodyGetCenterOfGravity(Ref);
+end;
+
+procedure TBody.SetCenterOfGravity(const Value: TVec2);
+begin
+  cpBodySetCenterOfGravity(Ref, Value);
+end;
+
+function TBody.GetPosition: TVec2;
+begin
+  Result := cpBodyGetPosition(Ref);
+end;
+
+procedure TBody.SetPosition(const Value: TVec2);
+begin
+  cpBodySetPosition(Ref, Value);
+end;
+
+function TBody.GetVelocity: TVec2;
+begin
+  Result := cpBodyGetVelocity(Ref);
+end;
+
+procedure TBody.SetVelocity(const Value: TVec2);
+begin
+  cpBodySetVelocity(Ref, Value);
+end;
+
+function TBody.GetForce: TVec2;
+begin
+  Result := cpBodyGetForce(Ref);
+end;
+
+procedure TBody.SetForce(const Value: TVec2);
+begin
+  cpBodySetForce(Ref, Value);
+end;
+
+function TBody.GetAngle: Float;
+begin
+  Result := cpBodyGetAngle(Ref);
+end;
+
+procedure TBody.SetAngle(const Value: Float);
+begin
+  cpBodySetAngle(Ref, Value);
+end;
+
+function TBody.GetAngularVelocity: Float;
+begin
+  Result := cpBodyGetAngularVelocity(Ref);
+end;
+
+procedure TBody.SetAngularVelocity(Value: Float);
+begin
+  cpBodySetAngularVelocity(Ref, Value);
+end;
+
+function TBody.GetTorque: Float;
+begin
+  Result := cpBodyGetTorque(Ref);
+end;
+
+procedure TBody.SetTorque(Value: Float);
+begin
+  cpBodySetTorque(Ref, Value);
+end;
+
+function TBody.GetRotation: TVec2;
+begin
+  Result := cpBodyGetRotation(Ref);
+end;
+
+function TBody.GetKineticEnergy: Float;
+begin
+  Result := cpBodyKineticEnergy(Ref);
+end;
+
+function TBody.GetVelocityFunc: cpBodyVelocityFunc;
+begin
+  Result := Ref.velocity_func;
+end;
+
+procedure TBody.SetVelocityFunc(Value: cpBodyVelocityFunc);
+begin
+  { Chipmunk2D calls the function without checking for nil }
+  if @Value = nil then
+    Value := cpBodyUpdateVelocity;
+  cpBodySetVelocityUpdateFunc(Ref, Value);
+end;
+
+function TBody.GetPositionFunc: cpBodyPositionFunc;
+begin
+  Result := Ref.position_func;
+end;
+
+procedure TBody.SetPositionFunc(Value: cpBodyPositionFunc);
+begin
+  { Chipmunk2D calls the function without checking for nil }
+  if @Value = nil then
+    Value := cpBodyUpdatePosition;
+  cpBodySetPositionUpdateFunc(Ref, Value);
+end;
+
+function TBody.GetShape: TShape;
+begin
+  Result.Ref := nil;
+  if IsNil then
+    Exit;
+  Result.Ref := Ref.shapeList;
+end;
+
+function TBody.GetUserData: Pointer;
+begin
+  Result := nil;
+  if IsNil then
+    Exit;
+  Result := cpBodyGetUserData(Ref);
+end;
+
+procedure TBody.SetUserData(Value: Pointer);
+begin
+  if IsNil then
+    Exit;
+  cpBodySetUserData(Ref, Value);
+end;
+
+function TBody.GetShapes: TBodyShapeEnumerator;
+begin
+  Result := TBodyShapeEnumerator.Create(Ref);
+end;
+
+{ TPinJoint }
+
+class operator TPinJoint.Implicit(const Value: TPinJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TPinJoint.Implicit(const Value: cpConstraint): TPinJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TPinJoint.GetPinA: TVec2;
+begin
+  Result := cpPinJointGetAnchorA(Ref);
+end;
+
+procedure TPinJoint.SetPinA(const Value: TVec2);
+begin
+  cpPinJointSetAnchorA(Ref, Value);
+end;
+
+function TPinJoint.GetPinB: TVec2;
+begin
+  Result := cpPinJointGetAnchorB(Ref);
+end;
+
+procedure TPinJoint.SetPinB(const Value: TVec2);
+begin
+  cpPinJointSetAnchorB(Ref, Value);
+end;
+
+function TPinJoint.GetDistance: Float;
+begin
+  Result := cpPinJointGetDist(Ref);
+end;
+
+procedure TPinJoint.SetDistance(Value: Float);
+begin
+  cpPinJointSetDist(Ref, Value);
+end;
+
+{ TSlideJoint }
+
+class operator TSlideJoint.Implicit(const Value: TSlideJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TSlideJoint.Implicit(const Value: cpConstraint): TSlideJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TSlideJoint.GetPinA: TVec2;
+begin
+  Result := cpSlideJointGetAnchorA(Ref);
+end;
+
+procedure TSlideJoint.SetPinA(const Value: TVec2);
+begin
+  cpSlideJointSetAnchorA(Ref, Value);
+end;
+
+function TSlideJoint.GetPinB: TVec2;
+begin
+  Result := cpSlideJointGetAnchorB(Ref);
+end;
+
+procedure TSlideJoint.SetPinB(const Value: TVec2);
+begin
+  cpSlideJointSetAnchorB(Ref, Value);
+end;
+
+function TSlideJoint.GetMin: Float;
+begin
+  Result := cpSlideJointGetMin(Ref);
+end;
+
+procedure TSlideJoint.SetMin(Value: Float);
+begin
+  cpSlideJointSetMin(Ref, Value);
+end;
+
+function TSlideJoint.GetMax: Float;
+begin
+  Result := cpSlideJointGetMax(Ref);
+end;
+
+procedure TSlideJoint.SetMax(Value: Float);
+begin
+  cpSlideJointSetMax(Ref, Value);
+end;
+
+{ TPivotJoint }
+
+class operator TPivotJoint.Implicit(const Value: TPivotJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TPivotJoint.Implicit(const Value: cpConstraint): TPivotJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TPivotJoint.GetPinA: TVec2;
+begin
+  Result := cpPivotJointGetAnchorA(Ref);
+end;
+
+procedure TPivotJoint.SetPinA(const Value: TVec2);
+begin
+  cpPivotJointSetAnchorA(Ref, Value);
+end;
+
+function TPivotJoint.GetPinB: TVec2;
+begin
+  Result := cpPivotJointGetAnchorB(Ref);
+end;
+
+procedure TPivotJoint.SetPinB(const Value: TVec2);
+begin
+  cpPivotJointSetAnchorB(Ref, Value);
+end;
+
+{ TGrooveJoint }
+
+class operator TGrooveJoint.Implicit(const Value: TGrooveJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TGrooveJoint.Implicit(const Value: cpConstraint): TGrooveJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TGrooveJoint.GetGrooveA: TVec2;
+begin
+  Result := cpGrooveJointGetGrooveA(Ref);
+end;
+
+procedure TGrooveJoint.SetGrooveA(const Value: TVec2);
+begin
+  cpGrooveJointSetGrooveA(Ref, Value);
+end;
+
+function TGrooveJoint.GetGrooveB: TVec2;
+begin
+  Result := cpGrooveJointGetGrooveB(Ref);
+end;
+
+procedure TGrooveJoint.SetGrooveB(const Value: TVec2);
+begin
+  cpGrooveJointSetGrooveB(Ref, Value);
+end;
+
+function TGrooveJoint.GetPinB: TVec2;
+begin
+  Result := cpGrooveJointGetAnchorB(Ref);
+end;
+
+procedure TGrooveJoint.SetPinB(const Value: TVec2);
+begin
+  cpGrooveJointSetAnchorB(Ref, Value);
+end;
+
+{ TDampedSpringJoint }
+
+class operator TDampedSpringJoint.Implicit(const Value: TDampedSpringJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TDampedSpringJoint.Implicit(const Value: cpConstraint): TDampedSpringJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TDampedSpringJoint.GetPinA: TVec2;
+begin
+  Result := cpDampedSpringGetAnchorA(Ref);
+end;
+
+procedure TDampedSpringJoint.SetPinA(const Value: TVec2);
+begin
+  cpDampedSpringSetAnchorA(Ref, Value);
+end;
+
+function TDampedSpringJoint.GetPinB: TVec2;
+begin
+  Result := cpDampedSpringGetAnchorB(Ref);
+end;
+
+procedure TDampedSpringJoint.SetPinB(const Value: TVec2);
+begin
+  cpDampedSpringSetAnchorB(Ref, Value);
+end;
+
+function TDampedSpringJoint.GetRestLength: Float;
+begin
+  Result := cpDampedSpringGetRestLength(Ref);
+end;
+
+procedure TDampedSpringJoint.SetRestLength(Value: Float);
+begin
+  cpDampedSpringSetRestLength(Ref, Value);
+end;
+
+function TDampedSpringJoint.GetStiffness: Float;
+begin
+  Result := cpDampedSpringGetStiffness(Ref);
+end;
+
+procedure TDampedSpringJoint.SetStiffness(Value: Float);
+begin
+  cpDampedSpringSetStiffness(Ref, Value);
+end;
+
+function TDampedSpringJoint.GetDamping: Float;
+begin
+  Result := cpDampedSpringGetDamping(Ref);
+end;
+
+procedure TDampedSpringJoint.SetDamping(Value: Float);
+begin
+  cpDampedSpringSetDamping(Ref, Value);
+end;
+
+function TDampedSpringJoint.GetForceFunc: cpDampedSpringForceFunc;
+begin
+  Result := cpDampedSpringGetSpringForceFunc(Ref);
+end;
+
+procedure TDampedSpringJoint.SetForceFunc(Value: cpDampedSpringForceFunc);
+begin
+  cpDampedSpringSetSpringForceFunc(Ref, Value);
+end;
+
+{ TDampedRotarySpringJoint }
+
+class operator TDampedRotarySpringJoint.Implicit(const Value: TDampedRotarySpringJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TDampedRotarySpringJoint.Implicit(const Value: cpConstraint): TDampedRotarySpringJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TDampedRotarySpringJoint.GetRestAngle: Float;
+begin
+  Result := cpDampedRotarySpringGetRestAngle(Ref);
+end;
+
+procedure TDampedRotarySpringJoint.SetRestAngle(Value: Float);
+begin
+  cpDampedRotarySpringSetRestAngle(Ref, Value);
+end;
+
+function TDampedRotarySpringJoint.GetStiffness: Float;
+begin
+  Result := cpDampedRotarySpringGetStiffness(Ref);
+end;
+
+procedure TDampedRotarySpringJoint.SetStiffness(Value: Float);
+begin
+  cpDampedRotarySpringSetStiffness(Ref, Value);
+end;
+
+function TDampedRotarySpringJoint.GetDamping: Float;
+begin
+  Result := cpDampedRotarySpringGetDamping(Ref);
+end;
+
+procedure TDampedRotarySpringJoint.SetDamping(Value: Float);
+begin
+  cpDampedRotarySpringSetDamping(Ref, Value);
+end;
+
+function TDampedRotarySpringJoint.GetTorqueFunc: cpDampedRotarySpringTorqueFunc;
+begin
+  Result := cpDampedRotarySpringGetSpringTorqueFunc(Ref);
+end;
+
+procedure TDampedRotarySpringJoint.SetTorqueFunc(Value: cpDampedRotarySpringTorqueFunc);
+begin
+  cpDampedRotarySpringSetSpringTorqueFunc(Ref, Value);
+end;
+
+{ TRotaryLimitJoint }
+
+class operator TRotaryLimitJoint.Implicit(const Value: TRotaryLimitJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TRotaryLimitJoint.Implicit(const Value: cpConstraint): TRotaryLimitJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TRotaryLimitJoint.GetMin: Float;
+begin
+  Result := cpRotaryLimitJointGetMin(Ref);
+end;
+
+procedure TRotaryLimitJoint.SetMin(Value: Float);
+begin
+  cpRotaryLimitJointSetMin(Ref, Value);
+end;
+
+function TRotaryLimitJoint.GetMax: Float;
+begin
+  Result := cpRotaryLimitJointGetMax(Ref);
+end;
+
+procedure TRotaryLimitJoint.SetMax(Value: Float);
+begin
+  cpRotaryLimitJointSetMax(Ref, Value);
+end;
+
+{ TRatchetJoint }
+
+class operator TRatchetJoint.Implicit(const Value: TRatchetJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TRatchetJoint.Implicit(const Value: cpConstraint): TRatchetJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TRatchetJoint.GetAngle: Float;
+begin
+  Result := cpRatchetJointGetAngle(Ref);
+end;
+
+procedure TRatchetJoint.SetAngle(Value: Float);
+begin
+  cpRatchetJointSetAngle(Ref, Value);
+end;
+
+function TRatchetJoint.GetPhase: Float;
+begin
+  Result := cpRatchetJointGetPhase(Ref);
+end;
+
+procedure TRatchetJoint.SetPhase(Value: Float);
+begin
+  cpRatchetJointSetPhase(Ref, Value);
+end;
+
+function TRatchetJoint.GetRatchet: Float;
+begin
+  Result := cpRatchetJointGetRatchet(Ref);
+end;
+
+procedure TRatchetJoint.SetRatchet(Value: Float);
+begin
+  cpRatchetJointSetRatchet(Ref, Value);
+end;
+
+{ TGearJoint }
+
+class operator TGearJoint.Implicit(const Value: TGearJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TGearJoint.Implicit(const Value: cpConstraint): TGearJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TGearJoint.GetPhase: Float;
+begin
+  Result := cpGearJointGetPhase(Ref);
+end;
+
+procedure TGearJoint.SetPhase(Value: Float);
+begin
+  cpGearJointSetPhase(Ref, Value);
+end;
+
+function TGearJoint.GetRatio: Float;
+begin
+  Result := cpGearJointGetRatio(Ref);
+end;
+
+procedure TGearJoint.SetRatio(Value: Float);
+begin
+  cpGearJointSetRatio(Ref, Value);
+end;
+
+{ TMotorJoint }
+
+class operator TMotorJoint.Implicit(const Value: TMotorJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TMotorJoint.Implicit(const Value: cpConstraint): TMotorJoint;
+begin
+  Result.Ref := Value;
+end;
+
+function TMotorJoint.GetRate: Float;
+begin
+  Result := cpSimpleMotorGetRate(Ref);
+end;
+
+procedure TMotorJoint.SetRate(Value: Float);
+begin
+  cpSimpleMotorSetRate(Ref, Value);
+end;
+
+{ TJoint }
+
+class operator TJoint.Implicit(const Value: TJoint): cpConstraint;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TJoint.Implicit(const Value: cpConstraint): TJoint;
+begin
+  Result.Ref := Value;
+end;
+
+class operator TJoint.Equal(const A, B: TJoint): Boolean;
+begin
+  Result := A.Ref = B.Ref;
+end;
+
+class operator TJoint.NotEqual(const A, B: TJoint): Boolean;
+begin
+  Result := A.Ref <> B.Ref;
+end;
+
+procedure TJoint.Free;
+begin
+  if Ref = nil then
+    Exit;
+  if Ref.space = nil then
+    cpConstraintFree(Ref)
+  else if cpSpaceIsLocked(Ref.space) then
+    cpSpaceAddPostStepCallback(Ref.space, PostConstraintFree, Ref, nil)
+  else
+    PostConstraintFree(Ref.space, Ref, nil);
+  Ref := nil;
+end;
+
+function TJoint.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+function TJoint.IsGrab: Boolean;
+
+  function BodyIsGrab(Body: cpBody): Boolean;
+  begin
+    Result := (Body <> nil) and (Body.shapeList <> nil) and
+      (cpShapeGetCollisionType(Body.shapeList) = collideGrab);
+  end;
+
+begin
+  if IsNil then
+    Exit(False);
+  Result := BodyIsGrab(Ref.a) or BodyIsGrab(Ref.b);
+end;
+
+function TJoint.AsPin: TPinJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.AsSlide: TSlideJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.AsPivot: TPivotJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.AsGroove: TGrooveJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.AsDampedSpring: TDampedSpringJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.AsDampedRotarySpring: TDampedRotarySpringJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.AsRotaryLimit: TRotaryLimitJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.AsRatchet: TRatchetJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.AsGear: TGearJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.AsMotor: TMotorJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+function TJoint.GetKind: TJointKind;
+begin
+  if cpConstraintIsPinJoint(Ref) then
+    Result := jointPin
+  else if cpConstraintIsSlideJoint(Ref) then
+    Result := jointSlide
+  else if cpConstraintIsPivotJoint(Ref) then
+    Result := jointPivot
+  else if cpConstraintIsGrooveJoint(Ref) then
+    Result := jointGroove
+  else if cpConstraintIsDampedSpring(Ref) then
+    Result := jointDampedSpring
+  else if cpConstraintIsDampedRotarySpring(Ref) then
+    Result := jointDampedRotarySpring
+  else if cpConstraintIsRotaryLimitJoint(Ref) then
+    Result := jointRotaryLimit
+  else if cpConstraintIsRatchetJoint(Ref) then
+    Result := jointRatchet
+  else if cpConstraintIsGearJoint(Ref) then
+    Result := jointGear
+  else if cpConstraintIsSimpleMotor(Ref) then
+    Result := jointMotor
+  else
+    Result := jointCustom;
+end;
+
+function TJoint.GetA: TBody;
+begin
+  Result.Ref := cpConstraintGetBodyA(Ref);
+end;
+
+function TJoint.GetB: TBody;
+begin
+  Result.Ref := cpConstraintGetBodyB(Ref);
+end;
+
+function TJoint.GetCollide: Boolean;
+begin
+  Result := cpConstraintGetCollideBodies(Ref);
+end;
+
+procedure TJoint.SetCollide(Value: Boolean);
+begin
+  cpConstraintSetCollideBodies(Ref, Value);
+end;
+
+function TJoint.GetErrorBias: Float;
+begin
+  Result := cpConstraintGetErrorBias(Ref);
+end;
+
+procedure TJoint.SetErrorBias(Value: Float);
+begin
+  cpConstraintSetErrorBias(Ref, Value);
+end;
+
+function TJoint.GetMaxBias: Float;
+begin
+  Result := cpConstraintGetMaxBias(Ref);
+end;
+
+procedure TJoint.SetMaxBias(Value: Float);
+begin
+  cpConstraintSetMaxBias(Ref, Value);
+end;
+
+function TJoint.GetMaxForce: Float;
+begin
+  Result := cpConstraintGetMaxForce(Ref);
+end;
+
+procedure TJoint.SetMaxForce(Value: Float);
+begin
+  cpConstraintSetMaxForce(Ref, Value);
+end;
+
+function TJoint.GetImpulse: Float;
+begin
+  Result := cpConstraintGetImpulse(Ref);
+end;
+
+function TJoint.GetPreSolve: cpConstraintPreSolveFunc;
+begin
+  Result := cpConstraintGetPreSolveFunc(Ref);
+end;
+
+procedure TJoint.SetPreSolve(Value: cpConstraintPreSolveFunc);
+begin
+  cpConstraintSetPreSolveFunc(Ref, Value);
+end;
+
+function TJoint.GetPostSolve: cpConstraintPostSolveFunc;
+begin
+  Result := cpConstraintGetPostSolveFunc(Ref);
+end;
+
+procedure TJoint.SetPostSolve(Value: cpConstraintPostSolveFunc);
+begin
+  cpConstraintSetPostSolveFunc(Ref, Value);
+end;
+
+function TJoint.GetUserData: Pointer;
+begin
+  Result := cpConstraintGetUserData(Ref);
+end;
+
+procedure TJoint.SetUserData(Value: Pointer);
+begin
+  cpConstraintSetUserData(Ref, Value);
+end;
+
+{ TBodyJointEnumerator }
+
+class function TBodyJointEnumerator.Create(Body: cpBody): TBodyJointEnumerator;
+begin
+  Result.FBody := Body;
+  Result.FStarted := False;
+  Result.FCurrent.Ref := nil;
+end;
+
+function TBodyJointEnumerator.MoveNext: Boolean;
+var
+  C: cpConstraint;
+begin
+  if not FStarted then
+  begin
+    FStarted := True;
+    if FBody <> nil then
+      FCurrent.Ref := FBody.constraintList;
+  end
+  else if FCurrent.Ref <> nil then
+  begin
+    { Each joint is in the list of both its bodies }
+    C := FCurrent.Ref;
+    if C.a = FBody then
+      FCurrent.Ref := C.next_a
+    else
+      FCurrent.Ref := C.next_b;
+  end;
+  Result := FCurrent.Ref <> nil;
+end;
+
+function TBodyJointEnumerator.GetEnumerator: TBodyJointEnumerator;
+begin
+  Result := Self;
+end;
+
+{ TArbiter }
+
+class operator TArbiter.Implicit(const Value: TArbiter): cpArbiter;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TArbiter.Implicit(const Value: cpArbiter): TArbiter;
+begin
+  Result.Ref := Value;
+end;
+
+function TArbiter.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+function TArbiter.Ignore: Boolean;
+begin
+  Result := cpArbiterIgnore(Ref);
+end;
+
+procedure TArbiter.GetShapes(out A, B: TShape);
+begin
+  cpArbiterGetShapes(Ref, A.Ref, B.Ref);
+end;
+
+procedure TArbiter.GetBodies(out A, B: TBody);
+begin
+  cpArbiterGetBodies(Ref, A.Ref, B.Ref);
+end;
+
+function TArbiter.IsFirstContact: Boolean;
+begin
+  Result := cpArbiterIsFirstContact(Ref);
+end;
+
+function TArbiter.IsRemoval: Boolean;
+begin
+  Result := cpArbiterIsRemoval(Ref);
+end;
+
+function TArbiter.CallWildcardBeginA(Space: cpSpace): Boolean;
+begin
+  Result := cpArbiterCallWildcardBeginA(Ref, Space);
+end;
+
+function TArbiter.CallWildcardBeginB(Space: cpSpace): Boolean;
+begin
+  Result := cpArbiterCallWildcardBeginB(Ref, Space);
+end;
+
+function TArbiter.CallWildcardPreSolveA(Space: cpSpace): Boolean;
+begin
+  Result := cpArbiterCallWildcardPreSolveA(Ref, Space);
+end;
+
+function TArbiter.CallWildcardPreSolveB(Space: cpSpace): Boolean;
+begin
+  Result := cpArbiterCallWildcardPreSolveB(Ref, Space);
+end;
+
+procedure TArbiter.CallWildcardPostSolveA(Space: cpSpace);
+begin
+  cpArbiterCallWildcardPostSolveA(Ref, Space);
+end;
+
+procedure TArbiter.CallWildcardPostSolveB(Space: cpSpace);
+begin
+  cpArbiterCallWildcardPostSolveB(Ref, Space);
+end;
+
+procedure TArbiter.CallWildcardSeparateA(Space: cpSpace);
+begin
+  cpArbiterCallWildcardSeparateA(Ref, Space);
+end;
+
+procedure TArbiter.CallWildcardSeparateB(Space: cpSpace);
+begin
+  cpArbiterCallWildcardSeparateB(Ref, Space);
+end;
+
+function TArbiter.GetRestitution: Float;
+begin
+  Result := cpArbiterGetRestitution(Ref);
+end;
+
+procedure TArbiter.SetRestitution(Value: Float);
+begin
+  cpArbiterSetRestitution(Ref, Value);
+end;
+
+function TArbiter.GetFriction: Float;
+begin
+  Result := cpArbiterGetFriction(Ref);
+end;
+
+procedure TArbiter.SetFriction(Value: Float);
+begin
+  cpArbiterSetFriction(Ref, Value);
+end;
+
+function TArbiter.GetSurfaceVelocity: TVec2;
+begin
+  Result := cpArbiterGetSurfaceVelocity(Ref);
+end;
+
+procedure TArbiter.SetSurfaceVelocity(const Value: TVec2);
+begin
+  cpArbiterSetSurfaceVelocity(Ref, Value);
+end;
+
+function TArbiter.GetUserData: Pointer;
+begin
+  Result := cpArbiterGetUserData(Ref);
+end;
+
+procedure TArbiter.SetUserData(Value: Pointer);
+begin
+  cpArbiterSetUserData(Ref, Value);
+end;
+
+function TArbiter.GetContactPointSet: cpContactPointSetStruct;
+begin
+  Result := cpArbiterGetContactPointSet(Ref);
+end;
+
+procedure TArbiter.SetContactPointSet(const Value: cpContactPointSetStruct);
+var
+  S: cpContactPointSetStruct;
+begin
+  S := Value;
+  cpArbiterSetContactPointSet(Ref, @S);
+end;
+
+function TArbiter.GetCount: Integer;
+begin
+  Result := cpArbiterGetCount(Ref);
+end;
+
+function TArbiter.GetNormal: TVec2;
+begin
+  Result := cpArbiterGetNormal(Ref);
+end;
+
+function TArbiter.GetPointA(Index: Integer): TVec2;
+begin
+  Result := cpArbiterGetPointA(Ref, Index);
+end;
+
+function TArbiter.GetPointB(Index: Integer): TVec2;
+begin
+  Result := cpArbiterGetPointB(Ref, Index);
+end;
+
+function TArbiter.GetDepth(Index: Integer): Float;
+begin
+  Result := cpArbiterGetDepth(Ref, Index);
+end;
+
+function TArbiter.GetTotalImpulse: TVec2;
+begin
+  Result := cpArbiterTotalImpulse(Ref);
+end;
+
+function TArbiter.GetTotalKineticEnergy: Float;
+begin
+  Result := cpArbiterTotalKE(Ref);
+end;
+
+{ TSpaceBodyEnumerator }
+
+class function TSpaceBodyEnumerator.Create(Space: cpSpace): TSpaceBodyEnumerator;
+begin
+  Result.FSpace := Space;
+  Result.FIndex := 0;
+  Result.FSleeping := nil;
+  Result.FCurrent.Ref := nil;
+end;
+
+{ Bodies are kept in four lists. Dynamic bodies which are awake, static
+  bodies, bodies woken while the space is locked, and sleeping components. A
+  sleeping component is a root body followed by the other bodies in its
+  group. }
+
+function TSpaceBodyEnumerator.MoveNext: Boolean;
+var
+  I: Integer;
+begin
+  Result := True;
+  if FSleeping <> nil then
+  begin
+    FSleeping := FSleeping.sleeping.next;
+    if FSleeping <> nil then
+    begin
+      FCurrent.Ref := FSleeping;
+      Exit;
+    end;
+  end;
+  I := FIndex;
+  Inc(FIndex);
+  if I < FSpace.dynamicBodies.num then
+  begin
+    FCurrent.Ref := FSpace.dynamicBodies.arr[I];
+    Exit;
+  end;
+  Dec(I, FSpace.dynamicBodies.num);
+  if I < FSpace.staticBodies.num then
+  begin
+    FCurrent.Ref := FSpace.staticBodies.arr[I];
+    Exit;
+  end;
+  Dec(I, FSpace.staticBodies.num);
+  if I < FSpace.rousedBodies.num then
+  begin
+    FCurrent.Ref := FSpace.rousedBodies.arr[I];
+    Exit;
+  end;
+  Dec(I, FSpace.rousedBodies.num);
+  if I < FSpace.sleepingComponents.num then
+  begin
+    FSleeping := FSpace.sleepingComponents.arr[I];
+    FCurrent.Ref := FSleeping;
+    Exit;
+  end;
+  FCurrent.Ref := nil;
+  Result := False;
+end;
+
+function TSpaceBodyEnumerator.GetEnumerator: TSpaceBodyEnumerator;
+begin
+  Result := Self;
+end;
+
+{ TSpaceShapeEnumerator }
+
+class function TSpaceShapeEnumerator.Create(Space: cpSpace): TSpaceShapeEnumerator;
+begin
+  Result.FSpace := Space;
+  Result.FBodies := TSpaceBodyEnumerator.Create(Space);
+  Result.FGround := False;
+  Result.FCurrent.Ref := nil;
+end;
+
+{ Every shape in a space is attached to a body in the space or to its ground
+  body, which is not in the list of bodies }
+
+function TSpaceShapeEnumerator.MoveNext: Boolean;
+var
+  B: cpBody;
+begin
+  if FCurrent.Ref <> nil then
+    FCurrent.Ref := FCurrent.Ref.next;
+  while FCurrent.Ref = nil do
+  begin
+    if not FGround then
+    begin
+      FGround := True;
+      B := cpSpaceGetStaticBody(FSpace);
+    end
+    else if FBodies.MoveNext then
+      B := FBodies.Current.Ref
+    else
+      Exit(False);
+    FCurrent.Ref := B.shapeList;
+  end;
+  Result := True;
+end;
+
+function TSpaceShapeEnumerator.GetEnumerator: TSpaceShapeEnumerator;
+begin
+  Result := Self;
+end;
+
+{ TSpaceJointEnumerator }
+
+class function TSpaceJointEnumerator.Create(Space: cpSpace): TSpaceJointEnumerator;
+begin
+  Result.FSpace := Space;
+  Result.FIndex := 0;
+  Result.FRoused := 0;
+  Result.FComponent := 0;
+  Result.FBody := nil;
+  Result.FCurrent.Ref := nil;
+end;
+
+{ Move to the next body whose joints are not in the joints of the space, which
+  are bodies woken while the space is locked followed by sleeping bodies }
+
+function TSpaceJointEnumerator.NextHiddenBody: Boolean;
+begin
+  Result := True;
+  { Walk the bodies of the current sleeping component }
+  if (FBody <> nil) and (FRoused >= FSpace.rousedBodies.num) then
+  begin
+    FBody := FBody.sleeping.next;
+    if FBody <> nil then
+      Exit;
+  end;
+  if FRoused < FSpace.rousedBodies.num then
+  begin
+    FBody := FSpace.rousedBodies.arr[FRoused];
+    Inc(FRoused);
+    Exit;
+  end;
+  if FComponent < FSpace.sleepingComponents.num then
+  begin
+    FBody := FSpace.sleepingComponents.arr[FComponent];
+    Inc(FComponent);
+    Exit;
+  end;
+  FBody := nil;
+  Result := False;
+end;
+
+{ When a body sleeps its joints are removed from the joints of the space and
+  kept in the joint list of the body. A joint is removed by its first body, or
+  by its second body if the first body is static. The same rule is used here
+  so that each joint is found once. }
+
+function TSpaceJointEnumerator.MoveNext: Boolean;
+var
+  C: cpConstraint;
+begin
+  if FIndex < FSpace.constraints.num then
+  begin
+    FCurrent.Ref := FSpace.constraints.arr[FIndex];
+    Inc(FIndex);
+    Exit(True);
+  end;
+  C := FCurrent.Ref;
+  if (FIndex = FSpace.constraints.num) and (FBody = nil) then
+    C := nil;
+  repeat
+    if C <> nil then
+      if C.a = FBody then
+        C := C.next_a
+      else
+        C := C.next_b;
+    while C = nil do
+    begin
+      if not NextHiddenBody then
+      begin
+        FCurrent.Ref := nil;
+        Exit(False);
+      end;
+      C := FBody.constraintList;
+    end;
+  until (C.a = FBody) or (cpBodyGetType(C.a) = CP_BODY_TYPE_STATIC);
+  FCurrent.Ref := C;
+  Result := True;
+end;
+
+function TSpaceJointEnumerator.GetEnumerator: TSpaceJointEnumerator;
+begin
+  Result := Self;
+end;
+
+{ Objects are released using post step callbacks, which run when the space
+  unlocks at the end of each iteration. This removes each object from the space
+  before it is freed, the same as the Chipmunk2D demos. }
+
+procedure EachShapeFree(shape: cpShape; data: Pointer); cdecl;
+begin
+  cpSpaceAddPostStepCallback(data, PostShapeFree, shape, nil);
+end;
+
+procedure EachConstraintFree(constraint: cpConstraint; data: Pointer); cdecl;
+begin
+  cpSpaceAddPostStepCallback(data, PostConstraintFree, constraint, nil);
+end;
+
+procedure EachBodyFree(body: cpBody; data: Pointer); cdecl;
+begin
+  cpSpaceAddPostStepCallback(data, PostBodyFree, body, nil);
+end;
+
+{ Query callbacks which collect their results into lists }
+
+type
+  TShapeList = TArrayList<TShape>;
+  PShapeList = ^TShapeList;
+  TPointQueryList = TArrayList<cpPointQueryInfoStruct>;
+  PPointQueryList = ^TPointQueryList;
+  TSegmentQueryList = TArrayList<cpSegmentQueryInfoStruct>;
+  PSegmentQueryList = ^TSegmentQueryList;
+
+procedure PointQueryCollect(shape: cpShape; point: cpVect; distance: cpFloat; gradient: cpVect; data: Pointer); cdecl;
+var
+  Info: cpPointQueryInfoStruct;
+begin
+  Info.shape := shape;
+  Info.point := point;
+  Info.distance := distance;
+  Info.gradient := gradient;
+  PPointQueryList(data).Push(Info);
+end;
+
+procedure SegmentQueryCollect(shape: cpShape; point, normal: cpVect; alpha: cpFloat; data: Pointer); cdecl;
+var
+  Info: cpSegmentQueryInfoStruct;
+begin
+  Info.shape := shape;
+  Info.point := point;
+  Info.normal := normal;
+  Info.alpha := alpha;
+  PSegmentQueryList(data).Push(Info);
+end;
+
+procedure BoxQueryCollect(shape: cpShape; data: Pointer); cdecl;
+var
+  S: TShape;
+begin
+  S.Ref := shape;
+  PShapeList(data).Push(S);
+end;
+
+procedure ShapeQueryCollect(shape: cpShape; points: cpContactPointSet; data: Pointer); cdecl;
+var
+  S: TShape;
+begin
+  S.Ref := shape;
+  PShapeList(data).Push(S);
+end;
+
+{ TSpace }
+
+class operator TSpace.Implicit(const Value: TSpace): cpSpace;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TSpace.Implicit(const Value: cpSpace): TSpace;
+begin
+  Result.Ref := Value;
+end;
+
+procedure TSpace.Free;
+begin
+  if Ref = nil then
+    Exit;
+  ReleaseObjects;
+  cpSpaceFree(Ref);
+  Ref := nil;
+end;
+
+function TSpace.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+procedure TSpace.ReleaseBodies;
+var
+  Items: TArrayList<TBody>;
+  B: TBody;
+  I: Integer;
+begin
+  for B in Bodies do
+    Items.Push(B);
+  for I := 0 to Items.Length - 1 do
+    Items.Items[I].Free;
+end;
+
+procedure TSpace.ReleaseJoints;
+var
+  Items: TArrayList<TJoint>;
+  J: TJoint;
+  I: Integer;
+begin
+  for J in Joints do
+    Items.Push(J);
+  for I := 0 to Items.Length - 1 do
+    Items.Items[I].Free;
+end;
+
+procedure TSpace.ReleaseObjects;
+begin
+  { Bodies woken while the space is locked are missed by cpSpaceEachBody, so
+    wait until the space unlocks }
+  if cpSpaceIsLocked(Ref) then
+  begin
+    cpSpaceAddPostStepCallback(Ref, PostReleaseObjects, Ref, nil);
+    Exit;
+  end;
+  { The joints of sleeping bodies are not in the joints of the space, so wake
+    every sleeping component first. Waking removes it from the list. }
+  while Ref.sleepingComponents.num > 0 do
+    cpBodyActivate(Ref.sleepingComponents.arr[0]);
+  cpSpaceEachShape(Ref, EachShapeFree, Ref);
+  cpSpaceEachConstraint(Ref, EachConstraintFree, Ref);
+  cpSpaceEachBody(Ref, EachBodyFree, Ref);
+end;
+
+procedure TSpace.Step(DeltaTime: Float);
+begin
+  if DeltaTime > 0 then
+    cpSpaceStep(Ref, DeltaTime);
+end;
+
+function TSpace.AddCollisionHandler(A, B: TCollisionType): TCollisionHandler;
+begin
+  Result := cpSpaceAddCollisionHandler(Ref, A, B);
+end;
+
+function TSpace.AddWildcardHandler(A: TCollisionType): TCollisionHandler;
+begin
+  Result := cpSpaceAddWildcardHandler(Ref, A);
+end;
+
+function TSpace.AddDefaultCollisionHandler: TCollisionHandler;
+begin
+  Result := cpSpaceAddDefaultCollisionHandler(Ref);
+end;
+
+function TSpace.AddPostStepCallback(Func: cpPostStepFunc; Key: Pointer; Data: Pointer = nil): Boolean;
+begin
+  Result := cpSpaceAddPostStepCallback(Ref, Func, Key, Data);
+end;
+
+function TSpace.NewBody: TBody;
+begin
+  Result.Ref := cpSpaceAddBody(Ref, cpBodyNew(0, 0));
+end;
+
+function TSpace.NewKinematicBody: TBody;
+begin
+  Result.Ref := cpSpaceAddBody(Ref, cpBodyNewKinematic);
+end;
+
+function TSpace.NewStaticBody: TBody;
+begin
+  Result.Ref := cpSpaceAddBody(Ref, cpBodyNewStatic);
+end;
+
+function TSpace.NewPin(A, B: TBody; const PinA, PinB: TVec2): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpPinJointNew(A.Ref, B.Ref, PinA, PinB));
+end;
+
+function TSpace.NewSlide(A, B: TBody; const PinA, PinB: TVec2; Min, Max: Float): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpSlideJointNew(A.Ref, B.Ref, PinA, PinB, Min, Max));
+end;
+
+function TSpace.NewPivot(A, B: TBody; const Pivot: TVec2): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpPivotJointNew(A.Ref, B.Ref, Pivot));
+end;
+
+function TSpace.NewPivot(A, B: TBody; const PinA, PinB: TVec2): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpPivotJointNew2(A.Ref, B.Ref, PinA, PinB));
+end;
+
+function TSpace.NewGroove(A, B: TBody; const GrooveA, GrooveB, PinB: TVec2): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpGrooveJointNew(A.Ref, B.Ref, GrooveA, GrooveB, PinB));
+end;
+
+function TSpace.NewDampedSpring(A, B: TBody; const PinA, PinB: TVec2; RestLength,
+  Stiffness, Damping: Float): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpDampedSpringNew(A.Ref, B.Ref, PinA, PinB,
+    RestLength, Stiffness, Damping));
+end;
+
+function TSpace.NewDampedRotarySpring(A, B: TBody; RestAngle, Stiffness,
+  Damping: Float): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpDampedRotarySpringNew(A.Ref, B.Ref,
+    RestAngle, Stiffness, Damping));
+end;
+
+function TSpace.NewRotaryLimit(A, B: TBody; Min, Max: Float): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpRotaryLimitJointNew(A.Ref, B.Ref, Min, Max));
+end;
+
+function TSpace.NewRatchet(A, B: TBody; Phase, Ratchet: Float): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpRatchetJointNew(A.Ref, B.Ref, Phase, Ratchet));
+end;
+
+function TSpace.NewGear(A, B: TBody; Phase, Ratio: Float): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpGearJointNew(A.Ref, B.Ref, Phase, Ratio));
+end;
+
+function TSpace.NewMotor(A, B: TBody; Rate: Float): TJoint;
+begin
+  Result.Ref := cpSpaceAddConstraint(Ref, cpSimpleMotorNew(A.Ref, B.Ref, Rate));
+end;
+
+function TSpace.Add(Body: TBody): TBody;
+begin
+  cpSpaceAddBody(Ref, Body.Ref);
+  Result := Body;
+end;
+
+function TSpace.Add(Joint: TJoint): TJoint;
+begin
+  cpSpaceAddConstraint(Ref, Joint.Ref);
+  Result := Joint;
+end;
+
+function TSpace.Add(Shape: TShape): TShape;
+begin
+  cpSpaceAddShape(Ref, Shape.Ref);
+  Result := Shape;
+end;
+
+procedure TSpace.Remove(Body: TBody);
+var
+  Items: TArrayList<TShape>;
+  S: TShape;
+  I: Integer;
+begin
+  { Removing a shape unlinks it from the body, so collect the shapes first }
+  for S in Body.Shapes do
+    Items.Push(S);
+  for I := 0 to Items.Length - 1 do
+    cpSpaceRemoveShape(Ref, Items.Items[I].Ref);
+  cpSpaceRemoveBody(Ref, Body.Ref);
+end;
+
+procedure TSpace.Remove(Joint: TJoint);
+begin
+  cpSpaceRemoveConstraint(Ref, Joint.Ref);
+end;
+
+procedure TSpace.Remove(Shape: TShape);
+begin
+  cpSpaceRemoveShape(Ref, Shape.Ref);
+end;
+
+function TSpace.Contains(Body: TBody): Boolean;
+begin
+  Result := cpSpaceContainsBody(Ref, Body.Ref);
+end;
+
+function TSpace.Contains(Joint: TJoint): Boolean;
+begin
+  Result := cpSpaceContainsConstraint(Ref, Joint.Ref);
+end;
+
+function TSpace.Contains(Shape: TShape): Boolean;
+begin
+  Result := cpSpaceContainsShape(Ref, Shape.Ref);
+end;
+
+function TSpace.PointQuery(const P: TVec2; MaxDistance: Float;
+  const Filter: cpShapeFilter): TArrayList<cpPointQueryInfoStruct>;
+begin
+  Result.Length := 0;
+  cpSpacePointQuery(Ref, P, MaxDistance, Filter, PointQueryCollect, @Result);
+end;
+
+function TSpace.PointQueryNearest(const P: TVec2; MaxDistance: Float;
+  const Filter: cpShapeFilter; out Info: cpPointQueryInfoStruct): TShape;
+begin
+  Result.Ref := cpSpacePointQueryNearest(Ref, P, MaxDistance, Filter, @Info);
+end;
+
+function TSpace.SegmentQuery(const A, B: TVec2; Radius: Float;
+  const Filter: cpShapeFilter): TArrayList<cpSegmentQueryInfoStruct>;
+begin
+  Result.Length := 0;
+  cpSpaceSegmentQuery(Ref, A, B, Radius, Filter, SegmentQueryCollect, @Result);
+end;
+
+function TSpace.SegmentQueryFirst(const A, B: TVec2; Radius: Float;
+  const Filter: cpShapeFilter; out Info: cpSegmentQueryInfoStruct): TShape;
+begin
+  Result.Ref := cpSpaceSegmentQueryFirst(Ref, A, B, Radius, Filter, @Info);
+end;
+
+function TSpace.BoxQuery(const Box: cpBB; const Filter: cpShapeFilter): TArrayList<TShape>;
+begin
+  Result.Length := 0;
+  cpSpaceBBQuery(Ref, Box, Filter, BoxQueryCollect, @Result);
+end;
+
+function TSpace.ShapeQuery(Shape: TShape): TArrayList<TShape>;
+begin
+  Result.Length := 0;
+  cpSpaceShapeQuery(Ref, Shape.Ref, ShapeQueryCollect, @Result);
+end;
+
+procedure TSpace.ReindexStatic;
+begin
+  cpSpaceReindexStatic(Ref);
+end;
+
+procedure TSpace.ReindexShape(Shape: TShape);
+begin
+  cpSpaceReindexShape(Ref, Shape.Ref);
+end;
+
+procedure TSpace.ReindexBody(Body: TBody);
+begin
+  cpSpaceReindexShapesForBody(Ref, Body.Ref);
+end;
+
+procedure TSpace.UseSpatialHash(Dim: Float; Count: Integer);
+begin
+  cpSpaceUseSpatialHash(Ref, Dim, Count);
+end;
+
+procedure TSpace.DebugDraw(const Options: cpSpaceDebugDrawOptions);
+var
+  O: cpSpaceDebugDrawOptions;
+begin
+  O := Options;
+  cpSpaceDebugDraw(Ref, @O);
+end;
+
+function TSpace.GetGround: TBody;
+begin
+  Result.Ref := cpSpaceGetStaticBody(Ref);
+end;
+
+function TSpace.GetIterations: LongWord;
+begin
+  Result := cpSpaceGetIterations(Ref);
+end;
+
+procedure TSpace.SetIterations(Value: LongWord);
+begin
+  cpSpaceSetIterations(Ref, Value);
+end;
+
+function TSpace.GetDamping: Float;
+begin
+  Result := cpSpaceGetDamping(Ref);
+end;
+
+procedure TSpace.SetDamping(Value: Float);
+begin
+  cpSpaceSetDamping(Ref, Value);
+end;
+
+function TSpace.GetGravity: TVec2;
+begin
+  Result := cpSpaceGetGravity(Ref);
+end;
+
+procedure TSpace.SetGravity(const Value: TVec2);
+begin
+  cpSpaceSetGravity(Ref, Value);
+end;
+
+function TSpace.GetIdleSpeedThreshold: Float;
+begin
+  Result := cpSpaceGetIdleSpeedThreshold(Ref);
+end;
+
+procedure TSpace.SetIdleSpeedThreshold(Value: Float);
+begin
+  cpSpaceSetIdleSpeedThreshold(Ref, Value);
+end;
+
+function TSpace.GetSleepTimeThreshold: Float;
+begin
+  Result := cpSpaceGetSleepTimeThreshold(Ref);
+end;
+
+procedure TSpace.SetSleepTimeThreshold(Value: Float);
+begin
+  cpSpaceSetSleepTimeThreshold(Ref, Value);
+end;
+
+function TSpace.GetCollisionSlop: Float;
+begin
+  Result := cpSpaceGetCollisionSlop(Ref);
+end;
+
+procedure TSpace.SetCollisionSlop(Value: Float);
+begin
+  cpSpaceSetCollisionSlop(Ref, Value);
+end;
+
+function TSpace.GetCollisionBias: Float;
+begin
+  Result := cpSpaceGetCollisionBias(Ref);
+end;
+
+procedure TSpace.SetCollisionBias(Value: Float);
+begin
+  cpSpaceSetCollisionBias(Ref, Value);
+end;
+
+function TSpace.GetCollisionPersistence: LongWord;
+begin
+  Result := cpSpaceGetCollisionPersistence(Ref);
+end;
+
+procedure TSpace.SetCollisionPersistence(Value: LongWord);
+begin
+  cpSpaceSetCollisionPersistence(Ref, Value);
+end;
+
+function TSpace.GetCurrentTimeStep: Float;
+begin
+  Result := cpSpaceGetCurrentTimeStep(Ref);
+end;
+
+function TSpace.GetLocked: Boolean;
+begin
+  Result := cpSpaceIsLocked(Ref);
+end;
+
+function TSpace.GetUserData: Pointer;
+begin
+  Result := cpSpaceGetUserData(Ref);
+end;
+
+procedure TSpace.SetUserData(Value: Pointer);
+begin
+  cpSpaceSetUserData(Ref, Value);
+end;
+
+function TSpace.GetBodies: TSpaceBodyEnumerator;
+begin
+  Result := TSpaceBodyEnumerator.Create(Ref);
+end;
+
+function TSpace.GetShapes: TSpaceShapeEnumerator;
+begin
+  Result := TSpaceShapeEnumerator.Create(Ref);
+end;
+
+function TSpace.GetJoints: TSpaceJointEnumerator;
+begin
+  Result := TSpaceJointEnumerator.Create(Ref);
+end;
+
+{ Polylines are allocated with the C runtime because Chipmunk2D frees and
+  reallocates them }
+
+function cpcalloc(count, size: PtrUInt): Pointer; cdecl; external name 'calloc';
+
+function PolylineAlloc(Count: Integer): cpPolyline;
+var
+  Capacity: Integer;
+begin
+  Capacity := Count;
+  if Capacity < 1 then
+    Capacity := 1;
+  Result := cpcalloc(1, SizeOf(Integer) * 2 + Capacity * SizeOf(TVec2));
+  Result.count := Count;
+  Result.capacity := Capacity;
+end;
+
+{ TPolyline }
+
+class operator TPolyline.Implicit(const Value: TPolyline): cpPolyline;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TPolyline.Implicit(const Value: cpPolyline): TPolyline;
+begin
+  Result.Ref := Value;
+end;
+
+class function TPolyline.Create(const Points: array of TVec2; Closed: Boolean = False): TPolyline;
+var
+  N, I: Integer;
+  V: PVec2;
+begin
+  N := Length(Points);
+  if Closed and (N > 1) and (Points[0] <> Points[N - 1]) then
+    Result.Ref := PolylineAlloc(N + 1)
+  else
+    Result.Ref := PolylineAlloc(N);
+  V := Result.Verts;
+  for I := 0 to N - 1 do
+    V[I] := Points[I];
+  if Result.Ref.count > N then
+    V[N] := Points[0];
+end;
+
+procedure TPolyline.Free;
+begin
+  if Ref <> nil then
+    cpPolylineFree(Ref);
+  Ref := nil;
+end;
+
+function TPolyline.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+function TPolyline.Copy: TPolyline;
+begin
+  Result.Ref := PolylineAlloc(Count);
+  if Count > 0 then
+    Move(Verts^, Result.Verts^, Count * SizeOf(TVec2));
+end;
+
+{ The simplify functions of Chipmunk2D read past the vertices of polylines with
+  too few vertices }
+
+function TPolyline.SimplifyCurves(Tol: Float): TPolyline;
+begin
+  if Count < 3 then
+    Result := Copy
+  else
+    Result.Ref := cpPolylineSimplifyCurves(Ref, Tol);
+end;
+
+function TPolyline.SimplifyVertexes(Tol: Float): TPolyline;
+begin
+  if Count < 3 then
+    Result := Copy
+  else
+    Result.Ref := cpPolylineSimplifyVertexes(Ref, Tol);
+end;
+
+function TPolyline.ToConvexHull(Tol: Float = 0): TPolyline;
+begin
+  if Count < 1 then
+    Result := Copy
+  else
+    Result.Ref := cpPolylineToConvexHull(Ref, Tol);
+end;
+
+function TPolyline.ToArray: TArray<TVec2>;
+begin
+  SetLength(Result, Count);
+  if Count > 0 then
+    Move(Verts^, Result[0], Count * SizeOf(TVec2));
+end;
+
+function TPolyline.GetCount: Integer;
+begin
+  if Ref = nil then
+    Result := 0
+  else
+    Result := Ref.count;
+end;
+
+function TPolyline.GetVert(Index: Integer): TVec2;
+begin
+  Result := Verts[Index];
+end;
+
+function TPolyline.GetVerts: PVec2;
+begin
+  Result := @Ref.verts[0];
+end;
+
+function TPolyline.GetClosed: Boolean;
+begin
+  Result := (Ref <> nil) and cpPolylineIsClosed(Ref);
+end;
+
+{ TPolylineSetEnumerator }
+
+class function TPolylineSetEnumerator.Create(PolylineSet: cpPolylineSet): TPolylineSetEnumerator;
+begin
+  Result.FSet := PolylineSet;
+  Result.FIndex := 0;
+  Result.FCurrent.Ref := nil;
+end;
+
+function TPolylineSetEnumerator.MoveNext: Boolean;
+begin
+  Result := (FSet <> nil) and (FIndex < FSet.count);
+  if Result then
+  begin
+    FCurrent.Ref := FSet.lines[FIndex];
+    Inc(FIndex);
+  end
+  else
+    FCurrent.Ref := nil;
+end;
+
+{ March sampling with a method }
+
+type
+  TMarchSampleData = record
+    Sample: TMarchSample;
+  end;
+  PMarchSampleData = ^TMarchSampleData;
+
+function MarchSampleMethod(point: cpVect; data: Pointer): cpFloat; cdecl;
+begin
+  Result := PMarchSampleData(data)^.Sample(point);
+end;
+
+{ TPolylineSet }
+
+class operator TPolylineSet.Implicit(const Value: TPolylineSet): cpPolylineSet;
+begin
+  Result := Value.Ref;
+end;
+
+class operator TPolylineSet.Implicit(const Value: cpPolylineSet): TPolylineSet;
+begin
+  Result.Ref := Value;
+end;
+
+class function TPolylineSet.Create: TPolylineSet;
+begin
+  Result.Ref := cpPolylineSetNew;
+end;
+
+{ Chipmunk2D requires a closed polygon with a positive area, but only checks
+  this in debug builds }
+
+class function TPolylineSet.ConvexDecomposition(Polyline: TPolyline; Tol: Float): TPolylineSet;
+var
+  L: TPolyline;
+  V: PVec2;
+  T: TVec2;
+  I, J: Integer;
+begin
+  L := TPolyline.Create(Polyline.ToArray, True);
+  try
+    { A closed polygon needs at least three distinct vertices }
+    if L.Count < 4 then
+      Exit(Create);
+    V := L.Verts;
+    if cpAreaForPoly(L.Count, V, 0) < 0 then
+    begin
+      I := 0;
+      J := L.Count - 1;
+      while I < J do
+      begin
+        T := V[I];
+        V[I] := V[J];
+        V[J] := T;
+        Inc(I);
+        Dec(J);
+      end;
+    end;
+    Result.Ref := cpPolylineConvexDecomposition(L.Ref, Tol);
+  finally
+    L.Free;
+  end;
+end;
+
+{ Chipmunk2D loops forever with fewer than two samples in either direction }
+
+class function TPolylineSet.MarchSoft(const Box: cpBB; XSamples, YSamples: Integer; Threshold: Float;
+  Sample: cpMarchSampleFunc; Data: Pointer = nil): TPolylineSet;
+begin
+  Result.Ref := cpPolylineSetNew;
+  if (XSamples < 2) or (YSamples < 2) or (not Assigned(Sample)) then
+    Exit;
+  cpMarchSoft(Box, XSamples, YSamples, Threshold, cpPolylineSetCollectSegment,
+    Result.Ref, Sample, Data);
+end;
+
+class function TPolylineSet.MarchSoft(const Box: cpBB; XSamples, YSamples: Integer; Threshold: Float;
+  Sample: TMarchSample): TPolylineSet;
+var
+  D: TMarchSampleData;
+begin
+  D.Sample := Sample;
+  if Assigned(Sample) then
+    Result := MarchSoft(Box, XSamples, YSamples, Threshold, MarchSampleMethod, @D)
+  else
+    Result := Create;
+end;
+
+class function TPolylineSet.MarchHard(const Box: cpBB; XSamples, YSamples: Integer; Threshold: Float;
+  Sample: cpMarchSampleFunc; Data: Pointer = nil): TPolylineSet;
+begin
+  Result.Ref := cpPolylineSetNew;
+  if (XSamples < 2) or (YSamples < 2) or (not Assigned(Sample)) then
+    Exit;
+  cpMarchHard(Box, XSamples, YSamples, Threshold, cpPolylineSetCollectSegment,
+    Result.Ref, Sample, Data);
+end;
+
+class function TPolylineSet.MarchHard(const Box: cpBB; XSamples, YSamples: Integer; Threshold: Float;
+  Sample: TMarchSample): TPolylineSet;
+var
+  D: TMarchSampleData;
+begin
+  D.Sample := Sample;
+  if Assigned(Sample) then
+    Result := MarchHard(Box, XSamples, YSamples, Threshold, MarchSampleMethod, @D)
+  else
+    Result := Create;
+end;
+
+procedure TPolylineSet.Free(FreeLines: Boolean = True);
+begin
+  if Ref <> nil then
+    cpPolylineSetFree(Ref, FreeLines);
+  Ref := nil;
+end;
+
+function TPolylineSet.IsNil: Boolean;
+begin
+  Result := Ref = nil;
+end;
+
+procedure TPolylineSet.AddSegment(const A, B: TVec2);
+begin
+  cpPolylineSetCollectSegment(A, B, Ref);
+end;
+
+function TPolylineSet.GetEnumerator: TPolylineSetEnumerator;
+begin
+  Result := TPolylineSetEnumerator.Create(Ref);
+end;
+
+function TPolylineSet.GetCount: Integer;
+begin
+  if Ref = nil then
+    Result := 0
+  else
+    Result := Ref.count;
+end;
+
+function TPolylineSet.GetLine(Index: Integer): TPolyline;
+begin
+  Result.Ref := Ref.lines[Index];
+end;
+
+{ TCircleHelper }
+
+function TCircleHelper.Base: TShape;
+begin
+  Result.Ref := Pointer(Ref);
+end;
+
+{ TSegmentHelper }
+
+function TSegmentHelper.Base: TShape;
+begin
+  Result.Ref := Pointer(Ref);
+end;
+
+{ TPolygonHelper }
+
+function TPolygonHelper.Base: TShape;
+begin
+  Result.Ref := Pointer(Ref);
+end;
+
+{ TShapeHelper }
+
+function TShapeHelper.Body: TBody;
+begin
+  Result.Ref := cpShapeGetBody(Ref);
+end;
+
+function TShapeHelper.Space: TSpace;
+begin
+  Result.Ref := cpShapeGetSpace(Ref);
+end;
+
+{ TPinJointHelper }
+
+function TPinJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TSlideJointHelper }
+
+function TSlideJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TPivotJointHelper }
+
+function TPivotJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TGrooveJointHelper }
+
+function TGrooveJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TDampedSpringJointHelper }
+
+function TDampedSpringJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TDampedRotarySpringJointHelper }
+
+function TDampedRotarySpringJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TRotaryLimitJointHelper }
+
+function TRotaryLimitJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TRatchetJointHelper }
+
+function TRatchetJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TGearJointHelper }
+
+function TGearJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TMotorJointHelper }
+
+function TMotorJointHelper.Base: TJoint;
+begin
+  Result.Ref := Ref;
+end;
+
+{ TJointHelper }
+
+function TJointHelper.Space: TSpace;
+begin
+  Result.Ref := cpConstraintGetSpace(Ref);
+end;
+
+{ TBodyHelper }
+
+function TBodyHelper.Space: TSpace;
+begin
+  Result.Ref := cpBodyGetSpace(Ref);
+end;
+
+function TBodyHelper.GetJoints: TBodyJointEnumerator;
+begin
+  Result := TBodyJointEnumerator.Create(Ref);
+end;
+
+function NewSpace: TSpace;
+begin
+  Result.Ref := cpSpaceNew;
+end;
+
+end.

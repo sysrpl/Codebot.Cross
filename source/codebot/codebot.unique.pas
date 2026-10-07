@@ -18,12 +18,16 @@ uses
   Codebot.System,
   Codebot.Networking;
 
-{ TMessageEvent }
+{ TMessageEvent is invoked when a message is received from another instance }
 
 type
   TMessageEvent = procedure(const Message: string) of object;
 
-{ TUniqueInstance }
+{ TUniqueInstance detects if another instance of a program is already running
+  by listening on a local port. The original instance receives messages sent
+  by later instances.
+  See also
+  <link Codebot.Unique.UniqueInstance, UniqueInstance function> }
 
   TUniqueInstance = class
   private
@@ -36,10 +40,15 @@ type
     procedure ReceiveMessage;
     procedure Execute(Thread: TSimpleThread);
   public
+    { Create a unique instance listening on the port given by Key }
     constructor Create(Key: Word);
     destructor Destroy; override;
+    { Send a message to the original instance }
     procedure SendMessage(const Message: string);
+    { Original is true if this is the first running instance }
     property Original: Boolean read FOriginal;
+    { OnMessage is invoked on the main thread when the original instance
+      receives a message }
     property OnMessage: TMessageEvent read FOnMessage write FOnMessage;
   end;
 

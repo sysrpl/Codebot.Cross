@@ -22,7 +22,7 @@ uses
   Codebot.Controls,
   Codebot.Debug;
 
-{ THeaderColumn }
+{ THeaderColumn is a column in a header bar or details list }
 
 type
   THeaderColumn = class(TCollectionItem)
@@ -47,34 +47,48 @@ type
     procedure SetWidth(Value: Integer);
     function GetOnResize: INotifyDelegate;
   protected
+    { The caption shown in the designer }
     function GetDisplayName: string; override;
+    { Notify OnResize subscribers }
     procedure DoResize;
   public
+    { Create a new column }
     constructor Create(ACollection: TCollection); override;
+    { Subscribe to notifications when the column is resized }
     property OnResize: INotifyDelegate read GetOnResize;
+    { The index of the column counting only visible columns }
     property VisibleIndex: Integer read GetVisibleIndex;
   published
+    { The alignment of the caption }
     property Alignment: TAlignment read FAlignment write SetAlignment default taLeftJustify;
+    { When true the column can be selected }
     property CanSelect: Boolean read FCanSelect write FCanSelect;
+    { The column caption }
     property Caption: string read FCaption write SetCaption;
+    { When true the column cannot be resized }
     property Fixed: Boolean read FFixed write SetFixed default False;
+    { The smallest width the column can be resized to }
     property MinWidth: Integer read FMinWidth write SetMinWidth default 10;
+    { The sort indicator shown in the column }
     property Sort: TSortingOrder read FSort write SetSort default soNone;
+    { User defined data }
     property Tag: Integer read FTag write FTag;
+    { Show or hide the column }
     property Visible: Boolean read FVisible write SetVisible default True;
+    { The column width }
     property Width: Integer read FWidth write SetWidth default 100;
   end;
 
-{ THeaderColumns }
+{ THeaderColumns is a collection of header columns }
 
   THeaderColumns = class(TNotifyCollection<THeaderColumn>)
   end;
 
-{ THeaderColumnEvent }
+{ THeaderColumnEvent is invoked when a header column is clicked, resized, or selected }
 
   THeaderColumnEvent = procedure(Sender: TObject; Column: THeaderColumn) of object;
 
-{ THeaderBar }
+{ THeaderBar is a row of resizable column headers }
 
   THeaderBar = class(TSurfaceGraphicControl)
   private
@@ -103,8 +117,11 @@ type
     procedure CaptureChanged; override;
     function ThemeAware: Boolean; override;
     procedure Draw; override;
+    { Invoke OnColumnClick }
     procedure ColumnClick(Column: THeaderColumn); virtual;
+    { Invoke OnColumnResize }
     procedure ColumnResize(Column: THeaderColumn); virtual;
+    { Invoke OnColumnSelect }
     procedure ColumnSelect(Column: THeaderColumn); virtual;
     procedure MouseLeave; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X,
@@ -113,17 +130,27 @@ type
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
       override;
   public
+    { Create a new header bar }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    { Return the bounds of a column }
     function GetColumnRect(Index: Integer): TRectI;
+    { Return the bounds of the resize grip of a column }
     function GetSizingRect(Index: Integer): TRectI;
+    { Return the widths of the visible columns }
     function GetColWidths: IntArray;
+    { The index of the column under the mouse or -1 }
     property HotIndex: Integer read GetHotIndex;
+    { The horizontal scroll offset }
     property ScrollLeft: Integer read FScrollLeft write SetScrollLeft;
+    { The total width of the visible columns }
     property ScrollWidth: Integer read GetScrollWidth;
+    { The selected column }
     property Selected: THeaderColumn read FSelected write SetSelected;
   published
+    { The columns }
     property Columns: THeaderColumns read FColumns write SetColumns;
+    { When true the column under the mouse is highlighted }
     property HotTrack: Boolean read FHotTrack write SetHotTrack default True;
     property Align;
     property Anchors;
@@ -139,8 +166,11 @@ type
     property ThemeName;
     property ShowHint;
     property Visible;
+    { OnColumnClick is invoked when a column is clicked }
     property OnColumnClick: THeaderColumnEvent read FOnColumnClick write FOnColumnClick;
+    { OnColumnResize is invoked when a column is resized }
     property OnColumnResize: THeaderColumnEvent read FOnColumnResize write FOnColumnResize;
+    { OnColumnSelect is invoked when a column is selected }
     property OnColumnSelect: THeaderColumnEvent read FOnColumnSelect write FOnColumnSelect;
     property OnChangeBounds;
     property OnClick;
@@ -161,7 +191,7 @@ type
     property OnStartDrag;
   end;
 
-{ TControlHintWindow }
+{ TControlHintWindow is a hint window shown over a control at a point }
 
   TControlHintWindow = class(THintWindow)
   private
@@ -172,14 +202,18 @@ type
     procedure SetControl(Value: TControl);
     procedure SetPoint(const Value: TPointI);
   public
+    { Create a new hint window }
     constructor Create(AOwner: TComponent); override;
     procedure ActivateHint(Rect: TRect; const AHint: string); override;
+    { Show or hide the hint }
     property Active: Boolean read FActive write SetActive;
+    { The control the hint is shown over }
     property Control: TControl read FControl write SetControl;
+    { The point in the control where the hint is shown }
     property Point: TPointI read FPoint write SetPoint;
   end;
 
-{ TScrollDir }
+{ TScrollDir is the direction a scroll list scrolls while dragging }
 
   TScrollDir = (sdNone, sdUp, sdDown);
 
@@ -238,7 +272,9 @@ type
     procedure WMKillFocus(var Message: TLMKillFocus); message LM_KILLFOCUS;
   protected
     procedure CreateHandle; override;
+    { Invoked when HeaderSize changes }
     procedure DoHeaderResize; virtual;
+    { Invoked when the mouse moves while captured }
     procedure CaptureMove(X, Y: Integer); virtual;
     procedure KeyPress(var Key: Char); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
@@ -249,44 +285,80 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseLeave; override;
     function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
+    { Invoke OnScrollLeft }
     procedure DoScrollLeft; virtual;
     procedure Resize; override;
     procedure Draw; override;
+    { Draw the area behind the items }
     procedure DrawBackground(const Rect: TRectI); virtual;
+    { Draw an item }
     procedure DrawItem(Index: Integer; var Rect: TRectI; State: TDrawState); virtual;
+    { Update the scroll bars to match the item count and size }
     procedure UpdateScrollRange;
+    { Scroll by a number of pixels }
     procedure Scroll(Delta: Integer); virtual;
+    { Scroll while the mouse is dragged above or below the list }
     procedure ScrollMove(Distance: Integer; Direction: TScrollDir); virtual;
+    { Invoked before the item index changes, set CanSelect to false to prevent it }
     procedure SelectItem(PriorIndex: Integer; NewIndex: Integer; var CanSelect: Boolean); virtual;
+    { The item where the mouse was pressed }
     property DownIndex: Integer read FDownIndex;
+    { The number of items }
     property Count: Integer read FCount write SetCount;
+    { A hint window shown over the list }
     property HintWindow: TControlHintWindow read FHintWindow;
+    { The item under the mouse or -1 }
     property HotIndex: Integer read FHotIndex;
+    { When true the item under the mouse is highlighted }
     property HotTrack: Boolean read FHotTrack write SetHotTrack;
+    { When true the list ignores the mouse }
     property MouseDisabled: Boolean read FMouseDisabled write SetMouseDisabled;
+    { When true more than one item can be selected }
     property MultiSelect: Boolean read FMultiSelect write SetMultiSelect;
+    { When true positions outside the client width do not match an item }
     property InsideRect: Boolean read FInsideRect write FInsideRect;
+    { The height of each item }
     property ItemHeight: Integer read FItemHeight write SetItemHeight default 16;
+    { The focused item or -1 }
     property ItemIndex: Integer read FItemIndex write SetItemIndex;
+    { When true the mouse only matches the current item }
     property Locked: Boolean read FLocked write FLocked;
+    { Scrolling is true while the mouse drags beyond the list }
     property Scrolling: Boolean read FScrolling write SetScrolling;
+    { The selected state of an item when MultiSelect is true }
     property Selected[Index: Integer]: Boolean read GetSelected write SetSelected;
+    { The number of selected items }
     property SelectCount: Integer read FSelectCount;
+    { The first visible item }
     property TopIndex: Integer read FTopIndex write SetTopIndex;
+    { OnSelectItem is invoked when an item is chosen }
     property OnSelectItem: TNotifyEvent read FOnSelectItem write FOnSelectItem;
+    { OnScrollLeft is invoked when the horizontal scroll position changes }
     property OnScrollLeft: TNotifyEvent read FOnScrollLeft write FOnScrollLeft;
   public
+    { Create a new scroll list }
     constructor Create(AOwner: TComponent); override;
+    { Return the bounds of an item }
     function ItemRect(Item: Integer): TRectI;
+    { Return the item at a point. When Existing is false points below the last
+      item return the last item. }
     function ItemAtPos(const Pos: TPointI; Existing: Boolean = False): Integer;
     procedure ScrollBy(DeltaX, DeltaY: Integer); override;
+    { Scroll so the item index is visible }
     procedure InsureItemVisible;
+    { Repaint an item }
     procedure InvalidateItem(Item: Integer);
+    { Returns true if an item is selected }
     function IsSelected(Index: Integer): Boolean;
+    { Invoke OnSelectItem }
     procedure Select;
+    { Scroll so the item index is visible }
     procedure ScrollToSelection;
+    { Space reserved above the items for a header }
     property HeaderSize: Integer read FHeaderSize write SetHeaderSize;
+    { The width of the horizontally scrollable area }
     property ScrollWidth: Integer read FScrollWidth write SetScrollWidth;
+    { The horizontal scroll position }
     property ScrollLeft: Integer read FScrollLeft write SetScrollLeft;
   end;
 
@@ -309,7 +381,8 @@ type
 
   TButtonClickEvent = procedure(Sender: TObject; ItemIndex, Button: Integer) of object;
 
-{ TCustomDrawList }
+{ TCustomDrawList is a scroll list drawn by event handlers with optional
+  buttons inside each item }
 
   TCustomDrawList = class(TScrollList)
   private
@@ -323,9 +396,12 @@ type
     FOnDrawItem: TDrawIndexEvent;
     procedure SetAutoScroll(Value: Boolean);
   protected
+    { Invoke OnButtonCalc }
     procedure ButtonCalc(ItemIndex: Integer; const Rect: TRectI; out Buttons: TButtonRects);
+    { Invoke OnButtonDraw }
     procedure ButtonDraw(Surface: ISurface; ItemIndex, Button: Integer;
       const Rect: TRectI; State: TDrawState);
+    { Invoke OnButtonClick }
     procedure ButtonClick(ItemIndex, Button: Integer);
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer); override;
@@ -336,17 +412,24 @@ type
     procedure DrawItem(Index: Integer; var Rect: TRectI;
       State: TDrawState); override;
     procedure Scroll(Delta: Integer); override;
+    { When true scrolling moves the drawn content, otherwise the list repaints }
     property AutoScroll: Boolean read FAutoScroll write SetAutoScroll;
+    { OnButtonCalc defines the buttons inside an item }
     property OnButtonCalc: TButtonCalcEvent read FOnButtonCalc write FOnButtonCalc;
+    { OnButtonDraw draws a button inside an item }
     property OnButtonDraw: TButtonDrawEvent read FOnButtonDraw write FOnButtonDraw;
+    { OnButtonClick is invoked when a button inside an item is clicked }
     property OnButtonClick: TButtonClickEvent read FOnButtonClick write FOnButtonClick;
+    { OnDrawBackground draws the area behind the items }
     property OnDrawBackground: TDrawRectEvent read FOnDrawBackground write FOnDrawBackground;
+    { OnDrawItem draws an item }
     property OnDrawItem: TDrawIndexEvent read FOnDrawItem write FOnDrawItem;
   public
+    { Create a new draw list }
     constructor Create(AOwner: TComponent); override;
   end;
 
-{ TDrawList }
+{ TDrawList publishes the properties of TCustomDrawList }
 
   TDrawList = class(TCustomDrawList)
   public
@@ -405,7 +488,7 @@ type
     property OnStartDrag;
   end;
 
-{ TDetailsList }
+{ TDetailsList is a draw list with a header bar of columns }
 
   TDetailsList = class(TCustomDrawList)
   private
@@ -424,14 +507,20 @@ type
     procedure Draw; override;
     procedure DoHeaderResize; override;
     procedure DoScrollLeft; override;
+    { Invoke OnColumnClick }
     procedure DoColumnClick(Sender: TObject; Column: THeaderColumn); virtual;
+    { Invoke OnColumnResize }
     procedure DoColumnResize(Sender: TObject; Column: THeaderColumn); virtual;
+    { Invoke OnColumnSelect }
     procedure DoColumnSelect(Sender: TObject; Column: THeaderColumn); virtual;
     procedure DrawBackground(const Rect: TRectI); override;
   public
+    { Create a new details list }
     constructor Create(AOwner: TComponent); override;
+    { Return the bounds of a column in the header or in a row }
     function GetColumnRect(Index: Integer): TRectI; overload;
     function GetColumnRect(Index: Integer; const Row: TRectI): TRectI; overload;
+    { The selected column }
     property SelectedColumn: THeaderColumn read GetSelectedColumn write SetSelectedColumn;
     property Count;
     property MouseDisabled;
@@ -439,6 +528,7 @@ type
     property ItemIndex;
     property Surface;
   published
+    { The columns }
     property Columns: THeaderColumns read GetHeaderColumns write SetHeaderColumns;
     property Align;
     property Anchors;
@@ -461,8 +551,11 @@ type
     property TabOrder;
     property TabStop;
     property Visible;
+    { OnColumnClick is invoked when a column is clicked }
     property OnColumnClick: THeaderColumnEvent read FOnColumnClick write FOnColumnClick;
+    { OnColumnResize is invoked when a column is resized }
     property OnColumnResize: THeaderColumnEvent read FOnColumnResize write FOnColumnResize;
+    { OnColumnSelect is invoked when a column is selected }
     property OnColumnSelect: THeaderColumnEvent read FOnColumnSelect write FOnColumnSelect;
     property OnClick;
     property OnConstrainedResize;
@@ -485,7 +578,7 @@ type
     property OnStartDrag;
   end;
 
-{ TDrawTextList }
+{ TDrawTextList is a draw list which shows a list of strings }
 
   TDrawTextList = class(TCustomDrawList)
   private
@@ -500,8 +593,10 @@ type
     procedure DrawItem(Index: Integer; var Rect: TRectI;
       State: TDrawState); override;
   public
+    { Create a new text list }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    { The text of the item index }
     property SelectedText: string read GetSelectedText;
     property Surface;
     property Canvas;
@@ -511,7 +606,9 @@ type
     property SelectCount;
     property Selected;
   published
+    { When true the item height follows the font }
     property AutoHeight: Boolean read FAutoHeight write SetAutoHeight default True;
+    { The lines of text }
     property Items: TStrings read FItems write SetItems;
     property Align;
     property Anchors;

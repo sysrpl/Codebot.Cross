@@ -21,13 +21,17 @@ uses
   Codebot.Forms.Floating,
   Codebot.Animation;
 
-{ TWidget }
-
 type
+  { TEdgeSize identifies a corner of a widget which can be dragged to resize it }
   TEdgeSize = (esNW, esNE, esSE, esSW);
+  { The set of corners which can be dragged to resize a widget }
   TEdgeSizable = set of TEdgeSize;
 
+  { TClickBoxEvent is invoked when a click box of a widget is clicked }
   TClickBoxEvent = procedure(Sender: TObject; BoxIndex: Integer) of object;
+
+{ TWidget is a floating form drawn with a surface which the user can drag
+  to move and resize by its corners. Override Render to draw it. }
 
   TWidget = class(TFloatingForm)
   private
@@ -66,28 +70,46 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure Paint; override;
+    { Called before Render }
     procedure BeforeRender; virtual;
+    { Draw the widget on Surface }
     procedure Render; virtual;
+    { Called after Render, by default drawing the resize grips }
     procedure AfterRender; virtual;
+    { Called when a click box is clicked, invoking OnClickBox }
     procedure ClickBox(Index: Integer); virtual;
     { Color of the resize grips and outline, Sizing is true during a resize }
     function GripColor(Sizing: Boolean): TColorB; virtual;
+    { The corner under the mouse or -1 if there is none }
     property HotQuad: Integer read FHotQuad write SetHotQuad;
+    { OnClickBox is invoked when a click box is clicked }
     property OnClickBox: TClickBoxEvent read FOnClickBox write FOnClickBox;
   public
+    { Create a new widget }
     constructor Create(AOwner: TComponent); override;
+    { Set the rectangles which respond to clicks instead of starting a drag }
     procedure ClickBoxes(Boxes: TArrayList<TRectI>);
+    { Move the widget to the center of the screen }
     procedure Center;
+    { When true a timer steps the Animator, repaints the widget while it is
+      animating, and invokes OnTick }
     property Animated: Boolean read GetAnimated write SetAnimated;
+    { The corners which can be dragged to resize the widget }
     property EdgeSizable: TEdgeSizable read FEdgeSizable write FEdgeSizable;
+    { The surface used to draw the widget during Render }
     property Surface: ISurface read FSurface;
+    { Dragged is true while the user is moving the widget }
     property Dragged: Boolean read FDragged;
+    { Sized is true while the user is resizing the widget }
     property Sized: Boolean read FSized;
+    { When greater than zero resizing keeps this width to height ratio }
     property AspectRatio: Float read FAspectRatio write SetAspectRatio;
+    { Size limits used while resizing }
     property MinWidth: Integer read FMinWidth write SetMinWidth default 128;
     property MinHeight: Integer read FMinHeight write SetMinHeight default 128;
     property MaxWidth: Integer read FMaxWidth write SetMaxWidth default 2000;
     property MaxHeight: Integer read FMaxHeight write SetMaxHeight default 2000;
+    { OnTick is invoked by the animation timer }
     property OnTick: TNotifyEvent read FOnTick write FOnTick;
   end;
 

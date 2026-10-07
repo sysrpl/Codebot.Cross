@@ -1,6 +1,6 @@
 { This file was automatically created by Lazarus. Do not edit!
   This source is only used to compile and install the package.
-  }
+ }
 
 unit codebot_controls;
 
@@ -8,13 +8,19 @@ unit codebot_controls;
 interface
 
 uses
-  Codebot.Controls.Banner, Codebot.Controls.Buttons, Codebot.Controls.Colors,
-  Codebot.Controls.Containers, Codebot.Controls.Edits, Codebot.Controls.Grids,
-  Codebot.Controls.Highlighter, Codebot.Controls, Codebot.Controls.Scrolling,
-  Codebot.Controls.Sliders, Codebot.Controls.Tooltips, Codebot.Debug,
-  Codebot.Forms.Floating, Codebot.Forms.Management, Codebot.Forms.Popup,
-  Codebot.Forms.Widget, Codebot.Input.Hotkeys, Codebot.Input.MouseMonitor,
-  Codebot.Interop.Linux.NetWM, Codebot.Controls.Extras, LazarusPackageIntf;
+  Codebot.Controls.Banner, Codebot.Controls.Buttons, Codebot.Controls.Colors, 
+  Codebot.Controls.Containers, Codebot.Controls.Edits, Codebot.Controls.Grids, 
+  Codebot.Controls.Highlighter, Codebot.Controls, Codebot.Controls.Scrolling, 
+  Codebot.Controls.Sliders, Codebot.Controls.Tooltips, Codebot.Debug, 
+  Codebot.Forms.Floating, Codebot.Forms.Management, Codebot.Forms.Popup, 
+  Codebot.Forms.Widget, Codebot.Input.Hotkeys, Codebot.Input.MouseMonitor, 
+  Codebot.Interop.Linux.NetWM, Codebot.Controls.Extras, Codebot.Graphics, 
+  Codebot.Platform.LCL, Codebot.Graphics.Linux.SurfaceCairo, 
+  Codebot.Graphics.Windows.ImageBitmap, 
+  Codebot.Graphics.Windows.InterfacedBitmap, 
+  Codebot.Graphics.Windows.SurfaceD2D, 
+  Codebot.Graphics.Windows.SurfaceGdiPlus, Codebot.Forms.ColorDialog, 
+  LazarusPackageIntf;
 
 implementation
 

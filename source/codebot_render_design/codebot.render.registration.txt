@@ -1,0 +1,1 @@
+The Codebot.Render.Registration unit registers TGraphicsBox with the Lazarus IDE, placing it on the Codebot Render page of the component palette.
