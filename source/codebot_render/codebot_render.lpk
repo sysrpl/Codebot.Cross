@@ -152,7 +152,7 @@
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
-      <LibraryPath Value="../Chipmunk2D/lib/$(TargetCPU)-$(TargetOS);../audio/lib/$(TargetCPU)-$(TargetOS)"/>
+      <LibraryPath Value="../../shared/libs/$(TargetCPU)-$(TargetOS)"/>
     </UsageOptions>
     <PublishOptions>
       <Version Value="2"/>

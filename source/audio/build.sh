@@ -7,12 +7,13 @@
 # are decoders only. The vorbis encoder is left out, as are the parts of
 # libxmp which unpack compressed modules.
 #
-# The library is written to lib/<cpu>-<os> using the Free Pascal names for the
-# cpu and os. The codebot_render package adds this folder to the library
-# path of programs that use it, and the Pascal units link it statically.
+# The library is written to shared/libs/<cpu>-<os> in the Codebot folder,
+# using the Free Pascal names for the cpu and os. The codebot_render package
+# adds this folder to the library path of programs that use it, and the
+# Pascal units link it statically.
 #
 # Pass win64 to cross compile for 64 bit Windows with MinGW-w64, which writes
-# the library to lib/x86_64-win64.
+# the library to shared/libs/x86_64-win64.
 
 set -e
 cd "$(dirname "$0")"
@@ -41,7 +42,7 @@ else
   esac
   OS=$(uname -s | tr 'A-Z' 'a-z')
 fi
-OUT=lib/$CPU-$OS
+OUT=../../shared/libs/$CPU-$OS
 OBJ=$OUT/obj
 rm -rf "$OBJ"
 mkdir -p "$OBJ"
