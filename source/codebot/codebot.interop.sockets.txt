@@ -1,1 +1,1 @@
-The Codebot.Interop.Sockets unit declares the sockets API of the operating system, which comes from the C library on Linux and macOS and from wsock32 on Windows. This unit is used by Codebot.Networking.
+The Codebot.Interop.Sockets unit declares the sockets API of the operating system, which comes from the C library on Linux and macOS and from ws2_32 (Winsock 2) on Windows. This unit is used by Codebot.Networking.

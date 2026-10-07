@@ -3,7 +3,7 @@
 {$ifdef windows}
 {$region xml interface}
 uses
-  ComObj,
+  ActiveX, ComObj,
   Codebot.Interop.Windows.Msxml;
 
 type
@@ -19,7 +19,8 @@ type
     function Instance: Pointer;
     function Next: INode;
     function SelectNode(const XPath: string): INode;
-    function SelectList(const XPath: string): INodeList;
+    function SelectList(const XPath: string): INodeList; overload;
+    function SelectList(const XPath: string; out List: INodeList): Boolean; overload;
     function Force(const Path: string): INode;
     function GetDocument: IDocument; virtual;
     function GetParent: INode;
@@ -103,7 +104,7 @@ begin
   begin
     if N.nodeType = T then
         Exit(TNode.Create(N));
-    N := FNode.nextSibling;
+    N := N.nextSibling;
   end;
 end;
 
@@ -171,6 +172,12 @@ begin
   except
     Result := nil;
   end;
+end;
+
+function TNode.SelectList(const XPath: string; out List: INodeList): Boolean;
+begin
+  List := SelectList(XPath);
+  Result := (List <> nil) and (List.Count > 0);
 end;
 
 function TNode.Force(const Path: string): INode;
@@ -377,8 +384,7 @@ var
 begin
   if FNode = nil then
     Exit;
-  L := FList as IXMLDOMNamedNodeMap;
-  if L <> nil then
+  if Supports(FList, IXMLDOMNamedNodeMap, L) then
     for I := L.length - 1 downto 0 do
       L.removeNamedItem(L.item[I].nodeName)
   else
@@ -459,15 +465,15 @@ begin
   Result := nil;
   N := nil;
   if Supports(FList, IXMLDOMNamedNodeMap) then
-    (FList as IXMLDOMNamedNodeMap).getNamedItem(AnsiToWide(Name))
+    N := (FList as IXMLDOMNamedNodeMap).getNamedItem(AnsiToWide(Name))
   else
   begin
     S := AnsiToWide(Name);
     L := FList as IXMLDOMNodeList;
     for I := 0 to L.length - 1 do
     begin
-      C := L.item[I] as IXMLDOMElement;
-      if C = nil then
+      { Skip text, comment, and other nodes which are not elements }
+      if not Supports(L.item[I], IXMLDOMElement, C) then
         Continue;
       if C.tagName = S then
       begin
@@ -586,6 +592,10 @@ end;
 
 procedure TDocument.Load(const FileName: string);
 begin
+  { MSXML loads asynchronously by default, which would return before the
+    document is parsed. A file which fails to load leaves the document empty,
+    as on Linux. }
+  FDocument.async := False;
   FDocument.load(FileName);
 end;
 
@@ -597,8 +607,36 @@ end;
 { DocumentCreate }
 
 function DocumentCreate: IDocument;
+const
+  CO_E_NOTINITIALIZED = HRESULT($800401F0);
+var
+  D: IXMLDOMDocument;
+  D2: IXMLDOMDocument2;
 begin
-  Result := TDocument.Create(CreateOleObject('Msxml2.DOMDocument') as IXMLDOMDocument);
+  try
+    D := CreateOleObject('Msxml2.DOMDocument') as IXMLDOMDocument;
+  except
+    on E: EOleSysError do
+      { COM is initialized for the main thread by ComObj, but other threads
+        must initialize it themselves }
+      if E.ErrorCode = CO_E_NOTINITIALIZED then
+      begin
+        CoInitializeEx(nil, COINIT_APARTMENTTHREADED);
+        D := CreateOleObject('Msxml2.DOMDocument') as IXMLDOMDocument;
+      end
+      else
+        raise;
+  end;
+  D.async := False;
+  { MSXML 3 uses the older XSLPattern language unless XPath is selected }
+  if Supports(D, IXMLDOMDocument2, D2) then
+    D2.setProperty('SelectionLanguage', 'XPath');
+  Result := TDocument.Create(D);
+end;
+
+function NewDocument: IDocument;
+begin
+  Result := DocumentCreate;
 end;
 {$endregion}
 {$endif}

@@ -15,10 +15,10 @@ uses
   Codebot.Controls.Containers,
   Codebot.Controls.Sliders;
 
-{ TForm1 }
+{ TEasingForm }
 
 type
-  TForm1 = class(TForm)
+  TEasingForm = class(TForm)
     SpeedLabel: TLabel;
     ReverseBox: TCheckBox;
     DrawList: TDrawList;
@@ -44,7 +44,7 @@ type
   end;
 
 var
-  Form1: TForm1;
+  EasingForm: TEasingForm;
 
 implementation
 
@@ -85,7 +85,7 @@ const
   { Our image sources }
   FoodNames = 'apples,bananas,cherries,doughnuts,eggs,fish,grapes';
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TEasingForm.FormCreate(Sender: TObject);
 var
   B: IBitmap;
   S: string;
@@ -116,13 +116,13 @@ begin
   end;
 end;
 
-procedure TForm1.DrawListSelectItem(Sender: TObject);
+procedure TEasingForm.DrawListSelectItem(Sender: TObject);
 begin
   { When you select an item in the draw list, change the current easing }
   CurrentEasing := Easings.Items[DrawList.ItemIndex].Value;
 end;
 
-procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: boolean);
+procedure TEasingForm.FormCloseQuery(Sender: TObject; var CanClose: boolean);
 begin
   FTimer.Enabled := False;
 end;
@@ -144,7 +144,7 @@ end;
 
 { This is where we draw the photos }
 
-procedure TForm1.SizingPanelRender(Sender: TObject; Surface: ISurface);
+procedure TEasingForm.SizingPanelRender(Sender: TObject; Surface: ISurface);
 const
   { Space the photos 150 pixels apart }
   Space = 150;
@@ -219,7 +219,7 @@ end;
 
 { Draw a background with a dashed set of time lines }
 
-procedure TForm1.DrawListDrawBackground(Sender: TObject; Surface: ISurface;
+procedure TEasingForm.DrawListDrawBackground(Sender: TObject; Surface: ISurface;
   Rect: TRectI);
 const
   Align = 0.5;
@@ -257,7 +257,7 @@ end;
 
 { This method draws the items in the TDrawList }
 
-procedure TForm1.DrawListDrawItem(Sender: TObject; Surface: ISurface;
+procedure TEasingForm.DrawListDrawItem(Sender: TObject; Surface: ISurface;
   Index: Integer; Rect: TRectI; State: TDrawState);
 var
   KeyValue: TEasingKeyValue;
@@ -300,7 +300,7 @@ begin
   Surface.FillRect(NewBrush(clBlack), R);
 end;
 
-procedure TForm1.SlideBarChange(Sender: TObject);
+procedure TEasingForm.SlideBarChange(Sender: TObject);
 begin
   { When the slider changes, update the caption }
   SpeedLabel.Caption := 'Speed: %f'.Format([SlideBar.Position]);
@@ -308,7 +308,7 @@ begin
   TimeFactor := SlideBar.Position;
 end;
 
-procedure TForm1.AnimatedTimer(Sender: TObject);
+procedure TEasingForm.AnimatedTimer(Sender: TObject);
 begin
   { Advance time, but don't reverse it }
   TimeStep;

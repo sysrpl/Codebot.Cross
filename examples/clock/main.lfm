@@ -5,7 +5,6 @@ object ClockWidget: TClockWidget
   Width = 278
   ClientHeight = 234
   ClientWidth = 278
-  OnClick = FormClick
   OnCreate = FormCreate
   object CloseButton: TThinButton
     Left = 242

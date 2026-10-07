@@ -31,7 +31,7 @@ codebot_rendering_design. The Lazarus config was updated to match.
 
 Moved to keep the core free of the LCL:
 
-  - Codebot.Graphics, the Cairo surface, and the Direct2D, GDI+, and WIC
+  - Codebot.Graphics, the Cairo surface, and the Direct2D and WIC
     bitmap units moved from codebot to codebot_controls.
   - TGraphicsBox, the scene controller, and Codebot.OpenGL.Linux and
     Codebot.OpenGL.Windows moved from codebot_render to
@@ -78,7 +78,7 @@ Backends
 
 Codebot.Platform.LCL in codebot_controls:
 
-  - Bitmaps from Codebot.Graphics (Cairo on Linux, Direct2D or GDI+ on
+  - Bitmaps from Codebot.Graphics (Cairo on Linux, Direct2D on
     Windows).
   - The clipboard and window reads wait for the main thread with Synchronize.
     Window changes and dialogs are queued to the main thread.

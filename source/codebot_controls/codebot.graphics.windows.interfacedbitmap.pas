@@ -19,8 +19,7 @@ uses
   Codebot.System,
   Codebot.Graphics.Types,
   Codebot.Graphics.Windows.ImageBitmap,
-  Codebot.Interop.Windows.ImageCodecs,
-  Codebot.Interop.Windows.GdiPlus;
+  Codebot.Interop.Windows.ImageCodecs;
 
 { TInterfacedBitmap is the base IBitmap implementation used by the Windows
   backends }
@@ -162,6 +161,7 @@ end;
 
 function TInterfacedBitmap.GetPixels: Pointer;
 begin
+  Result := nil;
   if HandleAvailable then
   begin
     Flush;
@@ -179,12 +179,13 @@ var
   C: TInterfacedBitmapClass;
   B: TInterfacedBitmap;
 begin
+  C := TInterfacedBitmapClass(ClassType);
+  { Return an empty bitmap of the same backend class }
   if not HandleAvailable then
-    Exit(TInterfacedBitmap.Create);
-  if (Width = FWidth) or (Height = FHeight) then
+    Exit(C.Create);
+  if (Width = FWidth) and (Height = FHeight) then
     Exit(Clone);
   Flush;
-  C := TInterfacedBitmapClass(ClassType);
   Result := C.Create;
   B := Result as TInterfacedBitmap;
   B.FBitmap := BitmapResize(FBitmap, Width, Height, Ord(Quality));
@@ -340,7 +341,7 @@ begin
     RegisterWindow;
   FWindow := CreateWindowEx(ExStyle, WindowClass, nil, WS_POPUP,
     0, 0, 100, 100, 0, 0, hInstance, nil);
-  SetWindowLong(FWindow, GWL_USERDATA, PtrInt(Self));
+  SetWindowLongPtr(FWindow, GWLP_USERDATA, LONG_PTR(Self));
   SetTimer(FWindow, 1, 1000, nil);
 end;
 
@@ -451,15 +452,16 @@ begin
 end;
 
 function Dpi: Integer;
+var
+  DC: HDC;
 begin
-  case GetSystemMetrics(SM_CXICON) of
-    32: Result := 96;
-    40: Result := 120;
-    48: Result := 144;
-    64: Result := 192;
-  else
+  { The logical dpi of the screen, which is 96 when the program is not dpi
+    aware because Windows then scales the program itself }
+  DC := GetDC(0);
+  Result := GetDeviceCaps(DC, LOGPIXELSY);
+  ReleaseDC(0, DC);
+  if Result < 1 then
     Result := 96;
-  end;
 end;
 {$endif}
 

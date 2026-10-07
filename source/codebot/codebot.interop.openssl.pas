@@ -137,8 +137,14 @@ var
 
 const
 {$ifdef windows}
-  libssl = 'libssl32.dll';
-  libcrypto = 'libeay32.dll';
+  { OpenSSL 3 library names, which provide the 1.1 and later functions used here }
+  {$ifdef cpu64}
+  libssl = 'libssl-3-x64.dll';
+  libcrypto = 'libcrypto-3-x64.dll';
+  {$else}
+  libssl = 'libssl-3.dll';
+  libcrypto = 'libcrypto-3.dll';
+  {$endif}
 {$endif}
 {$ifdef linux}
   libssl = 'libssl.so.3';

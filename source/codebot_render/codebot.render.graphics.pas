@@ -663,6 +663,11 @@ uses
 
 const
   StackSize = 100;
+{$ifdef windows}
+  { The resource type of raw data, which the system unit declares on other
+    systems and the Windows unit declares on Windows }
+  RT_RCDATA = PChar(10);
+{$endif}
 
 { Named objects and lists of named objects used to track resources }
 

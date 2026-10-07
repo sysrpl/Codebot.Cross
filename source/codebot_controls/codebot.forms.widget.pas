@@ -51,14 +51,27 @@ type
     FSizeBounds: TRectI;
     FTimer: TTimer;
     FGripOpacity: Float;
+    FMoused: Boolean;
+    FMouseOpacity: Float;
     FClickBoxes: TArrayList<TRectI>;
     FBoxIndex: Integer;
     FOnClickBox: TClickBoxEvent;
+    {$ifdef windows}
+    { The bitmap the widget is drawn into before it is shown }
+    FLayer: IBitmap;
+    { True while a redraw of the layer is queued }
+    FLayerPending: Boolean;
+    procedure RenderLayer;
+    procedure UpdateLayer;
+    procedure LayerUpdateAsync(Data: PtrInt);
+    {$endif}
     procedure DoTimer(Sender: TObject);
     function GetAnimated: Boolean;
     procedure SetAnimated(Value: Boolean);
     procedure SetAspectRatio(Value: Float);
     procedure SetHotQuad(Value: Integer);
+    procedure SetMoused(Value: Boolean);
+    function MouseOutside: Boolean;
     procedure SetMaxHeight(Value: Integer);
     procedure SetMaxWidth(Value: Integer);
     procedure SetMinHeight(Value: Integer);
@@ -69,7 +82,16 @@ type
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseEnter; override;
+    procedure MouseLeave; override;
     procedure Paint; override;
+    {doc off}
+    function PerPixelAlpha: Boolean; override;
+    {$ifdef windows}
+    procedure Resize; override;
+    procedure DoShow; override;
+    {$endif}
+    {doc on}
     { Called before Render }
     procedure BeforeRender; virtual;
     { Draw the widget on Surface }
@@ -87,6 +109,12 @@ type
   public
     { Create a new widget }
     constructor Create(AOwner: TComponent); override;
+    {$ifdef windows}
+    {doc off}
+    destructor Destroy; override;
+    procedure Invalidate; override;
+    {doc on}
+    {$endif}
     { Set the rectangles which respond to clicks instead of starting a drag }
     procedure ClickBoxes(Boxes: TArrayList<TRectI>);
     { Move the widget to the center of the screen }
@@ -102,6 +130,11 @@ type
     property Dragged: Boolean read FDragged;
     { Sized is true while the user is resizing the widget }
     property Sized: Boolean read FSized;
+    { Moused is true while the mouse is over the widget }
+    property Moused: Boolean read FMoused;
+    { MouseOpacity fades from 0 to 1 when the mouse moves over the widget and
+      back to 0 when it leaves. Use it to draw a hover effect in Render. }
+    property MouseOpacity: Float read FMouseOpacity;
     { When greater than zero resizing keeps this width to height ratio }
     property AspectRatio: Float read FAspectRatio write SetAspectRatio;
     { Size limits used while resizing }
@@ -114,6 +147,32 @@ type
   end;
 
 implementation
+
+{$ifdef windows}
+uses
+  Windows,
+  Codebot.Graphics.Windows.InterfacedBitmap;
+
+type
+  { Gives access to the device context of a bitmap }
+  TInterfacedBitmapAccess = class(TInterfacedBitmap);
+
+  TLayerBlend = record
+    BlendOp: Byte;
+    BlendFlags: Byte;
+    SourceConstantAlpha: Byte;
+    AlphaFormat: Byte;
+  end;
+
+const
+  LayerSrcOver = $00;
+  LayerSrcAlpha = $01;
+  LayerUpdateAlpha = $02;
+
+function LayerUpdate(Wnd: HWND; DstDC: HDC; DstPoint: PPoint; Size: PSize;
+  SrcDC: HDC; SrcPoint: PPoint; Key: COLORREF; var Blend: TLayerBlend;
+  Flags: DWORD): BOOL; stdcall; external 'user32.dll' name 'UpdateLayeredWindow';
+{$endif}
 
 const
   GripSize = 24;
@@ -158,22 +217,57 @@ begin
 end;
 
 procedure TWidget.DoTimer(Sender: TObject);
-var
-  R: TRectI;
-  P: TPointI;
 begin
   Animator.Step;
   if Animator.Animated then
-    Invalidate
-  else if (FHotQuad > -1) and (not FSized) then
+    Invalidate;
+  { The mouse events track the mouse, but if a mouse leave was missed this
+    returns the widget to its normal state once the mouse is outside }
+  if (not FDragged) and (FMoused or (FHotQuad > -1)) and MouseOutside then
   begin
-    R := BoundsRect;
-    P := Mouse.CursorPos;
-    if not R.Contains(P) then
-      SetHotQuad(-1);
+    SetHotQuad(-1);
+    SetMoused(False);
   end;
   if Assigned(OnTick) then
     FOnTick(Self);
+end;
+
+function TWidget.MouseOutside: Boolean;
+var
+  R: TRectI;
+begin
+  R := BoundsRect;
+  Result := not R.Contains(TPointI(Mouse.CursorPos));
+end;
+
+procedure TWidget.SetMoused(Value: Boolean);
+begin
+  if FMoused = Value then
+    Exit;
+  FMoused := Value;
+  if FMoused then
+    Animator.Animate(FMouseOpacity, 1)
+  else
+    Animator.Animate(FMouseOpacity, 0);
+  Invalidate;
+end;
+
+procedure TWidget.MouseEnter;
+begin
+  inherited MouseEnter;
+  SetMoused(True);
+end;
+
+procedure TWidget.MouseLeave;
+begin
+  inherited MouseLeave;
+  { Moving onto a child control, such as a button, also sends a mouse leave,
+    so only leave when the mouse is outside the widget. While dragging the
+    mouse is captured and the widget follows it. }
+  if FDragged or (not MouseOutside) then
+    Exit;
+  SetHotQuad(-1);
+  SetMoused(False);
 end;
 
 function TWidget.GetAnimated: Boolean;
@@ -273,6 +367,7 @@ var
   I: Integer;
 begin
   inherited MouseDown(Button, Shift, X, Y);
+  SetMoused(True);
   if Button = mbLeft then
     for I := 0 to FClickBoxes.Length - 1 do
       if FClickBoxes[I].Contains(X, Y) then
@@ -316,6 +411,7 @@ var
   X1, Y1: Integer;
 begin
   inherited MouseMove(Shift, X, Y);
+  SetMoused(True);
   if FDragged then
   begin
     P := Mouse.CursorPos;
@@ -459,6 +555,119 @@ begin
     Result := Blend(clHighlight, clWhite, 0.1);
 end;
 
+{$ifdef windows}
+{ On Windows a window drawn in Paint cannot have transparent pixels. Instead
+  the widget is drawn into a bitmap with an alpha channel, which is shown
+  using UpdateLayeredWindow.
+
+  Windows does not reliably send WM_PAINT to a window shown this way, so
+  Invalidate queues a redraw of the layer instead of relying on Paint. Several
+  invalidations before the redraw runs result in a single redraw. }
+
+destructor TWidget.Destroy;
+begin
+  Application.RemoveAsyncCalls(Self);
+  inherited Destroy;
+end;
+
+procedure TWidget.Invalidate;
+begin
+  inherited Invalidate;
+  if FLayerPending or (csDestroying in ComponentState) then
+    Exit;
+  FLayerPending := True;
+  Application.QueueAsyncCall(LayerUpdateAsync, 0);
+end;
+
+procedure TWidget.LayerUpdateAsync(Data: PtrInt);
+begin
+  FLayerPending := False;
+  if HandleAllocated and Visible and not (csDestroying in ComponentState) then
+    RenderLayer;
+end;
+
+procedure TWidget.Resize;
+begin
+  inherited Resize;
+  Invalidate;
+end;
+
+procedure TWidget.DoShow;
+begin
+  inherited DoShow;
+  Invalidate;
+end;
+
+procedure TWidget.Paint;
+begin
+  inherited Paint;
+  RenderLayer;
+end;
+
+procedure TWidget.RenderLayer;
+begin
+  if (Width < 1) or (Height < 1) then
+    Exit;
+  if FLayer = nil then
+    FLayer := NewBitmap(Width, Height)
+  else
+    FLayer.SetSize(Width, Height);
+  FSurface := FLayer.Surface;
+  try
+    BeforeRender;
+    Render;
+    AfterRender;
+  finally
+    FSurface := nil;
+  end;
+  UpdateLayer;
+end;
+
+procedure TWidget.UpdateLayer;
+var
+  DC, ScreenDC: HDC;
+  Size: TSize;
+  Origin: TPoint;
+  Blend: TLayerBlend;
+begin
+  { Reading the pixels finishes any drawing pending on the bitmap }
+  if FLayer.Pixels = nil then
+    Exit;
+  DC := TInterfacedBitmapAccess(FLayer as TInterfacedBitmap).FBitmap.DC;
+  { Child controls such as buttons are not drawn on a layered window, so draw
+    them into the bitmap }
+  PaintControls(DC, nil);
+  Size.cx := FLayer.Width;
+  Size.cy := FLayer.Height;
+  Origin.X := 0;
+  Origin.Y := 0;
+  Blend.BlendOp := LayerSrcOver;
+  Blend.BlendFlags := 0;
+  Blend.SourceConstantAlpha := Opacity;
+  Blend.AlphaFormat := LayerSrcAlpha;
+  ScreenDC := GetDC(0);
+  try
+    { A nil destination point keeps the window where it is }
+    LayerUpdate(Handle, ScreenDC, nil, @Size, DC, @Origin, 0, Blend,
+      LayerUpdateAlpha);
+  finally
+    ReleaseDC(0, ScreenDC);
+  end;
+end;
+
+function TWidget.PerPixelAlpha: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TWidget.BeforeRender;
+begin
+  { Fully transparent pixels of a layered window do not receive the mouse, so
+    clear to an almost transparent color. This keeps the whole widget,
+    including the resize grips in its corners, available for dragging. }
+  Surface.Clear(Rgba(clBlack, 1 / 255));
+end;
+{$else}
 procedure TWidget.Paint;
 begin
   inherited Paint;
@@ -469,6 +678,11 @@ begin
   FSurface := nil;
 end;
 
+function TWidget.PerPixelAlpha: Boolean;
+begin
+  Result := inherited PerPixelAlpha;
+end;
+
 procedure TWidget.BeforeRender;
 begin
   if Compositing then
@@ -476,6 +690,7 @@ begin
   else
     Surface.Clear(clWhite);
 end;
+{$endif}
 
 procedure TWidget.Render;
 begin

@@ -40,3 +40,5 @@ examples/pandrag/pandrag
 source/Chipmunk2D/
 source/nanovg/
 source/audio/
+backup/
+.claude-history/

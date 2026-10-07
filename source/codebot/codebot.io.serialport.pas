@@ -13,7 +13,7 @@ unit Codebot.IO.SerialPort;
 
 interface
 
-{$ifdef linux}
+{$if defined(linux) or defined(windows)}
 uses
   SysUtils, Classes, TypInfo;
 
@@ -72,7 +72,7 @@ type
     function ToString: string;
   end;
 
-{ TSerialPort reads and writes data to a serial port device on linux }
+{ TSerialPort reads and writes data to a serial port device on Linux and Windows }
 
   TSerialPort = class
   private
@@ -83,7 +83,8 @@ type
     procedure CheckOpened;
     function GetOpened: Boolean;
   public
-    { Create a serial port given a device path such as /dev/ttyUSB0 }
+    { Create a serial port given a device path such as /dev/ttyUSB0 on Linux
+      or a port name such as COM3 on Windows }
     constructor Create(const Device: string);
     { Close the port and destroy the object }
     destructor Destroy; override;
@@ -117,6 +118,7 @@ procedure EnumSerialPorts(Ports: TStrings);
 
 implementation
 
+{$if defined(linux) or defined(windows)}
 {$ifdef linux}
 const
   O_RDWR = $02;
@@ -301,6 +303,101 @@ begin
     _close(F);
   end;
 end;
+{$else}
+uses
+  Windows;
+
+const
+  { DCB flag bits }
+  DCB_BINARY = $0001;
+  DCB_PARITY = $0002;
+  DCB_OUTX_CTS_FLOW = $0004;
+  DCB_OUTX_DSR_FLOW = $0008;
+  DCB_DTR_CONTROL_MASK = $0030;
+  DCB_DTR_CONTROL_ENABLE = $0010;
+  DCB_DSR_SENSITIVITY = $0040;
+  DCB_OUTX = $0100;
+  DCB_INX = $0200;
+  DCB_RTS_CONTROL_MASK = $3000;
+  DCB_RTS_CONTROL_ENABLE = $1000;
+  DCB_RTS_CONTROL_HANDSHAKE = $2000;
+  DCB_ABORT_ON_ERROR = $4000;
+
+{ Open a port by name. The \\.\ prefix is required for COM10 and above. }
+
+function OpenPort(const Device: string): THandle;
+var
+  S: string;
+begin
+  S := Device;
+  if Copy(S, 1, 4) <> '\\.\' then
+    S := '\\.\' + S;
+  Result := CreateFile(PChar(S), GENERIC_READ or GENERIC_WRITE, 0, nil,
+    OPEN_EXISTING, 0, 0);
+  if Result = INVALID_HANDLE_VALUE then
+    Result := 0;
+end;
+
+class function TSerialPortOptions.Create(const Device: string): TSerialPortOptions;
+var
+  F: THandle;
+  D: TDCB;
+  T: TCommTimeouts;
+begin
+  FillChar(Result{%H-}, SizeOf(Result), 0);
+  F := OpenPort(Device);
+  if F = 0 then
+    Exit;
+  try
+    FillChar(D, SizeOf(D), 0);
+    D.DCBlength := SizeOf(D);
+    if not GetCommState(F, D) then
+      Exit;
+    Result.Baud := D.BaudRate;
+    Result.DataBits := D.ByteSize;
+    case D.Parity of
+      ODDPARITY: Result.Parity := prOdd;
+      EVENPARITY: Result.Parity := prEven;
+    else
+      Result.Parity := prNone;
+    end;
+    if D.StopBits = TWOSTOPBITS then
+      Result.StopBits := sbTwo
+    else
+      Result.StopBits := sbOne;
+    if D.Flags and DCB_OUTX <> 0 then
+      Include(Result.FlowControl, fcXOn);
+    if D.Flags and DCB_INX <> 0 then
+      Include(Result.FlowControl, fcXOff);
+    if D.Flags and DCB_OUTX_CTS_FLOW <> 0 then
+      Include(Result.FlowControl, fcRequestToSend);
+    { Convert the timeouts back to the Min and Timeout settings, see UpdatePort }
+    if GetCommTimeouts(F, T) then
+      if T.ReadIntervalTimeout = MAXDWORD then
+      begin
+        if T.ReadTotalTimeoutMultiplier = MAXDWORD then
+          if T.ReadTotalTimeoutConstant >= MAXDWORD - 1 then
+            Result.Min := 1
+          else if T.ReadTotalTimeoutConstant div 100 > High(Byte) then
+            Result.Timeout := High(Byte)
+          else
+            Result.Timeout := T.ReadTotalTimeoutConstant div 100;
+      end
+      else if T.ReadIntervalTimeout > 0 then
+      begin
+        Result.Min := 1;
+        if T.ReadIntervalTimeout div 100 > High(Byte) then
+          Result.Timeout := High(Byte)
+        else
+          Result.Timeout := T.ReadIntervalTimeout div 100;
+      end
+      else
+        Result.Min := 1;
+  finally
+    CloseHandle(F);
+  end;
+end;
+{$endif}
 
 class function TSerialPortOptions.Create(Baud: Integer; DataBits: Integer;
   Parity: TParity): TSerialPortOptions;
@@ -345,6 +442,7 @@ begin
   Result := Open(TSerialPortOptions.Create);
 end;
 
+{$ifdef linux}
 function TSerialPort.Open(const Options: TSerialPortOptions): Boolean;
 begin
   Result := False;
@@ -435,6 +533,117 @@ begin
   _close(H);
 end;
 
+{$else}
+function TSerialPort.Open(const Options: TSerialPortOptions): Boolean;
+begin
+  Result := False;
+  if Opened then
+    Exit;
+  FHandle := OpenPort(FDevice);
+  Result := Opened and UpdatePort(Options);
+end;
+
+function TSerialPort.UpdatePort(const Options: TSerialPortOptions): Boolean;
+var
+  D: TDCB;
+  T: TCommTimeouts;
+begin
+  Result := False;
+  FillChar(D, SizeOf(D), 0);
+  D.DCBlength := SizeOf(D);
+  if not GetCommState(FHandle, D) then
+  begin
+    Close;
+    Exit;
+  end;
+  case Options.Baud of
+    Baud300, Baud1200, Baud2400, Baud4800, Baud9600, Baud19200, Baud38400,
+    Baud57600, Baud115200, Baud230400: D.BaudRate := Options.Baud;
+  else
+    D.BaudRate := Baud9600;
+  end;
+  case Options.DataBits of
+    Bits5, Bits6, Bits7, Bits8: D.ByteSize := Options.DataBits;
+  else
+    D.ByteSize := Bits8;
+  end;
+  case Options.Parity of
+    prOdd: D.Parity := ODDPARITY;
+    prEven: D.Parity := EVENPARITY;
+  else
+    D.Parity := NOPARITY;
+  end;
+  if Options.StopBits = sbTwo then
+    D.StopBits := TWOSTOPBITS
+  else
+    D.StopBits := ONESTOPBIT;
+  { Raw binary mode with DTR and RTS on, and flow control as requested }
+  D.Flags := DCB_BINARY or DCB_DTR_CONTROL_ENABLE;
+  if Options.Parity <> prNone then
+    D.Flags := D.Flags or DCB_PARITY;
+  if fcXOn in Options.FlowControl then
+    D.Flags := D.Flags or DCB_OUTX;
+  if fcXOff in Options.FlowControl then
+    D.Flags := D.Flags or DCB_INX;
+  if fcRequestToSend in Options.FlowControl then
+    D.Flags := D.Flags or DCB_OUTX_CTS_FLOW or DCB_RTS_CONTROL_HANDSHAKE
+  else
+    D.Flags := D.Flags or DCB_RTS_CONTROL_ENABLE;
+  D.XonChar := #$11;
+  D.XoffChar := #$13;
+  if not SetCommState(FHandle, D) then
+  begin
+    Close;
+    Exit;
+  end;
+  { Imitate the Linux VMIN and VTIME read settings. Timeout is in tenths of a
+    second.
+    Min = 0, Timeout = 0: return immediately with what is available
+    Min = 0, Timeout > 0: wait up to Timeout for any data
+    Min > 0, Timeout = 0: wait for at least one byte, Windows cannot wait for
+      an exact number of bytes without blocking until the buffer is full
+    Min > 0, Timeout > 0: wait for the first byte, then return when the gap
+      between bytes exceeds Timeout }
+  FillChar(T, SizeOf(T), 0);
+  if Options.Min = 0 then
+  begin
+    T.ReadIntervalTimeout := MAXDWORD;
+    if Options.Timeout > 0 then
+    begin
+      T.ReadTotalTimeoutMultiplier := MAXDWORD;
+      T.ReadTotalTimeoutConstant := Options.Timeout * 100;
+    end;
+  end
+  else if Options.Timeout = 0 then
+  begin
+    T.ReadIntervalTimeout := MAXDWORD;
+    T.ReadTotalTimeoutMultiplier := MAXDWORD;
+    T.ReadTotalTimeoutConstant := MAXDWORD - 1;
+  end
+  else
+    T.ReadIntervalTimeout := Options.Timeout * 100;
+  if not SetCommTimeouts(FHandle, T) then
+  begin
+    Close;
+    Exit;
+  end;
+  PurgeComm(FHandle, PURGE_RXCLEAR or PURGE_TXCLEAR);
+  Result := True;
+end;
+
+procedure TSerialPort.Close;
+var
+  H: THandle;
+begin
+  if not Opened then
+    Exit;
+  H := FHandle;
+  FHandle := 0;
+  PurgeComm(H, PURGE_RXCLEAR or PURGE_TXCLEAR);
+  CloseHandle(H);
+end;
+{$endif}
+
 procedure TSerialPort.CheckOpened;
 begin
   if not Opened then
@@ -457,9 +666,21 @@ begin
 end;
 
 function TSerialPort.ReadBinary(var Buffer; BufferSize: Integer): Integer;
+{$ifdef windows}
+var
+  Count: DWORD;
+{$endif}
 begin
   CheckOpened;
+  {$ifdef linux}
   Result := _read(FHandle, Buffer, BufferSize);
+  {$else}
+  Count := 0;
+  if ReadFile(FHandle, Buffer, BufferSize, Count, nil) then
+    Result := Count
+  else
+    Result := -1;
+  {$endif}
 end;
 
 procedure TSerialPort.Write(const S: string);
@@ -474,9 +695,18 @@ begin
 end;
 
 procedure TSerialPort.WriteBinary(var Buffer; BufferSize: Integer);
+{$ifdef windows}
+var
+  Count: DWORD;
+{$endif}
 begin
   CheckOpened;
+  {$ifdef linux}
   _write(FHandle, Buffer, BufferSize);
+  {$else}
+  Count := 0;
+  WriteFile(FHandle, Buffer, BufferSize, Count, nil);
+  {$endif}
 end;
 
 procedure TSerialPort.XOn;
@@ -495,6 +725,7 @@ begin
   WriteBinary(B, 1);
 end;
 
+{$ifdef linux}
 function TSerialPort.GetOpened: Boolean;
 begin
   Result := FHandle > 0;
@@ -553,6 +784,53 @@ begin
     Ports.EndUpdate;
   end;
 end;
+{$else}
+function TSerialPort.GetOpened: Boolean;
+begin
+  Result := FHandle <> 0;
+end;
+
+{ Serial ports are listed in the registry by the drivers which create them }
+
+procedure EnumSerialPorts(Ports: TStrings);
+var
+  Key: HKEY;
+  Index, NameSize, DataSize, ValueType: DWORD;
+  Name: array[0..255] of Char;
+  Data: array[0..255] of Char;
+  Names: TStringList;
+begin
+  Ports.BeginUpdate;
+  Names := TStringList.Create;
+  try
+    Ports.Clear;
+    if RegOpenKeyEx(HKEY_LOCAL_MACHINE, 'HARDWARE\DEVICEMAP\SERIALCOMM', 0,
+      KEY_READ, Key) <> ERROR_SUCCESS then
+      Exit;
+    try
+      Index := 0;
+      repeat
+        NameSize := Length(Name);
+        DataSize := SizeOf(Data) - 1;
+        FillChar(Data, SizeOf(Data), 0);
+        if RegEnumValue(Key, Index, Name, NameSize, nil, @ValueType,
+          @Data, @DataSize) <> ERROR_SUCCESS then
+          Break;
+        if ValueType = REG_SZ then
+          Names.Add(PChar(@Data));
+        Inc(Index);
+      until False;
+    finally
+      RegCloseKey(Key);
+    end;
+    Names.Sort;
+    Ports.AddStrings(Names);
+  finally
+    Names.Free;
+    Ports.EndUpdate;
+  end;
+end;
+{$endif}
 {$endif}
 
 end.

@@ -3,9 +3,7 @@ program pandrag;
 {$mode delphi}
 
 uses
-	{$IFDEF UNIX}{$IFDEF UseCThreads}
-	cthreads,
-	{$ENDIF}{$ENDIF}
+	Codebot.System,
 	Interfaces, // this includes the LCL widgetset
 	Forms, Main
 	{ you can add units after this };
@@ -15,7 +13,7 @@ uses
 begin
 	RequireDerivedFormResource := True;
 	Application.Initialize;
-	Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TPanDragForm, PanDragForm);
 	Application.Run;
 end.
 

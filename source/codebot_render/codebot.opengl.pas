@@ -4912,9 +4912,20 @@ function OpenGLLoadFunctions(GetProc: TOpenGLGetProc): Boolean;
 var
   Loaded: Boolean;
 
+  { Some drivers provide a few functions only under the name of the ARB
+    extension they came from, such as glGetnTexImageARB on Intel drivers,
+    so that name is tried when the core name is not found }
+
   procedure Load(var Proc; Name: PChar);
+  var
+    S: string;
   begin
     Pointer(Proc) := GetProc(Name);
+    if Pointer(Proc) = nil then
+    begin
+      S := Name + 'ARB';
+      Pointer(Proc) := GetProc(PChar(S));
+    end;
     if Pointer(Proc) = nil then
       Loaded := False;
   end;

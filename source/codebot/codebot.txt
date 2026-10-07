@@ -46,7 +46,7 @@ The codebot package contains the core units of the Codebot library, and every ot
 | Codebot.Networking.Ftp | TFtpClient, a client for FTP servers. |
 | Codebot.Networking.Storage | Access to cloud storage held by Amazon S3 and compatible providers. |
 | Codebot.Networking.Unix | TUnixClientSocket, which connects to a Unix domain socket. |
-| Codebot.IO.SerialPort | TSerialPort, which reads and writes serial ports on Linux. |
+| Codebot.IO.SerialPort | TSerialPort, which reads and writes serial ports on Linux and Windows. |
 
 ## Bindings to system libraries
 
@@ -57,7 +57,6 @@ The codebot package contains the core units of the Codebot library, and every ot
 | Codebot.Interop.Linux.Xml2 | libxml2 |
 | Codebot.Interop.Windows.Msxml | MSXML |
 | Codebot.Interop.Windows.Direct2D | Direct2D and DirectWrite |
-| Codebot.Interop.Windows.GdiPlus | GDI+ |
 | Codebot.Interop.Windows.ImageCodecs | The Windows Imaging Component |
 
 ## Compiler settings

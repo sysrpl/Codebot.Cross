@@ -151,20 +151,14 @@ function xmp_set_player(c: TXmpContext; param, val: cint): cint; cdecl; external
 
 implementation
 
+uses
+  { On Windows the C runtime is linked by Codebot.Interop.MinGW }
+  Codebot.Interop.MinGW;
+
 {$linklib libcodebotaudio.a}
 {$ifdef unix}
   {$linklib m}
   {$linklib c}
-{$endif}
-{ On Windows the C runtime comes from the MinGW-w64 libraries which are
-  copied next to libcodebotaudio.a. The kernel32 library imports the one
-  Windows function libxmp calls. }
-{$ifdef windows}
-  {$linklib libmingwex.a}
-  {$linklib libmingw32.a}
-  {$linklib libucrt.a}
-  {$linklib libgcc.a}
-  {$linklib libkernel32.a}
 {$endif}
 
 end.

@@ -13,6 +13,7 @@ unit Codebot.WebKit.Controls.Gtk3;
 
 interface
 
+{$ifdef lclgtk3}
 uses
   Classes, SysUtils, Controls, LCLType, WSControls, WSLCLClasses;
 
@@ -98,8 +99,11 @@ type
     class procedure Close(AWinControl, ABrowser: TWinControl);
   end;
 
+{$endif}
+
 implementation
 
+{$ifdef lclgtk3}
 uses
   LMessages, LazGLib2, LazGObject2, LazCairo1, LazGdk3, LazGtk3, Gtk3Widgets,
   Codebot.Interop.WebKit;
@@ -852,5 +856,7 @@ begin
   webkit_web_inspector_close(webkit_web_view_get_inspector(PWebKitWebView(View.Widget)));
   View.InspectorHost := nil;
 end;
+
+{$endif}
 
 end.

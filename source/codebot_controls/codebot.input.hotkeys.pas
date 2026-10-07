@@ -478,6 +478,136 @@ begin
   if Count = 0 then
     gdk_window_remove_filter(FRoot, @FilterKeys, Self);
 end;
+{$elseif defined(windows)}
+uses
+  Windows;
+
+{ TWindowsHotkeyCapture registers hotkeys with RegisterHotKey and receives
+  WM_HOTKEY messages in a hidden message window. LCL key codes are Windows
+  virtual key codes, so they are passed through unchanged. }
+
+type
+  TWindowsHotkeyCapture = class(THotkeyCapture)
+  private
+    FWindow: HWND;
+  protected
+    procedure DoRegister(Key: Word; ShiftState: TShiftState); override;
+    procedure DoUnregister(Key: Word; ShiftState: TShiftState); override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  THotkeyCaptureImpl = TWindowsHotkeyCapture;
+
+const
+  MOD_NOREPEAT = $4000;
+  { The parent of message only windows, not declared by the Windows unit }
+  HWND_MESSAGE = HWND(-3);
+  HotkeyWindowClass = 'CodebotHotkeyWindow';
+
+function ShiftToMod(ShiftState: TShiftState): UINT;
+begin
+  Result := 0;
+  if ssShift in ShiftState then
+    Result := Result or MOD_SHIFT;
+  if ssAlt in ShiftState then
+    Result := Result or MOD_ALT;
+  if ssCtrl in ShiftState then
+    Result := Result or MOD_CONTROL;
+  if ssSuper in ShiftState then
+    Result := Result or MOD_WIN;
+end;
+
+function ModToShift(Modifiers: UINT): TShiftState;
+begin
+  Result := [];
+  if Modifiers and MOD_SHIFT <> 0 then
+    Include(Result, ssShift);
+  if Modifiers and MOD_ALT <> 0 then
+    Include(Result, ssAlt);
+  if Modifiers and MOD_CONTROL <> 0 then
+    Include(Result, ssCtrl);
+  if Modifiers and MOD_WIN <> 0 then
+    Include(Result, ssSuper);
+end;
+
+{ The hotkey id is built from the key and modifiers so it can be found again
+  when unregistering. Application ids must be below $C000. }
+
+function HotkeyId(Key: Word; ShiftState: TShiftState): Integer;
+begin
+  Result := (Integer(ShiftToMod(ShiftState)) shl 8) or (Key and $FF);
+end;
+
+function HotkeyWndProc(Wnd: HWND; Msg: UINT; WParam: WPARAM; LParam: LPARAM): LRESULT; stdcall;
+var
+  Capture: TWindowsHotkeyCapture;
+  Key: Word;
+  ShiftState: TShiftState;
+  H: THotkeyNotify;
+  I: Integer;
+begin
+  if Msg = WM_HOTKEY then
+  begin
+    Capture := TWindowsHotkeyCapture(GetWindowLongPtr(Wnd, GWLP_USERDATA));
+    if Capture <> nil then
+    begin
+      { The low word of LParam holds the modifiers and the high word the key }
+      Key := HiWord(DWORD(LParam));
+      ShiftState := ModToShift(LoWord(DWORD(LParam)) and (not MOD_NOREPEAT));
+      I := Capture.FindHotkey(Key, ShiftState);
+      if I > -1 then
+      begin
+        H := Capture[I];
+        if Assigned(H.Notify) then
+          H.Notify(Capture, Key, ShiftState);
+      end;
+    end;
+    Result := 0;
+  end
+  else
+    Result := DefWindowProc(Wnd, Msg, WParam, LParam);
+end;
+
+constructor TWindowsHotkeyCapture.Create;
+var
+  WndClass: TWndClass;
+begin
+  inherited Create;
+  if not GetClassInfo(HInstance, HotkeyWindowClass, @WndClass) then
+  begin
+    FillChar(WndClass, SizeOf(WndClass), 0);
+    WndClass.lpfnWndProc := @HotkeyWndProc;
+    WndClass.hInstance := HInstance;
+    WndClass.lpszClassName := HotkeyWindowClass;
+    Windows.RegisterClass(WndClass);
+  end;
+  { A message only window receives WM_HOTKEY without being visible }
+  FWindow := CreateWindowEx(0, HotkeyWindowClass, nil, 0, 0, 0, 0, 0,
+    HWND_MESSAGE, 0, HInstance, nil);
+  SetWindowLongPtr(FWindow, GWLP_USERDATA, LONG_PTR(Self));
+end;
+
+destructor TWindowsHotkeyCapture.Destroy;
+begin
+  { The inherited destructor unregisters every hotkey, so the window must
+    still exist while it runs }
+  inherited Destroy;
+  if FWindow <> 0 then
+    DestroyWindow(FWindow);
+end;
+
+procedure TWindowsHotkeyCapture.DoRegister(Key: Word; ShiftState: TShiftState);
+begin
+  RegisterHotKey(FWindow, HotkeyId(Key, ShiftState),
+    ShiftToMod(ShiftState) or MOD_NOREPEAT, Key);
+end;
+
+procedure TWindowsHotkeyCapture.DoUnregister(Key: Word; ShiftState: TShiftState);
+begin
+  UnregisterHotKey(FWindow, HotkeyId(Key, ShiftState));
+end;
 {$endif}
 
 function IsKeyValid(Key: Word): Boolean;
@@ -665,7 +795,7 @@ var
 
 function HotkeyCapture: THotkeyCapture;
 begin
-  {$if defined(linux) and (defined(lclgtk2) or defined(lclgtk3))}
+  {$if (defined(linux) and (defined(lclgtk2) or defined(lclgtk3))) or defined(windows)}
   if InternalCapture = nil then
     InternalCapture := THotkeyCaptureImpl.Create;
   {$endif}

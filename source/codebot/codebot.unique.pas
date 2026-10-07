@@ -76,7 +76,9 @@ begin
   FPort := Key;
   FSocket := TSocket.Create;
   FSocket.Blocking := True;
-  FOriginal := FSocket.Listen(FPort);
+  { Listen on the loopback address only, so other computers cannot send
+    messages and Windows does not show a firewall prompt }
+  FOriginal := FSocket.Listen(TAddressName.Create('127.0.0.1'), FPort);
   if FOriginal then
     FThread := TSimpleThread.Create(Execute);
 end;
@@ -127,7 +129,7 @@ begin
   S := TSocket.Create;
   try
     S.Blocking := True;
-    if S.Connect('localhost', FPort) then
+    if S.Connect('127.0.0.1', FPort) then
       S.Write(Message);
   finally
     S.Free;

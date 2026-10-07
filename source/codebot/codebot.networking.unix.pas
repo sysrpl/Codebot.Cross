@@ -65,9 +65,28 @@ begin
 end;
 
 procedure TUnixClientSocket.Connect;
+var
+  H: TSocketHandle;
+  Addr: TUnixAddr;
+  Path: AnsiString;
 begin
   if FHandle <> INVALID_SOCKET then
-      Exit;
+    Exit;
+  Path := FFileName;
+  if (Path = '') or (Length(Path) >= Length(Addr.path)) then
+    Exit;
+  if not SocketsInit then
+    Exit;
+  H := socket(AF_UNIX, SOCK_STREAM, 0);
+  if H = INVALID_SOCKET then
+    Exit;
+  FillChar(Addr, SizeOf(Addr), 0);
+  Addr.family := AF_UNIX;
+  Move(Path[1], Addr.path[0], Length(Path));
+  if Codebot.Interop.Sockets.connect(H, PSockAddr(@Addr), SizeOf(Addr)) = SOCKET_ERROR then
+    close(H)
+  else
+    FHandle := H;
 end;
 
 procedure TUnixClientSocket.Disconnect;
@@ -106,7 +125,13 @@ end;
 
 function TUnixClientSocket.Write(const S: string): Integer;
 begin
-  Result := 0;
+  if FHandle = INVALID_SOCKET then
+    Exit(SOCKET_ERROR);
+  if S = '' then
+    Exit(0);
+  Result := send(FHandle, PChar(S)^, Length(S), MSG_NOSIGNAL);
+  if Result = SOCKET_ERROR then
+    Disconnect;
 end;
 
 function TUnixClientSocket.GetConnected: Boolean;
@@ -125,6 +150,8 @@ end;
 procedure TUnixClientSocket.SetFileName(Value: string);
 begin
   if FFileName = Value then Exit;
+  { As documented, changing the file name disconnects the socket }
+  Disconnect;
   FFileName := Value;
 end;
 

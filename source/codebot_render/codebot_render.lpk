@@ -14,7 +14,7 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="32">
+    <Files Count="33">
       <Item1>
         <Filename Value="codebot.opengl.pas"/>
         <UnitName Value="Codebot.OpenGL"/>
@@ -143,6 +143,10 @@
         <Filename Value="codebot.opengl.sdl.pas"/>
         <UnitName Value="Codebot.OpenGL.SDL"/>
       </Item32>
+      <Item33>
+        <Filename Value="codebot.interop.mingw.pas"/>
+        <UnitName Value="Codebot.Interop.MinGW"/>
+      </Item33>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">

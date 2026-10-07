@@ -42,6 +42,8 @@ function NewFontD2D(Font: TFont): IFont;
 function NewSurfaceD2D(Canvas: TCanvas): ISurface; overload;
 function NewSurfaceD2D(Control: TWinControl): ISurface; overload;
 function NewBitmapD2D(Width, Height: Integer): IBitmap;
+{ Create a bitmap holding a capture of the desktop across all monitors }
+function NewScreenCaptureD2D: IBitmap;
 {$endif}
 
 implementation
@@ -49,10 +51,7 @@ implementation
 {$ifdef windows}
 function LoadD2D: Boolean;
 begin
-  if SurfaceOptions.HardwareRendering then
-    Result := Direct2DInit
-  else
-    Result := False;
+  Result := Direct2DInit;
 end;
 
 { Implementation types }
@@ -230,6 +229,7 @@ type
     FQuality: TFontQuality;
     FStyle: TFontStyles;
     FSize: Float;
+    FKerning: Float;
     function Format: IDWriteTextFormat;
   public
     constructor Create(F: TFont);
@@ -243,11 +243,14 @@ type
     procedure SetStyle(Value: TFontStyles);
     function GetSize: Float;
     procedure SetSize(Value: Float);
+    function GetKerning: Float;
+    procedure SetKerning(Value: Float);
     property Name: string read GetName write SetName;
     property Color: TColorB read GetColor write SetColor;
     property Quality: TFontQuality read GetQuality write SetQuality;
     property Style: TFontStyles read GetStyle write SetStyle;
     property Size: Float read GetSize write SetSize;
+    property Kerning: Float read GetKerning write SetKerning;
   end;
 
 { TPathD2D }
@@ -555,8 +558,11 @@ function DefaultRenderTargetProperties: TD2D1RenderTargetProperties;
 begin
   Result._type := D2D1_RENDER_TARGET_TYPE_DEFAULT;
   Result.pixelFormat := DefaultPixelFormat;
-  Result.dpiX := 0;
-  Result.dpiY := 0;
+  { 96 dpi makes one Direct2D unit equal one pixel, matching LCL coordinates.
+    A dpi of 0 would use the system dpi and scale all drawing on high dpi
+    displays. }
+  Result.dpiX := 96;
+  Result.dpiY := 96;
   { TODO: Review performance of D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE }
   Result.usage := D2D1_RENDER_TARGET_USAGE_GDI_COMPATIBLE;
   Result.minLevel := D2D1_FEATURE_LEVEL_DEFAULT;
@@ -567,6 +573,10 @@ var
   Prop: TD2D1RenderTargetProperties;
 begin
   Prop := DefaultRenderTargetProperties;
+  { DC render targets are created for each paint and for each bitmap surface.
+    A hardware target is slow to create and must copy its result back from the
+    GPU to the DC, so software rendering is much faster here. }
+  Prop._type := D2D1_RENDER_TARGET_TYPE_SOFTWARE;
   RenderFactory.CreateDCRenderTarget(Prop, Result);
 end;
 
@@ -603,8 +613,8 @@ begin
   Size.height := Height;
   Stride := Width * PixelSize;
   Prop.pixelFormat := DefaultPixelFormat;
-  Prop.dpiX := 0;
-  Prop.dpiY := 0;
+  Prop.dpiX := 96;
+  Prop.dpiY := 96;
   Target.CreateBitmap(Size, Bits, Stride, Prop, Result);
 end;
 
@@ -613,8 +623,8 @@ var
   Prop: TD2D1BitmapProperties;
 begin
   Prop.pixelFormat := DefaultPixelFormat;
-  Prop.dpiX := 0;
-  Prop.dpiY := 0;
+  Prop.dpiX := 96;
+  Prop.dpiY := 96;
   Target.CreateSharedBitmap(ID2D1Bitmap, Pointer(Bitmap), @Prop, Result);
 end;
 
@@ -829,17 +839,18 @@ end;
 
 function CreateTextFormat(Font: IFont): IDWriteTextFormat;
 const
-  Factor = 72 / 96;
   Eng = 'en-us';
   Weight: array[Boolean] of DWRITE_FONT_WEIGHT =
     (DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_WEIGHT_BOLD);
-  Style: array[Boolean] of DWRITE_FONT_WEIGHT =
+  Style: array[Boolean] of DWRITE_FONT_STYLE =
     (DWRITE_FONT_STYLE_NORMAL, DWRITE_FONT_STYLE_ITALIC);
 var
   Size: Float;
   Name: WideString;
 begin
-  Size := Font.Size * Factor;
+  { Font sizes are in points. Render targets use 96 dpi, so DirectWrite sizes
+    are in pixels, which depend on the dpi of the screen. }
+  Size := Font.Size * Dpi / 72;
   Name := Font.Name;
   if WriteFactory.CreateTextFormat(PWideChar(Name), nil, Weight[fsBold in Font.Style],
     Style[fsItalic in Font.Style], DWRITE_FONT_STRETCH_NORMAL, Size,
@@ -853,7 +864,7 @@ var
   S: WideString;
 begin
   if Format = nil then
-    Result := nil;
+    Exit(nil);
   S := Text;
   if WriteFactory.CreateTextLayout(PWideChar(S), Length(S), Format, Width, Height,
     Result) <> S_OK then
@@ -866,7 +877,7 @@ var
   S: WideString;
 begin
   if Format = nil then
-    Result := nil;
+    Exit(nil);
   S := Text;
   if WriteFactory.CreateGdiCompatibleTextLayout(PWideChar(S), Length(S), Format,
     Width, Height, 1, nil, True, Result) <> S_OK then
@@ -1294,21 +1305,32 @@ constructor TFontD2D.Create(F: TFont);
 const
   Points = 72;
 var
+  DefaultFont: TFont;
   LogFont: TLogFont;
 begin
   inherited Create;
-  FName := F.Name;
-  FColor := F.Color;
-  FQuality := F.Quality;
-  FStyle := F.Style;
-  GetObject(F.Handle, SizeOf(LogFont), @LogFont);
-  if LogFont.lfHeight < 0 then
+  DefaultFont := nil;
+  if F = nil then
   begin
-    FSize := -LogFont.lfHeight / Points;
-    FSize := FSize  * Dpi;
-  end
-  else
-    FSize := LogFont.lfHeight;
+    DefaultFont := TFont.Create;
+    F := DefaultFont;
+  end;
+  try
+    FColor := F.Color;
+    FQuality := F.Quality;
+    FStyle := F.Style;
+    GetObject(F.Handle, SizeOf(LogFont), @LogFont);
+    { The logical font holds the real face name when F.Name is 'default' }
+    FName := LogFont.lfFaceName;
+    if FName = '' then
+      FName := F.Name;
+    { Convert the logical font height in pixels to a size in points }
+    FSize := Abs(LogFont.lfHeight) * Points / Dpi;
+    if FSize < 4 then
+      FSize := 4;
+  finally
+    DefaultFont.Free;
+  end;
 end;
 
 function TFontD2D.Format: IDWriteTextFormat;
@@ -1325,7 +1347,11 @@ end;
 
 procedure TFontD2D.SetName(const Value: string);
 begin
-  FName := Value;
+  if Value <> FName then
+  begin
+    FName := Value;
+    FFormat := nil;
+  end;
 end;
 
 function TFontD2D.GetColor: TColorB;
@@ -1355,7 +1381,11 @@ end;
 
 procedure TFontD2D.SetStyle(Value: TFontStyles);
 begin
-  FStyle := Value;
+  if Value <> FStyle then
+  begin
+    FStyle := Value;
+    FFormat := nil;
+  end;
 end;
 
 function TFontD2D.GetSize: Float;
@@ -1374,6 +1404,16 @@ begin
     FSize := Value;
     FFormat := nil;
   end;
+end;
+
+function TFontD2D.GetKerning: Float;
+begin
+  Result := FKerning;
+end;
+
+procedure TFontD2D.SetKerning(Value: Float);
+begin
+  FKerning := Value;
 end;
 
 { TBitmapBrushD2D }
@@ -1612,7 +1652,7 @@ begin
   Path.FClipHeight := 0;
   Path.RestoreClipStack;
   Path.Add;
-  Path.FData := Path.FData;
+  Path.FData := Data;
   C.SetMatrix(Matrix);
 end;
 
@@ -2057,7 +2097,7 @@ var
 begin
   if Width < 1 then
     Exit(0);
-  Layout := CreateTextLayout((Font as TFontD2D).FFormat, Text, Width, MaxTextSize);
+  Layout := CreateTextLayout((Font as TFontD2D).Format, Text, Width, MaxTextSize);
   if Layout = nil then
     Exit(0);
   if Layout.GetMetrics(M) <> S_OK then
@@ -2239,6 +2279,7 @@ const
 var
   FontObj: TFontD2D;
   Layout: IDWriteTextLayout;
+  Layout1: IDWriteTextLayout1;
   Range: TDWriteTextRange;
   Ellipse: IDWriteInlineObject;
   Params1: IDWriteRenderingParams;
@@ -2259,6 +2300,8 @@ begin
   FontObj := Font as TFontD2D;
   { It's hard to tell if CreateGdiTextLayout makes any difference }
   Layout := CreateGdiTextLayout(FontObj.Format, Text, Rect.Width, Rect.Height);
+  if Layout = nil then
+    Exit;
   if Direction in [drLeft..drCenter] then
     Layout.SetWordWrapping(DWRITE_WORD_WRAPPING_NO_WRAP)
   else
@@ -2293,6 +2336,9 @@ begin
     Layout.SetStrikethrough(True, Range);
   if fsUnderline in FontObj.Style then
     Layout.SetUnderline(True, Range);
+  { Kerning adds extra space after each character, like Pango letter spacing }
+  if (FontObj.Kerning <> 0) and Supports(Layout, IDWriteTextLayout1, Layout1) then
+    Layout1.SetCharacterSpacing(0, FontObj.Kerning, 0, Range);
   WriteFactory.CreateEllipsisTrimmingSign(Layout, Ellipse);
   Layout.SetTrimming(TrimChar, Ellipse);
   WriteFactory.CreateRenderingParams(Params1);
@@ -2672,7 +2718,42 @@ begin
   Result := TBitmapD2D.Create;
   Result.SetSize(Width, Height);
 end;
-{$endif}
 
+function NewScreenCaptureD2D: IBitmap;
+const
+  { Include layered windows in the capture }
+  CAPTUREBLT = $40000000;
+var
+  B: TBitmapD2D;
+  X, Y, W, H, I: Integer;
+  DC: HDC;
+  P: PByte;
+begin
+  X := GetSystemMetrics(SM_XVIRTUALSCREEN);
+  Y := GetSystemMetrics(SM_YVIRTUALSCREEN);
+  W := GetSystemMetrics(SM_CXVIRTUALSCREEN);
+  H := GetSystemMetrics(SM_CYVIRTUALSCREEN);
+  B := TBitmapD2D.Create;
+  Result := B;
+  B.SetSize(W, H);
+  if not B.HandleAvailable then
+    Exit;
+  DC := GetDC(0);
+  BitBlt(B.FBitmap.DC, 0, 0, W, H, DC, X, Y, SRCCOPY or CAPTUREBLT);
+  ReleaseDC(0, DC);
+  { GDI leaves the alpha channel at zero, so make every pixel opaque }
+  P := B.FBitmap.Bits;
+  Inc(P, 3);
+  for I := 0 to W * H - 1 do
+  begin
+    P^ := $FF;
+    Inc(P, 4);
+  end;
+end;
+
+initialization
+  { Direct2D is the only drawing backend on Windows }
+  LoadD2D;
+{$endif}
 end.
 

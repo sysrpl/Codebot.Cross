@@ -1355,7 +1355,9 @@ function InitChipmunk2D(ThrowExceptions: Boolean = False): Boolean;
 implementation
 
 uses
-  SysUtils, Codebot.Core;
+  SysUtils, Codebot.Core,
+  { On Windows the C runtime is linked by Codebot.Interop.MinGW }
+  Codebot.Interop.MinGW;
 
 { The static library built by Chipmunk2D/build-single.sh. The codebot_render
   package adds the folder it is written to to the library path. }
@@ -1367,16 +1369,6 @@ const
 {$ifdef unix}
   {$linklib m}
   {$linklib c}
-{$endif}
-{ On Windows the C runtime comes from these MinGW-w64 libraries, which are
-  copied next to libchipmunk2d.a. The math functions are in mingwex, which
-  reports errors through mingw32, the C library functions are imported from
-  the Universal C Runtime by ucrt, and gcc has the stack probe. }
-{$ifdef windows}
-  {$linklib libmingwex.a}
-  {$linklib libmingw32.a}
-  {$linklib libucrt.a}
-  {$linklib libgcc.a}
 {$endif}
 
 { Floating point exceptions are masked while Chipmunk code runs }

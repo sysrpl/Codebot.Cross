@@ -15,7 +15,11 @@ interface
 
 uses
   Classes, SysUtils, Graphics, Controls, LMessages, LCLType,
+  {$ifdef lclgtk3}
   Codebot.WebKit.Controls.Gtk3;
+  {$else}
+  Codebot.WebKit.Controls.Win;
+  {$endif}
 
 type
   TWebHitTestItem = (
@@ -155,11 +159,15 @@ type
 
 { TCustomWebBrowser is an embeddable web browser control.
 
-  The control hosts a WebKitGTK web view once its window is created. Changes
-  made before then, such as setting Location, are kept and applied when the
-  window is created. If the WebKitGTK library is not installed the control
-  paints the WebKit logo and a message instead, which can be checked using the
-  Available function.
+  The control hosts a web view once its window is created, which is WebKitGTK
+  on Linux and Microsoft Edge WebView2 on Windows. Changes made before then,
+  such as setting Location, are kept and applied when the window is created.
+  If the web view library is not installed the control paints the WebKit logo
+  and a message instead, which can be checked using the Available function.
+
+  On Windows the web view is created in the background after the window, and
+  a few features differ. Only one step back or forward in history is possible,
+  HistoryItem returns false, and ZoomTextOnly has no effect.
 
   Nothing is loaded at design time, where the control paints the WebKit logo. }
 
@@ -235,6 +243,12 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure PaintWindow(DC: HDC); override;
     procedure Paint; virtual;
+    {$ifdef windows}
+    { The web view is a window of its own, which is resized with the control
+      and given the focus when the control receives it }
+    procedure Resize; override;
+    procedure DoEnter; override;
+    {$endif}
     { HasView is true when the control hosts a web view, and false when it
       paints itself }
     function HasView: Boolean;
@@ -292,7 +306,8 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    { Available is true when the WebKitGTK library is installed }
+    { Available is true when the WebKitGTK library is installed on Linux, or
+      when WebView2Loader.dll and the WebView2 runtime are found on Windows }
     class function Available: Boolean;
     { Load content by navigating using a protocol such as http: file: or about: }
     procedure Load(const Uri: string);
@@ -407,7 +422,12 @@ type
 
   Nothing is inspected at design time, where the control paints the WebKit
   logo. It paints the logo and a message if the WebKitGTK library is not
-  installed. }
+  installed.
+
+  On Windows the inspector is the developer tools page of WebView2, served by
+  its debugging server. The server is started with the first web view, and
+  only when an inspector control was created before it. Otherwise the
+  developer tools open in a window of their own. }
 
   TWebInspector = class(TWinControl, IWebInspectorEvents)
   private
@@ -430,6 +450,10 @@ type
     procedure PaintWindow(DC: HDC); override;
     procedure Paint; virtual;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    {$ifdef windows}
+    { The inspector is a window of its own, which is resized with the control }
+    procedure Resize; override;
+    {$endif}
     { ControlCanvas is used to paint the control when it cannot host an inspector }
     property ControlCanvas: TControlCanvas read FCanvas;
   public
@@ -453,8 +477,8 @@ implementation
 {$r webkit.res}
 
 uses
-  Forms, Dialogs, WSLCLClasses,
-  Codebot.Interop.WebKit;
+  Forms, Dialogs, WSLCLClasses
+  {$ifdef lclgtk3}, Codebot.Interop.WebKit{$endif};
 
 { PaintLogo paints a control which has no web view. The WebKit logo is drawn
   in the center of a dashed frame with an optional caption below it. Missing
@@ -486,7 +510,12 @@ begin
     Canvas.TextOut((Rect.Left + Rect.Right - Canvas.TextWidth(Caption)) div 2,
       Y + Logo.Height + 4, Caption);
   if Missing then
+    {$ifdef windows}
+    Canvas.TextOut(Rect.Left + 5, Rect.Top + 5,
+      'WebView2Loader.dll or the Microsoft Edge WebView2 runtime is not installed');
+    {$else}
     Canvas.TextOut(Rect.Left + 5, Rect.Top + 5, 'The WebKitGTK library is not installed');
+    {$endif}
 end;
 
 { TCustomWebBrowser }
@@ -566,6 +595,22 @@ procedure TCustomWebBrowser.Paint;
 begin
   PaintLogo(FCanvas, ClientRect, '', not (csDesigning in ComponentState));
 end;
+
+{$ifdef windows}
+procedure TCustomWebBrowser.Resize;
+begin
+  inherited Resize;
+  if HandleAllocated then
+    TWSWebBrowser.UpdateBounds(Self);
+end;
+
+procedure TCustomWebBrowser.DoEnter;
+begin
+  inherited DoEnter;
+  if HandleAllocated then
+    TWSWebBrowser.FocusView(Self);
+end;
+{$endif}
 
 var
   Registered: Boolean;
@@ -1238,6 +1283,10 @@ begin
   ControlStyle := ControlStyle - [csSetCaption];
   Width := 400;
   Height := 200;
+  {$ifdef windows}
+  if not (csDesigning in ComponentState) then
+    InspectorControlCreated;
+  {$endif}
 end;
 
 destructor TWebInspector.Destroy;
@@ -1307,6 +1356,15 @@ procedure TWebInspector.Paint;
 begin
   PaintLogo(FCanvas, ClientRect, 'Web Inspector', not (csDesigning in ComponentState));
 end;
+
+{$ifdef windows}
+procedure TWebInspector.Resize;
+begin
+  inherited Resize;
+  if HandleAllocated then
+    TWSWebInspector.UpdateBounds(Self);
+end;
+{$endif}
 
 procedure TWebInspector.Notification(AComponent: TComponent; Operation: TOperation);
 begin

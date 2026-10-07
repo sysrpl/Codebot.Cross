@@ -21,16 +21,12 @@ type
   TClockWidget = class(TWidget)
     Images: TImageStrip;
     CloseButton: TThinButton;
-    procedure FormClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure CloseButtonClick(Sender: TObject);
   private
     procedure ClockTick(Sender: TObject);
   protected
     FBitmap: IBitmap;
-    FClose: IBitmap;
-    FMoused: Boolean;
-    FMouseOpacity: Float;
     procedure Render; override;
   end;
 
@@ -400,19 +396,7 @@ begin
   DrawLens(Surface);
 end;
 
-procedure TClockWidget.FormClick(Sender: TObject);
-var
-  P: TPointI;
-begin
-  {P := Mouse.CursorPos;
-  P.Offset(-Left, -Top);
-  if (P.Y < FClose.Height) and (P.X > Width - FClose.Width) then
-    Close;}
-end;
-
 procedure TClockWidget.FormCreate(Sender: TObject);
-var
-  Stream: TStream;
 begin
   EdgeSizable := [esNW, esSE, esSW];
   Width := 220;
@@ -420,13 +404,6 @@ begin
   AspectRatio := 1;
   OnTick := ClockTick;
   FBitmap := NewBitmap(Size, Size);
-  {FClose := NewBitmap;
-  Stream := TResourceStream.Create(HInstance, 'CLOSE', RT_RCDATA);
-  try
-    // FClose.LoadFromStream(Stream);
-  finally
-    Stream.Free;
-  end;}
 end;
 
 procedure TClockWidget.ClockTick(Sender: TObject);
@@ -439,22 +416,12 @@ end;
 
 procedure TClockWidget.Render;
 var
-  PriorMoused: Boolean;
   Alpha: Float;
-  P: TPointI;
   B: IGradientBrush;
   R: TRectI;
 begin
-  R := BoundsRect;
-  P := Mouse.CursorPos;
-  PriorMoused := FMoused;
-  FMoused := R.Contains(P);
-  if FMoused <> PriorMoused then
-    if FMoused then
-      Animator.Animate(FMouseOpacity, 1)
-    else
-      Animator.Animate(FMouseOpacity, 0);
-  Alpha := FMouseOpacity;
+  { MouseOpacity fades to 1 while the mouse is over the widget and back to 0 }
+  Alpha := MouseOpacity;
   if Sized then
   begin
     R := ClientRect;
@@ -463,12 +430,8 @@ begin
     B.AddStop(Rgba(clHighlight, 0.2), 0.66);
     B.AddStop(Rgba(clHighlight, 0.1), 1);
     Surface.FillRect(B ,R);
-    {R := FClose.ClientRect;
-    R.X := Width - R.Width - 4;
-    R.Y := 4;
-    FClose.Surface.CopyTo(FClose.ClientRect, Surface, R, $FF);}
   end
-  else if FMoused or Animator.Animated then
+  else if Alpha > 0 then
   begin
     R := ClientRect;
     B := NewBrush(R.TopLeft, R.BottomLeft);

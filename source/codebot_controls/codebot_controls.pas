@@ -19,7 +19,7 @@ uses
   Codebot.Graphics.Windows.ImageBitmap, 
   Codebot.Graphics.Windows.InterfacedBitmap, 
   Codebot.Graphics.Windows.SurfaceD2D, 
-  Codebot.Graphics.Windows.SurfaceGdiPlus, Codebot.Forms.ColorDialog, 
+  Codebot.Forms.ColorDialog, 
   LazarusPackageIntf;
 
 implementation

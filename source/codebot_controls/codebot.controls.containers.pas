@@ -345,9 +345,11 @@ end;
 
 destructor TSizingPanel.Destroy;
 begin
-  FSplitter.Free;
-  FPadding.Free;
-  FImage.Free;
+  { The inherited destructor can still resize and realign the panel, so the
+    fields are set to nil when freed }
+  FreeAndNil(FSplitter);
+  FreeAndNil(FPadding);
+  FreeAndNil(FImage);
   inherited Destroy;
 end;
 
@@ -439,6 +441,10 @@ end;
 procedure TSizingPanel.Resize;
 begin
   inherited Resize;
+  { Resize can be called by the inherited constructor before the splitter
+    is created, or by the inherited destructor after it is freed }
+  if FSplitter = nil then
+    Exit;
   if FSplitter.Enabled then
   case Align of
     alTop, alBottom: SplitterSized(Height);
@@ -557,6 +563,10 @@ var
   M: Integer;
 begin
   R := ClientRect;
+  { The client rect is used while aligning, which can happen before the
+    splitter and padding are created or after they are freed }
+  if (FSplitter = nil) or (FPadding = nil) then
+    Exit(R);
   M := FSplitter.Margin;
   if not FSplitter.Visible then
     M := 0;
