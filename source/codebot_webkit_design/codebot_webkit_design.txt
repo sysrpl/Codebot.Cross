@@ -1,0 +1,3 @@
+The codebot_webkit_design package is the design time package of codebot_webkit. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot_webkit.
+
+Codebot.WebKit.Registration adds TWebBrowser, TWebAddressBar, TWebStatusIndicator, and TWebInspector, along with their palette icons, to the Codebot Webview page of the component palette.

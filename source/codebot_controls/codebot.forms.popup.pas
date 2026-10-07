@@ -21,7 +21,9 @@ uses
   Codebot.Graphics.Types,
   Codebot.Input.MouseMonitor;
 
-{ TPopupForm }
+{ TPopupForm is a borderless form shown below a control, such as a drop down
+  list. It is dismissed when the user clicks outside it. Key events of the
+  owning form are routed to the popup while it is shown. }
 
 type
   TPopupForm = class(TCustomForm)
@@ -37,10 +39,14 @@ type
     procedure MouseNotify(Kind: TMouseNotifyKind; Button: TMouseButton; X,
       Y: Integer);
   protected
+    { Draw the popup border }
     procedure Paint; override;
   public
+    { Create a new popup form }
     constructor Create(AOwner: TComponent); override;
+    { Show the popup below a control }
     procedure Popup(Associate: TControl);
+    { Hide the popup and restore the key events of the owning form }
     procedure Dismiss;
   end;
 

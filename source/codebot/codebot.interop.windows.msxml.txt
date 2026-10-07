@@ -1,0 +1,1 @@
+The Codebot.Interop.Windows.Msxml unit declares the interfaces of MSXML on Windows, including the XML document object model, SAX readers, and XML HTTP requests. This unit is used by Codebot.Text.Xml to read and write XML documents on Windows.

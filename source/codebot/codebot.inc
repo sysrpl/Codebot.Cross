@@ -1,5 +1,7 @@
 {$mode delphi}
-{$modeswitch multihelpers}
+{$if fpc_fullversion >= 30301}
+  {$modeswitch multihelpers}
+{$endif}
 
 {$z4}
 {$macro on}
@@ -8,7 +10,6 @@
 {$WARN 5024 off : Parameter "$1" not used}
 {$WARN 5094 off : Function result variable of a managed type does not seem to be initialized}
 {$WARN 6058 off : Call to subroutine "$1" marked as inline is not inlined}
-{$WARN 6060 off : }
 
 {$ifdef linux}
   {$define apicall := cdecl}
@@ -27,9 +28,6 @@
   {$endif}
 {$endif}
 
-{$ifndef platformok}
-'This library requires windows win32, linux gtk2, or linux gtk3 widgetsets'
-{$endif}
 {$ifndef fpc}
 'This library requires the free pascal compiler'
 {$endif}

@@ -1,0 +1,3 @@
+The Codebot.Animation unit provides the tools needed to animate values over time. TEasing is a function that describes how a value changes over time, the Easings function gives access to the default easings by name, and Interpolate applies an easing to a value.
+
+The unit also defines TVec1Prop, TVec2Prop, TVec3Prop, and TVec4Prop, which are vector properties that can be animated independently of the objects that own them, and IPropertyResolver, which finds one of these properties by name. TAnimationTimer is a timer that runs at a fixed 60 frames per second, and the shared Animator moves properties toward their target values over time using an easing.

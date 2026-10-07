@@ -1,22 +1,24 @@
 unit Codebot.Render.Textures;
 
 {$i render.inc}
+{$pointermath on}
 
 interface
 
 uses
   SysUtils, Classes,
   Codebot.System,
-  Codebot.Graphics,
+  Codebot.Platform,
   Codebot.Graphics.Types,
   Codebot.Geometry,
   Codebot.Render.Contexts;
 
-{ TTexture }
+{ TTexFilter is how a texture is sampled between its pixels }
 
 type
   TTexFilter = (tfNearest, tfLinear);
 
+  { TTexture is an OpenGL texture owned by a render context }
   TTexture = class(TContextManagedObject)
   private
     FHandle: Integer;
@@ -25,7 +27,9 @@ type
     FMagFilter: TTexFilter;
     FMinFilter: TTexFilter;
     FWrap: Boolean;
-    { TODO: Consider adding mipmap property }
+    FMipmaps: Boolean;
+    procedure ApplyFilters;
+    procedure ApplyWrap;
     function GetActive: Boolean;
     procedure SetActive(Value: Boolean);
     procedure SetMagFilter(Value: TTexFilter);
@@ -34,10 +38,16 @@ type
   public
     constructor Create;
     destructor Destroy; override;
-    { Generate mipmaps for the texture }
+    { Generate mipmaps for the texture. Until the texture is loaded again the
+      minify filter samples from the mipmaps. }
     procedure GenerateMipmaps;
-    { Load a texture from a bitmap }
-    procedure LoadFromBitmap(Bitmap: IBitmap);
+    { Load a texture from straight alpha RGBA pixels, four bytes per pixel,
+      with the first row at the top of the image }
+    procedure LoadFromData(Width, Height: Integer; Pixels: Pointer);
+    { Load a texture from a bitmap. Bitmap pixels are converted from
+      premultiplied BGRA to the straight alpha RGBA used by the render
+      context blend function. }
+    procedure LoadFromBitmap(Bitmap: IBitmapData);
     { Load a texture from a stream }
     procedure LoadFromStream(Stream: TStream);
     { Load a texture from a file }
@@ -56,7 +66,7 @@ type
     property Active: Boolean read GetActive write SetActive;
     { Maginify filter }
     property MagFilter: TTexFilter read FMagFilter write SetMagFilter;
-    { Minify filter }
+    { Minify filter, which also blends between mipmaps when they exist }
     property MinFilter: TTexFilter read FMinFilter write SetMinFilter;
     { Texture wrapping }
     property Wrap: Boolean read FWrap write SetWrap;
@@ -78,7 +88,7 @@ type
 
 { TTextureExtension adds the function Textures to the current context }
 
-  TTextureExtension = class helper for TContext
+  TTextureExtension = class helper for TRenderContext
   public
     { Returns the shader collection for the current context }
     function Textures: TTextureCollection;
@@ -87,7 +97,7 @@ type
 implementation
 
 uses
-  Codebot.GLES;
+  Codebot.OpenGL;
 
 constructor TTexture.Create;
 begin
@@ -101,26 +111,25 @@ begin
   inherited Destroy;
 end;
 
-procedure TTexture.GenerateMipmaps;
+procedure TTexture.ApplyFilters;
 begin
-  Push;
-  glGenerateMipmap(GL_TEXTURE_2D);
-  Pop;
-end;
-
-procedure TTexture.LoadFromBitmap(Bitmap: IBitmap);
-begin
-  FWidth := Bitmap.Width;
-  FHeight := Bitmap.Height;
-  Push;
   if FMagFilter = tfLinear then
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
   else
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  if FMinFilter = tfLinear then
+  if FMipmaps then
+    if FMinFilter = tfLinear then
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR)
+    else
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST)
+  else if FMinFilter = tfLinear then
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
   else
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+end;
+
+procedure TTexture.ApplyWrap;
+begin
   if FWrap then
   begin
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -131,25 +140,91 @@ begin
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   end;
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA,
-    GL_UNSIGNED_BYTE, Bitmap.Pixels);
+end;
+
+procedure TTexture.GenerateMipmaps;
+begin
+  if FWidth = 0 then
+    Exit;
+  Push;
+  glGenerateMipmap(GL_TEXTURE_2D);
+  FMipmaps := True;
+  ApplyFilters;
   Pop;
+end;
+
+procedure TTexture.LoadFromData(Width, Height: Integer; Pixels: Pointer);
+begin
+  FWidth := Width;
+  FHeight := Height;
+  FMipmaps := False;
+  Push;
+  ApplyFilters;
+  ApplyWrap;
+  { Rows of any width are tightly packed }
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA,
+    GL_UNSIGNED_BYTE, Pixels);
+  Pop;
+end;
+
+procedure TTexture.LoadFromBitmap(Bitmap: IBitmapData);
+var
+  Data: array of Byte;
+  Source: PPixel;
+  Dest: PByte;
+  A, I: Integer;
+begin
+  if (Bitmap.Width < 1) or (Bitmap.Height < 1) then
+  begin
+    LoadFromData(0, 0, nil);
+    Exit;
+  end;
+  SetLength(Data, Bitmap.Width * Bitmap.Height * 4);
+  Source := Bitmap.Pixels;
+  Dest := @Data[0];
+  for I := 0 to Bitmap.Width * Bitmap.Height - 1 do
+  begin
+    A := Source.Alpha;
+    if A = 0 then
+    begin
+      Dest[0] := 0;
+      Dest[1] := 0;
+      Dest[2] := 0;
+    end
+    else if A = $FF then
+    begin
+      Dest[0] := Source.Red;
+      Dest[1] := Source.Green;
+      Dest[2] := Source.Blue;
+    end
+    else
+    begin
+      Dest[0] := (Source.Red * $FF + A div 2) div A;
+      Dest[1] := (Source.Green * $FF + A div 2) div A;
+      Dest[2] := (Source.Blue * $FF + A div 2) div A;
+    end;
+    Dest[3] := A;
+    Inc(Source);
+    Inc(Dest, 4);
+  end;
+  LoadFromData(Bitmap.Width, Bitmap.Height, @Data[0]);
 end;
 
 procedure TTexture.LoadFromStream(Stream: TStream);
 var
-  B: IBitmap;
+  B: IBitmapData;
 begin
-  B := NewBitmap;
+  B := NewBitmapData;
   B.LoadFromStream(Stream);
   LoadFromBitmap(B);
 end;
 
 procedure TTexture.LoadFromFile(const FileName: string);
 var
-  B: IBitmap;
+  B: IBitmapData;
 begin
-  B := NewBitmap;
+  B := NewBitmapData;
   B.LoadFromFile(FileName);
   LoadFromBitmap(B);
 end;
@@ -199,10 +274,7 @@ begin
   if FWidth = 0 then
     Exit;
   Push;
-  if FMagFilter = tfLinear then
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
-  else
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  ApplyFilters;
   Pop;
 end;
 
@@ -213,10 +285,7 @@ begin
   if FWidth = 0 then
     Exit;
   Push;
-  if FMinFilter = tfLinear then
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
-  else
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  ApplyFilters;
   Pop;
 end;
 
@@ -227,16 +296,7 @@ begin
   if FWidth = 0 then
     Exit;
   Push;
-  if FWrap then
-  begin
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  end
-  else
-  begin
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  end;
+  ApplyWrap;
   Pop;
 end;
 
@@ -255,8 +315,8 @@ var
   Item: TContextManagedObject;
   S: string;
 begin
-  Item := GetObject(Name);
-  if Item <> nil then
+  Item := GetObject(AName);
+  if (Item <> nil) and (Item is TTexture) then
     Result := TTexture(Item)
   else
     Result := nil;

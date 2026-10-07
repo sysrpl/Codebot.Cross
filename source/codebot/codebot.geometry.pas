@@ -48,25 +48,39 @@ type
     class operator Multiply(const A: TVec2; B: Float): TVec2; overload; inline;
     class operator Divide(const A, B: TVec2): TVec2; overload; inline;
     class operator Divide(const A: TVec2; B: Float): TVec2; overload; inline;
+    {doc on}
+    { Returns true if both components match }
     function Equals(const Value: TVec2): Boolean; inline;
+    { The angle in radians from the origin to this vector }
     function Angle: Float; overload;
+    { The angle in radians from this vector to a point }
     function Angle(X, Y: Float): Float; overload;
     function Angle(const V: TVec2): Float; overload;
+    { The length of the vector }
     function Distance: Float; overload;
+    { The distance from this vector to a point }
     function Distance(X, Y: Float): Float; overload;
     function Distance(const V: TVec2): Float; overload;
+    { Move this vector by an amount }
     procedure Offset(X, Y: Float); overload;
     procedure Offset(const V: TVec2); overload;
+    { Return a copy of this vector moved by an amount }
     function Move(X, Y: Float): TVec2; overload;
     function Move(const V: TVec2): TVec2; overload;
+    { Scale the vector to a length of 1 }
     procedure Normalize;
+    { Return a copy of the vector scaled to a length of 1 }
     function Normal: TVec2;
+    { Return the normal rotated 90 degrees }
     function Binormal: TVec2;
+    { The point halfway between this vector and another }
     function Mid(const V: TVec2): TVec2;
+    { The point a distance from this vector toward V }
     function Extend(const V: TVec2; Dist: Float): TVec2;
+    { Rotate V around this vector by an angle in radians }
     function Rotate(const V: TVec2; Angle: Float): TVec2;
-    {doc on}
   public
+    { Components accessible by several names }
     case Integer of
       0: (X, Y: Float);
       1: (S, T: Float);
@@ -84,10 +98,6 @@ type
   See also
   <link Overview.Codebot.Geometry.TVec3, TVec3 members> }
 
-  { TVec3 is a three component vector
-    See also
-    <link Overview.Bare.Geometry.TVec3, TVec3 members> }
-
     TVec3 = record
     public
       {doc off}
@@ -100,17 +110,26 @@ type
       class operator Multiply(const A: TVec3; B: Float): TVec3; overload; inline;
       class operator Divide(const A, B: TVec3): TVec3; overload; inline;
       class operator Divide(const A: TVec3; B: Float): TVec3; overload; inline;
+      {doc on}
+      { Returns true if all components match }
       function Equals(const Value: TVec3): Boolean; inline;
+      { The angles in radians of the vector in the XZ and ZY planes }
       function Angle: TVec2;
+      { Mix with another vector by a percent from 0 to 1 }
       function Blend(const V: TVec3; Percent: Float): TVec3;
+      { The cross product with another vector }
       function Cross(const V: TVec3): TVec3;
+      { The dot product with another vector }
       function Dot(const V: TVec3): Float;
+      { The length of the vector }
       function Distance: Float; overload;
+      { The distance from this vector to a point }
       function Distance(X, Y, Z: Float): Float; overload;
       function Distance(const V: TVec3): Float; overload;
+      { Scale the vector to a length of 1 }
       procedure Normalize;
-      {doc on}
     public
+      { Components accessible by several names }
       case Integer of
         0: (X, Y, Z: Float);
         1: (R, G, B: Float);
@@ -142,9 +161,11 @@ type
     class operator Negative(const A: TVec4): TVec4; inline;
     class operator Equal(const A, B: TVec4): Boolean; inline;
     class operator NotEqual(const A, B: TVec4): Boolean; inline;
-    function Equals(const Value: TVec4): Boolean;
     {doc on}
+    { Returns true if all components match }
+    function Equals(const Value: TVec4): Boolean;
   public
+    { Components accessible by several names }
     case Integer of
       0: (X, Y, Z, W: Float);
       1: (R, G, B, A: Float);
@@ -160,32 +181,42 @@ type
   {doc ignore}
   TVec4Array = TArray<TVec4>;
 
+{ Build a vector from components or extend a smaller vector with more
+  components. The result size is determined by the number of components. }
 function Vec(const X, Y: Float): TVec2; overload; inline;
 function Vec(const X, Y, Z: Float): TVec3; overload; inline;
 function Vec(const X, Y, Z, W: Float): TVec4; overload; inline;
 function Vec(const V: TVec2; Z: Float): TVec3; overload; inline;
 function Vec(const V: TVec2; Z, W: Float): TVec4; overload; inline;
 function Vec(const V: TVec3; W: Float): TVec4; overload; inline;
+{ Build a TVec2 from one repeated value, two components, or the first two
+  components of a larger vector }
 function Vec2(X: Float): TVec2; overload; inline;
 function Vec2(const X, Y: Float): TVec2; overload; inline;
 function Vec2(const V: TVec3): TVec2; overload; inline;
 function Vec2(const V: TVec4): TVec2; overload; inline;
+{ Build a TVec3 from one repeated value, three components, or the first three
+  components of a TVec4 }
 function Vec3(X: Float): TVec3; overload; inline;
 function Vec3(const X, Y, Z: Float): TVec3; overload; inline;
 function Vec3(const V: TVec4): TVec3; overload; inline;
+{ Build a TVec4 from one repeated value or four components }
 function Vec4(X: Float): TVec4; overload; inline;
 function Vec4(const X, Y, Z, W: Float): TVec4; overload; inline;
 
 type
+  { TTransformOrder is the order translate (T), rotate (R), and scale (S)
+    are applied }
   TTransformOrder = (toTRS, toRST, toSTR, toTSR, toSRT, toRTS);
+  { TRotationOrder is the order axis rotations are applied }
   TRotationOrder = (roXYZ, roYZX, roZXY, roXZY, roZYX, roYXZ);
-  TMatrixOrder = (moPrepend, moAppend);
 
 { TMatrix4x4 is used to transform vertices
   See also
   <link Overview.Codebot.Geometry.TMatrix4x4, TMatrix4x4 members> }
 
   TMatrix4x4 = record
+    {doc off}
     class operator Equal(const A, B: TMatrix4x4): Boolean;
     class operator NotEqual(const A, B: TMatrix4x4): Boolean;
     class operator Add(const A, B: TMatrix4x4): TMatrix4x4;
@@ -195,24 +226,48 @@ type
     class operator Multiply(const A: TMatrix4x4; B: Float): TMatrix4x4; overload;
     class operator Divide(const A, B: TMatrix4x4): TMatrix4x4; overload;
     class operator Divide(const A: TMatrix4x4; B: Float): TMatrix4x4; overload;
+    {doc on}
+    { Returns true if all fields match another matrix }
     function Equals(const Value: TMatrix4x4): Boolean;
+    { Reset to the identity matrix }
     procedure Identity;
+    { Returns true if the matrix has an inverse }
     function CanInvert: Boolean;
+    { Invert the matrix in place returning false if it cannot be inverted }
     function Invert: Boolean;
+    { Swap rows and columns }
     procedure Transpose;
+    { Rotate in radians around each axis using DefaultRotationOrder }
     procedure Rotate(X, Y, Z: Float); overload;
+    { Rotate in radians around each axis using a rotation order }
     procedure Rotate(X, Y, Z: Float; Order: TRotationOrder); overload;
+    { Rotate in radians around a pivot point using DefaultRotationOrder }
     procedure RotateAt(X, Y, Z: Float; const Pivot: TVec3); overload;
+    { Rotate in radians around a pivot point using a rotation order }
     procedure RotateAt(X, Y, Z: Float; const Pivot: TVec3; Order: TRotationOrder); overload;
+    { Scale along each axis }
     procedure Scale(X, Y, Z: Float);
+    { Scale along each axis around a pivot point }
     procedure ScaleAt(X, Y, Z: Float; const Pivot: TVec3);
+    { Move along each axis }
     procedure Translate(X, Y, Z: Float);
+    { Transform a 2d point treating Z as zero }
     function Transform(const V: TVec2): TVec2; overload;
+    { Transform a 3d point }
     function Transform(const V: TVec3): TVec3; overload;
+    { Multiply this matrix by another matrix }
     function Transform(const M: TMatrix4x4): TMatrix4x4; overload;
+    { Project transforms a point by the matrix, including the perspective
+      divide, and maps it to window coordinates with the origin at the top
+      left. Returns False when the point is behind the camera. }
+    function Project(const V: TVec3; Width, Height: Float; out P: TVec2): Boolean;
+    { Set a perspective projection given a vertical field of view in degrees }
     procedure Perspective(FoV, AspectRatio, NearPlane, FarPlane: Float);
+    { Set a perspective projection given the bounds of the near plane }
     procedure Frustum(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
+    { Set an orthographic projection }
     procedure Ortho(Left, Right, Top, Bottom, NearPlane, FarPlane: Float);
+    { Set a view matrix looking from eye toward center }
     procedure LookAt(Eye, Center, Up: TVec3);
     case Integer of
       0: (M: array[0..3, 0..3] of Float);
@@ -224,35 +279,108 @@ type
   { Alias for TMatrix4x4 }
   TMatrix = TMatrix4x4;
   {doc ignore}
-  PMatrix = TMatrix;
+  PMatrix = ^TMatrix;
 
-{ TQuaternion }
+{ TMatrix2x2 is a two dimensional matrix without translation. Its fields are
+  in rows, so a vector is transformed as (X*A + Y*B, X*C + Y*D). }
+
+  TMatrix2x2 = record
+    { Create a matrix from its fields }
+    class function Create(A, B, C, D: Float): TMatrix2x2; static; inline;
+    { Transform a vector }
+    class operator Multiply(const M: TMatrix2x2; const V: TVec2): TVec2; inline;
+    { Transform a vector }
+    function Transform(const V: TVec2): TVec2; inline;
+    case Integer of
+      0: (A, B, C, D: Float);
+      1: (V: array[0..3] of Float);
+  end;
+  {doc ignore}
+  PMatrix2x2 = ^TMatrix2x2;
+
+{ TMatrix2x3 is a two dimensional affine matrix, which can rotate, scale,
+  skew, and translate. A point is transformed as
+  (X*A + Y*C + TX, X*B + Y*D + TY), the same layout used by vector graphics
+  libraries.
+
+  A * B gives the matrix which applies B first and then A. }
+
+  TMatrix2x3 = record
+    { Create a matrix from its fields }
+    class function Create(A, B, C, D, TX, TY: Float): TMatrix2x3; static; inline;
+    { Create from fields given a row at a time, as they are written on paper }
+    class function CreateTranspose(A, C, TX, B, D, TY: Float): TMatrix2x3; static; inline;
+    { Create a translation }
+    class function CreateTranslate(const V: TVec2): TMatrix2x3; static;
+    { Create a scale }
+    class function CreateScale(X, Y: Float): TMatrix2x3; static;
+    { Create a rotation }
+    class function CreateRotate(Radians: Float): TMatrix2x3; static;
+    { Create a rotation followed by a translation }
+    class function CreateRigid(const V: TVec2; Radians: Float): TMatrix2x3; static;
+    {doc off}
+    class operator Equal(const A, B: TMatrix2x3): Boolean;
+    class operator NotEqual(const A, B: TMatrix2x3): Boolean;
+    class operator Multiply(const A, B: TMatrix2x3): TMatrix2x3; overload;
+    class operator Multiply(const M: TMatrix2x3; const V: TVec2): TVec2; overload; inline;
+    {doc on}
+    { A two dimensional matrix placed in the XY plane of a 4x4 matrix }
+    class operator Implicit(const M: TMatrix2x3): TMatrix4x4;
+    { Reset to the identity matrix }
+    procedure Identity;
+    { Returns the inverse of the matrix }
+    function Inverse: TMatrix2x3;
+    { The inverse of a matrix which only rotates and translates }
+    function RigidInverse: TMatrix2x3;
+    { Transform a point, which is moved by the translation }
+    function Transform(const V: TVec2): TVec2; inline;
+    { Transform a direction, which is not moved by the translation }
+    function TransformVector(const V: TVec2): TVec2; inline;
+    case Integer of
+      0: (A, B, C, D, TX, TY: Float);
+      1: (V: array[0..5] of Float);
+  end;
+  {doc ignore}
+  PMatrix2x3 = ^TMatrix2x3;
+
+{ TQuaternion represents a 3d rotation }
 
   TQuaternion = record
+    { Convert a quaternion to a rotation matrix }
     class operator Explicit(const A: TQuaternion): TMatrix4x4;
+    { Convert the rotation of a matrix to a quaternion }
     class operator Implicit(const A: TMatrix4x4): TQuaternion;
+    { Combine two rotations }
     class operator Multiply(const A, B: TQuaternion): TQuaternion;
+    { Invert the rotation in place }
     procedure Conjugate;
+    { Scale to unit length }
     procedure Normalize;
     case Integer of
       0: (W, X, Y, Z: Float);
       1: (Q: array[0..3] of Float);
   end;
+  {doc ignore}
   PQuaternion = ^TQuaternion;
 
-{ TSlope2 }
+{ TSlope2 is the slope and y intercept of a 2d line }
 
   TSlope2 = record
+    { Undefined is true when the line is vertical }
     Undefined: Boolean;
+    { The rise over run of the line }
     Ratio: Float;
+    { The y value where the line crosses the y axis }
     Intercept: Float;
   end;
+  {doc ignore}
   PSlope2 = ^TSlope2;
 
 { TLine2 represents a 2d line }
 
   TLine2 = record
   public
+    { Scale both points of the line }
     class operator Multiply(const A: TLine2; B: Float): TLine2; overload;
     { Slope of the line }
     function Slope: TSlope2;
@@ -269,6 +397,7 @@ type
       0: (P0, P1: TVec2);
       1: (P: array[0..1] of TVec2);
   end;
+  {doc ignore}
   PLine2 = ^TLine2;
 
 { Build a 2d line given two points }
@@ -284,7 +413,9 @@ function Line2(X0, Y0, X1, Y1: Float): TLine2; overload; inline;
 type
   TCurve2 = record
   public
+    { Build a curve from a polygon computing distances between points }
     class operator Implicit(const Value: TPolygon): TCurve2;
+    { Return the points of the curve as a polygon }
     class operator Explicit(const Value: TCurve2): TPolygon;
     { Find a heading normal at a distance along the curve }
     function FindNormal(Dist: Float): TVec2;
@@ -298,6 +429,7 @@ type
     { Approximated points over the curve }
     P: TVec2Array;
   end;
+  {doc ignore}
   PCurve2 = ^TCurve2;
 
 { TBezier2 represents a 2d cubic bezier curve
@@ -312,6 +444,7 @@ type
   private
     function InternalFlatten(Count: Integer): TCurve2;
   public
+    { Create a bezier curve given end and control points }
     class function Create(const P0, P1, P2, P3: TVec2): TBezier2; overload; static;
     { Flatten into a 2d approximation of the curve with count points
       Remarks
@@ -322,6 +455,7 @@ type
       0: (P0, P1, P2, P3: TVec2);
       1: (P: array[0..3] of TVec2);
   end;
+  {doc ignore}
   PBezier2 = ^TBezier2;
 
 { Build a 2d cubic bezier curve given four points }
@@ -329,19 +463,178 @@ type
 function Bezier2(const P0, P1, P2, P3: TVec2): TBezier2;
 
 const
+  { A direction with no pitch, heading, or roll }
   StockDirection: TDirection = (
     Pitch: 0; Heading: 0; Roll: 0);
+  { The identity matrix }
   StockMatrix: TMatrix = (M: (
     (1, 0, 0, 0),
     (0, 1, 0, 0),
     (0, 0, 1, 0),
     (0, 0, 0, 1)));
+  { A quaternion with no rotation }
   StockQuaternion: TQuaternion = (W: 1; X: 0; Y: 0; Z: 0);
 
+{ The rotation order used when none is given }
 var
   DefaultRotationOrder: TRotationOrder = roZXY;
 
+{ Triangulate cuts a simple polygon, which may be concave, into triangles by
+  clipping ears. The points are the corners of the polygon in order, wound
+  either way, and the last is joined to the first. The result holds three
+  points for each triangle, wound the same way as the polygon. Points which
+  repeat the point before are dropped. A polygon whose edges cross is still
+  cut into triangles, though they may overlap. }
+function Triangulate(Points: PVec2; Count: Integer): TVec2Array; overload;
+function Triangulate(const Points: TVec2Array): TVec2Array; overload;
+
 implementation
+
+{ TMatrix2x2 }
+
+class function TMatrix2x2.Create(A, B, C, D: Float): TMatrix2x2;
+begin
+  Result.A := A;
+  Result.B := B;
+  Result.C := C;
+  Result.D := D;
+end;
+
+class operator TMatrix2x2.Multiply(const M: TMatrix2x2; const V: TVec2): TVec2;
+begin
+  Result.X := V.X * M.A + V.Y * M.B;
+  Result.Y := V.X * M.C + V.Y * M.D;
+end;
+
+function TMatrix2x2.Transform(const V: TVec2): TVec2;
+begin
+  Result.X := V.X * A + V.Y * B;
+  Result.Y := V.X * C + V.Y * D;
+end;
+
+{ TMatrix2x3 }
+
+class function TMatrix2x3.Create(A, B, C, D, TX, TY: Float): TMatrix2x3;
+begin
+  Result.A := A;
+  Result.B := B;
+  Result.C := C;
+  Result.D := D;
+  Result.TX := TX;
+  Result.TY := TY;
+end;
+
+class function TMatrix2x3.CreateTranspose(A, C, TX, B, D, TY: Float): TMatrix2x3;
+begin
+  Result.A := A;
+  Result.B := B;
+  Result.C := C;
+  Result.D := D;
+  Result.TX := TX;
+  Result.TY := TY;
+end;
+
+class function TMatrix2x3.CreateTranslate(const V: TVec2): TMatrix2x3;
+begin
+  Result := CreateTranspose(1, 0, V.X, 0, 1, V.Y);
+end;
+
+class function TMatrix2x3.CreateScale(X, Y: Float): TMatrix2x3;
+begin
+  Result := CreateTranspose(X, 0, 0, 0, Y, 0);
+end;
+
+class function TMatrix2x3.CreateRotate(Radians: Float): TMatrix2x3;
+var
+  S, C: Float;
+begin
+  S := Sin(Radians);
+  C := Cos(Radians);
+  Result := CreateTranspose(C, -S, 0, S, C, 0);
+end;
+
+class function TMatrix2x3.CreateRigid(const V: TVec2; Radians: Float): TMatrix2x3;
+var
+  S, C: Float;
+begin
+  S := Sin(Radians);
+  C := Cos(Radians);
+  Result := CreateTranspose(C, -S, V.X, S, C, V.Y);
+end;
+
+class operator TMatrix2x3.Equal(const A, B: TMatrix2x3): Boolean;
+begin
+  Result := (A.A = B.A) and (A.B = B.B) and (A.C = B.C) and (A.D = B.D) and
+    (A.TX = B.TX) and (A.TY = B.TY);
+end;
+
+class operator TMatrix2x3.NotEqual(const A, B: TMatrix2x3): Boolean;
+begin
+  Result := not (A = B);
+end;
+
+class operator TMatrix2x3.Multiply(const A, B: TMatrix2x3): TMatrix2x3;
+begin
+  Result := CreateTranspose(
+    A.A * B.A + A.C * B.B, A.A * B.C + A.C * B.D, A.A * B.TX + A.C * B.TY + A.TX,
+    A.B * B.A + A.D * B.B, A.B * B.C + A.D * B.D, A.B * B.TX + A.D * B.TY + A.TY);
+end;
+
+class operator TMatrix2x3.Multiply(const M: TMatrix2x3; const V: TVec2): TVec2;
+begin
+  Result.X := M.A * V.X + M.C * V.Y + M.TX;
+  Result.Y := M.B * V.X + M.D * V.Y + M.TY;
+end;
+
+class operator TMatrix2x3.Implicit(const M: TMatrix2x3): TMatrix4x4;
+begin
+  Result := StockMatrix;
+  Result.M[0, 0] := M.A;
+  Result.M[0, 1] := M.B;
+  Result.M[1, 0] := M.C;
+  Result.M[1, 1] := M.D;
+  Result.M[3, 0] := M.TX;
+  Result.M[3, 1] := M.TY;
+end;
+
+procedure TMatrix2x3.Identity;
+begin
+  A := 1;
+  B := 0;
+  C := 0;
+  D := 1;
+  TX := 0;
+  TY := 0;
+end;
+
+function TMatrix2x3.Inverse: TMatrix2x3;
+var
+  I: Float;
+begin
+  I := 1 / (A * D - C * B);
+  Result := CreateTranspose(
+    D * I, -C * I, (C * TY - TX * D) * I,
+    -B * I, A * I, (TX * B - A * TY) * I);
+end;
+
+function TMatrix2x3.RigidInverse: TMatrix2x3;
+begin
+  Result := CreateTranspose(
+    D, -C, C * TY - TX * D,
+    -B, A, TX * B - A * TY);
+end;
+
+function TMatrix2x3.Transform(const V: TVec2): TVec2;
+begin
+  Result.X := A * V.X + C * V.Y + TX;
+  Result.Y := B * V.X + D * V.Y + TY;
+end;
+
+function TMatrix2x3.TransformVector(const V: TVec2): TVec2;
+begin
+  Result.X := A * V.X + C * V.Y;
+  Result.Y := B * V.X + D * V.Y;
+end;
 
 { TVec2 }
 
@@ -1185,6 +1478,24 @@ begin
   Result := Self * M;
 end;
 
+function TMatrix4x4.Project(const V: TVec3; Width, Height: Float; out P: TVec2): Boolean;
+var
+  X, Y, W: Float;
+begin
+  X := M[0, 0] * V.X + M[1, 0] * V.Y + M[2, 0] * V.Z + M[3, 0];
+  Y := M[0, 1] * V.X + M[1, 1] * V.Y + M[2, 1] * V.Z + M[3, 1];
+  W := M[0, 3] * V.X + M[1, 3] * V.Y + M[2, 3] * V.Z + M[3, 3];
+  Result := W > 0.0001;
+  if not Result then
+  begin
+    P.X := 0;
+    P.Y := 0;
+    Exit;
+  end;
+  P.X := (X / W + 1) * 0.5 * Width;
+  P.Y := (1 - Y / W) * 0.5 * Height;
+end;
+
 procedure TMatrix4x4.Perspective(FoV, AspectRatio, NearPlane, FarPlane: Float);
 var
   XMax, YMax: Float;
@@ -1574,6 +1885,139 @@ begin
   Result.P1 := P1;
   Result.P2 := P2;
   Result.P3 := P3;
+end;
+
+{ Twice the area of a triangle, which is positive when A, B and C turn
+  counter clockwise where y points up }
+
+function TriangleCross(const A, B, C: TVec2): Double;
+begin
+  Result := (B.X - A.X) * (C.Y - A.Y) - (B.Y - A.Y) * (C.X - A.X);
+end;
+
+function Triangulate(Points: PVec2; Count: Integer): TVec2Array;
+const
+  { Points closer than this are taken to be the same point }
+  Near = 0.0001;
+var
+  V, T: TVec2Array;
+  Remain, Tris: Integer;
+  Sign: Double;
+
+  { A corner is an ear when it turns the same way as the polygon and none of
+    the other corners lie inside its triangle }
+  function IsEar(I: Integer): Boolean;
+  var
+    A, B, C, P: TVec2;
+    D1, D2, D3: Double;
+    J: Integer;
+  begin
+    A := V[(I + Remain - 1) mod Remain];
+    B := V[I];
+    C := V[(I + 1) mod Remain];
+    if TriangleCross(A, B, C) * Sign <= 0 then
+      Exit(False);
+    for J := 0 to Remain - 1 do
+    begin
+      P := V[J];
+      { Corners of the triangle, and points which share their place, do not count }
+      if ((Abs(P.X - A.X) < Near) and (Abs(P.Y - A.Y) < Near)) or
+        ((Abs(P.X - B.X) < Near) and (Abs(P.Y - B.Y) < Near)) or
+        ((Abs(P.X - C.X) < Near) and (Abs(P.Y - C.Y) < Near)) then
+        Continue;
+      D1 := TriangleCross(A, B, P) * Sign;
+      D2 := TriangleCross(B, C, P) * Sign;
+      D3 := TriangleCross(C, A, P) * Sign;
+      if (D1 >= 0) and (D2 >= 0) and (D3 >= 0) then
+        Exit(False);
+    end;
+    Result := True;
+  end;
+
+  procedure Clip(I: Integer);
+  var
+    J: Integer;
+  begin
+    T[Tris * 3] := V[(I + Remain - 1) mod Remain];
+    T[Tris * 3 + 1] := V[I];
+    T[Tris * 3 + 2] := V[(I + 1) mod Remain];
+    Inc(Tris);
+    for J := I to Remain - 2 do
+      V[J] := V[J + 1];
+    Dec(Remain);
+  end;
+
+var
+  Area: Double;
+  I, Ear: Integer;
+begin
+  Result := nil;
+  if (Points = nil) or (Count < 3) then
+    Exit;
+  { Copy the points, without those which repeat the point before }
+  SetLength(V, Count);
+  Remain := 0;
+  for I := 0 to Count - 1 do
+  begin
+    if (Remain > 0) and (Abs(Points.X - V[Remain - 1].X) < Near) and
+      (Abs(Points.Y - V[Remain - 1].Y) < Near) then
+    begin
+      Inc(Points);
+      Continue;
+    end;
+    V[Remain] := Points^;
+    Inc(Points);
+    Inc(Remain);
+  end;
+  if (Remain > 1) and (Abs(V[0].X - V[Remain - 1].X) < Near) and
+    (Abs(V[0].Y - V[Remain - 1].Y) < Near) then
+    Dec(Remain);
+  if Remain < 3 then
+    Exit;
+  { The sign of the area tells which way the polygon is wound }
+  Area := 0;
+  for I := 0 to Remain - 1 do
+    Area := Area + V[I].X * V[(I + 1) mod Remain].Y - V[(I + 1) mod Remain].X * V[I].Y;
+  if Area >= 0 then
+    Sign := 1
+  else
+    Sign := -1;
+  SetLength(T, (Remain - 2) * 3);
+  Tris := 0;
+  while Remain > 3 do
+  begin
+    Ear := -1;
+    for I := 0 to Remain - 1 do
+      if IsEar(I) then
+      begin
+        Ear := I;
+        Break;
+      end;
+    { A polygon whose edges cross may have no ear. A corner which turns the
+      right way is clipped instead, or failing that any corner, so that the
+      work always ends. }
+    if Ear < 0 then
+      for I := 0 to Remain - 1 do
+        if TriangleCross(V[(I + Remain - 1) mod Remain], V[I], V[(I + 1) mod Remain]) * Sign > 0 then
+        begin
+          Ear := I;
+          Break;
+        end;
+    if Ear < 0 then
+      Ear := 0;
+    Clip(Ear);
+  end;
+  Clip(1);
+  SetLength(T, Tris * 3);
+  Result := T;
+end;
+
+function Triangulate(const Points: TVec2Array): TVec2Array;
+begin
+  if Length(Points) < 3 then
+    Result := nil
+  else
+    Result := Triangulate(@Points[0], Length(Points));
 end;
 
 end.

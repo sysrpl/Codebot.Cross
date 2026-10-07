@@ -1,0 +1,1 @@
+The Codebot.WebKit.Controls.Extras unit defines controls that work alongside a web browser control. TWebAddressBar is a bar for navigating a browser, with an edit that shows the current location and buttons for back, forward, home, refresh, history, the inspector, print, capture, downloads, and settings. TWebStatusIndicator shows the status of a browser.

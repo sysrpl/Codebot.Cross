@@ -15,8 +15,46 @@ unit Codebot.Graphics.Types;
 interface
 
 uses
-  SysUtils, Classes, Graphics, Math,
-  Codebot.System;
+  { System.UITypes provides TFontStyles and TFontQuality, the same types the
+    LCL uses, and is listed first so the units after it take precedence }
+  System.UITypes,
+  SysUtils, Classes, GraphType, Math,
+  Codebot.System,
+  Codebot.Platform;
+
+{ TColor is the same type as the LCL TColor, declared here using GraphType from
+  LazUtils so this unit does not depend on the LCL. A color is $00BBGGRR, or a
+  system color such as the LCL clBtnFace when the high bit is set. System
+  colors are converted by SystemColorToRGB in Codebot.Platform. The standard
+  colors below have the same values as those in the LCL Graphics unit. }
+
+type
+  TColor = TGraphicsColor;
+
+const
+  clNone = TColor($1FFFFFFF);
+  clDefault = TColor($20000000);
+  clBlack = TColor($000000);
+  clMaroon = TColor($000080);
+  clGreen = TColor($008000);
+  clOlive = TColor($008080);
+  clNavy = TColor($800000);
+  clPurple = TColor($800080);
+  clTeal = TColor($808000);
+  clGray = TColor($808080);
+  clSilver = TColor($C0C0C0);
+  clRed = TColor($0000FF);
+  clLime = TColor($00FF00);
+  clYellow = TColor($00FFFF);
+  clBlue = TColor($FF0000);
+  clFuchsia = TColor($FF00FF);
+  clAqua = TColor($FFFF00);
+  clLtGray = TColor($C0C0C0);
+  clDkGray = TColor($808080);
+  clWhite = TColor($FFFFFF);
+  clMoneyGreen = TColor($C0DCC0);
+  clCream = TColor($F0FBFF);
+  clMedGray = TColor($A4A0A0);
 
 { TDirection has several applications. When drawing text it has
   the following meaning:
@@ -24,32 +62,37 @@ uses
   drLeft: Single line text aligned left center
   drUp: Single line aligned top center
   drRight: Single line aligned right center
-  drBottom: Single line aligned bottom center
+  drDown: Single line aligned bottom center
   drCenter: Single line aligned absolute center
   drFill: Wrapping lines of text aligned center
-  drWrap: Wrapping lines of text starting at the top left (like a text editor)  }
+  drWrap: Wrapping lines of text starting at the top left (like a text editor)
+  drFlow: Wrapping lines of text flowing from the top left }
 
 type
   TDirection = (drLeft, drUp, drRight, drDown, drCenter, drFill, drWrap, drFlow);
+  { A set of directions }
   TDirections = set of TDirection;
 
-{ AlignDir converts ebtween TAlignment and TDirection }
+{ AlignDir converts between TAlignment and TDirection }
 
 const
   AlignDir: array[TAlignment] of TDirection = (drLeft, drRight, drCenter);
 
-{ TDrawStateItem }
+{ TDrawStateItem describes one aspect of how a control should be drawn }
 
 type
   TDrawStateItem = (dsDisabled, dsPressed, dsSelected, dsHot, dsFocused, dsChecked,
     dsExpanded, dsDefaulted, dsThin, dsFlat, dsBackground, dsCustom);
+  { TDrawState is the set of states used when drawing a control }
   TDrawState = set of TDrawStateItem;
 
-{ TPointI }
+{ TPointI is an integer 2d point }
 
   TPointI = record
   public
+    { The coordinates of the point }
     X, Y: Integer;
+    {doc off}
     class operator Implicit(const Value: TPointI): TPoint;
     class operator Implicit(const Value: TPoint): TPointI;
     class operator Negative(const A: TPointI): TPointI;
@@ -57,20 +100,30 @@ type
     class operator NotEqual(const A, B: TPointI): Boolean;
     class operator Add(const A, B: TPointI): TPointI;
     class operator Subtract(const A, B: TPointI): TPointI;
+    {doc on}
+    { Returns true if both coordinates match }
     function Equals(const Value: TPointI): Boolean;
+    { Create a point at the origin }
     class function Create: TPointI; overload; static;
+    { Create a point given its coordinates }
     class function Create(X, Y: Integer): TPointI; overload; static;
+    { The angle in radians from this point to another }
     function Angle(const P: TPointI): Float;
+    { The distance from this point to another }
     function Dist(const P: TPointI): Float;
+    { The point halfway between this point and another }
     function Mid(const P: TPointI): TPointI;
+    { Move this point by an amount }
     procedure Offset(X, Y: Integer); overload;
     procedure Offset(const P: TPointI); overload;
+    { Return a copy of this point moved by an amount }
     function Move(X, Y: Integer): TPointI; overload;
     function Move(const P: TPointI): TPointI; overload;
   end;
+  {doc ignore}
   PPointI = ^TPointI;
 
-{ TRectI }
+{ TRectI is an integer rectangle defined by a position and size }
 
   TRectI = record
   private
@@ -88,47 +141,69 @@ type
     function GetTopRight: TPointI;
     function GetMidPoint: TPointI;
   public
+    { The position and size of the rectangle }
     X, Y, Width, Height: Integer;
+    {doc off}
     class operator Implicit(const Value: TRectI): TRect;
     class operator Implicit(const Value: TRect): TRectI;
     class operator Equal(const A, B: TRectI): Boolean;
     class operator NotEqual(const A, B: TRectI): Boolean;
+    {doc on}
+    { Create an empty rectangle at the origin }
     class function Create: TRectI; overload; static;
+    { Create a rectangle at the origin given a size }
     class function Create(Size: TPointI): TRectI; overload; static;
     class function Create(W, H: Integer): TRectI; overload; static;
+    { Create a rectangle given a position and size }
     class function Create(X, Y, W, H: Integer): TRectI; overload; static;
+    { Returns true if position and size match }
     function Equals(const Value: TRectI): Boolean;
+    { Returns true if a point lies inside the rectangle }
     function Contains(X, Y: Integer): Boolean; overload;
     function Contains(const P: TPointI): Boolean; overload;
+    { Move the rectangle so its center is at a point }
     procedure Center(X, Y: Integer); overload;
     procedure Center(const P: TPointI); overload;
+    { Grow the rectangle on each side by an amount }
     procedure Inflate(X, Y: Integer); overload;
     procedure Inflate(const P: TPointI); overload;
+    { Move the rectangle by an amount }
     procedure Offset(X, Y: Integer); overload;
     procedure Offset(const P: TPointI); overload;
+    { Empty is true when width or height is less than 1 }
     property Empty: Boolean read GetEmpty;
+    { The left edge, setting it keeps the right edge in place }
     property Left: Integer read X write SetLeft;
+    { The top edge, setting it keeps the bottom edge in place }
     property Top: Integer read Y write SetTop;
+    { The right edge }
     property Right: Integer read GetRight write SetRight;
+    { The bottom edge }
     property Bottom: Integer read GetBottom write SetBottom;
+    { The width and height as a point }
     property Size: TPointI read GetSize;
+    { Corner points }
     property TopLeft: TPointI read GetTopLeft;
     property BottomLeft: TPointI read GetBottomLeft;
     property BottomRight: TPointI read GetBottomRight;
     property TopRight: TPointI read GetTopRight;
+    { The center point }
     property MidPoint: TPointI read GetMidPoint;
   end;
+  {doc ignore}
   PRectI = ^TRectI;
 
 { TButtonRects is useful for virtualized buttons }
 
   TButtonRects = TArrayList<TRectI>;
 
-{ TPointF }
+{ TPointF is a floating point 2d point }
 
   TPointF = record
   public
+    { The coordinates of the point }
     X, Y: Float;
+    {doc off}
     class operator Implicit(const Value: TPointI): TPointF;
     class operator Implicit(const Value: TPoint): TPointF;
     class operator Explicit(const Value: TPointF): TPointI;
@@ -139,22 +214,42 @@ type
     class operator Add(const A, B: TPointF): TPointF;
     class operator Subtract(const A, B: TPointF): TPointF;
     class operator Multiply(const A: TPointF; B: Float): TPointF;
+    {doc on}
+    { Returns true if both coordinates match }
     function Equals(const Value: TPointF): Boolean;
+    { Create a point at the origin }
     class function Create: TPointF; overload; static;
+    { Create a point given its coordinates }
     class function Create(X, Y: Float): TPointF; overload; static;
+    { Move this point by an amount }
     procedure Offset(X, Y: Float); overload;
     procedure Offset(const P: TPointF); overload;
+    { Return a copy of this point moved by an amount }
     function Move(X, Y: Float): TPointF; overload;
     function Move(const P: TPointF): TPointF; overload;
+    { The angle in radians from this point to another }
     function Angle(const P: TPointF): Float;
+    { The distance from this point to another }
     function Dist(const P: TPointF): Float;
+    { The point halfway between this point and another }
     function Mid(const P: TPointF): TPointF;
+    { A point a distance beyond this point along the line from P }
     function Extend(const P: TPointF; Dist: Float): TPointF;
-    function Rotate(const P: TPointF; Angle: Float): TPointF;
+    { Rotate the point around P by an angle in radians }
+    function Rotate(const P: TPointF; Angle: Float): TPointF; overload;
+    { Rotate the point about the origin. A positive angle turns it
+      counterclockwise on the screen, where Y points down, as in Tiny Sim. }
+    function Rotate(Angle: Float): TPointF; overload;
+    { The distance from the origin, or from a point }
+    function Distance: Float; overload;
+    function Distance(const P: TPointF): Float; overload;
+    { Scale the point to a distance of 1 from the origin }
+    procedure Normalize;
   end;
+  {doc ignore}
   PPointF = ^TPointF;
 
-{ TRectF }
+{ TRectF is a floating point rectangle defined by a position and size }
 
   TRectF = record
   private
@@ -176,7 +271,9 @@ type
     function GetMidRight: TPointF;
     function GetMidBottom: TPointF;
   public
+    { The position and size of the rectangle }
     X, Y, Width, Height: Float;
+    {doc off}
     class operator Implicit(const Value: TRectI): TRectF;
     class operator Implicit(const Value: TRect): TRectF;
     class operator Explicit(const Value: TRectF): TRectI;
@@ -184,73 +281,108 @@ type
     class operator Equal(const A, B: TRectF): Boolean;
     class operator NotEqual(const A, B: TRectF): Boolean;
     class operator Multiply(const A: TRectF; B: Float): TRectF;
+    {doc on}
+    { Create an empty rectangle at the origin }
     class function Create: TRectF; overload; static;
+    { Create a rectangle at the origin given a size }
     class function Create(Size: TPointF): TRectF; overload; static;
     class function Create(W, H: Float): TRectF; overload; static;
+    { Create a rectangle given a position and size }
     class function Create(X, Y, W, H: Float): TRectF; overload; static;
+    { Returns true if position and size match }
     function Equals(const Value: TRectF): Boolean;
+    { Returns true if a point lies inside the rectangle }
     function Contains(X, Y: Float): Boolean; overload;
     function Contains(const P: TPointF): Boolean; overload;
+    { Move the rectangle so its center is at a point or the center of another rectangle }
     procedure Center(X, Y: Float); overload;
     procedure Center(const P: TPointF); overload;
     procedure Center(const R: TRectF); overload;
+    { Grow the rectangle on each side by an amount }
     procedure Inflate(X, Y: Float); overload;
     procedure Inflate(const P: TPointF); overload;
+    { Move the rectangle by an amount }
     procedure Offset(X, Y: Float); overload;
     procedure Offset(const P: TPointF); overload;
+    { Empty is true when width or height is zero or less }
     property Empty: Boolean read GetEmpty;
+    { The left edge, setting it keeps the right edge in place }
     property Left: Float read X write SetLeft;
+    { The top edge, setting it keeps the bottom edge in place }
     property Top: Float read Y write SetTop;
+    { The right edge }
     property Right: Float read GetRight write SetRight;
+    { The bottom edge }
     property Bottom: Float read GetBottom write SetBottom;
+    { The width and height as a point }
     property Size: TPointF read GetSize;
+    { Corner points }
     property TopLeft: TPointF read GetTopLeft;
     property TopRight: TPointF read GetTopRight;
     property BottomLeft: TPointF read GetBottomLeft;
     property BottomRight: TPointF read GetBottomRight;
+    { The center point }
     property MidPoint: TPointF read GetMidPoint;
+    { Midpoints of each edge }
     property MidLeft: TPointF read GetMidLeft;
     property MidTop: TPointF read GetMidTop;
     property MidRight: TPointF read GetMidRight;
     property MidBottom: TPointF read GetMidBottom;
   end;
+  {doc ignore}
   PRectF = ^TRectF;
 
-  TMatrixOrder = (moPrepend, moAppend);
-
-{ TMatrix2x3 }
+{ TMatrix2x3 is a 2d affine transform. Order determines if new operations are
+  applied before or after the existing transform. }
 
   TMatrix2x3 = record
   public
+    { The fields of the matrix where M31 and M32 are the translation }
     M11, M12, M21, M22, M31, M32: Float;
+    { Determines if new operations are prepended or appended }
     Order: TMatrixOrder;
+    {doc off}
     class operator Equal(const A, B: TMatrix2x3): Boolean;
     class operator Negative(const A: TMatrix2x3): TMatrix2x3;
     class operator Multiply(const A, B: TMatrix2x3): TMatrix2x3;
     class operator Multiply(const A: TMatrix2x3; const B: TPointF): TPointF;
+    {doc on}
+    { Create an identity matrix }
     class function Create: TMatrix2x3; static;
+    { Returns true if the matrix can be inverted }
     function CanInvert: Boolean;
+    { Reset to the identity matrix }
     procedure Identity;
+    { Invert the matrix in place }
     procedure Invert;
+    { Rotate by an angle in radians }
     procedure Rotate(Angle: Float);
+    { Rotate by an angle in radians around a point }
     procedure RotateAt(Angle: Float; X, Y: Float); overload;
     procedure RotateAt(Angle: Float; const P: TPointF); overload;
+    { Scale along each axis }
     procedure Scale(SX, SY: Float);
+    { Scale along each axis around a point }
     procedure ScaleAt(SX, SY, X, Y: Float); overload;
     procedure ScaleAt(SX, SY: Float; const P: TPointF); overload;
+    { Skew by angles in radians }
     procedure Skew(AngleX, AngleY: Float); overload;
+    { Move along each axis }
     procedure Translate(X, Y: Float); overload;
     procedure Translate(const P: TPointF); overload;
+    { Multiply by another matrix }
     function Multiply(const M: TMatrix2x3): TMatrix2x3; overload;
+    { Transform a point }
     function Multiply(const P: TPointF): TPointF; overload;
   end;
+  {doc ignore}
   PMatrix2x3 = ^TMatrix2x3;
 
-{ TColorAlpha }
+{ TColorAlpha is a color with alpha packed into 32 bits }
 
   TColorAlpha = type LongWord;
 
-{ TColorAlphaHelper }
+{ TColorAlphaHelper gives access to the channels of a TColorAlpha }
 
   TColorAlphaHelper = record helper for TColorAlpha
   private
@@ -263,28 +395,41 @@ type
     procedure SetGreen(Value: Byte);
     procedure SetRed(Value: Byte);
   public
+    { The blue channel }
     property Blue: Byte read GetBlue write SetBlue;
+    { The green channel }
     property Green: Byte read GetGreen write SetGreen;
+    { The red channel }
     property Red: Byte read GetRed write SetRed;
+    { The alpha channel }
     property Alpha: Byte read GetAlpha write SetAlpha;
   end;
 
-{ THSL }
+{ THSL is a color in hue, saturation, and lightness form with each value
+  ranging from 0 to 1. A float converts to a fully saturated hue. }
 
   THSL = record
   public
+    { The hue, saturation, and lightness from 0 to 1 }
     Hue, Saturation, Lightness: Float;
+    {doc off}
     class operator Implicit(Value: Float): THSL;
     class operator Implicit(const Value: THSL): Float;
+    {doc on}
+    { Create an HSL color }
     class function Create(H, S, L: Float): THSL; static;
   end;
+  {doc ignore}
   PHSL = ^THSL;
 
-{ TColorB }
+{ TColorB is a 32 bit color with byte channels stored blue, green, red,
+  then alpha }
 
   TColorB = packed record
   public
+    { The channels of the color }
     Blue, Green, Red, Alpha: Byte;
+    {doc off}
     class operator Implicit(Value: TColorB): TColorAlpha;
     class operator Implicit(Value: TColorAlpha): TColorB;
     class operator Implicit(const Value: THSL): TColorB;
@@ -295,49 +440,78 @@ type
     class operator Positive(A: TColorB): TColorB;
     class operator Equal(A: TColorB; B: TColorB): Boolean;
     class operator NotEqual(A: TColorB; B: TColorB): Boolean;
+    {doc on}
+    { Create a color given blue, green, red, and alpha }
     class function Create(B, G, R: Byte; A: Byte = $FF): TColorB; static;
+    { Return the color with red, green, and blue inverted }
     function Invert: TColorB;
+    { Mix with another color by a percent from 0 to 1 }
     function Blend(Value: TColorB; Percent: Float): TColorB;
+    { Move toward gray by a percent from 0 to 1 }
     function Desaturate(Percent: Float): TColorB;
+    { Move toward black by a percent from 0 to 1 }
     function Darken(Percent: Float): TColorB;
+    { Move toward white by a percent from 0 to 1 }
     function Lighten(Percent: Float): TColorB;
+    { Multiply alpha by a percent from 0 to 1 }
     function Fade(Percent: Float): TColorB;
+    { Convert to a TColor dropping alpha }
     function Color: TColor;
   end;
+  {doc ignore}
   PColorB = ^TColorB;
 
+  { Alias for TColorB }
   TBGRA = TColorB;
+  {doc ignore}
   PBGRA = PColorB;
+  { Alias for TColorB used for bitmap pixels }
   TPixel = TColorB;
+  {doc ignore}
   PPixel = PColorB;
 
+{ TColorHelper adds methods to TColor }
+
   TColorHelper = record helper for TColor
+    { Mix with another color by a percent from 0 to 1 }
     function Blend(Value: TColorB; Percent: Float): TColorB;
   end;
 
-{ TColorF }
+{ TColorF is a color with floating point channels from 0 to 1 }
 
   TColorF = record
   public
+    { The channels of the color }
     Blue, Green, Red, Alpha: Float;
+    {doc off}
     class operator Implicit(const Value: THSL): TColorF;
     class operator Explicit(const Value: TColorF): THSL;
     class operator Implicit(Value: TColorB): TColorF;
     class operator Explicit(const Value: TColorF): TColorB;
     class operator Implicit(Value: TColor): TColorF;
     class operator Explicit(const Value: TColorF): TColor;
+    {doc on}
+    { Create a color given blue, green, red, and alpha }
     class function Create(B, G, R: Float; A: Byte = 1): TColorF; static;
+    { Mix with another color by a percent from 0 to 1 }
     function Blend(const Value: TColorF; Percent: Float): TColorF;
+    { Move toward gray by a percent from 0 to 1 }
     function Desaturate(Percent: Float): TColorF;
+    { Multiply alpha by a percent from 0 to 1 }
     function Fade(Percent: Float): TColorF;
+    { Convert to a TColor dropping alpha }
     function Color: TColor;
   end;
+  {doc ignore}
   PColorF = ^TColorF;
 
 const
+  { The number of bytes in a pixel }
   PixelSize = SizeOf(TPixel);
 
+  { A fully transparent color }
   clTransparent: TColorB = (Blue: 0; Green: 0; Red: 0; Alpha: 0);
+  { Web colors as TColor values }
   clAliceBlue = TColor($FFF8F0);
   clAntiqueWhite = TColor($D7EBFA);
   clAquamarine = TColor($D4FF7F);
@@ -463,30 +637,203 @@ const
   clWhiteSmoke = TColor($F5F5F5);
   clYellowGreen = TColor($32CD9A);
 
+{ Named colors as TColorB values, which convert to TColorF. These are the web
+  colors with full opacity, the same as those in Tiny Sim. }
+
+const
+  colorBlack               : TColorB = (Blue: $00; Green: $00; Red: $00; Alpha: $FF);
+  colorWhite               : TColorB = (Blue: $FF; Green: $FF; Red: $FF; Alpha: $FF);
+  colorAliceBlue           : TColorB = (Blue: $FF; Green: $F8; Red: $F0; Alpha: $FF);
+  colorAntiqueWhite        : TColorB = (Blue: $D7; Green: $EB; Red: $FA; Alpha: $FF);
+  colorAqua                : TColorB = (Blue: $FF; Green: $FF; Red: $00; Alpha: $FF);
+  colorAquamarine          : TColorB = (Blue: $D4; Green: $FF; Red: $7F; Alpha: $FF);
+  colorAzure               : TColorB = (Blue: $FF; Green: $FF; Red: $F0; Alpha: $FF);
+  colorBeige               : TColorB = (Blue: $DC; Green: $F5; Red: $F5; Alpha: $FF);
+  colorBisque              : TColorB = (Blue: $C4; Green: $E4; Red: $FF; Alpha: $FF);
+  colorBlanchedAlmond      : TColorB = (Blue: $CD; Green: $EB; Red: $FF; Alpha: $FF);
+  colorBlue                : TColorB = (Blue: $FF; Green: $00; Red: $00; Alpha: $FF);
+  colorBlueViolet          : TColorB = (Blue: $E2; Green: $2B; Red: $8A; Alpha: $FF);
+  colorBrown               : TColorB = (Blue: $2A; Green: $2A; Red: $A5; Alpha: $FF);
+  colorBurlyWood           : TColorB = (Blue: $87; Green: $B8; Red: $DE; Alpha: $FF);
+  colorCadetBlue           : TColorB = (Blue: $A0; Green: $9E; Red: $5F; Alpha: $FF);
+  colorChartreuse          : TColorB = (Blue: $00; Green: $FF; Red: $7F; Alpha: $FF);
+  colorChocolate           : TColorB = (Blue: $1E; Green: $69; Red: $D2; Alpha: $FF);
+  colorCoral               : TColorB = (Blue: $50; Green: $7F; Red: $FF; Alpha: $FF);
+  colorCornflowerBlue      : TColorB = (Blue: $ED; Green: $95; Red: $64; Alpha: $FF);
+  colorCornsilk            : TColorB = (Blue: $DC; Green: $F8; Red: $FF; Alpha: $FF);
+  colorCrimson             : TColorB = (Blue: $3C; Green: $14; Red: $DC; Alpha: $FF);
+  colorCyan                : TColorB = (Blue: $FF; Green: $FF; Red: $00; Alpha: $FF);
+  colorDarkBlue            : TColorB = (Blue: $8B; Green: $00; Red: $00; Alpha: $FF);
+  colorDarkCyan            : TColorB = (Blue: $8B; Green: $8B; Red: $00; Alpha: $FF);
+  colorDarkGoldenRod       : TColorB = (Blue: $0B; Green: $86; Red: $B8; Alpha: $FF);
+  colorDarkGray            : TColorB = (Blue: $A9; Green: $A9; Red: $A9; Alpha: $FF);
+  colorDarkGrey            : TColorB = (Blue: $A9; Green: $A9; Red: $A9; Alpha: $FF);
+  colorDarkGreen           : TColorB = (Blue: $00; Green: $64; Red: $00; Alpha: $FF);
+  colorDarkKhaki           : TColorB = (Blue: $6B; Green: $B7; Red: $BD; Alpha: $FF);
+  colorDarkMagenta         : TColorB = (Blue: $8B; Green: $00; Red: $8B; Alpha: $FF);
+  colorDarkOliveGreen      : TColorB = (Blue: $2F; Green: $6B; Red: $55; Alpha: $FF);
+  colorDarkOrange          : TColorB = (Blue: $00; Green: $8C; Red: $FF; Alpha: $FF);
+  colorDarkOrchid          : TColorB = (Blue: $CC; Green: $32; Red: $99; Alpha: $FF);
+  colorDarkRed             : TColorB = (Blue: $00; Green: $00; Red: $8B; Alpha: $FF);
+  colorDarkSalmon          : TColorB = (Blue: $7A; Green: $96; Red: $E9; Alpha: $FF);
+  colorDarkSeaGreen        : TColorB = (Blue: $8F; Green: $BC; Red: $8F; Alpha: $FF);
+  colorDarkSlateBlue       : TColorB = (Blue: $8B; Green: $3D; Red: $48; Alpha: $FF);
+  colorDarkSlateGray       : TColorB = (Blue: $4F; Green: $4F; Red: $2F; Alpha: $FF);
+  colorDarkSlateGrey       : TColorB = (Blue: $4F; Green: $4F; Red: $2F; Alpha: $FF);
+  colorDarkTurquoise       : TColorB = (Blue: $D1; Green: $CE; Red: $00; Alpha: $FF);
+  colorDarkViolet          : TColorB = (Blue: $D3; Green: $00; Red: $94; Alpha: $FF);
+  colorDeepPink            : TColorB = (Blue: $93; Green: $14; Red: $FF; Alpha: $FF);
+  colorDeepSkyBlue         : TColorB = (Blue: $FF; Green: $BF; Red: $00; Alpha: $FF);
+  colorDimGray             : TColorB = (Blue: $69; Green: $69; Red: $69; Alpha: $FF);
+  colorDimGrey             : TColorB = (Blue: $69; Green: $69; Red: $69; Alpha: $FF);
+  colorDodgerBlue          : TColorB = (Blue: $FF; Green: $90; Red: $1E; Alpha: $FF);
+  colorFireBrick           : TColorB = (Blue: $22; Green: $22; Red: $B2; Alpha: $FF);
+  colorFloralWhite         : TColorB = (Blue: $F0; Green: $FA; Red: $FF; Alpha: $FF);
+  colorForestGreen         : TColorB = (Blue: $22; Green: $8B; Red: $22; Alpha: $FF);
+  colorFuchsia             : TColorB = (Blue: $FF; Green: $00; Red: $FF; Alpha: $FF);
+  colorGainsboro           : TColorB = (Blue: $DC; Green: $DC; Red: $DC; Alpha: $FF);
+  colorGhostWhite          : TColorB = (Blue: $FF; Green: $F8; Red: $F8; Alpha: $FF);
+  colorGold                : TColorB = (Blue: $00; Green: $D7; Red: $FF; Alpha: $FF);
+  colorGoldenRod           : TColorB = (Blue: $20; Green: $A5; Red: $DA; Alpha: $FF);
+  colorGray                : TColorB = (Blue: $80; Green: $80; Red: $80; Alpha: $FF);
+  colorGrey                : TColorB = (Blue: $80; Green: $80; Red: $80; Alpha: $FF);
+  colorGreen               : TColorB = (Blue: $00; Green: $80; Red: $00; Alpha: $FF);
+  colorGreenYellow         : TColorB = (Blue: $2F; Green: $FF; Red: $AD; Alpha: $FF);
+  colorHoneyDew            : TColorB = (Blue: $F0; Green: $FF; Red: $F0; Alpha: $FF);
+  colorHotPink             : TColorB = (Blue: $B4; Green: $69; Red: $FF; Alpha: $FF);
+  colorIndianRed           : TColorB = (Blue: $5C; Green: $5C; Red: $CD; Alpha: $FF);
+  colorIndigo              : TColorB = (Blue: $82; Green: $00; Red: $4B; Alpha: $FF);
+  colorIvory               : TColorB = (Blue: $F0; Green: $FF; Red: $FF; Alpha: $FF);
+  colorKhaki               : TColorB = (Blue: $8C; Green: $E6; Red: $F0; Alpha: $FF);
+  colorLavender            : TColorB = (Blue: $FA; Green: $E6; Red: $E6; Alpha: $FF);
+  colorLavenderBlush       : TColorB = (Blue: $F5; Green: $F0; Red: $FF; Alpha: $FF);
+  colorLawnGreen           : TColorB = (Blue: $00; Green: $FC; Red: $7C; Alpha: $FF);
+  colorLemonChiffon        : TColorB = (Blue: $CD; Green: $FA; Red: $FF; Alpha: $FF);
+  colorLightBlue           : TColorB = (Blue: $E6; Green: $D8; Red: $AD; Alpha: $FF);
+  colorLightCoral          : TColorB = (Blue: $80; Green: $80; Red: $F0; Alpha: $FF);
+  colorLightCyan           : TColorB = (Blue: $FF; Green: $FF; Red: $E0; Alpha: $FF);
+  colorLightGoldenRodYellow: TColorB = (Blue: $D2; Green: $FA; Red: $FA; Alpha: $FF);
+  colorLightGray           : TColorB = (Blue: $D3; Green: $D3; Red: $D3; Alpha: $FF);
+  colorLightGrey           : TColorB = (Blue: $D3; Green: $D3; Red: $D3; Alpha: $FF);
+  colorLightGreen          : TColorB = (Blue: $90; Green: $EE; Red: $90; Alpha: $FF);
+  colorLightPink           : TColorB = (Blue: $C1; Green: $B6; Red: $FF; Alpha: $FF);
+  colorLightSalmon         : TColorB = (Blue: $7A; Green: $A0; Red: $FF; Alpha: $FF);
+  colorLightSeaGreen       : TColorB = (Blue: $AA; Green: $B2; Red: $20; Alpha: $FF);
+  colorLightSkyBlue        : TColorB = (Blue: $FA; Green: $CE; Red: $87; Alpha: $FF);
+  colorLightSlateGray      : TColorB = (Blue: $99; Green: $88; Red: $77; Alpha: $FF);
+  colorLightSlateGrey      : TColorB = (Blue: $99; Green: $88; Red: $77; Alpha: $FF);
+  colorLightSteelBlue      : TColorB = (Blue: $DE; Green: $C4; Red: $B0; Alpha: $FF);
+  colorLightYellow         : TColorB = (Blue: $E0; Green: $FF; Red: $FF; Alpha: $FF);
+  colorLime                : TColorB = (Blue: $00; Green: $FF; Red: $00; Alpha: $FF);
+  colorLimeGreen           : TColorB = (Blue: $32; Green: $CD; Red: $32; Alpha: $FF);
+  colorLinen               : TColorB = (Blue: $E6; Green: $F0; Red: $FA; Alpha: $FF);
+  colorMagenta             : TColorB = (Blue: $FF; Green: $00; Red: $FF; Alpha: $FF);
+  colorMaroon              : TColorB = (Blue: $00; Green: $00; Red: $80; Alpha: $FF);
+  colorMediumAquaMarine    : TColorB = (Blue: $AA; Green: $CD; Red: $66; Alpha: $FF);
+  colorMediumBlue          : TColorB = (Blue: $CD; Green: $00; Red: $00; Alpha: $FF);
+  colorMediumOrchid        : TColorB = (Blue: $D3; Green: $55; Red: $BA; Alpha: $FF);
+  colorMediumPurple        : TColorB = (Blue: $DB; Green: $70; Red: $93; Alpha: $FF);
+  colorMediumSeaGreen      : TColorB = (Blue: $71; Green: $B3; Red: $3C; Alpha: $FF);
+  colorMediumSlateBlue     : TColorB = (Blue: $EE; Green: $68; Red: $7B; Alpha: $FF);
+  colorMediumSpringGreen   : TColorB = (Blue: $9A; Green: $FA; Red: $00; Alpha: $FF);
+  colorMediumTurquoise     : TColorB = (Blue: $CC; Green: $D1; Red: $48; Alpha: $FF);
+  colorMediumVioletRed     : TColorB = (Blue: $85; Green: $15; Red: $C7; Alpha: $FF);
+  colorMidnightBlue        : TColorB = (Blue: $70; Green: $19; Red: $19; Alpha: $FF);
+  colorMintCream           : TColorB = (Blue: $FA; Green: $FF; Red: $F5; Alpha: $FF);
+  colorMistyRose           : TColorB = (Blue: $E1; Green: $E4; Red: $FF; Alpha: $FF);
+  colorMoccasin            : TColorB = (Blue: $B5; Green: $E4; Red: $FF; Alpha: $FF);
+  colorNavajoWhite         : TColorB = (Blue: $AD; Green: $DE; Red: $FF; Alpha: $FF);
+  colorNavy                : TColorB = (Blue: $80; Green: $00; Red: $00; Alpha: $FF);
+  colorOldLace             : TColorB = (Blue: $E6; Green: $F5; Red: $FD; Alpha: $FF);
+  colorOlive               : TColorB = (Blue: $00; Green: $80; Red: $80; Alpha: $FF);
+  colorOliveDrab           : TColorB = (Blue: $23; Green: $8E; Red: $6B; Alpha: $FF);
+  colorOrange              : TColorB = (Blue: $00; Green: $A5; Red: $FF; Alpha: $FF);
+  colorOrangeRed           : TColorB = (Blue: $00; Green: $45; Red: $FF; Alpha: $FF);
+  colorOrchid              : TColorB = (Blue: $D6; Green: $70; Red: $DA; Alpha: $FF);
+  colorPaleGoldenRod       : TColorB = (Blue: $AA; Green: $E8; Red: $EE; Alpha: $FF);
+  colorPaleGreen           : TColorB = (Blue: $98; Green: $FB; Red: $98; Alpha: $FF);
+  colorPaleTurquoise       : TColorB = (Blue: $EE; Green: $EE; Red: $AF; Alpha: $FF);
+  colorPaleVioletRed       : TColorB = (Blue: $93; Green: $70; Red: $DB; Alpha: $FF);
+  colorPapayaWhip          : TColorB = (Blue: $D5; Green: $EF; Red: $FF; Alpha: $FF);
+  colorPeachPuff           : TColorB = (Blue: $B9; Green: $DA; Red: $FF; Alpha: $FF);
+  colorPeru                : TColorB = (Blue: $3F; Green: $85; Red: $CD; Alpha: $FF);
+  colorPink                : TColorB = (Blue: $CB; Green: $C0; Red: $FF; Alpha: $FF);
+  colorPlum                : TColorB = (Blue: $DD; Green: $A0; Red: $DD; Alpha: $FF);
+  colorPowderBlue          : TColorB = (Blue: $E6; Green: $E0; Red: $B0; Alpha: $FF);
+  colorPurple              : TColorB = (Blue: $80; Green: $00; Red: $80; Alpha: $FF);
+  colorRebeccaPurple       : TColorB = (Blue: $99; Green: $33; Red: $66; Alpha: $FF);
+  colorRed                 : TColorB = (Blue: $00; Green: $00; Red: $FF; Alpha: $FF);
+  colorRosyBrown           : TColorB = (Blue: $8F; Green: $8F; Red: $BC; Alpha: $FF);
+  colorRoyalBlue           : TColorB = (Blue: $E1; Green: $69; Red: $41; Alpha: $FF);
+  colorSaddleBrown         : TColorB = (Blue: $13; Green: $45; Red: $8B; Alpha: $FF);
+  colorSalmon              : TColorB = (Blue: $72; Green: $80; Red: $FA; Alpha: $FF);
+  colorSandyBrown          : TColorB = (Blue: $60; Green: $A4; Red: $F4; Alpha: $FF);
+  colorSeaGreen            : TColorB = (Blue: $57; Green: $8B; Red: $2E; Alpha: $FF);
+  colorSeaShell            : TColorB = (Blue: $EE; Green: $F5; Red: $FF; Alpha: $FF);
+  colorSienna              : TColorB = (Blue: $2D; Green: $52; Red: $A0; Alpha: $FF);
+  colorSilver              : TColorB = (Blue: $C0; Green: $C0; Red: $C0; Alpha: $FF);
+  colorSkyBlue             : TColorB = (Blue: $EB; Green: $CE; Red: $87; Alpha: $FF);
+  colorSlateBlue           : TColorB = (Blue: $CD; Green: $5A; Red: $6A; Alpha: $FF);
+  colorSlateGray           : TColorB = (Blue: $90; Green: $80; Red: $70; Alpha: $FF);
+  colorSlateGrey           : TColorB = (Blue: $90; Green: $80; Red: $70; Alpha: $FF);
+  colorSnow                : TColorB = (Blue: $FA; Green: $FA; Red: $FF; Alpha: $FF);
+  colorSpringGreen         : TColorB = (Blue: $7F; Green: $FF; Red: $00; Alpha: $FF);
+  colorSteelBlue           : TColorB = (Blue: $B4; Green: $82; Red: $46; Alpha: $FF);
+  colorTan                 : TColorB = (Blue: $8C; Green: $B4; Red: $D2; Alpha: $FF);
+  colorTeal                : TColorB = (Blue: $80; Green: $80; Red: $00; Alpha: $FF);
+  colorThistle             : TColorB = (Blue: $D8; Green: $BF; Red: $D8; Alpha: $FF);
+  colorTomato              : TColorB = (Blue: $47; Green: $63; Red: $FF; Alpha: $FF);
+  colorTurquoise           : TColorB = (Blue: $D0; Green: $E0; Red: $40; Alpha: $FF);
+  colorViolet              : TColorB = (Blue: $EE; Green: $82; Red: $EE; Alpha: $FF);
+  colorWheat               : TColorB = (Blue: $B3; Green: $DE; Red: $F5; Alpha: $FF);
+  colorWhiteSmoke          : TColorB = (Blue: $F5; Green: $F5; Red: $F5; Alpha: $FF);
+  colorYellow              : TColorB = (Blue: $00; Green: $FF; Red: $FF; Alpha: $FF);
+  colorYellowGreen         : TColorB = (Blue: $32; Green: $CD; Red: $9A; Alpha: $FF);
+
 { Color routines }
 
+{ Convert a registered color name to a color, returning clTransparent if the
+  name is not found }
 function StrToColor(S: string): TColorB;
+{ Convert a color to its registered name, returning an empty string if it
+  has no name }
 function ColorToStr(C: TColorB): string;
+{ Register a name for a color used by StrToColor and ColorToStr }
 procedure RegisterColorName(Color: TColorB; Name: string);
 
+{ Convert a hue from 0 to 1 to a fully saturated color }
 function HueToColor(H: Float): TColorB;
+{ Return the hue of a color from 0 to 1 }
 function ColorToHue(C: TColorB): Float;
 
+{ Convert a hue from 0 to 1 to a fully saturated color }
 function Hue(H: Float): TColorB;
+{ Convert the hue opposite H on the color wheel to a fully saturated color }
 function HueInvert(H: Float): TColorB;
+{ Mix two colors by a percent from 0 to 1 }
 function Blend(A, B: TColorB; Percent: Float): TColorB;
+{ Multiply the alpha of a color by a percent from 0 to 1 }
 function Fade(Color: TColorB; Percent: Float): TColorB;
+{ Move a color toward black by a percent from 0 to 1 }
 function Darken(Color: TColorB; Percent: Float): TColorB;
+{ Move a color toward white by a percent from 0 to 1 }
 function Lighten(Color: TColorB; Percent: Float): TColorB;
+{ Create a color from red, green, and blue bytes and an alpha from 0 to 1 }
 function Rgba(R, G, B: Byte; A: Float): TColorB; overload;
+{ Create a color from a TColor and an alpha from 0 to 1 }
 function Rgba(Color: TColor; A: Float): TColorB; overload;
 
 { Miscellaneous routines }
 
+{ Return the even division of a quotient }
 function Divide(const Quotient, Divisor: Extended): Extended;
+{ Return the remainder of an even division }
 function Remainder(const Quotient, Divisor: Extended): Extended;
+{ Bind a value between 0 and 1 }
 function Clamp(Percent: Float): Float;
+{ Convert degrees to radians }
 function DegToRad(D: Float): Float;
+{ Convert radians to degrees }
 function RadToDeg(R: Float): Float;
 
 {doc off}
@@ -507,27 +854,38 @@ type
   IPath = interface;
   ISurface = interface;
   IBitmap = interface;
+{doc on}
 
-{ IMatrix }
+{ IMatrix is a 2d transform used by surfaces and brushes }
 
   IMatrix = interface(ICloneable<IMatrix>)
   ['{2918AB0D-E288-4E5C-8FDE-67776EC7CFAD}']
+    { Reset to the identity matrix }
     procedure Identity;
+    { Multiply by another matrix }
     procedure Multiply(M: IMatrix);
+    { Move along each axis }
     procedure Translate(X, Y: Float);
+    { Scale along each axis }
     procedure Scale(X, Y: Float);
+    { Rotate by an angle in radians }
     procedure Rotate(Radians: Float);
+    { Transform a point }
     function Transform(Point: TPointF): TPointF;
   end;
 
-{ IPen }
-
+  { TLinePattern is the dash pattern of a pen }
   TLinePattern = (pnSolid, pnDash, pnDot, pnDashDot);
+  { TLineCap is the shape drawn at the ends of a line }
   TLineCap = (cpButt, cpRound, cpSquare);
+  { TLineJoin is the shape drawn where two lines meet }
   TLineJoin = (jnMiter, jnRound, jnBevel);
+
+{ IPen is used to stroke paths }
 
   IPen = interface
   ['{F702E75F-684F-4D02-9A51-682A154DD9D5}']
+    {doc off}
     function GetBrush: IBrush;
     procedure SetBrush(Value: IBrush);
     function GetColor: TColorB;
@@ -544,71 +902,94 @@ type
     procedure SetLineJoin(Value: TLineJoin);
     function GetMiterLimit: Float;
     procedure SetMiterLimit(Value: Float);
+    {doc on}
+    { An optional brush used to fill the stroke instead of color }
     property Brush: IBrush read GetBrush write SetBrush;
+    { The stroke color }
     property Color: TColorB read GetColor write SetColor;
+    { The stroke width }
     property Width: Float read GetWidth write SetWidth;
+    { The dash pattern }
     property LinePattern: TLinePattern read GetLinePattern write SetLinePattern;
+    { The distance into the dash pattern where the stroke begins }
     property LinePatternOffset: Float read GetLinePatternOffset write SetLinePatternOffset;
+    { The shape at the ends of lines }
     property LineCap: TLineCap read GetLineCap write SetLineCap;
+    { The shape where lines meet }
     property LineJoin: TLineJoin read GetLineJoin write SetLineJoin;
+    { The limit at which miter joins become bevels }
     property MiterLimit: Float read GetMiterLimit write SetMiterLimit;
   end;
 
-{ IBrush }
+{ IBrush is used to fill paths }
 
   IBrush = interface
   ['{77B25395-F891-4526-A941-77C200C3F08F}']
+    {doc off}
     function GetMatrix: IMatrix;
     procedure SetMatrix(Value: IMatrix);
     function GetOpacity: Byte;
     procedure SetOpacity(Value: Byte);
+    {doc on}
+    { Transform applied to the brush pattern }
     property Matrix: IMatrix read GetMatrix write SetMatrix;
+    { The overall opacity of the brush }
     property Opacity: Byte read GetOpacity write SetOpacity;
   end;
 
-{ ISolidBrush }
+{ ISolidBrush fills with a single color }
 
   ISolidBrush = interface(IBrush)
   ['{8F520DF0-C9F7-4C5E-8954-9A62179BB84F}']
+    {doc off}
     function GetColor: TColorB;
     procedure SetColor(Value: TColorB);
+    {doc on}
+    { The fill color }
     property Color: TColorB read GetColor write SetColor;
   end;
 
-{ IBitmapBrush }
+{ IBitmapBrush fills with a repeating bitmap }
 
   IBitmapBrush = interface(IBrush)
   ['{3199CC5B-5B41-4E91-BDD0-17FAB1E91ABA}']
   end;
 
-{ IGradientBrush }
+{ TGradientWrap determines how a gradient fills beyond its end points }
 
   TGradientWrap = (gwClamp, gwRepeat, gwReflect);
 
+{ IGradientBrush fills with colors blended between stops }
+
   IGradientBrush = interface(IBrush)
   ['{B3870AD1-4A48-4A0A-AC39-13DD43501E63}']
+    {doc off}
     function GetWrap: TGradientWrap;
     procedure SetWrap(Value: TGradientWrap);
+    {doc on}
+    { Add a color stop at an offset from 0 to 1 }
     procedure AddStop(Color: TColorB; Offset: Float);
+    { How the gradient fills beyond its end points }
     property Wrap: TGradientWrap read GetWrap write SetWrap;
   end;
 
-{ ILinearGradientBrush }
+{ ILinearGradientBrush is a gradient along a line }
 
   ILinearGradientBrush = interface(IGradientBrush)
   ['{EBEC24AC-6BE7-44D1-BA4F-F11B8A206DEA}']
   end;
 
-{ IRadialGradientBrush }
+{ IRadialGradientBrush is a gradient radiating from a center }
 
   IRadialGradientBrush = interface(IGradientBrush)
   ['{A8B230B8-4CD4-4C51-878A-D1448077F0C3}']
   end;
 
-{ IFont }
+{ IFont describes how text is drawn }
 
   IFont = interface
   ['{9ACA722A-6DDE-4C15-89E0-47DD1B86B981}']
+    {doc off}
     function GetName: string;
     procedure SetName(const Value: string);
     function GetColor: TColorB;
@@ -621,11 +1002,18 @@ type
     procedure SetSize(Value: Float);
     function GetKerning: Float;
     procedure SetKerning(Value: Float);
+    {doc on}
+    { The font family name }
     property Name: string read GetName write SetName;
+    { The text color }
     property Color: TColorB read GetColor write SetColor;
+    { The antialiasing quality }
     property Quality: TFontQuality read GetQuality write SetQuality;
+    { Bold, italic, underline, and strikeout }
     property Style: TFontStyles read GetStyle write SetStyle;
+    { The size in points }
     property Size: Float read GetSize write SetSize;
+    { Extra space added between characters }
     property Kerning: Float read GetKerning write SetKerning;
   end;
 
@@ -635,7 +1023,7 @@ type
   ['{C2887F8D-D729-427D-90C2-F9B081697CAB}']
   end;
 
-{ IPath is created by surface drawing commands. Path data can be obtain by
+{ IPath is created by surface drawing commands. Path data can be obtained by
   cloning this object. }
 
   IPath = interface(ICloneable<IPathData>)
@@ -656,14 +1044,17 @@ type
 
 { ISurface is the main interface used to draw high quality fast vector graphics }
 
+  { TResampleQuality determines the filtering used when scaling images }
   TResampleQuality = (rqLowest, rqNormal, rqBest);
 
   ISurface = interface
   ['{6C23D3BC-6D74-4EDD-B0B9-EB55BF655E80}']
+    {doc off}
     function GetMatrix: IMatrix;
     procedure SetMatrix(Value: IMatrix);
     function GetPath: IPath;
     function GetHandle: Pointer;
+    {doc on}
     { Wait for drawing operations to complete }
     procedure Flush;
     { Fill the entire surface with a color }
@@ -703,11 +1094,11 @@ type
     procedure Stroke(Pen: IPen; Preserve: Boolean = False);
     { Fill the current path optionally preserving it }
     procedure Fill(Brush: IBrush; Preserve: Boolean = False);
-    { Stroke a rect aligning its pixels to the pen width  }
+    { Stroke a rect aligning its pixels to the pen width }
     procedure StrokeRect(Pen: IPen; const Rect: TRectF);
     { Fill a rect aligning its pixels evenly within the rect }
     procedure FillRect(Brush: IBrush; const Rect: TRectF);
-    { Stroke a round rect aligning its pixels to the pen width  }
+    { Stroke a round rect aligning its pixels to the pen width }
     procedure StrokeRoundRect(Pen: IPen; const Rect: TRectF; Radius: Float);
     { Fill a round rect aligning its pixels evenly within the rect }
     procedure FillRoundRect(Brush: IBrush; const Rect: TRectF; Radius: Float);
@@ -715,50 +1106,55 @@ type
     property Matrix: IMatrix read GetMatrix write SetMatrix;
     { The current path which can be stroked or filled }
     property Path: IPath read GetPath;
-    { Handle }
+    { The underlying platform drawing handle }
     property Handle: Pointer read GetHandle;
   end;
 
 { IBitmap can load and save images as well as allow ISurface drawing in memory }
 
+  { TImageFormat is the file format used when saving a bitmap }
   TImageFormat = (fmPng, fmJpeg, fmGif, fmBmp, fmIco, fmTiff);
 
-  IBitmap = interface(ICloneable<IBitmap>)
+  { IBitmap extends IBitmapData from Codebot.Platform, which provides Width,
+    Height, Pixels, SetSize, and the load and save methods }
+
+  IBitmap = interface(IBitmapData)
   ['{DB935633-A218-4181-96A2-B0808697150F}']
+    {doc off}
     function GetEmpty: Boolean;
     function GetSurface: ISurface;
     function GetClientRect: TRectI;
     function GetFormat: TImageFormat;
     procedure SetFormat(Value: TImageFormat);
-    function GetHeight: Integer;
-    function GetWidth: Integer;
-    function GetPixels: PPixel;
+    {doc on}
+    { Create a clone of the bitmap }
+    function Clone: IBitmap;
+    { Release the image making the bitmap empty }
     procedure Clear;
+    { Return a scaled copy of the bitmap }
     function Resample(Width, Height: Integer; Quality: TResampleQuality = rqNormal): IBitmap;
-    procedure LoadFromFile(const FileName: string);
-    procedure LoadFromStream(Stream: TStream);
-    procedure SaveToFile(const FileName: string);
-    procedure SaveToStream(Stream: TStream);
-    procedure SetSize(Width, Height: Integer);
+    { Empty is true when the bitmap has no pixels }
     property Empty: Boolean read GetEmpty;
+    { A surface for drawing on the bitmap }
     property Surface: ISurface read GetSurface;
+    { A rectangle at the origin the size of the bitmap }
     property ClientRect: TRectI read GetClientRect;
+    { The format used when saving }
     property Format: TImageFormat read GetFormat write SetFormat;
-    property Width: Integer read GetWidth;
-    property Height: Integer read GetHeight;
-    property Pixels: PPixel read GetPixels;
   end;
 
 { ISplash is a floating window whose shape is defined by a bitmap }
 
   ISplash = interface
   ['{291570E9-3567-4C10-8899-CDA04979060F}']
+    {doc off}
     function GetBitmap: IBitmap;
     function GetOpacity: Byte;
     procedure SetOpacity(Value: Byte);
     function GetVisible: Boolean;
     procedure SetVisible(Value: Boolean);
     function GetHandle: IntPtr;
+    {doc on}
     { Move the window to x and y }
     procedure Move(X, Y: Integer);
     { Update the window when you're done drawing on bitmap }
@@ -767,22 +1163,28 @@ type
     property Bitmap: IBitmap read GetBitmap;
     { Opacity controls the overall transparency of the window }
     property Opacity: Byte read GetOpacity write SetOpacity;
-    { Visible shows or hide the window }
+    { Visible shows or hides the window }
     property Visible: Boolean read GetVisible write SetVisible;
-    { Handle is the udnerlying operating system window handle }
+    { Handle is the underlying operating system window handle }
     property Handle: IntPtr read GetHandle;
   end;
 
 const
+  { The default miter limit of a pen }
   PenMiterLimitDefault = 10;
 
+{ Convert a file name or extension to an image format, defaulting to png }
 function StrToImageFormat(S: string): TImageFormat;
+{ Convert an image format to a file extension }
 function ImageFormatToStr(F: TImageFormat): string;
+{ Convert an image format to a mime type }
 function ImageFormatToMimeType(F: TImageFormat): string;
+
+{ TSurfaceOptions controls how surfaces are created by the backend }
 
 type
   TSurfaceOptions = record
-    { Use hardware rendering when possbile }
+    { Use hardware rendering when possible }
     HardwareRendering: Boolean;
     { Use double buffering if hardware rendering is not supported }
     SoftwareBuffering: Boolean;
@@ -794,6 +1196,7 @@ type
     GammaCorrection: Boolean;
   end;
 
+{ The options used when creating surfaces }
 var
   SurfaceOptions: TSurfaceOptions = (
     HardwareRendering: True;
@@ -803,6 +1206,7 @@ var
   );
 
 const
+  { The line cap which matches each line join }
   JoinCaps: array[TLineJoin] of TLineCap = (cpButt, cpRound, cpButt);
 
 implementation
@@ -1258,6 +1662,37 @@ begin
   Y := -Self.X * S - Self.Y * C + Self.Y;
   Result.X := P.X * C - P.Y * S + X;
   Result.Y := P.X * S + P.Y * C + Y;
+end;
+
+function TPointF.Rotate(Angle: Float): TPointF;
+var
+  S, C: Float;
+begin
+  SinCos(Angle, S, C);
+  Result.X := X * C + Y * S;
+  Result.Y := Y * C - X * S;
+end;
+
+function TPointF.Distance: Float;
+begin
+  Result := Sqrt(X * X + Y * Y);
+end;
+
+function TPointF.Distance(const P: TPointF): Float;
+begin
+  Result := Sqrt(Sqr(X - P.X) + Sqr(Y - P.Y));
+end;
+
+procedure TPointF.Normalize;
+var
+  D: Float;
+begin
+  D := Distance;
+  if D > 0 then
+  begin
+    X := X / D;
+    Y := Y / D;
+  end;
 end;
 
 { TRectF }
@@ -1952,7 +2387,12 @@ var
   C: TColor;
   S: TRGBAShort absolute C;
 begin
-  C := ColorToRGB(Value);
+  { System colors have the high bit set, and the bits above the color are
+    cleared as the LCL ColorToRGB does }
+  if Value < 0 then
+    C := SystemColorToRGB(Value) and $FFFFFF
+  else
+    C := Value and $FFFFFF;
   Result.Red := S.R;
   Result.Green := S.G;
   Result.Blue := S.B;
@@ -2537,8 +2977,8 @@ end;
 function Rgba(R, G, B: Byte; A: Float): TColorB;
 begin
   Result.Red := R;
-  Result.Green := R;
-  Result.Blue := R;
+  Result.Green := G;
+  Result.Blue := B;
   Result.Alpha := Round(Clamp(A) * $FF);
 end;
 

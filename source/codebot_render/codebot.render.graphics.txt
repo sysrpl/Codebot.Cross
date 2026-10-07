@@ -1,0 +1,12 @@
+The Codebot.Render.Graphics unit provides 2D vector graphics through the ICanvas interface, which is drawn using Codebot.Render.NanoVG. A canvas draws paths, images, sprites, and text using pens, brushes, and fonts.
+
+The unit defines the following interfaces:
+
+- IMatrix is a 2D transform.
+- IBitmap is an image, and IRenderBitmap is an image that can be drawn to.
+- IFont describes how text is drawn.
+- IPen strokes paths, and the solid, linear, radial, box gradient, and bitmap brushes fill them.
+- ISprite draws a single cell of a sprite sheet.
+- ITextWriter writes formatted text over several lines.
+
+A canvas must be created and used while an OpenGL context is current.

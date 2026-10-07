@@ -1,0 +1,6 @@
+#!/bin/bash
+../../../../lazarus/tools/lazres ../../source/codebot_webkit_design/palette_icons.res \
+	TWebBrowser.bmp \
+	TWebAddressBar.bmp \
+	TWebStatusIndicator.bmp \
+	TWebInspector.bmp

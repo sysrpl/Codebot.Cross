@@ -1,0 +1,1 @@
+The Codebot.Text unit provides routines for working with text and its encodings. The Unicode routines step through the UTF-8 characters of a string, count them, and convert a character code to a string. TBuffer is a managed block of memory, and TBufferStream reads a buffer as a stream. The encoding routines convert memory, buffers, and strings to and from hexadecimal and base64.

@@ -1,0 +1,27 @@
+The codebot_controls_design package is the design time package of codebot_controls. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot_controls, IDEIntf, and RunTimeTypeInfoControls.
+
+## Registration
+
+Codebot.Design.Registration adds the following to the IDE:
+
+- The components on the Codebot Controls page of the component palette, which are TImageStrip, TSlideBar, TThinButton, TDrawImage, TDrawBox, TDrawPanel, TIndeterminateProgress, TStepBubbles, THuePicker, TSaturationPicker, TAlphaPicker, TAnglePicker, TBanner, TContentGrid, TSizingPanel, TCaptionBox, THeaderBar, TDrawList, TDrawTextList, TDetailsList, TAnimationTimer, TTextStorage, TSlideEdit, TColorSlideEdit, TAdvancedColorDialog, and TExternalCommand.
+- Two kinds of form that can be created using File New: Render Form, which is a TSurfaceForm, and Banner Form, which is a TBannerForm.
+- The Application Explorer item in the menu of the IDE.
+
+## Editors
+
+Codebot.Design.Editors defines the property and component editors. The property editors handle the image index of a thin button, theme names, surface bitmaps, and the items of a text storage. The component editors are shown when a sizing panel, a draw image, an image strip, or a text storage is double clicked.
+
+The editors show these forms:
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Design.ImageListEditor | Adds, removes, and saves the images of a TImageStrip. |
+| Codebot.Design.SurfaceBitmapEditor | Loads, saves, and clears a TSurfaceBitmap. |
+| Codebot.Design.TextStorageEditor | Edits the named items of a TTextStorage. |
+
+## Other units
+
+Codebot.Design.Forms registers a form class with File New in the IDE.
+
+Codebot.Design.AppExplorer defines the Application Explorer, which shows a tree of every component owned by the application and edits the properties of the selected component. A program can also show it by calling ShowAppExplorer.

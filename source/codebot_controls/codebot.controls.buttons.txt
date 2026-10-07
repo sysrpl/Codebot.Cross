@@ -1,0 +1,6 @@
+The Codebot.Controls.Buttons unit defines TThinButton, which is a flat button that draws itself using the current theme and can optionally show an image from an image strip. The kind of a thin button determines how it behaves:
+
+- A plain button.
+- A drop down or dialog button, which has a second area for an arrow or an ellipsis.
+- A spin button, which has up and down areas.
+- A splitter.

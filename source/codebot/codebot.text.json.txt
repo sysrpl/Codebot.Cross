@@ -1,0 +1,3 @@
+The Codebot.Text.Json unit reads and writes JSON. TJsonNode parses, builds, and navigates a JSON document. Each node is an object, array, boolean, null, number, or string, and the nodes inside an object or array can be accessed by name or index, or enumerated using a for in loop.
+
+The unit also provides routines that validate JSON, encode and decode JSON strings, and convert JSON to XML.

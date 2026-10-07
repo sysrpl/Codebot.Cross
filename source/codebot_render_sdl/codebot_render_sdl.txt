@@ -1,0 +1,33 @@
+The codebot_render_sdl package is the SDL host of codebot_render. It runs scenes in an SDL2 window without using the LCL, so a program built with it has no forms. The package requires only codebot_render.
+
+## Running a scene
+
+Codebot.Render.Application defines TApplication, which is the scene host of an SDL window and is accessed through the global Application function. A program sets the properties of the window and then calls Run with a scene class:
+
+```pascal
+Application.Title := 'Joint Demo';
+Application.Run(TJointScene);
+```
+
+Run creates the window, the OpenGL context, the render context, and the canvas. On each frame it does the following:
+
+1. Delivers the window events to the scene as keyboard, text, mouse, and wheel input.
+2. Updates the scene.
+3. Swaps the buffers.
+
+A scene with a step interval is stepped on its own thread. Unless the scene handles these keys itself, F1 toggles full screen and F2 toggles vertical sync. Run returns when the window is closed.
+
+## Platform
+
+Codebot.Platform.SDL provides the Codebot.Platform interfaces using SDL2, and takes the place of Codebot.Platform.LCL in programs that do not use the LCL.
+
+| Feature | Provided by |
+| --- | --- |
+| Bitmaps | SDL_image, which loads and saves them |
+| Clipboard | The SDL clipboard |
+| Message dialogs | SDL message boxes |
+| File and picture dialogs | The dialogs made from widgets in codebot_render, since SDL has no file dialogs |
+
+## Requirements
+
+Programs that use this package need the SDL2 and SDL2_image libraries.

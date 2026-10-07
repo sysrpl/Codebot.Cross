@@ -1,0 +1,1 @@
+The Codebot.Interop.Windows.Direct2D unit declares the interfaces of Direct2D, DirectWrite, and DXGI on Windows. These are loaded when Direct2DInit is called. This unit is used by the Direct2D drawing surface in the codebot_controls package.

@@ -66,7 +66,7 @@ type
     ssServer,
     { The socket is a client and is connected to a server }
     ssClient,
-    { The socket is an incomming connection accepted by a server socket }
+    { The socket is an incoming connection accepted by a server socket }
     ssRemote);
 
 { TSocketKind is used by the TSocket class
@@ -109,8 +109,9 @@ type
   public
     { Create a new socket }
     constructor Create; overload;
-    { Create an incomming connection for a server socket }
+    { Create an incoming connection for a server socket }
     constructor Create(Server: TSocket); overload;
+    { Close and destroy the socket }
     destructor Destroy; override;
     { Close the socket }
     procedure Close;
@@ -120,7 +121,7 @@ type
     function Listen(const Address: TAddressName; Port: Word): Boolean; overload;
     { Listen on port converting the state to a server }
     function Listen(Port: Word): Boolean; overload;
-    { While listening wait to accept an incomming connection }
+    { While listening wait to accept an incoming connection }
     function Accept(Socket: TSocket): Boolean;
     { Read from a client or remote socket to a buffer }
     function Read(var Buffer; BufferSize: LongWord): Integer; overload;
@@ -140,7 +141,7 @@ type
     function WriteStream(Stream: TStream; Task: IAsyncTask = nil): Boolean;
     { The address of socket }
     property Address: TAddressName read GetAddress;
-    { When blocking is true, read an write operations wait }
+    { When blocking is true, read and write operations wait }
     property Blocking: Boolean read FBlocking write SetBlocking;
     { The kind of the socket to create }
     property Kind: TSocketKind read FKind write FKind;
@@ -152,7 +153,7 @@ type
     property Secure: Boolean read FSecure write SetSecure;
     { The underlying socket state }
     property State: TSocketState read FState;
-    { Optional timeout period }
+    { Optional timeout period in milliseconds }
     property Timeout: LongWord read FTimeout write FTimeout;
     { Connected is true when a socket is valid and active }
     property Connected: Boolean read GetConnected;
@@ -164,7 +165,7 @@ type
 
   TTransmitEvent = procedure(Sender: TObject; const Size, Transmitted: LargeWord) of object;
 
-{ Send data to a host using a port returning true if sucessful }
+{ Send data to a host using a port returning true if successful }
 
 function SocketSend(const Host: string; Port: Word; const Data: string): Boolean;
 

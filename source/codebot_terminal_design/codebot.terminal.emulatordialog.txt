@@ -1,0 +1,1 @@
+The Codebot.Terminal.EmulatorDialog unit defines the Terminal window of the Lazarus IDE, which is a form that holds a terminal. Whenever the shell ends, it is started again. The window is registered with the IDE so that it is laid out along with the other windows of the IDE.

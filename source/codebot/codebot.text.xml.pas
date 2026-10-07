@@ -22,40 +22,66 @@ uses
   Codebot.Cryptography;
 
 {$region xml interface}
-{TODO: Add documentation}
+{ TNodeKind identifies the type of an xml node }
 
 type
   TNodeKind = (nkDocument, nkElement, nkAttribute, nkText, nkOther);
 
+  {doc off}
   INodeList = interface;
   IDocument = interface;
+  {doc on}
 
-{ IFiler }
+{ IFiler reads and writes typed values to xml nodes selected by an xpath key.
+  Read methods return a default value when the key is not found, and when
+  Stored is true the default value is also written to the document.
+  See also
+  <link Overview.Codebot.Text.Xml.IFiler, IFiler members> }
 
   IFiler = interface
     ['{3DC4CC5C-AFFC-449F-9983-11FE39194CF5}']
+    {doc off}
     function GetDocument: IDocument;
+    {doc on}
+    { Write an encrypted string value }
     procedure Encrypt(const Key, Value: string);
+    { Read and decrypt a string value }
     function Decrypt(const Key: string): string;
+    { Read a string value }
     function ReadStr(const Key: string; const DefValue: string = ''; Stored: Boolean = False): string;
+    { Write a string value }
     procedure WriteStr(const Key, Value: string);
+    { Read a boolean value }
     function ReadBool(const Key: string; const DefValue: Boolean = False; Stored: Boolean = False): Boolean;
+    { Write a boolean value }
     procedure WriteBool(const Key: string; Value: Boolean);
+    { Read an integer value }
     function ReadInt(const Key: string; const DefValue: Integer = 0; Stored: Boolean = False): Integer;
+    { Write an integer value }
     procedure WriteInt(const Key: string; Value: Integer);
+    { Read a 64 bit integer value }
     function ReadInt64(const Key: string; const DefValue: Int64 = 0; Stored: Boolean = False): Int64;
+    { Write a 64 bit integer value }
     procedure WriteInt64(const Key: string; Value: Int64);
+    { Read a float value }
     function ReadFloat(const Key: string; const DefValue: Single = 0; Stored: Boolean = False): Single;
+    { Write a float value }
     procedure WriteFloat(const Key: string; Value: Single);
+    { Read a date value }
     function ReadDate(const Key: string; const DefValue: TDateTime = 0; Stored: Boolean = False): TDateTime;
+    { Write a date value }
     procedure WriteDate(const Key: string; Value: TDateTime);
+    { The document the filer writes to }
     property Document: IDocument read GetDocument;
   end;
 
-{ INode }
+{ INode is an element, attribute, text, or document node in an xml tree
+  See also
+  <link Overview.Codebot.Text.Xml.INode, INode members> }
 
   INode = interface
     ['{BC90FD97-E83D-41BB-B4D8-3E25AA5EB2C6}']
+    {doc off}
     function GetDocument: IDocument;
     function GetParent: INode;
     function GetFiler: IFiler;
@@ -67,56 +93,98 @@ type
     procedure SetText(const Value: string);
     function GetXml: string;
     procedure SetXml(const Value: string);
+    {doc on}
+    { The underlying platform node object }
     function Instance: Pointer;
+    { The next sibling node or nil if there is none }
     function Next: INode;
+    { Select the first node matching an xpath or nil if there is no match }
     function SelectNode(const XPath: string): INode;
+    { Select a list of nodes matching an xpath }
     function SelectList(const XPath: string): INodeList; overload;
+    { Select a list of nodes matching an xpath returning true if any matched }
     function SelectList(const XPath: string; out List: INodeList): Boolean; overload;
+    { Return the node at a path creating any missing elements along the way }
     function Force(const Path: string): INode;
+    { The document which owns the node }
     property Document: IDocument read GetDocument;
+    { The parent node or nil if there is none }
     property Parent: INode read GetParent;
+    { A filer which reads and writes values relative to this node }
     property Filer: IFiler read GetFiler;
+    { The attributes of an element }
     property Attributes: INodeList read GetAttributes;
+    { The child nodes }
     property Nodes: INodeList read GetNodes;
+    { The type of node }
     property Kind: TNodeKind read GetKind;
+    { The name of the node }
     property Name: string read GetName;
+    { The text content of the node }
     property Text: string read GetText write SetText;
+    { The node and its children as xml }
     property Xml: string read GetXml write SetXml;
   end;
 
-{ INodeList }
+{ INodeList is a list of attributes or child nodes
+  See also
+  <link Overview.Codebot.Text.Xml.INodeList, INodeList members> }
 
   INodeList = interface(IEnumerable<INode>)
     ['{D36A2B84-D31D-4134-B878-35E8D33FD067}']
+    {doc off}
     function GetCount: Integer;
     function GetByName(const Name: string): INode; overload;
     function GetByIndex(Index: Integer): INode; overload;
+    {doc on}
+    { Remove all nodes from the list }
     procedure Clear;
+    { Add a node to the list }
     procedure Add(Node: INode); overload;
+    { Add a new node by name returning the node }
     function Add(const Name: string): INode; overload;
+    { Remove a node from the list }
     procedure Remove(Node: INode); overload;
+    { Remove a node by name from the list }
     procedure Remove(const Name: string); overload;
+    { The number of nodes in the list }
     property Count: Integer read GetCount;
+    { Nodes indexed by name }
     property ByName[const Name: string]: INode read GetByName;
+    { Nodes indexed by an integer }
     property ByIndex[Index: Integer]: INode read GetByIndex; default;
   end;
 
-{ IDocument }
+{ IDocument is the root of an xml tree
+  See also
+  <link Overview.Codebot.Text.Xml.IDocument, IDocument members> }
 
   IDocument = interface(INode)
     ['{B713CB91-C809-440A-83D1-C42BDF806C4A}']
+    {doc off}
     procedure SetRoot(Value: INode);
     function GetRoot: INode;
+    {doc on}
+    { Format the document with indentation }
     procedure Beautify;
+    { Create a new attribute node owned by the document }
     function CreateAttribute(const Name: string): INode;
+    { Create a new element node owned by the document }
     function CreateElement(const Name: string): INode;
+    { Load the document from a file }
     procedure Load(const FileName: string);
+    { Save the document to a file }
     procedure Save(const FileName: string);
+    { The root element of the document }
     property Root: INode read GetRoot write SetRoot;
   end;
 
+{ TEncryptionFunc is used by IFiler to encrypt and decrypt values }
+
 type
   TEncryptionFunc = function(const S: string): string;
+
+{ The functions used by IFiler.Encrypt and IFiler.Decrypt }
 
 var
   EncryptFunc: TEncryptionFunc;
@@ -124,6 +192,7 @@ var
 
 { Create a new xml document }
 function DocumentCreate: IDocument;
+{ Create a new xml document, same as DocumentCreate }
 function NewDocument: IDocument;
 { Create a new filer given a document and a node }
 function FilerCreate(Document: IDocument; Node: INode): IFiler;
@@ -136,7 +205,7 @@ function SettingsLoad: IFiler;
 procedure SettingsSave(Filer: IFiler);
 {$endregion}
 
-{ Check if an xml is properly closed }
+{ Check if an xml string is well formed }
 function XmlValidate(const Xml: string): Boolean;
 
 implementation

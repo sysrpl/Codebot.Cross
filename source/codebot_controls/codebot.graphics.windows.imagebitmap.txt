@@ -1,0 +1,1 @@
+The Codebot.Graphics.Windows.ImageBitmap unit defines TImageBitmap, which is a 32 bit alpha blended graphic for Windows. It loads and saves BMP, GIF, JPEG, PNG, and TIFF images from files, streams, and resources. The unit also includes routines that saturate, screen, colorize, and gray an image.

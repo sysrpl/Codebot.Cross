@@ -17,7 +17,7 @@ uses
   Classes,
   Codebot.System;
 
-{ IAsyncRunner\<T\> }
+{ IAsyncRunnerBase allows a background worker to report progress }
 
 type
   IAsyncRunnerBase = interface
@@ -26,18 +26,23 @@ type
     procedure Tick(Delta: Int64);
   end;
 
+{ IAsyncRunner\<T\> allows a background worker to report its final status
+  and result }
+
   IAsyncRunner<T> = interface(IAsyncRunnerBase)
   ['{631018B8-D7D1-4C2A-928E-124500AFBA03}']
-    { Nofity fires the update event if the status has changed }
+    { Notify fires the complete event if the status has changed }
     procedure Notify(Status: TAsyncStatus; Result: T);
   end;
 
-{ TAsyncTaskRunner\<T\> }
+{ TAsyncTaskRunner\<T\> implements IAsyncTask and invokes OnComplete with a
+  result of type T when the task finishes }
 
   TAsyncTaskRunner<T> = class(TInterfacedObject, IAsyncTask, IAsyncRunnerBase,
     IAsyncRunner<T>)
   public
     type
+      { TNotifyComplete is invoked when the task finishes }
       TNotifyComplete = procedure(Task: IAsyncTask; Result: T) of object;
   private
     FOnComplete: TNotifyComplete;
@@ -63,15 +68,19 @@ type
     { IAsyncRunner<T> }
     procedure Notify(Status: TAsyncStatus; Result: T);
   public
+    { Create a busy task optionally holding data which it may own }
     constructor Create(OnComplete: TNotifyComplete; Data: TObject = nil; OwnsObject: Boolean = False); virtual;
+    { Destroy the task freeing data if it is owned }
     destructor Destroy; override;
   end;
 
-{ TThreadRunner\<T\> }
+{ TThreadRunner\<T\> runs OnExecute on a background thread with a set of
+  parameters, then runs OnComplete on the main thread }
 
   TThreadRunner<T> = class(TThread)
   public
     type
+      { TRunnerProc is the signature of the execute and complete procedures }
       TRunnerProc = procedure(var Params: T; Task: IAsyncTask);
   private
     FParams: T;
@@ -79,13 +88,17 @@ type
     FOnExecute: TRunnerProc;
     FOnComplete: TRunnerProc;
   protected
+    { Invokes OnComplete on the main thread }
     procedure Complete;
+    { Invokes OnExecute on the background thread }
     procedure Execute; override;
   public
+    { Create and start a thread runner }
     constructor Create(const Params: T; Task: IAsyncTask; OnExecute, OnComplete: TRunnerProc);
   end;
 
 const
+  { Map a boolean result to a success or failure status }
   BoolAsync: array[Boolean] of TAsyncStatus = (asyncFail, asyncSuccess);
 
 implementation

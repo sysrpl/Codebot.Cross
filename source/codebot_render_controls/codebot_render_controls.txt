@@ -1,0 +1,30 @@
+The codebot_render_controls package is the LCL host of codebot_render. It contains the control that shows OpenGL graphics inside an LCL form, and the component that runs a scene inside that control. The package requires codebot_render, codebot_controls, and the LCL.
+
+## Graphics box
+
+TGraphicsBox in Codebot.Render.Controls is a windowed control for hosting OpenGL graphics. When the control is first shown, it creates an SDL window that fills it, and SDL creates the OpenGL context for that window.
+
+- Rendering is done on a render thread, which calls OnRenderStart, OnRender, and OnRenderStop with the context made current.
+- A step thread can call OnStep at a fixed rate.
+- Because the SDL window covers the control, SDL reads the keyboard and mouse input over it. Before each frame, the graphics box passes those events on as its own LCL key and mouse events, and through OnInput.
+- Its options choose the depth bits, stencil bits, and multisampling of the context.
+- Nothing is created at design time.
+
+## Scene controller
+
+TSceneController in Codebot.Render.Scenes.Controller runs a TScene inside a TGraphicsBox and acts as its scene host. It creates, updates, and frees the scene on the render thread, delivers keyboard and mouse input to it, and provides it with the canvas, a default font, and the form holding the graphics box as its window.
+
+## Native windows
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Render.Controls.Child | Creates the SDL window and places it inside the native window of the control, using X11 on Linux and the Windows API on Windows, since SDL has no child windows of its own. It also moves the keyboard focus between the form and the SDL window. |
+| Codebot.Render.Controls.Gtk2 | The GTK2 widgetset class of the graphics box. |
+| Codebot.Render.Controls.Gtk3 | The GTK3 widgetset class of the graphics box. |
+| Codebot.Render.Controls.Windows | The Windows widgetset class of the graphics box. |
+
+Each widgetset class supplies the native window of the control and of the form that holds it.
+
+## Notes
+
+Scenes use the bitmaps, clipboard, and dialogs provided by Codebot.Platform.LCL in the codebot_controls package. Wayland is not supported.

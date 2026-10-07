@@ -1,0 +1,1 @@
+The Codebot.Debug unit helps debug a program by sending messages to another program. Bugout sends a line of text, a formatted string, or a number from the program being debugged. In the other program, TDebugServer listens on a local port for these messages and passes them to its subscribers on the main thread.

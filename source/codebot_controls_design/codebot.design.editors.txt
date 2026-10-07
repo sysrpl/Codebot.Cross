@@ -1,0 +1,4 @@
+The Codebot.Design.Editors unit defines the property and component editors used by the codebot_controls package in the Lazarus IDE.
+
+- The property editors handle the image index of an image strip, theme names, surface bitmaps, and the items of a text storage.
+- The component editors open when a sizing panel, a draw image, an image strip, or a text storage is double clicked.

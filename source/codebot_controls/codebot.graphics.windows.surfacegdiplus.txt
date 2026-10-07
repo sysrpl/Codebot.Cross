@@ -1,0 +1,1 @@
+The Codebot.Graphics.Windows.SurfaceGdiPlus unit implements the drawing interfaces using GDI+ on Windows, including matrices, pens, brushes, fonts, surfaces, and bitmaps. Codebot.Graphics uses this unit as a drawing backend on Windows.

@@ -18,7 +18,8 @@ uses
   Codebot.System,
   Codebot.Graphics.Types;
 
-{ TFloatingForm }
+{ TFloatingForm is a borderless form which can be made transparent, faded,
+  or set to let mouse input pass through it }
 
 type
   TFloatingForm = class(TForm)
@@ -34,15 +35,23 @@ type
     procedure SetInteractive(Value: Boolean);
     procedure SetOpacity(Value: Byte);
   protected
+    {doc off}
     procedure CreateHandle; override;
     procedure Loaded; override;
     procedure Paint; override;
+    {doc on}
   public
+    { Create a new floating form }
     constructor Create(AOwner: TComponent); override;
+    { Move and resize the form in one step }
     procedure MoveSize(Rect: TRectI);
+    { The overall transparency of the form }
     property Opacity: Byte read FOpacity write SetOpacity;
+    { Compositing is true when the window manager supports transparency }
     property Compositing: Boolean read GetCompositing;
+    { When false mouse input passes through the form to windows below }
     property Interactive: Boolean read FInteractive write SetInteractive;
+    { When true the form fades out, or hides if fading is not supported }
     property Faded: Boolean read FFaded write SetFaded;
   end;
 

@@ -1,0 +1,7 @@
+The Codebot.Controls.Scrolling unit defines lists that scroll.
+
+- THeaderBar is a row of column headers that can be resized.
+- TScrollList is the base class of the scrolling lists.
+- TDrawList is a list drawn by event handlers, and its items can contain buttons.
+- TDrawTextList shows a list of strings.
+- TDetailsList is a draw list with a header bar of columns.

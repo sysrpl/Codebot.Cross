@@ -1,0 +1,3 @@
+#!/bin/bash
+../../../../lazarus/tools/lazres ../../source/codebot_render_design/palette_icons.res \
+	TGraphicsBox.bmp

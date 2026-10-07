@@ -1,0 +1,1 @@
+The Codebot.Graphics.Windows.InterfacedBitmap unit defines TInterfacedBitmap, which is the base implementation of IBitmap that the Direct2D and GDI+ backends descend from on Windows. The unit also creates splash windows and provides the dots per inch of the screen.

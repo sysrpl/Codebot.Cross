@@ -17,7 +17,7 @@ uses
   Codebot.System,
   Codebot.Interop.Sockets;
 
-{ TUnixClientSocket }
+{ TUnixClientSocket connects to a unix domain socket given its file name }
 
 type
   TUnixClientSocket = class(TObject)
@@ -28,14 +28,23 @@ type
     procedure SetConnected(Value: Boolean);
     procedure SetFileName(Value: string);
   public
+    { Create a disconnected socket }
     constructor Create;
+    { Disconnect and destroy the socket }
     destructor Destroy; override;
+    { Connect to the socket file given by FileName }
     procedure Connect;
+    { Close the connection }
     procedure Disconnect;
+    { Read up to BufferSize bytes into a buffer returning the number of bytes read }
     function Read(var Buffer; BufferSize: LongWord): Integer; overload;
+    { Read up to BufferSize bytes as text returning the number of bytes read }
     function Read(out Text: string; BufferSize: LongWord = $10000): Integer; overload;
+    { Write a string returning the number of bytes written }
     function Write(const S: string): Integer;
+    { The path of the unix domain socket file. Changing it disconnects the socket. }
     property FileName: string read FFileName write SetFileName;
+    { Connected is true while the socket is connected }
     property Connected: Boolean read GetConnected write SetConnected;
   end;
 

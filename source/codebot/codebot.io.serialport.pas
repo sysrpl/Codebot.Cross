@@ -17,6 +17,8 @@ interface
 uses
   SysUtils, Classes, TypInfo;
 
+{ Common serial port baud rates }
+
 const
   Baud300 = 300;
   Baud1200 = 1200;
@@ -29,34 +31,48 @@ const
   Baud115200 = 115200;
   Baud230400 = 230400;
 
+  { Number of data bits per character }
   Bits5 = 5;
   Bits6 = 6;
   Bits7 = 7;
   Bits8 = 8;
 
 type
+  { Parity checking mode }
   TParity = (prNone, prOdd, prEven);
+  { Number of stop bits }
   TStopBits = (sbOne, sbTwo);
+  { Software and hardware flow control options }
   TFlowControl = set of (fcXOn, fcXOff, fcRequestToSend);
 
-{ TSerialPortOptions }
+{ TSerialPortOptions holds the line settings of a serial port }
 
   TSerialPortOptions = record
   public
+    { Speed in bits per second }
     Baud: Integer;
+    { Number of data bits per character }
     DataBits: Integer;
+    { Parity checking mode }
     Parity: TParity;
+    { Number of stop bits }
     StopBits: TStopBits;
+    { Flow control options }
     FlowControl: TFlowControl;
+    { Minimum number of bytes a read waits for }
     Min: Byte;
+    { Read timeout in tenths of a second }
     Timeout: Byte;
+    { Read the current options of a serial port device }
     class function Create(const Device: string): TSerialPortOptions; overload; static;
+    { Create options with a baud rate, data bits, and parity }
     class function Create(Baud: Integer = Baud9600; DataBits: Integer = Bits8;
       Parity: TParity = prNone): TSerialPortOptions; overload; static;
+    { Convert the options to a readable string }
     function ToString: string;
   end;
 
-{ TSerialPort }
+{ TSerialPort reads and writes data to a serial port device on linux }
 
   TSerialPort = class
   private
@@ -67,21 +83,35 @@ type
     procedure CheckOpened;
     function GetOpened: Boolean;
   public
+    { Create a serial port given a device path such as /dev/ttyUSB0 }
     constructor Create(const Device: string);
+    { Close the port and destroy the object }
     destructor Destroy; override;
+    { Open the port using its current options }
     function Open: Boolean; overload;
+    { Open the port and apply options }
     function Open(const Options: TSerialPortOptions): Boolean; overload;
+    { Close the port }
     procedure Close;
+    { Read available data as a string }
     function Read: string;
+    { Read up to BufferSize bytes returning the number of bytes read }
     function ReadBinary(var Buffer; BufferSize: Integer): Integer;
+    { Write a string to the port }
     procedure Write(const S: string);
+    { Write a block of memory to the port }
     procedure WriteBinary(var Buffer; BufferSize: Integer);
+    { Send an XOn character to resume transmission }
     procedure XOn;
+    { Send an XOff character to pause transmission }
     procedure XOff;
+    { Opened is true while the port is open }
     property Opened: Boolean read GetOpened;
+    { The device path of the port }
     property Device: string read FDevice;
   end;
 
+{ Fill a strings object with the device paths of available serial ports }
 procedure EnumSerialPorts(Ports: TStrings);
 {$endif}
 

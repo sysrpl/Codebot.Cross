@@ -1,0 +1,7 @@
+The Codebot.Controls.Colors unit defines controls that pick a color using the mouse.
+
+- THuePicker selects a hue from either a bar or a color wheel.
+- TSaturationPicker selects the saturation and lightness of a hue.
+- TAlphaPicker selects the transparency of a color.
+- TAnglePicker is a round dial with a hand that is dragged to pick an angle.
+- TColorSlideEdit is a slide edit for a single component of a color.

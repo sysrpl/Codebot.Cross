@@ -20,8 +20,10 @@ uses
   Codebot.Graphics.Types,
   Codebot.Controls.Containers,
   Codebot.Controls.Extras,
+  Codebot.Text.Store,
   Codebot.Design.SurfaceBitmapEditor,
-  Codebot.Design.ImageListEditor;
+  Codebot.Design.ImageListEditor,
+  Codebot.Design.TextStorageEditor;
 
 { TImageStripIndexPropertyEditor }
 
@@ -58,6 +60,15 @@ type
     function GetAttributes: TPropertyAttributes; override;
   end;
 
+{ TTextItemsPropertyEditor opens the text storage editor from the Items
+  property of a TTextStorage }
+
+  TTextItemsPropertyEditor = class(TClassPropertyEditor)
+  public
+    procedure Edit; override;
+    function GetAttributes: TPropertyAttributes; override;
+  end;
+
 { TSizingPanelEditor }
 
   TSizingPanelEditor = class(TComponentEditor)
@@ -81,6 +92,17 @@ type
 { TImageStripEditor }
 
   TImageStripEditor = class(TComponentEditor)
+  public
+    procedure Edit; override;
+    procedure ExecuteVerb(Index: Integer); override;
+    function GetVerb(Index: Integer): string; override;
+    function GetVerbCount: Integer; override;
+  end;
+
+{ TTextStorageComponentEditor opens the text storage editor when a
+  TTextStorage is double clicked or from its context menu }
+
+  TTextStorageComponentEditor = class(TComponentEditor)
   public
     procedure Edit; override;
     procedure ExecuteVerb(Index: Integer); override;
@@ -225,6 +247,22 @@ begin
   end;
 end;
 
+{ TTextItemsPropertyEditor }
+
+function TTextItemsPropertyEditor.GetAttributes: TPropertyAttributes;
+begin
+  Result := [paDialog, paReadOnly];
+end;
+
+procedure TTextItemsPropertyEditor.Edit;
+var
+  Obj: TPersistent;
+begin
+  Obj := GetComponent(0);
+  if (Obj is TTextStorage) and EditTextStorage(TTextStorage(Obj)) then
+    Modified;
+end;
+
 { TSizingPanelEditor }
 
 function TSizingPanelEditor.GetVerb(Index: Integer): string;
@@ -310,6 +348,29 @@ begin
 end;
 
 procedure TImageStripEditor.ExecuteVerb(Index: Integer);
+begin
+  Edit;
+end;
+
+{ TTextStorageComponentEditor }
+
+function TTextStorageComponentEditor.GetVerb(Index: Integer): string;
+begin
+  Result := 'Edit items ...';
+end;
+
+function TTextStorageComponentEditor.GetVerbCount: Integer;
+begin
+  Result := 1;
+end;
+
+procedure TTextStorageComponentEditor.Edit;
+begin
+  if (Component is TTextStorage) and EditTextStorage(TTextStorage(Component)) then
+    Designer.Modified;
+end;
+
+procedure TTextStorageComponentEditor.ExecuteVerb(Index: Integer);
 begin
   Edit;
 end;

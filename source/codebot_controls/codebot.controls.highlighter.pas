@@ -20,7 +20,8 @@ uses
   Codebot.Graphics.Types,
   Codebot.Animation;
 
-{ TControlHighlighter }
+{ TControlHighlighter draws an animated outline around a control in a
+  floating window, useful for drawing attention to part of a form }
 
 type
   TControlHighlighter = class(TComponent)
@@ -44,21 +45,33 @@ type
     procedure SetVisible(Value: Boolean);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    { Invoked by the animation timer to redraw the highlight }
     procedure Animate(Sender: TObject);
     procedure Loaded; override;
+    { Draw the highlight, invoking OnRender if it is assigned }
     procedure Render(Surface: ISurface; Rect: TRectI); virtual;
+    { Move the highlight window to the control and redraw it }
     procedure Update;
   public
+    { Create a new highlighter }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
+    { The control to highlight }
     property Control: TControl read FControl write SetControl;
+    { The color of the outline }
     property Color: TColor read FColor write SetColor default clRed;
+    { The distance between the control and the outline }
     property Offset: Float read FOffset write SetOffset default 4;
+    { The transparency of the outline }
     property Opacity: Byte read FOpacity write SetOpacity default  $7F;
+    { The corner radius of the outline }
     property Radius: Float read FRadius write SetRadius default 8;
+    { The width of the outline }
     property Thickness: Float read FThickness write SetThickness default 4;
+    { Show or hide the highlight }
     property Visible: Boolean read FVisible write SetVisible;
+    { OnRender allows custom drawing of the highlight }
     property OnRender: TDrawRectEvent read FOnRender write FOnRender;
   end;
 

@@ -1,6 +1,6 @@
 # Codebot Cross Platform Library
 
-This is the official git repository for the Codebot Cross library. It contains the source and assets code for three Free Pascal packges.
+This is the official git repository for the Codebot Cross library. It contains the source and assets code for four Free Pascal packges. Iit has been updated to work with the Lazarus Gtk3 widgetset.
 
 The official landing page for the library with detailed information, including installation, documentation, and examples about this library is [located here](https://cross.codebot.org).
 

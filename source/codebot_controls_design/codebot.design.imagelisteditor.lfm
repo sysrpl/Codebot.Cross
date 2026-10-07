@@ -398,19 +398,19 @@ object ImageListEditor: TImageListEditor
     E60CA2DA46D3D580B81620C30AF77F89C830CFD11473D5F9277D49FA1F40DE87
     4BFEA3D9B00000000049454E44AE426082
   }
-  Banner.Color = clHighlight
+  Banner.Color = clWhite
   Banner.ColorBalance = 0.5
   Banner.Height = 80
   Banner.ImageBalance = 0.5
   Title.ParentFont = False
-  Title.Font.Color = clWindowText
+  Title.Font.Color = clBlack
   Title.Font.Height = 20
   Title.Font.Style = [fsBold]
   Title.Text = 'Image Strip Editor'
   Title.X = 0
   Title.Y = 0
   TitleSub.ParentFont = True
-  TitleSub.Font.Color = clWindowText
+  TitleSub.Font.Color = clBlack
   TitleSub.Text = 'You can change the order of images by holding shift while dragging the mouse'
   TitleSub.X = 0
   TitleSub.Y = 0
@@ -435,41 +435,41 @@ object ImageListEditor: TImageListEditor
     TabOrder = 1
   end
   object AddButton: TButton
-    Left = 448
+    Left = 8
     Height = 25
-    Top = 88
+    Top = 360
     Width = 75
-    Anchors = [akTop, akRight]
+    Anchors = [akLeft, akBottom]
     Caption = 'Add'
     OnClick = AddButtonClick
     TabOrder = 2
   end
   object RemoveButton: TButton
-    Left = 448
+    Left = 91
     Height = 25
-    Top = 120
+    Top = 360
     Width = 75
-    Anchors = [akTop, akRight]
+    Anchors = [akLeft, akBottom]
     Caption = 'Remove'
     OnClick = RemoveButtonClick
     TabOrder = 3
   end
   object SaveButton: TButton
-    Left = 448
+    Left = 174
     Height = 25
-    Top = 152
+    Top = 360
     Width = 75
-    Anchors = [akTop, akRight]
+    Anchors = [akLeft, akBottom]
     Caption = 'Save'
     OnClick = SaveButtonClick
     TabOrder = 4
   end
   object ClearButton: TButton
-    Left = 448
+    Left = 257
     Height = 25
-    Top = 185
+    Top = 360
     Width = 75
-    Anchors = [akTop, akRight]
+    Anchors = [akLeft, akBottom]
     Caption = 'Clear'
     OnClick = ClearButtonClick
     TabOrder = 5
@@ -478,7 +478,7 @@ object ImageListEditor: TImageListEditor
     Left = 8
     Height = 256
     Top = 88
-    Width = 432
+    Width = 515
     DefColWidth = 75
     DefRowHeight = 25
     ColCount = 5

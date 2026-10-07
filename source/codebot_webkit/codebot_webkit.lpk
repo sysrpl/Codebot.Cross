@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="codebot_webkit"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx5024="True"/>
+        </CompilerMessages>
+      </Other>
+    </CompilerOptions>
+    <Files Count="5">
+      <Item1>
+        <Filename Value="webkit.inc"/>
+        <Type Value="Include"/>
+      </Item1>
+      <Item2>
+        <Filename Value="codebot.interop.webkit.pas"/>
+        <UnitName Value="Codebot.Interop.WebKit"/>
+      </Item2>
+      <Item3>
+        <Filename Value="codebot.webkit.controls.pas"/>
+        <UnitName Value="Codebot.WebKit.Controls"/>
+      </Item3>
+      <Item4>
+        <Filename Value="codebot.webkit.controls.gtk3.pas"/>
+        <UnitName Value="Codebot.WebKit.Controls.Gtk3"/>
+      </Item4>
+      <Item5>
+        <Filename Value="codebot.webkit.controls.extras.pas"/>
+        <UnitName Value="Codebot.WebKit.Controls.Extras"/>
+      </Item5>
+    </Files>
+    <CompatibilityMode Value="True"/>
+    <RequiredPkgs Count="2">
+      <Item1>
+        <PackageName Value="codebot_controls"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="LCL"/>
+      </Item2>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

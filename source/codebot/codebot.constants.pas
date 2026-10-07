@@ -13,6 +13,8 @@ unit Codebot.Constants;
 
 interface
 
+{ Error messages shared by Codebot units }
+
 resourcestring
   SRangeError = 'Range check error';
   SRangeMethodError = 'Index exceeds bounds range in method %s.%s';

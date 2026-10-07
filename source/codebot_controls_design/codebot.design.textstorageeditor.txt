@@ -1,0 +1,1 @@
+The Codebot.Design.TextStorageEditor unit defines the form used to edit the named items of a TTextStorage at design time. The form lists the names of the items, allows items to be added and deleted, and edits the name and text of the selected item. The editor works on a copy of the items, and EditTextStorage returns True if the items were changed.

@@ -1,0 +1,1 @@
+The Codebot.Interop.Xmp unit declares the part of the libxmp C API, version 4.6.0, used to play tracker music. The library is linked statically from libcodebotaudio.a, which is built by audio/build.sh. It is built without the depackers, so compressed modules are not supported.

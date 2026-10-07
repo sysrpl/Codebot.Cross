@@ -1,0 +1,3 @@
+The codebot_render_design package is the design time package of codebot_render_controls. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot_render_controls.
+
+Codebot.Render.Registration adds TGraphicsBox, along with its palette icon, to the Codebot Render page of the component palette.

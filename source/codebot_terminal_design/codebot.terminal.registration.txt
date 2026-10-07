@@ -1,0 +1,1 @@
+The Codebot.Terminal.Registration unit registers TTerminal with the Lazarus IDE, placing it on the Codebot Terminal page of the component palette. It also adds a Terminal window to the View menu of the IDE.

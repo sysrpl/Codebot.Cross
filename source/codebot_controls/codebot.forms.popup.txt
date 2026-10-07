@@ -1,0 +1,1 @@
+The Codebot.Forms.Popup unit defines TPopupForm, which is a borderless form shown below a control, such as a drop down list. The popup is dismissed when the user clicks outside of it, and while it is shown, the key events of the form that owns it are sent to the popup.

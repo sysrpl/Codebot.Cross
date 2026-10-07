@@ -1,0 +1,10 @@
+The Codebot.Hardware unit plays audio and reads the keyboard, mouse, and joysticks using SDL alone, so it works the same way on every backend.
+
+Audio is added as named sources that are held in memory. To play a source, it is loaded into one of a fixed number of banks, each of which has its own volume, pan, position, and loop count. The banks are mixed together on the audio thread. All audio is played as 16 bit stereo at 44100 Hz, and the following formats are supported:
+
+- MP3
+- Ogg Vorbis
+- Uncompressed WAV
+- Tracker music
+
+The Keyboard, Mouse, and Joysticks functions hold the state of the hardware as it was when last scanned. The hosts scan the hardware once per frame by calling ScanHardware. When SDL recognizes a joystick as a gamepad, it also provides the named buttons and axes of a gamepad.

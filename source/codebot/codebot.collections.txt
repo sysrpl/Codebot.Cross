@@ -1,0 +1,8 @@
+The Codebot.Collections unit defines the generic collection classes used throughout the library.
+
+- TList<TItem> is a list that grows as items are added.
+- TIndexedList<TItem> extends TList<TItem> so that items can be found and removed by value.
+- TObjectList<TItem> holds objects and can optionally manage their lifetime.
+- TDictionary<K, V> holds key and value pairs indexed by their key.
+
+The unit also defines IList<T>, a reference counted list interface, which is implemented by TObjects<T> for objects and TInterfaces<T> for interfaces. Finally, TAggregateStream reads a series of text, files, and streams as if they were one continuous stream.

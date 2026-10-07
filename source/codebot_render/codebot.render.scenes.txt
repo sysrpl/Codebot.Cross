@@ -1,0 +1,3 @@
+The Codebot.Render.Scenes unit defines TScene, which is the base class of everything a host shows. A program descends from TScene to draw each frame and to handle keyboard, text, mouse, and wheel input. A scene can also be stepped at a fixed interval on its own thread.
+
+TSceneHost runs scenes and provides what they share: the canvas, a default font, the window, the clipboard, the timer, and vertical sync. The two scene hosts are TSceneController in the codebot_render_controls package and TApplication in the codebot_render_sdl package.

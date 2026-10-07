@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="codebot_render_controls"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <IncludeFiles Value="../codebot_render"/>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx5024="True"/>
+        </CompilerMessages>
+      </Other>
+    </CompilerOptions>
+    <Files Count="6">
+      <Item1>
+        <Filename Value="codebot.render.controls.pas"/>
+        <UnitName Value="Codebot.Render.Controls"/>
+      </Item1>
+      <Item2>
+        <Filename Value="codebot.render.controls.gtk2.pas"/>
+        <UnitName Value="Codebot.Render.Controls.Gtk2"/>
+      </Item2>
+      <Item3>
+        <Filename Value="codebot.render.controls.gtk3.pas"/>
+        <UnitName Value="Codebot.Render.Controls.Gtk3"/>
+      </Item3>
+      <Item4>
+        <Filename Value="codebot.render.controls.windows.pas"/>
+        <UnitName Value="Codebot.Render.Controls.Windows"/>
+      </Item4>
+      <Item5>
+        <Filename Value="codebot.render.scenes.controller.pas"/>
+        <UnitName Value="Codebot.Render.Scenes.Controller"/>
+      </Item5>
+      <Item6>
+        <Filename Value="codebot.render.controls.child.pas"/>
+        <UnitName Value="Codebot.Render.Controls.Child"/>
+      </Item6>
+    </Files>
+    <CompatibilityMode Value="True"/>
+    <RequiredPkgs Count="3">
+      <Item1>
+        <PackageName Value="codebot_render"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="codebot_controls"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="LCL"/>
+      </Item3>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

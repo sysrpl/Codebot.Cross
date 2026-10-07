@@ -37,3 +37,9 @@ examples/docker/docker.dbg
 examples/pandrag/pandrag.dbg
 examples/pandrag/lib/x86_64-linux/pandrag.or
 examples/pandrag/pandrag
+source/Chipmunk2D/
+source/nanovg/
+source/audio/minimp3/
+source/audio/ogg/
+source/audio/vorbis/
+source/audio/xmp/

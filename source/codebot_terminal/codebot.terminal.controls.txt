@@ -1,0 +1,3 @@
+The Codebot.Terminal.Controls unit defines TTerminal, which is a terminal emulator control that runs the shell of the user using the VTE library from the GNOME terminal. The shell starts when the control is first shown. OnReady is invoked once the shell has written its prompt, OnTerminate is invoked when the shell ends, and Restart starts the shell again. TTerminalColors holds the colors of the terminal and its palette.
+
+While the control is being designed in the IDE there is no running terminal, so the control paints a prompt and a cursor instead.

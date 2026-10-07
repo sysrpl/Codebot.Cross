@@ -1,0 +1,1 @@
+The Codebot.Forms.Management unit provides FormManager, which helps manage the forms of an application. It can find the form in the foreground or the form that holds a control, bring a form to the foreground and activate it, and provide the default font used by forms.

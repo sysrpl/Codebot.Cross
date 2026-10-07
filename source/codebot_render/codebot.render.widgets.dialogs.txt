@@ -1,0 +1,3 @@
+The Codebot.Render.Widgets.Dialogs unit defines file and picture dialogs that are made from widgets. They implement IFileDialog and IPictureDialog from Codebot.Platform without relying on any backend, so they work anywhere a widget scene does. The SDL backend uses them because SDL has no file dialogs of its own.
+
+Each dialog is a modal window that shows the current folder, a list of folders and files in columns that can be sorted and resized, the file name, the filters, and buttons to accept or cancel. A picture dialog also shows the selected image beside the list. The scene keeps running while a dialog is open.

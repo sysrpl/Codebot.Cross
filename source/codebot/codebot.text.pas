@@ -31,13 +31,13 @@ uses
   Unicode number: U+20AC
   € = 11100010 10000010 10101100 }
 
-{ Seek to the next character and return the count of utf8  bytes [group unicode] }
+{ Seek to the next character and return the count of utf8 bytes [group unicode] }
 function UnicodeParse(var P: PChar): LongWord;
 { Seek to the next character and return the utf8 character code [group unicode] }
 function UnicodeToChar(var P: PChar): LongWord;
 { Return the number of utf8 characters in a string [group unicode] }
 function UnicodeLength(S: string): Integer;
-{ Covert a utf8 character code to a string [group unicode] }
+{ Convert a utf8 character code to a string [group unicode] }
 function UnicodeToStr(C: LongWord): string;
 {$endregion}
 
@@ -58,7 +58,7 @@ type
   end;
 {doc on}
 
-{ TBuffer is a managed a block of memory and is used when converting
+{ TBuffer is a managed block of memory and is used when converting
   between text encodings and binary data [group memory]
   See also
   <link Overview.Codebot.Text.TBuffer, TBuffer members> }
@@ -95,7 +95,7 @@ type
     property Size: LongInt read GetSize write SetSize;
     { Convert data to a string }
     property AsString: string read GetAsString;
-    { Convert data to a hexidecimal string }
+    { Convert data to a hexadecimal string }
     property AsHex: string read GetAsHex;
     { Convert data to a base 64 string }
     property AsBase64: string read GetAsBase64;
@@ -118,10 +118,15 @@ type
     {doc on}
     { Create a new buffer stream given a buffer }
     constructor Create(Buffer: TBuffer);
+    { Read bytes from the buffer }
     function Read(var Buffer; Count: LongInt): LongInt; override;
+    { Write bytes to the buffer growing it if needed }
     function Write(const Buffer; Count: LongInt): LongInt; override;
+    { Move the stream position }
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
+    { Save the buffer contents to another stream }
     procedure SaveToStream(Stream: TStream);
+    { Save the buffer contents to a file }
     procedure SaveToFile(const FileName: string);
   end;
 
@@ -131,7 +136,7 @@ function HexEncode(Buffer: Pointer; Size: LongInt): string; overload;
 function HexEncode(const Buffer: TBuffer): string; overload;
 { Encode string data as a hexadecimal string [group encoding] }
 function HexEncode(const S: string): string; overload;
-{ Decode a hexadecimal string returing a buffer [group encoding] }
+{ Decode a hexadecimal string returning a buffer [group encoding] }
 function HexDecode(const S: string): TBuffer;
 
 { Encode memory as a base64 string [group encoding] }
@@ -140,7 +145,7 @@ function Base64Encode(Buffer: Pointer; Size: LongInt): string; overload;
 function Base64Encode(const Buffer: TBuffer): string; overload;
 { Encode string data as a base64 string [group encoding] }
 function Base64Encode(const S: string): string; overload;
-{ Decode a base64 string returing a buffer [group encoding] }
+{ Decode a base64 string returning a buffer [group encoding] }
 function Base64Decode(const S: string): TBuffer;
 {$endregion}
 

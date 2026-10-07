@@ -1,0 +1,13 @@
+The Codebot.Graphics.Types unit declares the types and interfaces used for 2D graphics, without depending on the LCL.
+
+It defines integer and floating point points and rectangles, along with several kinds of colors. TColor uses the same values as the LCL, TColorB stores each channel as a byte, TColorF stores each channel as a floating point value, and THSL describes a color by its hue, saturation, and lightness. The unit also includes the named web colors and routines that convert, blend, fade, darken, and lighten colors.
+
+The drawing interfaces are declared here as well:
+
+- ISurface is what everything is drawn on.
+- IPen strokes paths, and IBrush fills them, with solid, bitmap, and gradient brushes available.
+- IFont describes how text is drawn, and IPath holds the shapes being drawn.
+- IMatrix is a 2D transform used by surfaces and brushes.
+- IBitmap is an image that can be drawn on and saved, and ISplash is a floating window shaped by a bitmap.
+
+These interfaces are implemented by the Codebot.Graphics unit in the codebot_controls package.

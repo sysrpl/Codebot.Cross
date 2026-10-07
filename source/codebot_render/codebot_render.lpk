@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="codebot_render"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx5024="True"/>
+        </CompilerMessages>
+      </Other>
+    </CompilerOptions>
+    <Files Count="32">
+      <Item1>
+        <Filename Value="codebot.opengl.pas"/>
+        <UnitName Value="Codebot.OpenGL"/>
+      </Item1>
+      <Item2>
+        <Filename Value="codebot.render.buffers.pas"/>
+        <UnitName Value="Codebot.Render.Buffers"/>
+      </Item2>
+      <Item3>
+        <Filename Value="codebot.render.contexts.pas"/>
+        <UnitName Value="Codebot.Render.Contexts"/>
+      </Item3>
+      <Item4>
+        <Filename Value="codebot.render.fonts.pas"/>
+        <UnitName Value="Codebot.Render.Fonts"/>
+      </Item4>
+      <Item5>
+        <Filename Value="codebot.render.scenes.pas"/>
+        <UnitName Value="Codebot.Render.Scenes"/>
+      </Item5>
+      <Item6>
+        <Filename Value="codebot.render.shaders.pas"/>
+        <UnitName Value="Codebot.Render.Shaders"/>
+      </Item6>
+      <Item7>
+        <Filename Value="codebot.render.textures.pas"/>
+        <UnitName Value="Codebot.Render.Textures"/>
+      </Item7>
+      <Item8>
+        <Filename Value="codebot.render.world.pas"/>
+        <UnitName Value="Codebot.Render.World"/>
+      </Item8>
+      <Item9>
+        <Filename Value="codebot_render.pas"/>
+        <UnitName Value="codebot_render"/>
+      </Item9>
+      <Item10>
+        <Filename Value="render.inc"/>
+        <Type Value="Include"/>
+      </Item10>
+      <Item11>
+        <Filename Value="codebot.render.truetype.pas"/>
+        <UnitName Value="Codebot.Render.TrueType"/>
+      </Item11>
+      <Item12>
+        <Filename Value="codebot.render.fontstash.pas"/>
+        <UnitName Value="Codebot.Render.FontStash"/>
+      </Item12>
+      <Item13>
+        <Filename Value="codebot.render.nanovg.pas"/>
+        <UnitName Value="Codebot.Render.NanoVG"/>
+      </Item13>
+      <Item14>
+        <Filename Value="codebot.render.graphics.pas"/>
+        <UnitName Value="Codebot.Render.Graphics"/>
+      </Item14>
+      <Item15>
+        <Filename Value="codebot.interop.assimp.pas"/>
+        <UnitName Value="Codebot.Interop.Assimp"/>
+      </Item15>
+      <Item16>
+        <Filename Value="codebot.render.svg.pas"/>
+        <UnitName Value="Codebot.Render.SVG"/>
+      </Item16>
+      <Item17>
+        <Filename Value="codebot.render.widgets.pas"/>
+        <UnitName Value="Codebot.Render.Widgets"/>
+      </Item17>
+      <Item18>
+        <Filename Value="codebot.render.widgets.themes.pas"/>
+        <UnitName Value="Codebot.Render.Widgets.Themes"/>
+      </Item18>
+      <Item19>
+        <Filename Value="codebot.render.widgets.custom.pas"/>
+        <UnitName Value="Codebot.Render.Widgets.Custom"/>
+      </Item19>
+      <Item20>
+        <Filename Value="codebot.render.scenes.widgets.pas"/>
+        <UnitName Value="Codebot.Render.Scenes.Widgets"/>
+      </Item20>
+      <Item21>
+        <Filename Value="codebot.interop.chipmunk2d.pas"/>
+        <UnitName Value="Codebot.Interop.Chipmunk2D"/>
+      </Item21>
+      <Item22>
+        <Filename Value="codebot.physics.pas"/>
+        <UnitName Value="Codebot.Physics"/>
+      </Item22>
+      <Item23>
+        <Filename Value="codebot.render.scenes.physics.pas"/>
+        <UnitName Value="Codebot.Render.Scenes.Physics"/>
+      </Item23>
+      <Item24>
+        <Filename Value="codebot.interop.sdl2.pas"/>
+        <UnitName Value="Codebot.Interop.SDL2"/>
+      </Item24>
+      <Item25>
+        <Filename Value="codebot.render.widgets.dialogs.pas"/>
+        <UnitName Value="Codebot.Render.Widgets.Dialogs"/>
+      </Item25>
+      <Item26>
+        <Filename Value="codebot.interop.mpv.pas"/>
+        <UnitName Value="Codebot.Interop.MPV"/>
+      </Item26>
+      <Item27>
+        <Filename Value="codebot.render.widgets.video.pas"/>
+        <UnitName Value="Codebot.Render.Widgets.Video"/>
+      </Item27>
+      <Item28>
+        <Filename Value="codebot.interop.minimp3.pas"/>
+        <UnitName Value="Codebot.Interop.MiniMp3"/>
+      </Item28>
+      <Item29>
+        <Filename Value="codebot.interop.vorbis.pas"/>
+        <UnitName Value="Codebot.Interop.Vorbis"/>
+      </Item29>
+      <Item30>
+        <Filename Value="codebot.interop.xmp.pas"/>
+        <UnitName Value="Codebot.Interop.Xmp"/>
+      </Item30>
+      <Item31>
+        <Filename Value="codebot.hardware.pas"/>
+        <UnitName Value="Codebot.Hardware"/>
+      </Item31>
+      <Item32>
+        <Filename Value="codebot.opengl.sdl.pas"/>
+        <UnitName Value="Codebot.OpenGL.SDL"/>
+      </Item32>
+    </Files>
+    <CompatibilityMode Value="True"/>
+    <RequiredPkgs Count="1">
+      <Item1>
+        <PackageName Value="codebot"/>
+      </Item1>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+      <LibraryPath Value="../Chipmunk2D/lib/$(TargetCPU)-$(TargetOS);../audio/lib/$(TargetCPU)-$(TargetOS)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

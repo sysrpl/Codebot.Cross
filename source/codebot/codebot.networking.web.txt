@@ -1,0 +1,8 @@
+The Codebot.Networking.Web unit makes HTTP requests.
+
+- TUrl parses a URL into its parts.
+- WebSendRequest performs an HTTP 1.1 request and supports chunked replies.
+- THttpClient is a reusable HTTP client, and THttpPost sends multipart post requests.
+- WebGet and WebPost are simplified requests that write the response to a stream or a string, and CurlGet does the same using the curl program.
+
+The unit also provides routines that build GET and POST requests, parse response headers, encode and decode URLs and their arguments, and find the MIME type of a file.

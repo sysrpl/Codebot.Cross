@@ -1,0 +1,1 @@
+The Codebot.Networking.Unix unit defines TUnixClientSocket, which connects to a Unix domain socket using its file name and then reads and writes data through it.

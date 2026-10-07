@@ -1,0 +1,3 @@
+The Codebot.Render.Contexts unit defines TRenderContext, which is the interface to all rendering in the library. Ctx returns the render context of the calling thread. A render context holds the matrix stacks, finds asset files, and can save what was rendered to a bitmap.
+
+TContextManagedObject is the base class of objects that need a render context, such as shaders, textures, and vertex buffers. Any of these objects that the program does not free are freed when the context is destroyed. TContextCollection is the base class of the collections that other units add to the context, such as Ctx.Shaders.

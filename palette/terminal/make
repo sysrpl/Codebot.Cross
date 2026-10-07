@@ -1,0 +1,3 @@
+#!/bin/bash
+../../../../lazarus/tools/lazres ../../source/codebot_terminal_design/palette_icons.res \
+	TTerminal.bmp

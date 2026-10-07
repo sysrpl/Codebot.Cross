@@ -1,0 +1,3 @@
+The Codebot.Graphics unit creates the drawing objects declared in Codebot.Graphics.Types. These include matrices, pens, solid, bitmap, and gradient brushes, fonts, surfaces for a canvas or a window, bitmaps, splash windows, and captures of the screen. Each object is made by the drawing backend of the platform, which is Cairo on Linux and either Direct2D or GDI+ on Windows.
+
+The unit also defines TSurfaceBitmap, which is a TGraphic that holds an IBitmap, and TImageStrip, which is a component that holds a series of images of the same size. Finally, it includes routines that fill and outline rectangles, along with TDefaultTheme and TRedmondTheme, which are the themes used to draw controls.

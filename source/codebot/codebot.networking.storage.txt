@@ -1,0 +1,3 @@
+The Codebot.Networking.Storage unit provides access to cloud storage held by S3 compatible providers. TS3Config holds the end points, regions, and credentials of a provider, and S3Configs supplies default configurations for several providers, such as DigitalOcean, Google, IBM, Microsoft, and Wasabi.
+
+TS3Methods generates the S3 REST requests. These requests can be run as asynchronous tasks, which produce either an XML document through IAsyncDocTask or a stream through IAsyncStreamTask.

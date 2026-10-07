@@ -1,0 +1,3 @@
+The Codebot.Render.Buffers unit defines buffers that are owned by a render context. TTextureBuffer renders into a texture, and TShadowBuffer records depth into a texture for shadow mapping.
+
+TDataBuffer<T> collects large amounts of vertex data, and TDrawingBuffer<T> draws it. The unit declares vertex records that combine position, color, texture coordinates, normals, and skinning in several ways, along with a vertex buffer class for each one.

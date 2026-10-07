@@ -22,10 +22,14 @@ uses
   Codebot.Controls;
 
 type
+  { TSlideBarKind is the orientation of a slide bar }
   TSlideBarKind = (sbVertical, sbHorizontal);
+  { TFormatTextEvent allows the text written to an associated control to be
+    changed }
   TFormatTextEvent = procedure(Sender: TObject; var Text: string) of object;
 
-  { TCustomSlideBar }
+{ TCustomSlideBar is a track bar with a draggable thumb which selects a value
+  between Min and Max }
 
   TCustomSlideBar = class(TSurfaceGraphicControl)
   private
@@ -48,9 +52,13 @@ type
     procedure SetPosition(Value: Double);
     procedure SetKind(Value: TSlideBarKind);
   protected
+    { The bounds of the thumb }
     function GetGripRect: TRectI;
     function ThemeAware: Boolean; override;
+    { Called when position changes, invoking OnChange immediately if
+      tracking is true }
     procedure Change; dynamic;
+    { Invoke OnChange if the position has changed }
     procedure DoChange; dynamic;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure EnabledChanged; override;
@@ -61,22 +69,38 @@ type
       X, Y: Integer); override;
     procedure MouseLeave; override;
     procedure Draw; override;
+    { A control whose text is set to the position when it changes }
     property Associate: TControl read FAssociate write SetAssociate;
+    { The orientation of the slide bar }
     property Kind: TSlideBarKind read FKind write SetKind;
+    { The smallest position }
     property Min: Double read FMin write SetMin;
+    { The largest position }
     property Max: Double read FMax write SetMax;
+    { When greater than zero the position snaps to multiples of step }
     property Step: Double read FStep write FStep;
+    { Moving is true while the user drags the thumb }
     property Moving: Boolean read FMoving;
+    { When true OnChange is invoked while dragging, otherwise only when the
+      thumb is released }
     property Tracking: Boolean read Ftracking write FTracking default True;
+    { The current value }
     property Position: Double read FPosition write SetPosition;
+    { OnChange is invoked when the position changes }
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
+    { OnDrawBackground allows custom drawing of the track }
     property OnDrawBackground: TDrawStateEvent read FOnDrawBackground write FOnDrawBackground;
+    { OnDrawThumb allows custom drawing of the thumb }
     property OnDrawThumb: TDrawStateEvent read FOnDrawThumb write FOnDrawThumb;
+    { OnFormat allows the text written to Associate to be changed }
     property OnFormat: TFormatTextEvent read FOnFormat write FOnFormat;
   public
+    { Create a new slide bar }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   end;
+
+{ TSlideBar publishes the properties of TCustomSlideBar }
 
   TSlideBar = class(TCustomSlideBar)
   public

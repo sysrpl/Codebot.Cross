@@ -20,7 +20,7 @@ uses
   Codebot.Graphics,
   Codebot.Graphics.Types;
 
-{ TImageMode }
+{ TImageMode determines how TDrawImage places its image }
 
 type
   TImageMode = (
@@ -35,7 +35,7 @@ type
     { Repeat the image across the client area }
     imTile);
 
-{ TDrawImage }
+{ TDrawImage displays an image which can be desaturated or colorized }
 
   TDrawImage = class(TSurfaceGraphicControl)
   private
@@ -58,23 +58,35 @@ type
     procedure SetSaturation(Value: Float);
     procedure SetSharedImage(Value: TSurfaceBitmap);
   protected
+    { The color used when Colorized is true }
     procedure SetColor(Value: TColor); override;
     procedure Draw; override;
+    { SharedImage if it is assigned, otherwise Image }
     property ComputeImage: TSurfaceBitmap read GetComputeImage;
   public
+    { Create a new draw image }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     procedure GetPreferredSize(var PreferredWidth, PreferredHeight: integer;
       Raw: Boolean = False; WithThemeSpace: Boolean = True); override;
+    { Discard the cached desaturated or colorized copy and repaint }
     procedure UpdateImage;
+    { The area of the control covered by the image }
     property RenderArea: TRectI read GetRenderArea;
+    { An image owned elsewhere which is drawn instead of Image when assigned }
     property SharedImage: TSurfaceBitmap read FSharedImage write SetSharedImage;
   published
+    { The image to draw }
     property Image: TSurfaceBitmap read FImage write SetImage;
+    { A rotation angle, currently unused when drawing }
     property Angle: Float read FAngle write SetAngle;
+    { The image saturation from 0 for gray to 1 for full color }
     property Saturation: Float read FSaturation write SetSaturation;
+    { When true the image is tinted using Color }
     property Colorized: Boolean read FColorized write SetColorized;
+    { How the image is placed in the control }
     property Mode: TImageMode read FMode write SetMode;
+    { The transparency of the image }
     property Opacity: Byte read GetOpacity write SetOpacity;
     property Align;
     property Anchors;
@@ -108,7 +120,8 @@ type
     property Visible;
   end;
 
-{ TDrawBox }
+{ TDrawBox is a graphic control which draws nothing on its own. Use OnDraw
+  to draw on its surface. }
 
   TDrawBox = class(TSurfaceGraphicControl)
   protected
@@ -144,12 +157,14 @@ type
     property Visible;
   end;
 
-{ TDrawPanel }
+{ TDrawPanel is a windowed control which draws nothing on its own. Use
+  OnDraw to draw on its surface. }
 
   TDrawPanel = class(TSurfaceCustomControl)
   protected
     procedure Draw; override;
   public
+    { Create a new draw panel }
     constructor Create(AOwner: TComponent); override;
   published
     property OnDraw;
@@ -185,10 +200,13 @@ type
     property OnStartDrag;
   end;
 
+  { TProgressStatus selects the icon shown by TIndeterminateProgress }
   TProgressStatus = (psNone, psBusy, psReady, psInfo, psHelp, psWarn, psError, psCustom);
+  { TIconPosition is where an icon is placed relative to its text }
   TIconPosition = (icNear, icAbove, icFar, icBelow);
 
-{ TIndeterminateProgress }
+{ TIndeterminateProgress shows a status icon next to its caption, animating
+  a busy icon while the status is psBusy }
 
   TIndeterminateProgress = class(TSurfaceGraphicControl)
   private
@@ -214,14 +232,21 @@ type
     procedure FontChanged(Sender: TObject); override;
     procedure TextChanged; override;
   public
+    { Create a new progress indicator }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
+    { The current status }
     property Status: TProgressStatus read FStatus write SetStatus default psReady;
+    { Animation frames shown while busy, or nil to use the defaults }
     property BusyImages: TImageStrip read FBusyImages write SetBusyImages;
+    { Status icons starting with psReady, or nil to use the defaults }
     property StatusImages: TImageStrip read FStatusImages write SetStatusImages;
+    { Milliseconds between busy animation frames }
     property BusyDelay: Cardinal read GetBusyDelay write SetBusyDelay default 30;
+    { Where the icon is placed relative to the text }
     property IconPosition: TIconPosition read FIconPosition write SetIconPosition default icNear;
+    { When not empty this text is shown with the help icon instead of the caption }
     property Help: string read FHelp write SetHelp;
     property Align;
     property Anchors;
@@ -258,10 +283,84 @@ type
     property OnStartDrag;
   end;
 
-{ TStepBubbles }
+{ TStepClickEvent is invoked when a step of a TStepBubbles is clicked }
+
+  TStepClickEvent = procedure(Sender: TObject; StepIndex: Integer) of object;
+
+{ TStepBubbles shows the steps of a process, such as the pages of a wizard,
+  as a row of arrows. Each arrow has a numbered circle at its tail and
+  points to the next step. The last step is drawn as a rounded bubble.
+  Steps before and including StepIndex are highlighted. }
 
   TStepBubbles = class(TSurfaceGraphicControl)
   private
+    FStepIndex: Integer;
+    FHotStepIndex: Integer;
+    FDownStepIndex: Integer;
+    FSteps: TStrings;
+    FStepRects: TButtonRects;
+    FHotTrack: Boolean;
+    FTransparent: Boolean;
+    FOnStep: TNotifyEvent;
+    FOnStepClick: TStepClickEvent;
+    procedure StepsChange(Sender: TObject);
+    procedure SetStepIndex(Value: Integer);
+    procedure SetSteps(Value: TStrings);
+    procedure SetTransparent(Value: Boolean);
+  protected
+    { Position the steps and return the size needed to draw them }
+    function Layout(Target: ISurface): TPointI;
+    { Return the step at a point or -1 if there is none }
+    function StepFromPoint(X, Y: Integer): Integer;
+    procedure CalculatePreferredSize(var PreferredWidth, PreferredHeight: Integer;
+      WithThemeSpace: Boolean); override;
+    procedure FontChanged(Sender: TObject); override;
+    procedure MouseDown(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseUp(Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer); override;
+    procedure MouseLeave; override;
+    procedure Draw; override;
+  public
+    { Create a new step bubbles control }
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  published
+    { The current step or -1 if no step has been reached }
+    property StepIndex: Integer read FStepIndex write SetStepIndex default 0;
+    { The caption of each step, one per line }
+    property Steps: TStrings read FSteps write SetSteps;
+    { When true the step under the mouse is highlighted }
+    property HotTrack: Boolean read FHotTrack write FHotTrack default False;
+    { When false the background is filled with Color }
+    property Transparent: Boolean read FTransparent write SetTransparent default True;
+    { OnStep is invoked when StepIndex changes }
+    property OnStep: TNotifyEvent read FOnStep write FOnStep;
+    { OnStepClick is invoked when a step is clicked }
+    property OnStepClick: TStepClickEvent read FOnStepClick write FOnStepClick;
+    property Align;
+    property Anchors;
+    property AutoSize default True;
+    property BorderSpacing;
+    property Color;
+    property Constraints;
+    property Cursor;
+    property Enabled;
+    property Font;
+    property ParentColor;
+    property ParentFont;
+    property ParentShowHint;
+    property PopupMenu;
+    property ShowHint;
+    property Visible;
+    property OnClick;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnResize;
   end;
 
 implementation
@@ -794,6 +893,375 @@ end;
 procedure TIndeterminateProgress.TextChanged;
 begin
   inherited TextChanged;
+  Invalidate;
+end;
+
+{ TStepBubbles }
+
+const
+  StepArrowWidth = 24;
+  StepOffset = 32;
+  StepCenter = StepArrowWidth + 2;
+
+{ Mix two colors where Percent is the amount of Fore }
+
+function StepBlend(Fore, Back: TColor; Percent: Integer = 50): TColorB;
+var
+  F, B: TColorB;
+begin
+  F := Fore;
+  B := Back;
+  Result := B.Blend(F, Percent / 100);
+end;
+
+function StepBoldFont(Font: TFont): IFont;
+begin
+  Result := NewFont(Font);
+  Result.Style := Result.Style + [fsBold];
+  Result.Size := Result.Size * 1.5;
+end;
+
+{ Add a horizontal arrow from A to B with a body of Width and a head of twice
+  Width to the current path }
+
+procedure StepArrowPath(Surface: ISurface; const A, B: TPointF; Width: Float);
+var
+  W: Float;
+begin
+  W := Width / 2;
+  Surface.MoveTo(A.X - W, A.Y - W);
+  Surface.LineTo(B.X - W, B.Y - W);
+  Surface.LineTo(B.X - W, B.Y - Width);
+  Surface.LineTo(B.X + Width, B.Y);
+  Surface.LineTo(B.X - W, B.Y + Width);
+  Surface.LineTo(B.X - W, B.Y + W);
+  Surface.LineTo(A.X - W, A.Y + W);
+  Surface.Path.Close;
+end;
+
+{ Add a circle at A with a radius of Width to the current path }
+
+procedure StepCirclePath(Surface: ISurface; const A: TPointF; Width: Float);
+begin
+  Surface.Ellipse(TRectF.Create(A.X - Width, A.Y - Width, Width * 2, Width * 2));
+end;
+
+{ Add a horizontal capsule from A to B with a height of Width to the current path }
+
+procedure StepCapsulePath(Surface: ISurface; const A, B: TPointF; Width: Float);
+var
+  W: Float;
+begin
+  W := Width / 2;
+  Surface.RoundRectangle(TRectF.Create(A.X - W, A.Y - W, B.X - A.X + Width, Width), W);
+end;
+
+{ Draw text centered on a point }
+
+procedure StepText(Surface: ISurface; Font: IFont; const Text: string; const P: TPointF);
+begin
+  Surface.TextOut(Font, Text, TRectF.Create(P.X - 1000, P.Y - 100, 2000, 200), drCenter);
+end;
+
+{ Draw an arrow with a numbered circle at its tail. The shape is drawn in
+  three layers to give an outlined look: an outer ring and fill in Back, a
+  band in Fore, and an inner fill in Back. Each layer fills the arrow and
+  circle separately so their outlines do not show where they overlap. }
+
+procedure DrawBubbleArrow(Surface: ISurface; Font, Bold: IFont; const Caption: string;
+  Step: Integer; const A, B: TPointF; Width: Float; Fore, Back: TColorB);
+var
+  Pen: IPen;
+  Brush: IBrush;
+begin
+  Pen := NewPen(Back, 2.5);
+  Brush := NewBrush(Back);
+  StepArrowPath(Surface, A, B, Width);
+  Surface.Stroke(Pen);
+  StepCirclePath(Surface, A, Width);
+  Surface.Stroke(Pen);
+  StepArrowPath(Surface, A, B, Width);
+  Surface.Fill(Brush);
+  StepCirclePath(Surface, A, Width);
+  Surface.Fill(Brush);
+  Brush := NewBrush(Fore);
+  StepArrowPath(Surface, A, B, Width - 2.5);
+  Surface.Fill(Brush);
+  StepCirclePath(Surface, A, Width - 2.5);
+  Surface.Fill(Brush);
+  Brush := NewBrush(Back);
+  StepArrowPath(Surface, A, B, Width - 6);
+  Surface.Fill(Brush);
+  StepCirclePath(Surface, A, Width - 6);
+  Surface.Fill(Brush);
+  Font.Color := Fore;
+  Bold.Color := Fore;
+  StepText(Surface, Font, Caption, TPointF.Create((A.X + B.X) / 2, A.Y));
+  StepText(Surface, Bold, IntToStr(Step + 1), A);
+end;
+
+{ Draw the last step as a capsule using the same layers as DrawBubbleArrow }
+
+procedure DrawBubble(Surface: ISurface; Bold: IFont; const Caption: string;
+  const A, B: TPointF; Width: Float; Fore, Back: TColorB);
+begin
+  StepCapsulePath(Surface, A, B, Width);
+  Surface.Stroke(NewPen(Back, 2.5), True);
+  Surface.Fill(NewBrush(Back));
+  StepCapsulePath(Surface, A, B, Width - 5);
+  Surface.Fill(NewBrush(Fore));
+  StepCapsulePath(Surface, A, B, Width - 12);
+  Surface.Fill(NewBrush(Back));
+  Bold.Color := Fore;
+  StepText(Surface, Bold, Caption, TPointF.Create((A.X + B.X) / 2, A.Y));
+end;
+
+constructor TStepBubbles.Create(AOwner: TComponent);
+var
+  S: TStringList;
+begin
+  inherited Create(AOwner);
+  S := TStringList.Create;
+  S.Add('Step one');
+  S.Add('Step two');
+  S.Add('Step three');
+  S.Add('Done');
+  S.OnChange := StepsChange;
+  FSteps := S;
+  FStepIndex := 0;
+  FDownStepIndex := -1;
+  FHotStepIndex := -1;
+  FTransparent := True;
+  FStepRects.Length := FSteps.Count;
+  Width := 400;
+  Height := StepArrowWidth * 2 + 4;
+  AutoSize := True;
+end;
+
+destructor TStepBubbles.Destroy;
+begin
+  FSteps.Free;
+  inherited Destroy;
+end;
+
+function TStepBubbles.Layout(Target: ISurface): TPointI;
+var
+  F, B: IFont;
+  X, W: Float;
+  R: TRectI;
+  I, Last: Integer;
+begin
+  F := NewFont(Font);
+  B := StepBoldFont(Font);
+  Last := FSteps.Count - 1;
+  FStepRects.Length := FSteps.Count;
+  X := -StepArrowWidth / 2 + 2;
+  for I := 0 to Last do
+  begin
+    X := X + StepArrowWidth + StepArrowWidth / 2;
+    if I = Last then
+      W := Target.TextSize(B, FSteps[I]).X
+    else
+      W := Target.TextSize(F, FSteps[I]).X;
+    { The rect of a step spans its line from A to B }
+    R.X := Round(X);
+    R.Width := Round(X + W + StepOffset) - R.X;
+    R.Y := StepCenter - StepArrowWidth div 2;
+    R.Height := StepArrowWidth;
+    if I = Last then
+    begin
+      R.X := Round(X - StepArrowWidth / 4);
+      R.Width := Round(X + W - StepArrowWidth) - R.X;
+      R.Y := StepCenter - StepArrowWidth;
+      R.Height := StepArrowWidth * 2;
+    end;
+    FStepRects[I] := R;
+    X := X + W + StepOffset;
+  end;
+  Result := TPointI.Create(StepArrowWidth * 2 + 4, StepArrowWidth * 2 + 4);
+  if Last > -1 then
+    Result.X := FStepRects[Last].Right + StepArrowWidth + 2;
+end;
+
+function TStepBubbles.StepFromPoint(X, Y: Integer): Integer;
+var
+  I: Integer;
+begin
+  Result := -1;
+  for I := FStepRects.Lo to FStepRects.Hi do
+    if FStepRects[I].Contains(X, Y) then
+      Exit(I);
+end;
+
+procedure TStepBubbles.CalculatePreferredSize(var PreferredWidth, PreferredHeight: Integer;
+  WithThemeSpace: Boolean);
+var
+  Bitmap: IBitmap;
+  Size: TPointI;
+begin
+  { Measure text using a small bitmap since Surface is only valid in Draw }
+  Bitmap := NewBitmap(1, 1);
+  Size := Layout(Bitmap.Surface);
+  PreferredWidth := Size.X;
+  PreferredHeight := Size.Y;
+end;
+
+procedure TStepBubbles.FontChanged(Sender: TObject);
+begin
+  inherited FontChanged(Sender);
+  InvalidatePreferredSize;
+  AdjustSize;
+  Invalidate;
+end;
+
+procedure TStepBubbles.MouseDown(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+var
+  I: Integer;
+begin
+  inherited MouseDown(Button, Shift, X, Y);
+  if Button = mbLeft then
+  begin
+    I := StepFromPoint(X, Y);
+    if FDownStepIndex <> I then
+    begin
+      FDownStepIndex := I;
+      if FHotTrack then
+        Invalidate;
+    end;
+  end;
+end;
+
+procedure TStepBubbles.MouseMove(Shift: TShiftState; X, Y: Integer);
+var
+  I: Integer;
+begin
+  inherited MouseMove(Shift, X, Y);
+  I := StepFromPoint(X, Y);
+  if FHotStepIndex <> I then
+  begin
+    FHotStepIndex := I;
+    if FHotTrack then
+      Invalidate;
+  end;
+end;
+
+procedure TStepBubbles.MouseUp(Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+var
+  I, J: Integer;
+begin
+  inherited MouseUp(Button, Shift, X, Y);
+  if (Button = mbLeft) and (FDownStepIndex > -1) then
+  begin
+    I := StepFromPoint(X, Y);
+    J := FDownStepIndex;
+    FDownStepIndex := -1;
+    if FHotTrack then
+      Invalidate;
+    if (J = I) and Assigned(FOnStepClick) then
+      FOnStepClick(Self, I);
+  end;
+end;
+
+procedure TStepBubbles.MouseLeave;
+begin
+  inherited MouseLeave;
+  if FHotStepIndex > -1 then
+  begin
+    FHotStepIndex := -1;
+    if FHotTrack then
+      Invalidate;
+  end;
+end;
+
+procedure TStepBubbles.Draw;
+var
+  F, B: IFont;
+  P0, P1: TPointF;
+  Fore, Back: TColorB;
+  R: TRectI;
+  I: Integer;
+begin
+  if not FTransparent then
+    FillRectColor(Surface, ClientRect, Color);
+  Layout(Surface);
+  F := NewFont(Font);
+  B := StepBoldFont(Font);
+  { Draw backwards so each arrow head lies on top of the next step }
+  for I := FSteps.Count - 1 downto 0 do
+  begin
+    Fore := clHighlightText;
+    { Past steps are a slightly darker tone of the highlight }
+    Back := StepBlend(clHighlight, clBlack, 80);
+    if I = FStepIndex then
+      Back := StepBlend(clHighlight, clWindowText, 80);
+    if FHotTrack then
+    begin
+      if I > FStepIndex then
+        if I = FHotStepIndex then
+          if I = FDownStepIndex then
+            Back := StepBlend(cl3DDkShadow, clWindowText)
+          else
+            Back := clBtnShadow
+        else
+          Back := cl3DDkShadow
+      else if I = FHotStepIndex then
+        if I = FDownStepIndex then
+          Back := StepBlend(clHighlight, clWindowText, 70)
+        else
+          Back := StepBlend(clHighlight, clHighlightText, 60);
+    end
+    else if I > FStepIndex then
+      Back := cl3DDkShadow;
+    if not Enabled then
+      Back := Back.Desaturate(1);
+    R := FStepRects[I];
+    P0 := TPointF.Create(R.Left, StepCenter);
+    P1 := TPointF.Create(R.Right, StepCenter);
+    if I = FSteps.Count - 1 then
+      DrawBubble(Surface, B, FSteps[I], P0, P1, StepArrowWidth * 2, Fore, Back)
+    else
+      DrawBubbleArrow(Surface, F, B, FSteps[I], I, P0, P1, StepArrowWidth, Fore, Back);
+  end;
+end;
+
+procedure TStepBubbles.StepsChange(Sender: TObject);
+begin
+  FDownStepIndex := -1;
+  FHotStepIndex := -1;
+  StepIndex := FStepIndex;
+  FStepRects.Length := FSteps.Count;
+  InvalidatePreferredSize;
+  AdjustSize;
+  Invalidate;
+end;
+
+procedure TStepBubbles.SetStepIndex(Value: Integer);
+begin
+  if Value < -1 then
+    Value := -1
+  else if Value > FSteps.Count - 1 then
+    Value := FSteps.Count - 1;
+  if Value <> FStepIndex then
+  begin
+    FStepIndex := Value;
+    if Assigned(FOnStep) then
+      FOnStep(Self);
+    Invalidate;
+  end;
+end;
+
+procedure TStepBubbles.SetSteps(Value: TStrings);
+begin
+  FSteps.Assign(Value);
+  StepIndex := -1;
+end;
+
+procedure TStepBubbles.SetTransparent(Value: Boolean);
+begin
+  if FTransparent = Value then Exit;
+  FTransparent := Value;
   Invalidate;
 end;
 

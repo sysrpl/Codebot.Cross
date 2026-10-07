@@ -21,32 +21,41 @@ uses
   Codebot.Graphics,
   Codebot.Graphics.Types;
 
-{ TScrollWindow }
-
 type
+  { TScrollData holds the scroll position and the size of the scrollable area }
   TScrollData = record
     Left, Top, Width, Height: Integer;
   end;
 
+  { TScrollKind identifies a scroll bar }
   TScrollKind = (skVertical, skHorizontal);
 
+  { TScrollChangeEvent is invoked when the scroll position changes }
   TScrollChangeEvent = procedure(Sender: TObject; X, Y: Integer) of object;
 
-{ TRectSelection }
+{ TRectSelection tracks an area of a control which needs to be repainted }
 
   TRectSelection = record
   private
     FAdded: Boolean;
     FRect: TRectI;
   public
+    { Empty the area }
     procedure Clear;
+    { Grow the area to include a rectangle }
     procedure Add(Rect: TRectI);
+    { Move the area by a scroll amount }
     procedure Scroll(X, Y: Integer);
+    { Invalidate the area of a control }
     procedure Update(Control: TWinControl);
+    { The area }
     property Region: TRectI read FRect;
+    { Modified is true when a rectangle has been added }
     property Modified: Boolean read FAdded;
   end;
 
+  { TScrollWindow is a windowed control with scroll bars which draws a
+    scrollable area larger than itself }
   TScrollWindow = class(TSurfaceCustomControl)
   private
     FScrollData: TScrollData;
@@ -65,37 +74,56 @@ type
     procedure WMVScroll(var Msg: TLMScroll); message WM_VSCROLL;
     procedure WMHScroll(var Msg: TLMScroll); message WM_HSCROLL;
   protected
+    { The control width less the border }
     function InternalWidth: Integer;
+    { The control height less the border }
     function InternalHeight: Integer;
+    { Returns true if a scroll bar is visible }
     function IsBarVisible(Kind: TScrollKind): Boolean;
+    { Set the scroll position and scrollable size }
     procedure SetScrollData(const Value: TScrollData);
+    { Return the scroll position and scrollable size }
     function GetScrollData: TScrollData;
+    { Scroll to a position or until a rectangle is visible }
     procedure ScrollTo(X, Y: Integer); overload;
     procedure ScrollTo(const Rect: TRect); overload;
+    { Invoked when the view scrolls by an amount }
     procedure SelectionScroll(DX, DY: Integer); virtual;
+    { Call DoUpdate and refresh the scroll bars unless updates are suspended }
     procedure UpdateChanged;
+    { Invoked when the scroll position changes }
     procedure DoScroll(X, Y: Integer); virtual;
+    { Override to recalculate the scrollable size }
     procedure DoUpdate; virtual;
+    { The horizontal amount scrolled by a scroll bar arrow }
     property LineWidth: Integer read FLineWidth write FLineWidth;
+    { The vertical amount scrolled by a scroll bar arrow }
     property LineHeight: Integer read FLineHeight write FLineHeight;
+    { OnScrollChange is invoked when the scroll position changes }
     property OnScrollChange: TScrollChangeEvent read FOnScrollChange write FOnScrollChange;
   public
     procedure SetBounds(ALeft, ATop, AWidth, AHeight: Integer); override;
+    { Suspend updates until EndUpdate is called }
     procedure BeginUpdate;
+    { Resume updates and apply changes }
     procedure EndUpdate;
+    { CanUpdate is false while updates are suspended }
     property CanUpdate: Boolean read GetCanUpdate;
     property Anchors;
     property Canvas;
     property Color;
+    { The width of the scrollable area }
     property ScrollWidth: Integer read GetScrollWidth;
+    { The height of the scrollable area }
     property ScrollHeight: Integer read GetScrollHeight;
+    { The horizontal scroll position }
     property ScrollLeft: Integer read GetScrollLeft;
+    { The vertical scroll position }
     property ScrollTop: Integer read GetScrollTop;
     property OnResize;
   end;
 
-{ TGridCellManager }
-
+{doc off}
   PGridNode = ^TGridNode;
   TGridNode = record
     Size: Integer;
@@ -108,29 +136,41 @@ type
     FarWall: Integer;
   end;
 
+{doc on}
+
+  { TGridCoord is a column and row in a grid }
   TGridCoord = TPoint;
+  { TGridHitTest is the part of a cell under the mouse }
   TGridHitTest = (ghNothing, ghIcon, ghCheckbox);
 
+  { TGridHitTestEvent allows the part of a cell under the mouse to be determined }
   TGridHitTestEvent = procedure(Sender: TObject; X, Y: Integer;
     var HitTest: TGridHitTest) of object;
+  { TGridSelectionEvent allows a change of selection or hot tracking to be prevented }
   TGridSelectionEvent = procedure(Sender: TObject; Col, Row: Integer;
     var Allow: Boolean) of object;
 
+  { TMergeCellParams describes a cell which can span several columns and rows }
   TMergeCellParams = record
     Col, Row, Width, Height: Integer;
     Merged: Boolean;
   end;
 
+  { TGridCellMergeEvent allows cells to be merged }
   TGridCellMergeEvent = procedure(Sender: TObject; var Params: TMergeCellParams) of object;
 
+  { TDrawRowEvent allows a whole row to be drawn. Set DefaultDraw to false to
+    skip drawing its cells. }
   TDrawRowEvent = procedure(Sender: TObject; Surface: ISurface; Row: Integer; Rect: TRectI;
     var DefaultDraw: Boolean) of object;
+  { TDrawCellEvent is invoked to draw a cell }
   TDrawCellEvent = procedure(Sender: TObject; Surface: ISurface; Col, Row: Integer;
     Rect: TRectI; State: TDrawState) of object;
+  { TDrawIndexSectionEvent is invoked to draw a section of an item }
   TDrawIndexSectionEvent = procedure(Sender: TObject; Surface: ISurface;
     Section, Index: Integer; Rect: TRectI; State: TDrawState) of object;
 
-{ TGridCellManager }
+{ TGridCellManager stores the column widths and row heights of a grid }
 
   TGridCellManager = class(TObject)
   private
@@ -147,18 +187,27 @@ type
     function GetRow(Index: Integer): Integer;
     procedure SetRow(Index: Integer; Value: Integer);
   public
+    { Create a new cell manager }
     constructor Create;
     destructor Destroy; override;
+    { Return the bounds of a cell }
     function GetCell(X, Y: Integer): TRect;
+    { The width of columns which have not been sized }
     property DefColWidth: Integer read FDefColWidth write FDefColWidth;
+    { The height of rows which have not been sized }
     property DefRowHeight: Integer read FDefRowHeight write FDefRowHeight;
+    { The number of columns }
     property ColCount: Integer read FColCount write SetColCount;
+    { The number of rows }
     property RowCount: Integer read FRowCount write SetRowCount;
+    { The height of a row }
     property RowHeight[Index: Integer]: Integer read GetRow write SetRow;
+    { The width of a column }
     property ColWidth[Index: Integer]: Integer read GetCol write SetCol;
   end;
 
-{ TContentGrid }
+{ TContentGrid is a grid of cells drawn by event handlers. When SingleColumn
+  is true it acts as a list box. }
 
   TContentGrid = class(TScrollWindow)
   private
@@ -219,34 +268,59 @@ type
     procedure Draw; override;
     procedure Resize; override;
     procedure DoOnResize; override;
+    { Set the cell under the mouse }
     procedure SetHotTrack(const Value: TGridCoord);
+    { OnDrawIndexSection is invoked to draw a section of an item }
     property OnDrawIndexSection: TDrawIndexSectionEvent read FOnDrawIndexSection write FOnDrawIndexSection;
   public
+    { Create a new content grid }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    { Repaint a cell }
     procedure InvalidateCoord(X, Y: Integer);
+    { Return the bounds of a cell }
     function RectFromCoord(X, Y: Integer): TRect;
+    { The cell under the mouse }
     property HotTrack: TGridCoord read FHotTrack;
+    { Return the cell at a point }
     function CoordFromPoint(X, Y: Integer): TGridCoord;
+    { The width of a column }
     property ColWidths[Col: Integer]: Integer read GetColWidths write SetColWidths;
+    { The height of a row }
     property RowHeights[Row: Integer]: Integer read GetRowHeights write SetRowHeights;
+    { The selected row when SingleColumn is true, otherwise -1 }
     property ItemIndex: Integer read GetItemIndex write SetItemIndex;
+    { The selected cell }
     property Selection: TGridCoord read FSelection write SetSelection;
+    { OnMergeCell allows cells to be merged }
     property OnMergeCell: TGridCellMergeEvent read FOnMergeCell write FOnMergeCell;
     property OnScrollChange;
+    { When true the first row cannot be selected }
     property FixedRow: Boolean read FFixedRow write SetFixedRow;
   published
+    { When true the grid scrolls to show the selected cell }
     property AutoScroll: Boolean read FAutoScroll write FAutoScroll default True;
+    { The width of columns which have not been sized }
     property DefColWidth: Integer read GetDefColWidth write SetDefColWidth;
+    { The height of rows which have not been sized }
     property DefRowHeight: Integer read GetDefRowHeight write SetDefRowHeight;
+    { The number of columns }
     property ColCount: Integer read GetColCount write SetColCount;
+    { The number of rows }
     property RowCount: Integer read GetRowCount write SetRowCount;
+    { When true the grid has one column and acts as a list box }
     property SingleColumn: Boolean read FSingleColumn write SetSingleColumn default False;
+    { OnDrawBackground is invoked to draw behind the cells }
     property OnDrawBackground: TDrawRectEvent read FOnDrawBackground write FOnDrawBackground;
+    { OnHitTest allows the part of a cell under the mouse to be determined }
     property OnHitTest: TGridHitTestEvent read FOnHitTest write FOnHitTest;
+    { OnSelection is invoked before the selection changes }
     property OnSelection: TGridSelectionEvent read FOnSelection write FOnSelection;
+    { OnHotTrack is invoked before the cell under the mouse changes }
     property OnHotTrack: TGridSelectionEvent read FOnHotTrack write FOnHotTrack;
+    { OnDrawRow is invoked to draw a row }
     property OnDrawRow: TDrawRowEvent read FOnDrawRow write FOnDrawRow;
+    { OnDrawCell is invoked to draw a cell }
     property OnDrawCell: TDrawCellEvent read FOnDrawCell write FOnDrawCell;
     property Align;
     property Anchors;
@@ -296,7 +370,7 @@ type
     property OnUnDock;
   end;
 
-{ TImageListGridProvider }
+{ TImageListGridProvider displays the images of an image strip in a content grid }
 
   TImageListGridProvider = class(TComponent)
   private
@@ -319,10 +393,13 @@ type
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
   public
+    { Create a new provider }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   published
+    { The images to display }
     property ImageList: TImageStrip read FImageList write SetImageList;
+    { The grid which displays the images }
     property Grid: TContentGrid read FGrid write SetGrid;
   end;
 

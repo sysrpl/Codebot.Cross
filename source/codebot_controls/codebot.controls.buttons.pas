@@ -20,10 +20,15 @@ uses
   Codebot.Graphics,
   Codebot.Graphics.Types;
 
-{ TCustomThinButton }
+{ TButtonKind determines the areas of a thin button. A button and splitter
+  have one area, a drop down and dialog button have a main area and an arrow
+  or ellipsis area, and a spin button has a main area and up and down areas. }
 
 type
   TButtonKind = (bkButton, bkDropDown, bkDialog, bkSpin, bkSplitter);
+
+{ TCustomThinButton is a flat button with an optional image which draws
+  itself using the current theme }
 
 type
   TCustomThinButton = class(TSurfaceGraphicControl)
@@ -51,7 +56,9 @@ type
     procedure TextChanged; override;
     function ThemeAware: Boolean; override;
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+    { An image strip holding the button image }
     property Images: TImageStrip read FImages write SetImages;
+    { The index of the image in Images or -1 for no image }
     property ImageIndex: Integer read FImageIndex write SetImageIndex default -1;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X,
       Y: Integer); override;
@@ -59,16 +66,21 @@ type
     procedure MouseEnter; override;
     procedure MouseLeave; override;
     procedure Draw; override;
+    { When true the button is drawn pressed }
     property Down: Boolean read FDown write SetDown;
+    { The kind of button }
     property Kind: TButtonKind read FKind write SetKind default bkButton;
+    { OnDrawButton allows custom drawing of the button }
     property OnDrawButton: TDrawStateEvent read FOnDrawButton write FOnDrawButton;
+    { When true the caption is drawn next to the image }
     property ShowCaption: Boolean read FShowCaption write SetShowCaption default False;
   public
+    { Create a new thin button }
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
   end;
 
-{ TThinButton }
+{ TThinButton publishes the properties of TCustomThinButton }
 
   TThinButton = class(TCustomThinButton)
   published

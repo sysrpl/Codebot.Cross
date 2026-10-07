@@ -187,13 +187,16 @@
         <FormatVersion Value="1"/>
       </local>
     </RunParams>
-    <RequiredPackages Count="2">
+    <RequiredPackages Count="3">
       <Item1>
         <PackageName Value="codebot"/>
       </Item1>
       <Item2>
         <PackageName Value="LCL"/>
       </Item2>
+      <Item3>
+        <PackageName Value="codebot_controls"/>
+      </Item3>
     </RequiredPackages>
     <Units Count="3">
       <Unit0>

@@ -1,0 +1,114 @@
+object TextStorageEditor: TTextStorageEditor
+  Left = 400
+  Height = 460
+  Top = 160
+  Width = 640
+  ClientHeight = 460
+  ClientWidth = 640
+  Constraints.MinHeight = 360
+  Constraints.MinWidth = 480
+  KeyPreview = True
+  OnCloseQuery = FormCloseQuery
+  OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  OnKeyDown = FormKeyDown
+  Position = poDesktopCenter
+  Options = [boReanchor, boBannerShadow, boFooterShadow, boFooterGrip]
+  Banner.Color = clWhite
+  Banner.ColorBalance = 0.5
+  Banner.Height = 80
+  Banner.ImageBalance = 0.5
+  Title.ParentFont = False
+  Title.Font.Color = clBlack
+  Title.Font.Height = 20
+  Title.Font.Style = [fsBold]
+  Title.Text = 'Text Storage Editor'
+  Title.X = 0
+  Title.Y = 0
+  TitleSub.ParentFont = True
+  TitleSub.Font.Color = clBlack
+  TitleSub.Text = 'Each item stores a block of text which can be read by name'
+  TitleSub.X = 0
+  TitleSub.Y = 0
+  object NameList: TListBox
+    Left = 8
+    Height = 323
+    Top = 88
+    Width = 180
+    Anchors = [akTop, akLeft, akBottom]
+    ItemHeight = 0
+    TabOrder = 0
+    OnSelectionChange = NameListSelectionChange
+  end
+  object AddButton: TButton
+    Left = 8
+    Height = 25
+    Top = 428
+    Width = 87
+    Anchors = [akLeft, akBottom]
+    Caption = '&Add'
+    TabOrder = 1
+    OnClick = AddButtonClick
+  end
+  object DeleteButton: TButton
+    Left = 101
+    Height = 25
+    Top = 428
+    Width = 87
+    Anchors = [akLeft, akBottom]
+    Caption = '&Delete'
+    TabOrder = 2
+    OnClick = DeleteButtonClick
+  end
+  object NameLabel: TLabel
+    Left = 196
+    Height = 17
+    Top = 92
+    Width = 40
+    Caption = '&Name'
+    FocusControl = NameEdit
+  end
+  object NameEdit: TEdit
+    Left = 244
+    Height = 25
+    Top = 88
+    Width = 388
+    Anchors = [akTop, akLeft, akRight]
+    TabOrder = 3
+    OnChange = NameEditChange
+  end
+  object TextMemo: TMemo
+    Left = 196
+    Height = 291
+    Top = 120
+    Width = 436
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ScrollBars = ssAutoBoth
+    TabOrder = 4
+    WantTabs = True
+    WordWrap = False
+    OnChange = TextMemoChange
+  end
+  object OKButton: TButton
+    Left = 476
+    Height = 25
+    Top = 428
+    Width = 75
+    Anchors = [akRight, akBottom]
+    Caption = '&OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 5
+  end
+  object CancelButton: TButton
+    Left = 557
+    Height = 25
+    Top = 428
+    Width = 75
+    Anchors = [akRight, akBottom]
+    Caption = '&Cancel'
+    Cancel = True
+    ModalResult = 2
+    TabOrder = 6
+  end
+end

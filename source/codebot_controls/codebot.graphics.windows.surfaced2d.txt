@@ -1,0 +1,1 @@
+The Codebot.Graphics.Windows.SurfaceD2D unit implements the drawing interfaces using Direct2D on Windows, including matrices, pens, brushes, fonts, surfaces, and bitmaps. LoadD2D reports whether Direct2D is available. Codebot.Graphics uses this unit as a drawing backend on Windows.

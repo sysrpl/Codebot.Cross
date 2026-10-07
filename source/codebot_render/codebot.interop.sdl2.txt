@@ -1,0 +1,1 @@
+The Codebot.Interop.SDL2 unit declares the C API of the SDL2 library. The library is linked when a program that uses this unit is built.

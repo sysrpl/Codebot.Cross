@@ -6,7 +6,7 @@ object SurfaceBitmapEditor: TSurfaceBitmapEditor
   ClientHeight = 464
   ClientWidth = 610
   Constraints.MinHeight = 288
-  Constraints.MinWidth = 404
+  Constraints.MinWidth = 467
   KeyPreview = True
   Position = poDesktopCenter
   LCLVersion = '3.99.0.0'
@@ -143,19 +143,19 @@ object SurfaceBitmapEditor: TSurfaceBitmapEditor
     C995822EB7FA625EB750B6392FBBC49CC52F0816570A0195A414ECC512B0FCA8
     F8857C215FC8FF6BF93F016C3B4898D43EF10000000049454E44AE426082
   }
-  Banner.Color = clHighlight
+  Banner.Color = clWhite
   Banner.ColorBalance = 0.5
   Banner.Height = 80
   Banner.ImageBalance = 0.5
   Title.ParentFont = False
-  Title.Font.Color = clWindowText
+  Title.Font.Color = clBlack
   Title.Font.Height = 20
   Title.Font.Style = [fsBold]
   Title.Text = 'Surface Bitmap Editor'
   Title.X = 0
   Title.Y = 0
   TitleSub.ParentFont = True
-  TitleSub.Font.Color = clWindowText
+  TitleSub.Font.Color = clBlack
   TitleSub.Text = 'A surface bitmap can load and save all popular image formats'
   TitleSub.X = 0
   TitleSub.Y = 0
@@ -163,7 +163,7 @@ object SurfaceBitmapEditor: TSurfaceBitmapEditor
     Left = 8
     Height = 240
     Top = 88
-    Width = 368
+    Width = 451
     Borders = []
     Shadows = []
     Anchors = [akTop, akLeft, akRight, akBottom]
@@ -209,31 +209,31 @@ object SurfaceBitmapEditor: TSurfaceBitmapEditor
     TabOrder = 2
   end
   object LoadButton: TButton
-    Left = 384
+    Left = 8
     Height = 25
-    Top = 88
+    Top = 344
     Width = 75
-    Anchors = [akTop, akRight]
+    Anchors = [akLeft, akBottom]
     Caption = '&Load'
     TabOrder = 3
     OnClick = LoadButtonClick
   end
   object SaveButton: TButton
-    Left = 384
+    Left = 91
     Height = 25
-    Top = 120
+    Top = 344
     Width = 75
-    Anchors = [akTop, akRight]
+    Anchors = [akLeft, akBottom]
     Caption = '&Save'
     TabOrder = 4
     OnClick = SaveButtonClick
   end
   object ClearButton: TButton
-    Left = 384
+    Left = 174
     Height = 25
-    Top = 152
+    Top = 344
     Width = 75
-    Anchors = [akTop, akRight]
+    Anchors = [akLeft, akBottom]
     Caption = 'Cl&ear'
     TabOrder = 5
     OnClick = ClearButtonClick

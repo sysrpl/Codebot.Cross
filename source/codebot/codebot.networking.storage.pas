@@ -23,10 +23,14 @@ uses
   Codebot.Networking,
   Codebot.Networking.Web;
 
-{ TS3Config }
+{ ES3ConfigError is raised when an S3 provider name is not recognized }
 
 type
   ES3ConfigError = class(Exception);
+
+{ TS3Config holds the end points, regions, and credentials of an S3 compatible
+  provider. Credentials are read from the environment variables named by the
+  provider unless AccessId and SecretKey are set directly. }
 
   TS3Config = class
   private
@@ -44,26 +48,35 @@ type
     function GetAccessId: string;
     function GetSecretKey: string;
   public
+    { Create a config for a named provider raising ES3ConfigError if the
+      provider is not known }
     constructor Create(const AProvider: string);
     destructor Destroy; override;
+    { The name of the provider }
     function Provider: string;
+    { The host name for a region or the default host if region is empty }
     function EndPoint(const Region: string = ''): string;
+    { The port used to connect to the provider }
     function Port: Word;
+    { The region used when none is given }
     function DefaultRegion: string;
+    { Output the names and values of regions supported by the provider }
     procedure ListRegions(out Regions: TNamedStrings);
+    { The access key id, read from the environment if not set }
     property AccessId: string read GetAccessId write FAccessId;
+    { The secret access key, read from the environment if not set }
     property SecretKey: string read GetSecretKey write FSecretKey;
   end;
 
-{ S3Configs provides some default S3 confiurations. These configurations are
-  not exhaustive. Feel free to define you own.
+{ S3Configs provides some default S3 configurations. These configurations are
+  not exhaustive. Feel free to define your own.
 
   All methods conform to the TS3ConfigFactory prototype and can be used in the
-  contructor of a TS3Client.
+  constructor of a TS3Client.
 
   Each configuration below depends on environment variables to store your S3
   credentials. The following is a list of those environment variable names
-  you must have populated to use the these configurations.
+  you must have populated to use these configurations.
 
     AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
     DO_ACCESS_KEY_ID and DO_SECRET_ACCESS_KEY
@@ -98,15 +111,20 @@ type
   SendAsync method. When send completes either through success, failure, or
   cancellation OnComplete will notify you that the task is done. }
 
+{ IAsyncDocTask is an async task which results in an xml document }
+
   IAsyncDocTask = interface(IAsyncTask)
   ['{387A116F-9D1F-400D-8CD7-31A0E1769418}']
   end;
+
+{ IAsyncStreamTask is an async task which results in a stream }
 
   IAsyncStreamTask = interface(IAsyncTask)
   ['{B915D4B9-4A84-400D-AF35-6E2CCE4B30CD}']
   end;
 
-{ TNotifyComplete is used to notify of the result of an async task }
+{ TNotifyDocComplete and TNotifyStreamComplete are used to notify of the
+  result of an async task }
 
   TNotifyDocComplete = procedure(Task: IAsyncTask; Result: IDocument) of object;
   TNotifyStreamComplete = procedure(Task: IAsyncTask; Result: TStream) of object;
@@ -117,7 +135,7 @@ type
 
 function NewDocTask(OnComplete: TNotifyDocComplete; Data: TObject = nil; OwnsObject: Boolean = False): IAsyncDocTask;
 
-{ NewStreamTask creates an async task using a stream object. The steam will be
+{ NewStreamTask creates an async task using a stream object. The stream will be
   returned in the result of the completion event. The same rules apply to data
   as described above with the addition that you are responsible for managing the
   stream after completion. }
@@ -141,7 +159,7 @@ type
 
   Note:
 
-  You will need either set to valid access key environment variables for your
+  You will need to either set valid access key environment variables for your
   preferred S3 compatible service or define your own TS3ConfigFactory where
   you can implement your own TS3KeyStore functions for retrieving access keys.
 
@@ -167,6 +185,7 @@ type
     function GetConfig: TS3Config;
     function QueryBucket(const Bucket, Query: string): TS3Request;
   public
+    { Create S3 methods using a named provider configuration }
     constructor Create(const AProvider: string);
     destructor Destroy; override;
     { Reconfigure replaces the current config and erases bucket region memory }
@@ -180,7 +199,7 @@ type
     { Request to list all buckets }
     function ListBuckets: TS3Request;
     { Request to get bucket region. Due to legacy constraints a blank value
-      returned from from this request should be interrupted as us-east-1. }
+      returned from this request should be interpreted as us-east-1. }
     function GetBucketLocation(const Bucket: string): TS3Request;
     { Request to get bucket access control list }
     function GetBucketAcl(const Bucket: string): TS3Request;
@@ -201,13 +220,13 @@ type
       Prefix: string = ''; Delimiter: string = ''): TS3Request;
     {$endregion}
     {$region send}
-    { Gnerate a presigned url for public access to an object }
+    { Generate a presigned url for public access to an object }
     function Presign(const Bucket, Path: string; Expires: Integer = 0): string;
     { Send a request to your S3 servers outputting the response to a XML
       document. Returns true if the status code is 200 OK.
 
       First overload can be used when querying or sending commands to S3
-      Second overload can be used when receving files from S3 }
+      Second overload can be used when receiving files from S3 }
     function Send(const Request: TS3Request; out Response: IDocument): Boolean; overload;
     function Send(const Request: TS3Request; Stream: TStream): Boolean; overload;
     { SendAsync is identical to the method Send above but performed
@@ -217,7 +236,7 @@ type
       response status is 200 OK. The completion notification will receive either
       a response document or a stream as the result argument.
 
-      Failure to provide a completion notification will cause then response
+      Failure to provide a completion notification will cause the response
       document or stream to be discarded. When using the stream variant you
       might want to free the stream upon completion.
 
@@ -235,6 +254,7 @@ type
     procedure SendAsync(const Request: TS3Request; Task: IAsyncDocTask); overload;
     procedure SendAsync(const Request: TS3Request; Stream: TStream; Task: IAsyncStreamTask); overload;
     {$endregion}
+    { The current provider configuration }
     property Config: TS3Config read GetConfig;
   end;
 

@@ -1,0 +1,1 @@
+The Codebot.Terminal.Controls.Gtk3 unit implements the terminal control for the GTK3 widgetset using version 2.91 of the VTE library. Its widgetset class creates the terminal widget, sets its palette, colors, font, and scroll bar, and restarts the shell. Building this unit requires the libvte-2.91-dev package.

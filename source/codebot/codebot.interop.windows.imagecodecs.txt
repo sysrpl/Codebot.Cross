@@ -1,0 +1,1 @@
+The Codebot.Interop.Windows.ImageCodecs unit declares the interfaces of the Windows Imaging Component, which loads and saves image files. The component is loaded when WinCodecsInit is called. This unit is used by the bitmap units of the codebot_controls package on Windows.

@@ -36,14 +36,14 @@ type
     { Execute permissions are set for the current user }
     fsaExecute);
 
-{ fsaAny is a shortcut to all file system flagsSee also
+{ fsaAny is a shortcut to all file system flags
   See also
   <link Codebot.Networking.Ftp.TFileSystemAttributes, TFileSystemAttributes set> }
 
 const
   fsaAny = [fsaDirectory, fsaLink, fsaRead, fsaWrite, fsaExecute];
 
-{ TRemoteFindData is used  by <link Codebot.Networking.Ftp.TFtpClient.FindFirst, TFtpClient.FindFirst method>
+{ TRemoteFindData is used by <link Codebot.Networking.Ftp.TFtpClient.FindFirst, TFtpClient.FindFirst method>
   See also
   <link Codebot.Networking.Ftp.TFtpClient, TFtpClient class>
   <link Codebot.Networking.Ftp.TRemoteFindData, TRemoteFindData members> }
@@ -65,8 +65,6 @@ type
 { TTextEvent where Text is a value being processed }
 
   TTextEvent = procedure(Sender: TObject; const Text: string) of object;
-
-{ TTransferEvent where Size is the amount available and Sent is the amount send or received }
 
 { TFtpClient provides access to an ftp client
   Remarks
@@ -113,6 +111,7 @@ type
   public
     { Create a new file transfer object }
     constructor Create;
+    { Disconnect and destroy the file transfer object }
     destructor Destroy; override;
     { Attempt to open a file transfer connection using the host, port, username, and password }
     function Connect: Boolean;
@@ -140,13 +139,13 @@ type
     function FileSize(const FileName: string): LargeWord;
     { Retrieve the modified date of a remote file }
     function FileDate(const FileName: string): TDateTime;
-    { Initiate an file upload to the remote server }
+    { Initiate a file upload to the remote server }
     function FilePut(const LocalFile, RemoteFile: string; Overwrite: Boolean = True): Boolean;
     { Request a file download from the remote server }
     function FileGet(const RemoteFile, LocalFile: string; Overwrite: Boolean = True): Boolean;
-    { Retrieve a text mode listing files and folders }
+    { Retrieve a text mode listing of files and folders }
     function FileList(const Path: string = ''): string;
-    { Initiate a structured listing files and folders with an optional attribute mask }
+    { Initiate a structured listing of files and folders with an optional attribute mask }
     function FindFirst(const Path: string; out FindData: TRemoteFindData;
       Allow: TFileSystemAttributes = fsaAny): Boolean;
     { Continue with the next listing started by FindFirst }
