@@ -220,6 +220,7 @@ end;
 
 function CheckTerminated(S: string): Boolean;
 begin
+  Result := False;
   if S.EndsWith(#10) then
   begin
     S := S.Trim.Split(#10).Last;
@@ -515,6 +516,13 @@ begin
       FreeMem(Buffer);
       Stream.Free;
     end;
+    { Close the data connection, then read the reply which ends the transfer }
+    Socket.Close;
+    if R.IsPass(100, 199) then
+    begin
+      Recv(R);
+      Result := Result and R.IsPass(200, 299);
+    end;
   finally
     Socket.Free;
   end;
@@ -562,6 +570,13 @@ begin
       FreeMem(Buffer);
       Stream.Free;
     end;
+    { Close the data connection, then read the reply which ends the transfer }
+    Socket.Close;
+    if R.IsPass(100, 199) then
+    begin
+      Recv(R);
+      Result := Result and R.IsPass(200, 299);
+    end;
   finally
     Socket.Free;
   end;
@@ -580,12 +595,12 @@ begin
       Send('LIST', R)
     else
       Send('LIST ' + Path.Quote, R);
-    if R.IsPass(150, 299) then
+    if R.IsPass(100, 299) then
     begin
       while Socket.Read(S) > 0 do
         Result := Result + S;
     end;
-    if R.IsPass(150, 199) then
+    if R.IsPass(100, 199) then
       Recv(R);
   finally
     Socket.Free;
@@ -660,11 +675,12 @@ begin
         Include(FindData.Attributes, fsaDirectory);
       if S[1] = 'l' then
         Include(FindData.Attributes, fsaLink);
-      if S[8] = 'r' then
+      { Characters 2 to 4 are the owner permissions }
+      if S[2] = 'r' then
         Include(FindData.Attributes, fsaRead);
-      if S[9] = 'w' then
+      if S[3] = 'w' then
         Include(FindData.Attributes, fsaWrite);
-      if S[10] = 'x' then
+      if S[4] = 'x' then
         Include(FindData.Attributes, fsaExecute);
     end;
     if FindData.Attributes * FFindMask = [] then

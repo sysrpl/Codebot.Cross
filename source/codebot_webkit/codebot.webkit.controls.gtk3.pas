@@ -45,6 +45,10 @@ type
     procedure ViewDownloadProgress(Download: Pointer; Progress: Integer);
     procedure ViewDownloadFinish(Download: Pointer; Failed: Boolean;
       const ErrorMessage: string);
+    { The inspector asks to be shown, such as from Inspect Element in the
+      context menu, and has no host. Set Hosted to True when an inspector
+      control will host it, which keeps it out of a window of its own. }
+    procedure ViewInspectorRequest(var Hosted: Boolean);
   end;
 
 { IWebInspectorEvents is used to notify an inspector control that its
@@ -317,11 +321,10 @@ begin
   Host.DeliverMessage(Msg);
 end;
 
-{ The inspector asks to be shown either attached to its web view or in a
-  window of its own. In both cases it is placed in the inspector host when
-  there is one. Returning true tells the inspector the request was handled. }
+{ EmbedInspector places the web view of an inspector in the inspector host of
+  a web view }
 
-function InspectorEmbed(Inspector: PWebKitWebInspector; Data: TGtk3WebView): gboolean; cdecl;
+function EmbedInspector(Data: TGtk3WebView; Inspector: PWebKitWebInspector): Boolean;
 var
   Host, Widget: PGtkWidget;
 begin
@@ -340,6 +343,28 @@ begin
   end;
   gtk_widget_show(Widget);
   Result := True;
+end;
+
+{ The inspector asks to be shown either attached to its web view or in a
+  window of its own. In both cases it is placed in the inspector host when
+  there is one. With no host, the browser control is asked if an inspector
+  control will host it, and if so the inspector waits until that control is
+  shown and embeds it. Returning true tells the inspector the request was
+  handled. }
+
+function InspectorEmbed(Inspector: PWebKitWebInspector; Data: TGtk3WebView): gboolean; cdecl;
+var
+  Events: IWebBrowserEvents;
+  Hosted: Boolean;
+begin
+  if Data.InspectorHost = nil then
+  begin
+    Hosted := False;
+    if Data.GetEvents(Events) then
+      Events.ViewInspectorRequest(Hosted);
+    Exit(Hosted);
+  end;
+  Result := EmbedInspector(Data, Inspector);
 end;
 
 { The inspector stays in the inspector host when asked to detach }
@@ -788,6 +813,7 @@ var
   View: TGtk3WebView;
   Host: TGtk3Widget;
   Inspector: PWebKitWebInspector;
+  Widget: PGtkWidget;
 begin
   View := WebViewWidget(ABrowser);
   if (View = nil) or (not AWinControl.HandleAllocated) then
@@ -798,8 +824,17 @@ begin
   if View.InspectorHost = Host then
     Exit;
   Inspector := webkit_web_view_get_inspector(PWebKitWebView(View.Widget));
+  Widget := webkit_web_inspector_get_web_view(Inspector);
+  { An inspector opened by Inspect Element waits for its host with no parent,
+    and is embedded as it is so it keeps the element being inspected }
+  if (Widget <> nil) and (gtk_widget_get_parent(Widget) = nil) then
+  begin
+    View.InspectorHost := TGtk3WebInspector(Host);
+    EmbedInspector(View, Inspector);
+    Exit;
+  end;
   { An inspector shown elsewhere is closed so that it asks to be shown again }
-  if webkit_web_inspector_get_web_view(Inspector) <> nil then
+  if Widget <> nil then
     webkit_web_inspector_close(Inspector);
   View.InspectorHost := TGtk3WebInspector(Host);
   webkit_web_inspector_show(Inspector);
