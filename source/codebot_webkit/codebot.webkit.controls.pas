@@ -226,6 +226,8 @@ type
     procedure ViewDownloadProgress(Download: Pointer; Progress: Integer);
     procedure ViewDownloadFinish(Download: Pointer; Failed: Boolean;
       const ErrorMessage: string);
+    procedure ViewInspectorRequest(var Hosted: Boolean);
+    procedure InspectorRequestAsync(Data: PtrInt);
   protected
     class procedure WSRegisterClass; override;
     procedure InitializeWnd; override;
@@ -507,6 +509,7 @@ destructor TCustomWebBrowser.Destroy;
 var
   I: Integer;
 begin
+  Application.RemoveAsyncCalls(Self);
   for I := 0 to FDownloads.Count - 1 do
     TObject(FDownloads[I]).Free;
   FDownloads.Free;
@@ -1102,6 +1105,39 @@ begin
   Notify(wnDownload);
   if Assigned(FOnDownloadFinish) then
     FOnDownloadFinish(Self, Item);
+end;
+
+{ Inspect Element in the context menu opens the inspector. When the browser
+  has an inspector control the inspector is shown in it, rather than in a
+  window of its own. The control is shown after the request returns. }
+
+procedure TCustomWebBrowser.ViewInspectorRequest(var Hosted: Boolean);
+begin
+  if (csDestroying in ComponentState) or (FInspector = nil) then
+    Exit;
+  Hosted := True;
+  Application.QueueAsyncCall(InspectorRequestAsync, 0);
+end;
+
+{ The inspector control and any hidden containers holding it, such as a
+  caption box, are shown before the inspector is made active }
+
+procedure TCustomWebBrowser.InspectorRequestAsync(Data: PtrInt);
+var
+  Control: TControl;
+begin
+  if (csDestroying in ComponentState) or (FInspector = nil) then
+    Exit;
+  Control := FInspector;
+  while (Control <> nil) and not (Control is TCustomForm) do
+  begin
+    Control.Visible := True;
+    Control := Control.Parent;
+  end;
+  if FInspector.Active then
+    FInspector.UpdateInspector
+  else
+    FInspector.Active := True;
 end;
 
 { An inspector control sets itself as the inspector of the browser it is

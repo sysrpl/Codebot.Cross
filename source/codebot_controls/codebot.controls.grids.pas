@@ -316,7 +316,8 @@ type
     property OnHitTest: TGridHitTestEvent read FOnHitTest write FOnHitTest;
     { OnSelection is invoked before the selection changes }
     property OnSelection: TGridSelectionEvent read FOnSelection write FOnSelection;
-    { OnHotTrack is invoked before the cell under the mouse changes }
+    { OnHotTrack is invoked before the cell under the mouse changes. Col and Row
+      are -1 when the mouse leaves the cells, and Allow is then ignored. }
     property OnHotTrack: TGridSelectionEvent read FOnHotTrack write FOnHotTrack;
     { OnDrawRow is invoked to draw a row }
     property OnDrawRow: TDrawRowEvent read FOnDrawRow write FOnDrawRow;
@@ -1376,6 +1377,10 @@ begin
     end;
     if (Value.X < 0) or (Value.Y < 0) then
     begin
+      { Notify that no cell is under the mouse, which cannot be prevented }
+      Allow := True;
+      if Assigned(FOnHotTrack) then
+        FOnHotTrack(Self, -1, -1, Allow);
       FHotTrack.X := -1;
       FHotTrack.Y := -1;
       FRectSelection.Update(Self);

@@ -506,8 +506,7 @@ begin
   if Bytes = -1 then
   begin
     ErrorCode := GetErrno;
-    WriteLn('recv error: ', ErrorCode);
-    Exit;
+    Exit(SOCKET_ERROR);
   end;
   if Bytes = 0 then
   begin
