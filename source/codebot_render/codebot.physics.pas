@@ -1535,6 +1535,7 @@ function ConvexHull(const Verts: array of TVec2; Tol: Float = 0): TArray<TVec2>;
 var
   N: Integer;
 begin
+  Result := nil;
   N := Length(Verts);
   SetLength(Result, N);
   if N = 0 then
@@ -4215,6 +4216,7 @@ end;
 
 function TPolyline.ToArray: TArray<TVec2>;
 begin
+  Result := nil;
   SetLength(Result, Count);
   if Count > 0 then
     Move(Verts^, Result[0], Count * SizeOf(TVec2));

@@ -6544,8 +6544,15 @@ class function TOpenGLParams.Create: TOpenGLParams;
 begin
   Result.Depth := 24;
   Result.Stencil := 8;
+  { Multisampling is off by default on the Raspberry Pi, where it costs too
+    much at 1080p }
+  {$ifdef raspberrypi}
+  Result.MultiSampling := False;
+  Result.MultiSamples := 0;
+  {$else}
   Result.MultiSampling := True;
   Result.MultiSamples := 4;
+  {$endif}
 end;
 
 function OpenGLLoad: Boolean;

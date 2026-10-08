@@ -854,9 +854,12 @@ begin
       if (not FHidden) and (Search.Name[1] = '.') then
         Continue;
       Folder := (Search.Attr and SysUtils.faDirectory) <> 0;
-      { A link to a folder is shown as a folder }
+      { A link to a folder is shown as a folder. faSymLink is marked as not
+        portable, but it is defined on every platform this library supports. }
+      {$push}{$warn 5044 off}
       if (not Folder) and ((Search.Attr and SysUtils.faSymLink) <> 0) then
         Folder := DirectoryExists(FullName(Search.Name));
+      {$pop}
       if (not Folder) and (not MatchMasks(Search.Name)) then
         Continue;
       if Count = Length(FItems) then
@@ -870,7 +873,11 @@ begin
         FItems[Count].Kind := KindText(Search.Name);
       FItems[Count].Selected := False;
       try
+        {$if fpc_fullversion >= 30200}
+        FItems[Count].Modified := Search.TimeStamp;
+        {$else}
         FItems[Count].Modified := FileDateToDateTime(Search.Time);
+        {$endif}
       except
         FItems[Count].Modified := 0;
       end;

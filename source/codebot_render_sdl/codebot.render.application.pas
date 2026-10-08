@@ -132,7 +132,8 @@ type
     property Decorated: Boolean read FDecorated write FDecorated;
     { Buffer options used when the window is created. MultiSamples of 0 or 1
       turns multisampling off. If the window cannot be created with
-      multisampling it is created without it. }
+      multisampling it is created without it. MultiSamples is 4 by default,
+      or 0 on the Raspberry Pi. }
     property DepthBits: Integer read FDepthBits write FDepthBits;
     property StencilBits: Integer read FStencilBits write FStencilBits;
     property MultiSamples: Integer read FMultiSamples write FMultiSamples;
@@ -244,7 +245,13 @@ begin
   FVSync := True;
   FDepthBits := 24;
   FStencilBits := 8;
+  { Multisampling is off by default on the Raspberry Pi, where it costs too
+    much at 1080p }
+  {$ifdef raspberrypi}
+  FMultiSamples := 0;
+  {$else}
   FMultiSamples := 4;
+  {$endif}
 end;
 
 { The OpenGL attributes are set before the window is created, as SDL chooses
