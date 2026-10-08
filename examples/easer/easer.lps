@@ -10,7 +10,7 @@
         <Loaded Value="True"/>
         <UsageCount Value="54"/>
         <EditorIndex Value="1"/>
-        <CursorPos X="17" Y="6"/>
+        <CursorPos X="9" Y="19"/>
       </Unit>
       <Unit>
         <Filename Value="main.pas"/>
@@ -18,7 +18,6 @@
         <LoadedDesigner Value="True"/>
         <UsageCount Value="54"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="22"/>
         <Bookmarks Count="1">
           <Item0 Y="53" ID="1"/>
         </Bookmarks>
@@ -151,7 +150,7 @@
         <CursorPos X="35" Y="448"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="9">
+    <JumpHistory HistoryIndex="10">
       <Position>
         <Filename Value="main.pas"/>
         <Caret Line="306" TopLine="275"/>
@@ -190,6 +189,10 @@
       <Position>
         <Filename Value="main.pas"/>
         <Caret Line="277" Column="11" TopLine="259"/>
+      </Position>
+      <Position>
+        <Filename Value="easer.lpr"/>
+        <Caret Line="19" Column="9"/>
       </Position>
     </JumpHistory>
     <RunParams>

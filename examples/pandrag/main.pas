@@ -98,11 +98,16 @@ const
   ShapeSpacing = 25;
 var
   S: ISurface;
+  F: IFont;
   R: TRectF;
   B: IBrush;
 begin
   { Create a surface }
   S := NewSurface(Canvas);
+  { Create our font }
+  F := NewFont(Font);
+  { Make it black }
+  F.Color := clBlack;
   { Zoom our surface }
   S.Matrix.Scale(Zoom, Zoom);
   { Pan our surface }
@@ -114,7 +119,7 @@ begin
   { Give the text area a margin of 8 }
   R.Inflate(Margin, Margin);
   { Write out some instructions }
-  S.TextOut(NewFont(Font), Help, R, drWrap);
+  S.TextOut(F, Help, R, drWrap);
   { Draw some shapes }
   R := TRectF.Create(8, 50, 100, 100);
   { A rectangle }

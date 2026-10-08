@@ -18,8 +18,8 @@
         <LoadedDesigner Value="True"/>
         <UsageCount Value="95"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="43"/>
-        <CursorPos X="6" Y="79"/>
+        <TopLine Value="100"/>
+        <CursorPos X="18" Y="109"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\Components\Cross.Codebot\source\codebot.graphics.windows.surfaced2d.pas"/>
