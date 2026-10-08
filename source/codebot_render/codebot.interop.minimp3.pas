@@ -78,7 +78,12 @@ uses
   { On Windows the C runtime is linked by Codebot.Interop.MinGW }
   Codebot.Interop.MinGW;
 
-{$linklib libcodebotaudio.a}
+{ Prebuilt in shared/libs for x86_64-linux, aarch64-linux and x86_64-win64 }
+{$if defined(win64) or (defined(linux) and (defined(cpux86_64) or defined(cpuaarch64)))}
+  {$linklib libcodebotaudio.a}
+{$else}
+  {$error libcodebotaudio.a is not built for this target, run source/audio/build.sh to build it}
+{$endif}
 {$ifdef unix}
   {$linklib m}
   {$linklib c}

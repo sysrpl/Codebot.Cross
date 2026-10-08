@@ -1365,7 +1365,12 @@ uses
 const
   libchipmunk2d = 'libchipmunk2d.a';
 
-{$linklib libchipmunk2d.a}
+{ Prebuilt in shared/libs for x86_64-linux, aarch64-linux and x86_64-win64 }
+{$if defined(win64) or (defined(linux) and (defined(cpux86_64) or defined(cpuaarch64)))}
+  {$linklib libchipmunk2d.a}
+{$else}
+  {$error libchipmunk2d.a is not built for this target, run source/Chipmunk2D/build-single.sh to build it}
+{$endif}
 {$ifdef unix}
   {$linklib m}
   {$linklib c}
