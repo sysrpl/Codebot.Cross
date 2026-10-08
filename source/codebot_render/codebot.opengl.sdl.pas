@@ -16,7 +16,10 @@
   because SDL chooses the pixel format of a window when it is created.
 
   OpenGLInfo creates a hidden window and context to find out what the
-  hardware supports. SDL video is started for it if it is not running. }
+  hardware supports. SDL video is started for it if it is not running. When
+  glfallback is defined in render.inc and the selected version cannot be
+  created or loaded, it tries OpenGL 3.3 instead, and every context created
+  after it uses 3.3. }
 unit Codebot.OpenGL.SDL;
 
 {$i render.inc}
@@ -26,9 +29,10 @@ interface
 uses
   Codebot.OpenGL;
 
-{ OpenGLSetAttributes sets the SDL attributes for the version selected in
-  render.inc and the buffer options in Params. Call it before creating a
-  window for OpenGLContextCreate. }
+{ OpenGLSetAttributes sets the SDL attributes for the context version, which
+  is the version selected in render.inc or the fallback version, and the
+  buffer options in Params. Call it before creating a window for
+  OpenGLContextCreate. }
 
 procedure OpenGLSetAttributes(const Params: TOpenGLParams);
 
@@ -67,9 +71,10 @@ begin
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
   end;
-  { Request the version selected in render.inc }
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, OpenGLMajor);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, OpenGLMinor);
+  { Request the version selected in render.inc, or the fallback version if
+    the selected version is not supported }
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, OpenGLContextMajor);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, OpenGLContextMinor);
   {$if defined(glesapi)}
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
   {$elseif defined(glcompat)}
@@ -211,8 +216,44 @@ var
   PriorWindow: PSDL_Window;
   PriorContext: PSDL_GLContext;
   Window: PSDL_Window;
-  Context: PSDL_GLContext;
   Params: TOpenGLParams;
+
+  { Create a context of the context version on the hidden window and load the
+    functions with it. The result is False if the context could not be
+    created. }
+
+  function TryContext: Boolean;
+  var
+    Context: PSDL_GLContext;
+  begin
+    OpenGLSetAttributes(Params);
+    Context := SDL_GL_CreateContext(Window);
+    Result := Context <> nil;
+    if not Result then
+      Exit;
+    try
+      if SDL_GL_MakeCurrent(Window, Context) = 0 then
+      try
+        { Load every function belonging to the context version }
+        Obj.FIsValid := OpenGLLoadFunctions(@GetProc);
+        if Assigned(glGetString) then
+        begin
+          Obj.FRenderer := PChar(glGetString(GL_RENDERER));
+          Obj.FVendor := PChar(glGetString(GL_VENDOR));
+          Obj.FVersion := PChar(glGetString(GL_VERSION));
+          ParseVersion(Obj.FVersion, Obj.FMajor, Obj.FMinor);
+          Obj.FMajorMinor := IntToStr(Obj.FMajor) + '.' + IntToStr(Obj.FMinor);
+          if Obj.FIsValid then
+            Obj.FExtensions := ReadExtensions;
+        end;
+      finally
+        SDL_GL_MakeCurrent(PriorWindow, PriorContext);
+      end;
+    finally
+      SDL_GL_DeleteContext(Context);
+    end;
+  end;
+
 begin
   if Info <> nil then
     Exit;
@@ -231,29 +272,14 @@ begin
     if Window = nil then
       Exit;
     try
-      Context := SDL_GL_CreateContext(Window);
-      if Context = nil then
-        Exit;
-      try
-        if SDL_GL_MakeCurrent(Window, Context) = 0 then
-        try
-          { Load every function belonging to the version selected in render.inc }
-          Obj.FIsValid := OpenGLLoadFunctions(@GetProc);
-          if Assigned(glGetString) then
-          begin
-            Obj.FRenderer := PChar(glGetString(GL_RENDERER));
-            Obj.FVendor := PChar(glGetString(GL_VENDOR));
-            Obj.FVersion := PChar(glGetString(GL_VERSION));
-            ParseVersion(Obj.FVersion, Obj.FMajor, Obj.FMinor);
-            Obj.FMajorMinor := IntToStr(Obj.FMajor) + '.' + IntToStr(Obj.FMinor);
-            if Obj.FIsValid then
-              Obj.FExtensions := ReadExtensions;
-          end;
-        finally
-          SDL_GL_MakeCurrent(PriorWindow, PriorContext);
-        end;
-      finally
-        SDL_GL_DeleteContext(Context);
+      { When the selected version cannot be created or loaded, try the
+        fallback version on the same window. The context version attributes
+        are read when a context is created, not when a window is. }
+      if (not TryContext or not Obj.FIsValid) and OpenGLFallback then
+      begin
+        OpenGLContextMajor := OpenGLFallbackMajor;
+        OpenGLContextMinor := OpenGLFallbackMinor;
+        TryContext;
       end;
     finally
       SDL_DestroyWindow(Window);

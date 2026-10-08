@@ -353,6 +353,12 @@ begin
   mpv_set_option_string(FPlayer, 'osc', 'no');
   mpv_set_option_string(FPlayer, 'input-default-bindings', 'no');
   mpv_set_option_string(FPlayer, 'input-vo-keyboard', 'no');
+  { Use the DRM hardware decoder where there is one, such as HEVC on the Pi 5.
+    The decoded frames are copied to memory and uploaded as textures, as
+    sharing the decoder's buffers with OpenGL fails at times on the Pi. }
+  mpv_set_option_string(FPlayer, 'hwdec', 'drm-copy');
+  { Cheaper scaling and no dithering, suited to small or embedded GPUs }
+  mpv_set_option_string(FPlayer, 'profile', 'fast');
   if mpv_initialize(FPlayer) < 0 then
   begin
     mpv_terminate_destroy(FPlayer);

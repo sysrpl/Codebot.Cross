@@ -34,7 +34,10 @@
     gles20 gles30 gles31 gles32
 
   Only the functions belonging to the selected version and earlier versions
-  are declared and loaded. If no version is selected gl33 is used. }
+  are declared and loaded. If no version is selected gles31 is used on the
+  Raspberry Pi and gl46 is used everywhere else. When gl46 is used because no
+  version was selected, contexts fall back to OpenGL 3.3 on hardware which
+  does not support OpenGL 4.6. }
 
 {.$define gl30}
 {.$define gl31}
@@ -46,11 +49,34 @@
 {.$define gl43}
 {.$define gl44}
 {.$define gl45}
-{$define gl46}
+{.$define gl46}
 {.$define gles20}
 {.$define gles30}
 {.$define gles31}
 {.$define gles32}
+
+{ When no version is selected the Raspberry Pi uses OpenGL ES 3.1 and every
+  other platform uses OpenGL 4.6 with glfallback, which falls back to OpenGL
+  3.3 if 4.6 is not supported. The raspberrypi define is set in codebot.inc. }
+
+{$if not (defined(gl30) or defined(gl31) or defined(gl32) or defined(gl33) or
+  defined(gl40) or defined(gl41) or defined(gl42) or defined(gl43) or
+  defined(gl44) or defined(gl45) or defined(gl46) or
+  defined(gles20) or defined(gles30) or defined(gles31) or defined(gles32))}
+  {$ifdef raspberrypi}
+    {$define gles31}
+  {$else}
+    {$define gl46}
+    {$define glfallback}
+  {$endif}
+{$endif}
+
+{ The Raspberry Pi has no fallbacks, even if glfallback is added to the build
+  defines }
+
+{$ifdef raspberrypi}
+  {$undef glfallback}
+{$endif}
 
 { Add glcompat to your build defines to include the compatibility profile
   functions removed from the core profile in OpenGL 3.2 and to request a
@@ -70,10 +96,6 @@
     defined(gl44) or defined(gl45) or defined(gl46)}
     {$error Select either a desktop OpenGL version or an OpenGL ES version, but not both}
   {$endif}
-{$elseif not (defined(gl30) or defined(gl31) or defined(gl32) or defined(gl33) or
-  defined(gl40) or defined(gl41) or defined(gl42) or defined(gl43) or
-  defined(gl44) or defined(gl45) or defined(gl46))}
-  {$define gl33}
 {$endif}
 
 { Each version implies all earlier versions }

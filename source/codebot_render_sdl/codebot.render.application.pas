@@ -89,6 +89,7 @@ type
     FFilesDropped: StringArray;
     procedure CreateWindow;
     procedure DestroyWindow;
+    procedure CreateCanvas;
     procedure FreeScene;
     procedure CheckStepping;
     procedure HandleEvent(var Event: TSDL_Event);
@@ -256,6 +257,13 @@ var
 begin
   if SDL_Init(SDL_INIT_VIDEO or SDL_INIT_TIMER) < 0 then
     raise EApplicationError.CreateFmt(SSDLInitFailed, [SDL_GetError]);
+  { OpenGLInfo loads the OpenGL functions using a hidden window. It must run
+    before the main window is created, as the KMSDRM video driver used without
+    a display server cannot make a context current on a window created before
+    another window was opened and closed. }
+  if not OpenGLInfo.IsValid then
+    raise EApplicationError.CreateFmt(SSDLOpenGLVersion,
+      [OpenGLContextMajor, OpenGLContextMinor, OpenGLInfo.Version]);
   Params := TOpenGLParams.Create;
   Params.Depth := FDepthBits;
   Params.Stencil := FStencilBits;
@@ -280,9 +288,6 @@ begin
   end;
   if FSDLWindow = nil then
     raise EApplicationError.CreateFmt(SSDLWindowFailed, [SDL_GetError]);
-  if not OpenGLInfo.IsValid then
-    raise EApplicationError.CreateFmt(SSDLOpenGLVersion,
-      [OpenGLMajor, OpenGLMinor, OpenGLInfo.Version]);
   FContext := OpenGLContextCreate(GLwindow(FSDLWindow), Params);
   if FContext = nil then
     raise EApplicationError.CreateFmt(SSDLContextFailed, [SDL_GetError]);
@@ -307,12 +312,32 @@ begin
   SDL_Quit;
 end;
 
+{ The canvas and font are created here rather than in Run, as the compiler
+  holds interface function results in hidden temporaries which are released
+  when the method returns. Released at the end of Run, they would free the
+  canvas after DestroyWindow, when SDL has already unloaded the OpenGL library
+  the canvas uses to delete its textures. }
+
+procedure TApplication.CreateCanvas;
+var
+  FontFile: string;
+begin
+  FCanvas := NewCanvas;
+  { Scenes may have no assets folder, so the default font is optional }
+  FFont := nil;
+  if Ctx.FindAssetFile('fonts/roboto.ttf', FontFile) then
+  try
+    FFont := FCanvas.LoadFont('default', FontFile);
+  except
+    FFont := nil;
+  end;
+end;
+
 procedure TApplication.Run(SceneClass: TSceneClass = nil);
 var
   RenderContext: TRenderContext;
   Current: TSceneClass;
   Event: TSDL_Event;
-  FontFile: string;
 begin
   if SceneClass <> nil then
     FSceneClass := SceneClass;
@@ -327,16 +352,8 @@ begin
       { The render context becomes Ctx for this thread }
       RenderContext := TRenderContext.Create;
       try
-        FCanvas := NewCanvas;
+        CreateCanvas;
         try
-          { Scenes may have no assets folder, so the default font is optional }
-          FFont := nil;
-          if Ctx.FindAssetFile('fonts/roboto.ttf', FontFile) then
-          try
-            FFont := FCanvas.LoadFont('default', FontFile);
-          except
-            FFont := nil;
-          end;
           FTimer := StopwatchCreate;
           FTime := 0;
           FFrames := 0;

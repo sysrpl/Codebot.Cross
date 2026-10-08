@@ -137,6 +137,21 @@ const
   { OpenGLApiName is the selected api in readable form such as 'OpenGL 3.3' }
   OpenGLApiName = {$ifdef glesapi}'OpenGL ES '{$else}'OpenGL '{$endif} +
     Chr(Ord('0') + OpenGLMajor) + '.' + Chr(Ord('0') + OpenGLMinor);
+  { OpenGLFallback is True when contexts fall back to OpenGL 3.3 if the
+    selected version is not supported, which glfallback in render.inc turns on }
+  OpenGLFallback = {$ifdef glfallback}True{$else}False{$endif};
+  OpenGLFallbackMajor = 3;
+  OpenGLFallbackMinor = 3;
+
+{ OpenGLContextMajor and OpenGLContextMinor are the version contexts are
+  created with. They begin as the selected version and are changed to the
+  fallback version by the platform unit if the selected version is not
+  supported. Functions belonging to versions above the context version are
+  then nil and must not be called. }
+
+var
+  OpenGLContextMajor: Integer = OpenGLMajor;
+  OpenGLContextMinor: Integer = OpenGLMinor;
 
 {$ifdef glesapi}
 { OpenGL ES 2.0 }
@@ -4756,7 +4771,8 @@ type
   The context requests the version selected in render.inc. Desktop versions
   3.2 and above request a core profile, or a compatibility profile when
   glcompat is defined. Embedded versions request an OpenGL ES profile and
-  fall back to a desktop context providing the ES compatibility functions.
+  fall back to a desktop context providing the ES compatibility functions,
+  except on the Raspberry Pi which has no fallbacks.
 
   Desktop contexts have a vertex array object bound when first made current,
   so code written for OpenGL ES also works with core profiles. }
@@ -4883,8 +4899,13 @@ begin
   if S.BeginsWith(Embedded) <> OpenGLEmbedded then
   begin
     { A desktop context can provide embedded functions through the
-      ES compatibility extensions, but not the reverse }
+      ES compatibility extensions, but not the reverse. The Raspberry Pi
+      has no fallbacks, so it requires an OpenGL ES context. }
+    {$ifdef raspberrypi}
+    Result := False;
+    {$else}
     Result := OpenGLEmbedded;
+    {$endif}
     Exit;
   end;
   I := 1;
@@ -4905,12 +4926,22 @@ begin
     Minor := Minor * 10 + Ord(S[I]) - Ord('0');
     Inc(I);
   end;
-  Result := (Major > OpenGLMajor) or ((Major = OpenGLMajor) and (Minor >= OpenGLMinor));
+  Result := (Major > OpenGLContextMajor) or
+    ((Major = OpenGLContextMajor) and (Minor >= OpenGLContextMinor));
 end;
 
 function OpenGLLoadFunctions(GetProc: TOpenGLGetProc): Boolean;
 var
   Loaded: Boolean;
+  { Functions belonging to versions above the context version are loaded if
+    they are found, but are not required }
+  Required: Boolean;
+
+  function ContextHas(Major, Minor: Integer): Boolean;
+  begin
+    Result := (OpenGLContextMajor > Major) or
+      ((OpenGLContextMajor = Major) and (OpenGLContextMinor >= Minor));
+  end;
 
   { Some drivers provide a few functions only under the name of the ARB
     extension they came from, such as glGetnTexImageARB on Intel drivers,
@@ -4926,13 +4957,14 @@ var
       S := Name + 'ARB';
       Pointer(Proc) := GetProc(PChar(S));
     end;
-    if Pointer(Proc) = nil then
+    if (Pointer(Proc) = nil) and Required then
       Loaded := False;
   end;
 
 begin
   OpenGLGetProc := GetProc;
   Loaded := True;
+  Required := True;
   {$ifdef glesapi}
   { OpenGL ES 2.0 }
   Load(glActiveTexture, 'glActiveTexture');
@@ -6064,6 +6096,7 @@ begin
   {$endif}
   { OpenGL 4.0 }
   {$ifdef gl40}
+  Required := ContextHas(4, 0);
   Load(glMinSampleShading, 'glMinSampleShading');
   Load(glBlendEquationi, 'glBlendEquationi');
   Load(glBlendEquationSeparatei, 'glBlendEquationSeparatei');
@@ -6113,6 +6146,7 @@ begin
   {$endif}
   { OpenGL 4.1 }
   {$ifdef gl41}
+  Required := ContextHas(4, 1);
   Load(glReleaseShaderCompiler, 'glReleaseShaderCompiler');
   Load(glShaderBinary, 'glShaderBinary');
   Load(glGetShaderPrecisionFormat, 'glGetShaderPrecisionFormat');
@@ -6204,6 +6238,7 @@ begin
   {$endif}
   { OpenGL 4.2 }
   {$ifdef gl42}
+  Required := ContextHas(4, 2);
   Load(glDrawArraysInstancedBaseInstance, 'glDrawArraysInstancedBaseInstance');
   Load(glDrawElementsInstancedBaseInstance, 'glDrawElementsInstancedBaseInstance');
   Load(glDrawElementsInstancedBaseVertexBaseInstance, 'glDrawElementsInstancedBaseVertexBaseInstance');
@@ -6219,6 +6254,7 @@ begin
   {$endif}
   { OpenGL 4.3 }
   {$ifdef gl43}
+  Required := ContextHas(4, 3);
   Load(glClearBufferData, 'glClearBufferData');
   Load(glClearBufferSubData, 'glClearBufferSubData');
   Load(glDispatchCompute, 'glDispatchCompute');
@@ -6265,6 +6301,7 @@ begin
   {$endif}
   { OpenGL 4.4 }
   {$ifdef gl44}
+  Required := ContextHas(4, 4);
   Load(glBufferStorage, 'glBufferStorage');
   Load(glClearTexImage, 'glClearTexImage');
   Load(glClearTexSubImage, 'glClearTexSubImage');
@@ -6277,6 +6314,7 @@ begin
   {$endif}
   { OpenGL 4.5 }
   {$ifdef gl45}
+  Required := ContextHas(4, 5);
   Load(glClipControl, 'glClipControl');
   Load(glCreateTransformFeedbacks, 'glCreateTransformFeedbacks');
   Load(glTransformFeedbackBufferBase, 'glTransformFeedbackBufferBase');
@@ -6390,6 +6428,7 @@ begin
   {$endif}
   { OpenGL 4.5 compatibility profile }
   {$if defined(gl45) and defined(glcompat)}
+  Required := ContextHas(4, 5);
   Load(glGetnMapdv, 'glGetnMapdv');
   Load(glGetnMapfv, 'glGetnMapfv');
   Load(glGetnMapiv, 'glGetnMapiv');
@@ -6405,6 +6444,7 @@ begin
   {$endif}
   { OpenGL 4.6 }
   {$ifdef gl46}
+  Required := ContextHas(4, 6);
   Load(glSpecializeShader, 'glSpecializeShader');
   Load(glMultiDrawArraysIndirectCount, 'glMultiDrawArraysIndirectCount');
   Load(glMultiDrawElementsIndirectCount, 'glMultiDrawElementsIndirectCount');

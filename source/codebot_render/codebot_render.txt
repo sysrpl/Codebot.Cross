@@ -9,7 +9,7 @@ A host package supplies the window that a scene runs in:
 
 ## OpenGL
 
-Codebot.OpenGL declares the OpenGL API for versions 3.0 through 4.6 and OpenGL ES 2.0 through 3.2, along with the context and information interfaces used for rendering. The version is chosen by a define in render.inc, and OpenGL 3.3 is used if no version is chosen. Codebot.OpenGL.SDL creates every OpenGL context using SDL, for both hosts.
+Codebot.OpenGL declares the OpenGL API for versions 3.0 through 4.6 and OpenGL ES 2.0 through 3.2, along with the context and information interfaces used for rendering. The version is chosen by a define in render.inc. If no version is chosen, OpenGL ES 3.1 is used on the Raspberry Pi and OpenGL 4.6 everywhere else, falling back to OpenGL 3.3 when 4.6 is not supported. Codebot.OpenGL.SDL creates every OpenGL context using SDL, for both hosts.
 
 ## Rendering
 

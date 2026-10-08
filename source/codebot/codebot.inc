@@ -11,6 +11,13 @@
 {$WARN 5094 off : Function result variable of a managed type does not seem to be initialized}
 {$WARN 6058 off : Call to subroutine "$1" marked as inline is not inlined}
 
+{ FPC has no define for the Raspberry Pi, so 64 bit ARM Linux is taken to be
+  one }
+
+{$if defined(linux) and defined(cpuaarch64)}
+  {$define raspberrypi}
+{$endif}
+
 {$ifdef linux}
   {$define apicall := cdecl}
   {$ifdef lclgtk2}
