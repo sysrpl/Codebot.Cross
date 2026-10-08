@@ -3,9 +3,7 @@
 {$mode delphi}
 
 uses
-  {$IFDEF UNIX}{$IFDEF UseCThreads}
-  cthreads,
-  {$ENDIF}{$ENDIF}
+	Codebot.System,
   Interfaces, // this includes the LCL widgetset
   Forms, main, Docker.Spacing;
 
@@ -14,7 +12,7 @@ uses
 begin
   RequireDerivedFormResource := True;
   Application.Initialize;
-  Application.CreateForm(TForm1, Form1);
+  Application.CreateForm(TDockForm, DockForm);
   Application.Run;
 end.
 

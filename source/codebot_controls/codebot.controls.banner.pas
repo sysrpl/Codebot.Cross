@@ -521,8 +521,11 @@ end;
 
 destructor TBanner.Destroy;
 begin
-  FLogo.Free;
   inherited Destroy;
+  FLogo.Free;
+  FBackground.Free;
+  FTitle.Free;
+  FTitleSub.Free;
 end;
 
 procedure TBanner.Loaded;
@@ -547,6 +550,8 @@ var
   S: string;
   I: Integer;
 begin
+  if csDestroying in ComponentState then
+    Exit;
   if (FLogo.Width = 1) and (FLogo.Height = 1) then
     FLogo.LoadFromResourceName(HINSTANCE, 'banner_blank');
   FBackground.Draw(Surface);
@@ -653,15 +658,18 @@ begin
   FOptions := [boReanchor, boBannerShadow, boFooterShadow, boFooterGrip];
 end;
 
+{ The parts are freed after the window and child controls are destroyed, as
+  the form can still be painted while it is being torn down }
+
 destructor TBannerForm.Destroy;
 begin
   Boundary := nil;
+  inherited Destroy;
   FPicture.Free;
   FLogo.Free;
   FBanner.Free;
   FTitle.Free;
   FTitleSub.Free;
-  inherited Destroy;
 end;
 
 procedure TBannerForm.DoShow;
@@ -724,6 +732,8 @@ var
   S: string;
   I: Integer;
 begin
+  if csDestroying in ComponentState then
+    Exit;
   if (FLogo.Width = 1) and (FLogo.Height = 1) then
     FLogo.LoadFromResourceName(HINSTANCE, 'banner_blank');
   FBanner.Draw(Surface);

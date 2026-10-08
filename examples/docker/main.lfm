@@ -1,23 +1,23 @@
-object Form1: TForm1
+object DockForm: TDockForm
   Left = 351
-  Height = 414
+  Height = 396
   Top = 286
-  Width = 754
-  BorderStyle = bsToolWindow
-  Caption = 'Form1'
-  ClientHeight = 414
-  ClientWidth = 754
+  Width = 596
+  BorderStyle = bsDialog
+  Caption = 'Dock Form'
+  ClientHeight = 396
+  ClientWidth = 596
+  Position = poScreenCenter
+  LCLVersion = '5.99.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnMouseMove = FormMouseMove
   OnPaint = FormPaint
-  Position = poScreenCenter
-  LCLVersion = '1.5'
   object ToggleButton: TThinButton
     Left = 8
     Height = 30
     Top = 8
-    Width = 182
+    Width = 166
     AutoSize = True
     Caption = 'Display on desktop'
     Down = False
@@ -32,8 +32,8 @@ object Form1: TForm1
     ParentFont = False
   end
   object LargeImages: TImageStrip
-    left = 32
-    top = 72
+    Left = 32
+    Top = 72
     Data = {
       89504E470D0A1A0A0000000D49484452000006800000008008060000002B8BAB
       880000000473424954080808087C0864880000200049444154789CECBD79B464
@@ -6732,12 +6732,12 @@ object Form1: TForm1
     }
   end
   object SmallImages: TImageStrip
-    left = 32
-    top = 136
+    Left = 32
+    Top = 136
   end
   object ButtonImages: TImageStrip
-    left = 32
-    top = 200
+    Left = 32
+    Top = 200
     Data = {
       89504E470D0A1A0A0000000D494844520000002C000000160806000000BB657E
       CA0000000473424954080808087C086488000005E0494441544889D5977F6C94

@@ -13,10 +13,10 @@ uses
   Codebot.Graphics,
   Codebot.Graphics.Types;
 
-{ TForm1 }
+{ TDockForm }
 
 type
-  TForm1 = class(TForm)
+  TDockForm = class(TForm)
     LargeImages: TImageStrip;
     SmallImages: TImageStrip;
     ButtonImages: TImageStrip;
@@ -29,11 +29,11 @@ type
     procedure ToggleButtonMouseEnter(Sender: TObject);
     procedure ToggleButtonMouseLeave(Sender: TObject);
     procedure ToggleButtonMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
+			Y: Integer);
   private
     FBackground: IBitmap;
     FDesktopDisplay: Boolean;
-    FDocker: TDocker;
+    FDocker: TDock;
     FMouseCoord: Integer;
     FSplash: ISplash;
     FArea: TRectI;
@@ -46,15 +46,15 @@ type
   end;
 
 var
-  Form1: TForm1;
+  DockForm: TDockForm;
 
 implementation
 
 {$R *.lfm}
 
-{ TForm1 }
+{ TDockForm }
 
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TDockForm.FormCreate(Sender: TObject);
 const
   Names = 'Home,Folder,Save,Calculator,Search,Options,Stop,Help,Pictures,Print,Control Panel,Recycle Bin';
 begin
@@ -62,7 +62,7 @@ begin
   ClientHeight := 196;
   FBackground := NewBitmap;
   FBackground.LoadFromFile('flower.jpg');
-  FDocker := TDocker.Create(Names);
+  FDocker := TDock.Create(Names);
   FDocker.Count := 12;
   FDocker.SmallSize := 48;
   FDocker.Stretch := FDocker.SmallSize * 2;
@@ -78,12 +78,12 @@ begin
   FSplash.Move(FArea.X, FArea.Y);
 end;
 
-procedure TForm1.FormDestroy(Sender: TObject);
+procedure TDockForm.FormDestroy(Sender: TObject);
 begin
   MouseMonitor.Remove(MouseNotify);
 end;
 
-procedure TForm1.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+procedure TDockForm.FormMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
   if FDesktopDisplay then Exit;
   if X <> FMouseCoord then
@@ -97,10 +97,10 @@ end;
   font to draw text, and small and large images. Images should probably have
   been resampled using IBitmap.Resample with bicubic filtering for best appearance }
 
-procedure DrawDocker(Surface: ISurface; Docker: TDocker; MouseCoord: Integer;
+procedure DrawDocker(Surface: ISurface; Docker: TDock; MouseCoord: Integer;
   Area: TRectI; Font: TFont; SmallImages, LargeImages: TImageStrip);
 var
-  DockerItems: TDockerItems;
+  DockerItems: TDockItems;
   DockerIndex: Integer;
   R: TRectF;
   F: IFont;
@@ -156,7 +156,7 @@ begin
   end;
 end;
 
-procedure TForm1.FormPaint(Sender: TObject);
+procedure TDockForm.FormPaint(Sender: TObject);
 var
   Surface: ISurface;
 begin
@@ -166,22 +166,22 @@ begin
   DrawDocker(Surface, FDocker, FMouseCoord, ClientRect, Font, SmallImages, LargeImages);
 end;
 
-procedure TForm1.ToggleButtonClick(Sender: TObject);
+procedure TDockForm.ToggleButtonClick(Sender: TObject);
 begin
   DesktopDisplay := not DesktopDisplay;
 end;
 
-procedure TForm1.ToggleButtonMouseEnter(Sender: TObject);
+procedure TDockForm.ToggleButtonMouseEnter(Sender: TObject);
 begin
   ToggleButton.Font.Color := clBlack;
 end;
 
-procedure TForm1.ToggleButtonMouseLeave(Sender: TObject);
+procedure TDockForm.ToggleButtonMouseLeave(Sender: TObject);
 begin
   ToggleButton.Font.Color := clWhite;
 end;
 
-procedure TForm1.ToggleButtonMouseMove(Sender: TObject; Shift: TShiftState; X,
+procedure TDockForm.ToggleButtonMouseMove(Sender: TObject; Shift: TShiftState; X,
   Y: Integer);
 begin
   if FDesktopDisplay then Exit;
@@ -193,7 +193,7 @@ begin
   end;
 end;
 
-procedure TForm1.UpdateSplash(X, Y: Integer);
+procedure TDockForm.UpdateSplash(X, Y: Integer);
 const
   FadeDistance = 150;
 var
@@ -229,14 +229,14 @@ begin
   FSplash.Opacity := Round(255 * Opacity);
 end;
 
-procedure TForm1.MouseNotify(Kind: TMouseNotifyKind; Button: TMouseButton; X,
+procedure TDockForm.MouseNotify(Kind: TMouseNotifyKind; Button: TMouseButton; X,
   Y: Integer);
 begin
   if Kind = nkMove then
     UpdateSplash(X - FArea.X, Y - FArea.Y);
 end;
 
-procedure TForm1.SetDesktopDisplay(Value: Boolean);
+procedure TDockForm.SetDesktopDisplay(Value: Boolean);
 begin
   if FDesktopDisplay = Value then Exit;
   FDesktopDisplay := Value;

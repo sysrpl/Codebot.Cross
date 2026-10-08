@@ -79,6 +79,8 @@ begin
       Column.Caption := Names[I];
       Column.Width := Widths[I];
       Column.Alignment := TAlignment(Aligns[I]);
+      { Columns must be selectable to show and change their sort order }
+      Column.CanSelect := True;
     end;
   finally
     DetailsList.Columns.EndUpdate;
@@ -264,8 +266,11 @@ end;
 procedure TDetailsForm.Sort(Column: THeaderColumn);
 begin
   if Column <> nil then
+  begin
     { TArrayList<T> can sort itself if you give it an TComparer<T> }
     FDownloads.Sort(Column.Sort, DownloadCompare(Column.Tag));
+    DetailsList.Invalidate;
+  end;
 end;
 
 procedure TDetailsForm.DetailsListColumnSelect(Sender: TObject;

@@ -228,8 +228,8 @@ var
   R: TRectF;
   P: IPen;
 begin
-  { Fill with the current control color }
-  FillRectColor(Surface, Rect, DrawList.CurrentColor);
+  { Fill with white }
+  FillRectColor(Surface, Rect, clWhite);
   R := Rect;
   { Create a silver pen }
   P := NewPen(clSilver);
@@ -282,7 +282,8 @@ begin
   DrawEasing(Surface, Theme.Font, R, KeyValue.Value, ReverseBox.Checked, Time);
   R.Top := R.Bottom + 5;
   R.Bottom := Rect.Bottom;
-  { Draw the name beneath the easing }
+  { Draw the name beneath the easing in black }
+  Theme.Font.Color := clBlack;
   Surface.TextOut(Theme.Font, KeyValue.Key, R, drCenter);
   { Create a block to show the easing motion }
   R := TRectF.Create(20, 20);

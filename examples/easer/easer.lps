@@ -10,7 +10,7 @@
         <Loaded Value="True"/>
         <UsageCount Value="54"/>
         <EditorIndex Value="1"/>
-        <CursorPos X="9" Y="19"/>
+        <CursorPos Y="19"/>
       </Unit>
       <Unit>
         <Filename Value="main.pas"/>
@@ -18,6 +18,8 @@
         <LoadedDesigner Value="True"/>
         <UsageCount Value="54"/>
         <IsVisibleTab Value="True"/>
+        <TopLine Value="88"/>
+        <CursorPos X="85" Y="107"/>
         <Bookmarks Count="1">
           <Item0 Y="53" ID="1"/>
         </Bookmarks>
@@ -147,7 +149,7 @@
         <UsageCount Value="10"/>
         <EditorIndex Value="2"/>
         <TopLine Value="418"/>
-        <CursorPos X="35" Y="448"/>
+        <CursorPos X="28" Y="448"/>
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="10">

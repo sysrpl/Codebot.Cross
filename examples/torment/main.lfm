@@ -6,9 +6,9 @@ object DetailsForm: TDetailsForm
   Caption = 'Torrent Downloads'
   ClientHeight = 400
   ClientWidth = 800
-  OnCreate = FormCreate
   Position = poScreenCenter
-  LCLVersion = '1.5'
+  LCLVersion = '5.99.0.0'
+  OnCreate = FormCreate
   object DetailsList: TDetailsList
     Left = 0
     Height = 400
@@ -28,8 +28,8 @@ object DetailsForm: TDetailsForm
     OnDrawItem = DetailsListDrawItem
   end
   object Images: TImageStrip
-    left = 163
-    top = 69
+    Left = 163
+    Top = 69
     Data = {
       89504E470D0A1A0A0000000D4948445200000070000000100806000000CE14FB
       110000000473424954080808087C08648800000EE8494441545885BD586B7454
@@ -157,7 +157,7 @@ object DetailsForm: TDetailsForm
   end
   object Timer: TTimer
     OnTimer = TimerTimer
-    left = 232
-    top = 80
+    Left = 232
+    Top = 80
   end
 end

@@ -10,7 +10,7 @@
         <Loaded Value="True"/>
         <UsageCount Value="31"/>
         <EditorIndex Value="2"/>
-        <CursorPos Y="15"/>
+        <CursorPos X="34" Y="10"/>
       </Unit>
       <Unit>
         <Filename Value="main.pas"/>
@@ -18,16 +18,15 @@
         <LoadedDesigner Value="True"/>
         <UsageCount Value="31"/>
         <IsVisibleTab Value="True"/>
-        <TopLine Value="3"/>
-        <CursorPos X="45" Y="43"/>
+        <TopLine Value="13"/>
+        <CursorPos X="39" Y="18"/>
       </Unit>
       <Unit>
         <Filename Value="docker.spacing.pas"/>
         <Loaded Value="True"/>
         <UsageCount Value="31"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="34"/>
-        <CursorPos X="20" Y="58"/>
+        <CursorPos X="11" Y="16"/>
       </Unit>
       <Unit>
         <Filename Value="..\..\..\FreePascal\lazarus\components\codetools\directorycacher.pas"/>
@@ -231,15 +230,7 @@
         <CursorPos X="3" Y="69"/>
       </Unit>
     </Units>
-    <JumpHistory HistoryIndex="23">
-      <Position>
-        <Filename Value="main.pas"/>
-        <Caret Line="64" Column="32" TopLine="51"/>
-      </Position>
-      <Position>
-        <Filename Value="main.pas"/>
-        <Caret Line="71" Column="24" TopLine="56"/>
-      </Position>
+    <JumpHistory HistoryIndex="28">
       <Position>
         <Filename Value="main.pas"/>
         <Caret Line="73" Column="3" TopLine="56"/>
@@ -327,6 +318,33 @@
       <Position>
         <Filename Value="docker.spacing.pas"/>
         <Caret Line="58" Column="20" TopLine="34"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="96" Column="10" TopLine="70"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="219" Column="64" TopLine="193"/>
+      </Position>
+      <Position>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="20" Column="8"/>
+      </Position>
+      <Position>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="11" Column="12"/>
+      </Position>
+      <Position>
+        <Filename Value="docker.spacing.pas"/>
+        <Caret Line="16" Column="13"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="46" Column="47" TopLine="25"/>
       </Position>
     </JumpHistory>
     <RunParams>

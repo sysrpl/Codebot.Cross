@@ -9,7 +9,7 @@
         <Filename Value="torment.pas"/>
         <Loaded Value="True"/>
         <UsageCount Value="190"/>
-        <CursorPos X="44" Y="19"/>
+        <CursorPos X="16"/>
       </Unit>
       <Unit>
         <Filename Value="main.pas"/>
@@ -18,8 +18,8 @@
         <UsageCount Value="190"/>
         <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="34"/>
-        <CursorPos X="13" Y="49"/>
+        <TopLine Value="7"/>
+        <CursorPos X="50" Y="27"/>
       </Unit>
       <Unit>
         <Filename Value="downloads.pas"/>
@@ -378,8 +378,38 @@
           <Item0 X="48" Y="1709" ID="1"/>
         </Bookmarks>
       </Unit>
+      <Unit>
+        <Filename Value="..\..\source\codebot_controls\codebot.controls.scrolling.pas"/>
+        <UnitName Value="Codebot.Controls.Scrolling"/>
+        <Loaded Value="True"/>
+        <UsageCount Value="10"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="487"/>
+        <CursorPos X="3" Y="493"/>
+      </Unit>
     </Units>
-    <JumpHistory HistoryIndex="-1"/>
+    <JumpHistory HistoryIndex="4">
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="49" Column="13" TopLine="19"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="50" Column="13" TopLine="19"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="49" Column="13" TopLine="19"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="48" Column="39" TopLine="7"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="27" Column="50" TopLine="7"/>
+      </Position>
+    </JumpHistory>
     <RunParams>
       <FormatVersion Value="2"/>
       <Modes ActiveMode="default"/>

@@ -162,14 +162,14 @@ type
   The control hosts a web view once its window is created, which is WebKitGTK
   on Linux and Microsoft Edge WebView2 on Windows. Changes made before then,
   such as setting Location, are kept and applied when the window is created.
-  If the web view library is not installed the control paints the WebKit logo
+  If the web view library is not installed the control paints a browser icon
   and a message instead, which can be checked using the Available function.
 
   On Windows the web view is created in the background after the window, and
   a few features differ. Only one step back or forward in history is possible,
   HistoryItem returns false, and ZoomTextOnly has no effect.
 
-  Nothing is loaded at design time, where the control paints the WebKit logo. }
+  Nothing is loaded at design time, where the control paints a browser icon. }
 
   TWebInspector = class;
 
@@ -420,8 +420,8 @@ type
   When Active is true the inspector of the associated browser is shown inside
   the control rather than in a window of its own.
 
-  Nothing is inspected at design time, where the control paints the WebKit
-  logo. It paints the logo and a message if the WebKitGTK library is not
+  Nothing is inspected at design time, where the control paints a magnifying
+  glass icon. It paints the icon and a message if the WebKitGTK library is not
   installed.
 
   On Windows the inspector is the developer tools page of WebView2, served by
@@ -480,15 +480,19 @@ uses
   Forms, Dialogs, WSLCLClasses
   {$ifdef lclgtk3}, Codebot.Interop.WebKit{$endif};
 
-{ PaintLogo paints a control which has no web view. The WebKit logo is drawn
-  in the center of a dashed frame with an optional caption below it. Missing
-  is true when the reason for there being no web view is that the WebKitGTK
-  library is not installed. }
+{ PaintGlyph paints a control which has no web view. A large white icon from
+  the Material Design Icons font is drawn in the center of a dashed frame.
+  The icons are encoded as utf8 and are web $F059F for the browser and
+  magnify $F0349 for the inspector. Missing is true when the reason for there
+  being no web view is that the WebKitGTK library is not installed. }
 
-var
-  Logo: TPicture;
+const
+  GlyphFont = 'Material Design Icons';
+  GlyphBrowser = #$F3#$B0#$96#$9F;
+  GlyphInspector = #$F3#$B0#$8D#$89;
+  GlyphSize = 48;
 
-procedure PaintLogo(Canvas: TCanvas; const Rect: TRect; const Caption: string;
+procedure PaintGlyph(Canvas: TCanvas; const Rect: TRect; const Glyph: string;
   Missing: Boolean);
 var
   X, Y: Integer;
@@ -497,18 +501,15 @@ begin
   Canvas.Pen.Color := clWhite;
   Canvas.Pen.Style := psDash;
   Canvas.Rectangle(Rect);
-  if Logo = nil then
-  begin
-    Logo := TPicture.Create;
-    Logo.LoadFromResourceName(HInstance, 'webkit.png');
-  end;
-  X := (Rect.Left + Rect.Right - Logo.Width) div 2;
-  Y := (Rect.Top + Rect.Bottom - Logo.Height) div 2;
-  Canvas.Draw(X, Y, Logo.Graphic);
+  Canvas.Brush.Style := bsClear;
   Canvas.Font.Color := clWhite;
-  if Caption <> '' then
-    Canvas.TextOut((Rect.Left + Rect.Right - Canvas.TextWidth(Caption)) div 2,
-      Y + Logo.Height + 4, Caption);
+  Canvas.Font.Name := GlyphFont;
+  Canvas.Font.Size := GlyphSize;
+  X := (Rect.Left + Rect.Right - Canvas.TextWidth(Glyph)) div 2;
+  Y := (Rect.Top + Rect.Bottom - Canvas.TextHeight(Glyph)) div 2;
+  Canvas.TextOut(X, Y, Glyph);
+  Canvas.Font.Name := 'default';
+  Canvas.Font.Size := 0;
   if Missing then
     {$ifdef windows}
     Canvas.TextOut(Rect.Left + 5, Rect.Top + 5,
@@ -516,6 +517,7 @@ begin
     {$else}
     Canvas.TextOut(Rect.Left + 5, Rect.Top + 5, 'The WebKitGTK library is not installed');
     {$endif}
+  Canvas.Brush.Style := bsSolid;
 end;
 
 { TCustomWebBrowser }
@@ -593,7 +595,7 @@ end;
 
 procedure TCustomWebBrowser.Paint;
 begin
-  PaintLogo(FCanvas, ClientRect, '', not (csDesigning in ComponentState));
+  PaintGlyph(FCanvas, ClientRect, GlyphBrowser, not (csDesigning in ComponentState));
 end;
 
 {$ifdef windows}
@@ -1354,7 +1356,7 @@ end;
 
 procedure TWebInspector.Paint;
 begin
-  PaintLogo(FCanvas, ClientRect, 'Web Inspector', not (csDesigning in ComponentState));
+  PaintGlyph(FCanvas, ClientRect, GlyphInspector, not (csDesigning in ComponentState));
 end;
 
 {$ifdef windows}
@@ -1443,6 +1445,4 @@ begin
   end;
 end;
 
-finalization
-  Logo.Free;
 end.

@@ -8,16 +8,16 @@ uses
   Codebot.System;
 
 type
-  TDockerItem = record
+  TDockItem = record
     Offset: Float;
     Size: Float;
   end;
 
-  TDockerItems = TArray<TDockerItem>;
+  TDockItems = TArray<TDockItem>;
 
-  { TDocker }
+  { TDock }
 
-  TDocker = class
+  TDock = class
   private
     FNames: StringArray;
     FCount: Integer;
@@ -30,7 +30,7 @@ type
     procedure SetStretch(Value: Integer);
   public
     constructor Create(const Names: string = '');
-    function MouseMove(MouseCoord, Area: Integer; out Items: TDockerItems): Integer;
+    function MouseMove(MouseCoord, Area: Integer; out Items: TDockItems): Integer;
     property Name[Index: Integer]: string read GetName;
     property Count: Integer read FCount write FCount;
     property SmallSize: Integer read FSmallSize write SetSmallSize;
@@ -41,13 +41,13 @@ type
 { DockerQuery returns the current item }
 
 function DockerQuery(MouseCoord, SmallSize, LargeSize, Stretch, Area, Count: Integer;
-  out Items: TDockerItems): Integer;
+  out Items: TDockItems): Integer;
 
 implementation
 
 
 function DockerQuery(MouseCoord, SmallSize, LargeSize, Stretch, Area, Count: Integer;
-  out Items: TDockerItems): Integer;
+  out Items: TDockItems): Integer;
 var
   X, J: Float;
   I: Integer;
@@ -129,9 +129,9 @@ begin
   end;
 end;
 
-{ TDocker }
+{ TDock }
 
-constructor TDocker.Create(const Names: string = '');
+constructor TDock.Create(const Names: string = '');
 begin
   inherited Create;
   FNames := Names.Split(',');
@@ -141,12 +141,12 @@ begin
   FStretch := 64;
 end;
 
-function TDocker.MouseMove(MouseCoord, Area: Integer; out Items: TDockerItems): Integer;
+function TDock.MouseMove(MouseCoord, Area: Integer; out Items: TDockItems): Integer;
 begin
   Result := DockerQuery(MouseCoord, FSmallSize, FLargeSize, FStretch, Area, FCount, Items);
 end;
 
-function TDocker.GetName(Index: Integer): string;
+function TDock.GetName(Index: Integer): string;
 begin
   if (Index < 0) or (Index > FNames.Length - 1) then
     Result := ''
@@ -154,14 +154,14 @@ begin
     Result := FNames[Index];
 end;
 
-procedure TDocker.SetLargeSize(Value: Integer);
+procedure TDock.SetLargeSize(Value: Integer);
 begin
   if Value < 1 then Value := 1;
   if Value < FSmallSize then Value := FSmallSize;
   FLargeSize := Value;
 end;
 
-procedure TDocker.SetSmallSize(Value: Integer);
+procedure TDock.SetSmallSize(Value: Integer);
 begin
   if Value < 1 then Value := 1;
   FSmallSize := Value;
@@ -169,7 +169,7 @@ begin
     FLargeSize := FSmallSize;
 end;
 
-procedure TDocker.SetStretch(Value: Integer);
+procedure TDock.SetStretch(Value: Integer);
 begin
   if Value < 1 then Value := 1;
   FStretch := Value;
