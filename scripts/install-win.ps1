@@ -1,7 +1,7 @@
 # Installs the Free Pascal compiler (FPC), the Lazarus IDE, the Codebot library
 # and its DLLs on 64 bit Windows. Run it in PowerShell with:
 #
-#   irm https://raw.githubusercontent.com/sysrpl/Codebot.Cross/master/install-win.ps1 | iex
+#   irm https://www.getlazarus.org/install-win.ps1 | iex
 #
 # Everything is installed for the current user, so administrator access is
 # never needed. The script is one function called at the end, so nothing runs
