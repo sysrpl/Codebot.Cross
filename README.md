@@ -107,4 +107,4 @@ DLLs, installed into `%LOCALAPPDATA%\bin`:
 | libassimp-5.dll | codebot_render: 3D models |
 | libssl-3-x64.dll, libcrypto-3-x64.dll | codebot: secure sockets |
 
-The terminal control (VTE) is not available on Windows.
+The terminal control (VTE) is not available on Windows and as a result it has no dependency on Windows.
