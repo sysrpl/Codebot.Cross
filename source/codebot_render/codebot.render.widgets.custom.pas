@@ -84,7 +84,7 @@ type
   end;
 
 
-{ TMarkDownLabel is a label which draws its text as markdown. Set MaxWidth to
+(* TMarkDownLabel is a label which draws its text as markdown. Set MaxWidth to
   wrap the text to a width, which is then the width of the label. Without a
   MaxWidth each paragraph is one line. The height of the label fits the text.
 
@@ -102,10 +102,19 @@ type
     --- horizontal rules
     \ escapes the next character
 
+  A line holding only ![](name){left 240x180} reserves a rectangle which is
+  drawn by OnDrawRect. The name tells the handler what to draw, and the size
+  is in the units of the label. A left or right rectangle floats at that
+  side, and paragraphs, headings, and lists flow around it. A center
+  rectangle sits on its own between the blocks around it, which is also
+  where a float goes when the label has no MaxWidth or the float would leave
+  too little room for text. Code blocks, quotes, and rules start below any
+  floats, and a line holding only {clear} does the same for what follows.
+
   The text uses the NotoSans fonts and DejaVuSansMono from the fonts folder
   of the render context assets. A font which can not be loaded is replaced
   by the theme font. FontSize is the size of plain text, and when it is zero
-  the size of the theme font is used. }
+  the size of the theme font is used. *)
 
   TMarkDownStyle = (mdRegular, mdBold, mdItalic, mdBoldItalic, mdCode);
 
@@ -120,6 +129,20 @@ type
     Code: Boolean;
     Faded: Boolean;
   end;
+
+  { TMarkDownBoxAlign is where a rectangle in markdown is placed }
+  TMarkDownBoxAlign = (boxLeft, boxCenter, boxRight);
+
+  { TMarkDownBox is a rectangle placed by the layout of a markdown label }
+  TMarkDownBox = record
+    Name: string;
+    Rect: TRectF;
+  end;
+
+  { TMarkDownRectEvent draws a rectangle of a markdown label. Rect is on the
+    canvas, which is clipped to it. }
+  TMarkDownRectEvent = procedure(Sender: TObject; Surface: ICanvas;
+    const Name: string; const Rect: TRectF) of object;
 
   { TMarkDownDecorKind are the things drawn around markdown text }
   TMarkDownDecorKind = (decorCodeBlock, decorQuote, decorRule, decorBullet);
@@ -138,6 +161,9 @@ type
     FFragmentCount: Integer;
     FDecors: array of TMarkDownDecor;
     FDecorCount: Integer;
+    FBoxes: array of TMarkDownBox;
+    FBoxCount: Integer;
+    FOnDrawRect: TMarkDownRectEvent;
     procedure SetFontSize(Value: Float);
     function GetFont(Canvas: ICanvas; Style: TMarkDownStyle): IFont;
     function BaseSize: Float;
@@ -149,6 +175,10 @@ type
     constructor Create(Parent: TWidget; const Name: string = ''); override;
     { The size of plain text, or zero for the size of the theme font }
     property FontSize: Float read FFontSize write SetFontSize;
+    { OnDrawRect is called for each rectangle in the markdown when the label
+      is drawn, after the backgrounds of code blocks and quotes and before
+      the text }
+    property OnDrawRect: TMarkDownRectEvent read FOnDrawRect write FOnDrawRect;
   end;
 
 implementation
@@ -377,6 +407,62 @@ const
   MarkDownHeadings: array[1..6] of Float = (1.6, 1.35, 1.15, 1, 1, 1);
   { The space around the text of a code block in pixels }
   MarkDownCodePad = 8;
+  { The space between a floating rectangle and the text beside it, the
+    narrowest a line beside a float can be, both as a part of the font size,
+    and the widest a float can be as a part of the width of the label }
+  MarkDownBoxGap = 1;
+  MarkDownMinLine = 8;
+  MarkDownMaxFloat = 0.6;
+
+(* BoxLine reads a line holding only ![](name){align WxH}. The alignment is
+  left, right, or center, and center when it is left out. *)
+
+function BoxLine(const S: string; out Name: string; out Align: TMarkDownBoxAlign;
+  out Width, Height: Float): Boolean;
+var
+  Words: StringArray;
+  U: string;
+  A, B, X: Integer;
+begin
+  Result := False;
+  Name := '';
+  Align := boxCenter;
+  Width := 0;
+  Height := 0;
+  if (Copy(S, 1, 4) <> '![](') or (S[Length(S)] <> '}') then
+    Exit;
+  A := Pos(')', S);
+  if (A < 6) or (A + 1 > Length(S)) or (S[A + 1] <> '{') then
+    Exit;
+  Name := Trim(Copy(S, 5, A - 5));
+  U := Copy(S, A + 2, Length(S) - A - 2);
+  Words := U.Split(' ');
+  for A := 0 to Words.Length - 1 do
+  begin
+    U := LowerCase(Trim(Words[A]));
+    if U = '' then
+      Continue;
+    if U = 'left' then
+      Align := boxLeft
+    else if U = 'right' then
+      Align := boxRight
+    else if U = 'center' then
+      Align := boxCenter
+    else
+    begin
+      X := Pos('x', U);
+      if X < 2 then
+        Exit;
+      Val(Copy(U, 1, X - 1), Width, B);
+      if B <> 0 then
+        Exit;
+      Val(Copy(U, X + 1, Length(U)), Height, B);
+      if B <> 0 then
+        Exit;
+    end;
+  end;
+  Result := (Name <> '') and (Width > 0) and (Height > 0);
+end;
 
 function StyleOf(Bold, Italic: Boolean): TMarkDownStyle;
 begin
@@ -613,9 +699,15 @@ end;
 procedure TMarkDownLabel.Layout;
 type
   TBlockKind = (blockNone, blockParagraph, blockHeading, blockList, blockOther);
+  { A rectangle which text flows around, at the left or the right }
+  TFloatBox = record
+    Rect: TRectF;
+    Left: Boolean;
+  end;
 var
   Canvas: ICanvas;
   Lines: StringArray;
+  Floats: array of TFloatBox;
   Size, Wrap, Y, Right: Float;
   LastBlock: TBlockKind;
   Para: string;
@@ -655,6 +747,75 @@ var
       Right := X;
   end;
 
+  { The left and right of the room for a line at Y, between the floats
+    beside it }
+  function Beside(const F: TFloatBox; LineHeight: Float): Boolean;
+  begin
+    Result := (Y < F.Rect.Bottom) and (Y + LineHeight > F.Rect.Top);
+  end;
+
+  procedure LineBounds(LineHeight: Float; out L, R: Float);
+  var
+    J: Integer;
+    G: Float;
+  begin
+    L := 0;
+    R := Wrap;
+    G := Size * MarkDownBoxGap;
+    for J := 0 to Length(Floats) - 1 do
+      if Beside(Floats[J], LineHeight) then
+        if Floats[J].Left then
+        begin
+          if Floats[J].Rect.Right + G > L then
+            L := Floats[J].Rect.Right + G;
+        end
+        else if Floats[J].Rect.X - G < R then
+          R := Floats[J].Rect.X - G;
+  end;
+
+  { Find where a line begins and the right it wraps at. When the room beside
+    the floats is too narrow, the line moves down below a float. }
+  procedure StartLine(Indent, LineHeight: Float; out X, WrapAt: Float);
+  var
+    L, Next: Float;
+    J: Integer;
+  begin
+    repeat
+      LineBounds(LineHeight, L, WrapAt);
+      X := L + Indent;
+      if WrapAt - X >= Size * MarkDownMinLine then
+        Exit;
+      Next := 0;
+      for J := 0 to Length(Floats) - 1 do
+        if Beside(Floats[J], LineHeight) then
+          if (Next = 0) or (Floats[J].Rect.Bottom < Next) then
+            Next := Floats[J].Rect.Bottom;
+      if Next <= Y then
+        Exit;
+      Y := Next;
+    until False;
+  end;
+
+  { Move below every float }
+  procedure ClearFloats;
+  var
+    J: Integer;
+  begin
+    for J := 0 to Length(Floats) - 1 do
+      if Floats[J].Rect.Bottom > Y then
+        Y := Floats[J].Rect.Bottom;
+    Floats := nil;
+  end;
+
+  procedure AddBox(const Name: string; const Rect: TRectF);
+  begin
+    if FBoxCount = Length(FBoxes) then
+      SetLength(FBoxes, FBoxCount * 2 + 4);
+    FBoxes[FBoxCount].Name := Name;
+    FBoxes[FBoxCount].Rect := Rect;
+    Inc(FBoxCount);
+  end;
+
   { Space before a block. Items of a list are closer together. }
   procedure BeginBlock(Kind: TBlockKind);
   begin
@@ -666,12 +827,12 @@ var
     LastBlock := Kind;
   end;
 
-  { Flow runs into lines between Left and Wrap. Words are kept whole and the
-    spaces at the start of a line are dropped. }
+  { Flow runs into lines between Left and Wrap, beside any floats. Words are
+    kept whole and the spaces at the start of a line are dropped. }
   procedure Flow(const Runs: TMarkDownRuns; Left, FontSize: Float; Faded: Boolean);
   var
     Font: IFont;
-    LineHeight, X, S, WordWidth, FullWidth: Float;
+    LineHeight, X, S, WordWidth, FullWidth, WrapAt: Float;
     Started: Boolean;
     Fragment, R, A, B, L: Integer;
     Token, Word: string;
@@ -679,7 +840,7 @@ var
     if Length(Runs) = 0 then
       Exit;
     LineHeight := FontSize * MarkDownLineHeight;
-    X := Left;
+    StartLine(Left, LineHeight, X, WrapAt);
     Started := False;
     for R := 0 to Length(Runs) - 1 do
     begin
@@ -699,7 +860,7 @@ var
         if Runs[R].Text[A] = #10 then
         begin
           Y := Y + LineHeight;
-          X := Left;
+          StartLine(Left, LineHeight, X, WrapAt);
           Started := False;
           Fragment := -1;
           Inc(A);
@@ -717,10 +878,10 @@ var
           Continue;
         WordWidth := Canvas.MeasureAdvance(Font, Word);
         FullWidth := Canvas.MeasureAdvance(Font, Token);
-        if Started and (Word <> '') and (X + WordWidth > Wrap) then
+        if Started and (Word <> '') and (X + WordWidth > WrapAt) then
         begin
           Y := Y + LineHeight;
-          X := Left;
+          StartLine(Left, LineHeight, X, WrapAt);
           Started := False;
           Fragment := -1;
         end;
@@ -828,10 +989,13 @@ var
   var
     D: Integer;
     M, X, U: string;
+    A: TMarkDownBoxAlign;
+    W, H: Float;
   begin
     U := Trim(S);
     Result := (U = '') or IsFence(S) or (HeadingLevel(U) > 0) or (U[1] = '>') or
-      IsRule(U, ['-', '*', '_']) or ListItem(S, D, M, X);
+      IsRule(U, ['-', '*', '_']) or ListItem(S, D, M, X) or (U = '{clear}') or
+      BoxLine(U, M, A, W, H);
   end;
 
   { A line ending in two spaces or a backslash breaks the line }
@@ -867,6 +1031,7 @@ var
       Code.Push(Lines[I]);
       Inc(I);
     end;
+    ClearFloats;
     BeginBlock(blockOther);
     Font := GetFont(Canvas, mdCode);
     if Font = nil then
@@ -905,6 +1070,7 @@ var
     end;
 
   begin
+    ClearFloats;
     BeginBlock(blockOther);
     Top := Y;
     Text := '';
@@ -931,7 +1097,7 @@ var
   procedure List(Indent: Integer; const Marker, First: string);
   var
     Text: string;
-    Left, LineHeight, W: Float;
+    Left, LineHeight, X, W: Float;
     Font: IFont;
     Level: Integer;
   begin
@@ -949,9 +1115,11 @@ var
       Level := 4;
     Left := Size * MarkDownIndent * (Level + 1);
     LineHeight := Size * MarkDownLineHeight;
+    { The marker goes where the first line begins, beside any floats }
+    StartLine(Left, LineHeight, X, W);
     { A bullet is a dot whose center and radius are kept in the rectangle }
     if Marker[1] in ['-', '*', '+'] then
-      AddDecor(decorBullet, Left - Size * 0.8, Y + LineHeight / 2, Size * 0.18, 0)
+      AddDecor(decorBullet, X - Size * 0.8, Y + LineHeight / 2, Size * 0.18, 0)
     else
     begin
       Font := GetFont(Canvas, mdRegular);
@@ -959,20 +1127,70 @@ var
       begin
         Font.Size := Size;
         W := Canvas.MeasureAdvance(Font, Marker);
-        AddFragment(Left - Size * 0.4 - W, Y, Marker, mdRegular, Size, False, False, False);
+        AddFragment(X - Size * 0.4 - W, Y, Marker, mdRegular, Size, False, False, False);
       end;
     end;
     Flow(ParseInline(Text, False), Left, Size, False);
   end;
 
+  { A float begins where the next block would, and goes below a float
+    already at its side. A centered rectangle is a block of its own. }
+  procedure PlaceBox(const Name: string; Align: TMarkDownBoxAlign; W, H: Float);
+  var
+    R: TRectF;
+    G: Float;
+    J: Integer;
+  begin
+    if (MaxWidth <= 0) or (W > Wrap * MarkDownMaxFloat) then
+      Align := boxCenter;
+    if Align = boxCenter then
+    begin
+      ClearFloats;
+      BeginBlock(blockOther);
+      if MaxWidth > 0 then
+        R := NewRectF((Wrap - W) / 2, Y, W, H)
+      else
+        R := NewRectF(0, Y, W, H);
+      AddBox(Name, R);
+      Extend(R.Right);
+      Y := Y + H;
+      Exit;
+    end;
+    G := Size * MarkDownBoxGap;
+    R.Y := Y;
+    if LastBlock <> blockNone then
+      R.Y := R.Y + Size * MarkDownGap;
+    for J := 0 to Length(Floats) - 1 do
+      if (Floats[J].Left = (Align = boxLeft)) and (Floats[J].Rect.Bottom + G > R.Y) then
+        R.Y := Floats[J].Rect.Bottom + G;
+    if Align = boxLeft then
+      R.X := 0
+    else
+      R.X := Wrap - W;
+    R.Width := W;
+    R.Height := H;
+    AddBox(Name, R);
+    J := Length(Floats);
+    SetLength(Floats, J + 1);
+    Floats[J].Rect := R;
+    Floats[J].Left := Align = boxLeft;
+    { The space below a float keeps text from touching it }
+    Floats[J].Rect.Height := H + G;
+  end;
+
 var
   Indent: Integer;
+  BoxName: string;
+  BoxAlign: TMarkDownBoxAlign;
+  BoxWidth, BoxHeight: Float;
   Marker, Rest, S: string;
   Level: Integer;
   W: Float;
 begin
   FFragmentCount := 0;
   FDecorCount := 0;
+  FBoxCount := 0;
+  Floats := nil;
   Canvas := TCanvasTheme(Computed.Theme).Canvas;
   if Canvas = nil then
     Exit;
@@ -1018,9 +1236,20 @@ begin
       Para := '';
       Heading(Rest, 2);
     end
+    else if T = '{clear}' then
+    begin
+      EndParagraph;
+      ClearFloats;
+    end
+    else if BoxLine(T, BoxName, BoxAlign, BoxWidth, BoxHeight) then
+    begin
+      EndParagraph;
+      PlaceBox(BoxName, BoxAlign, BoxWidth, BoxHeight);
+    end
     else if IsRule(T, ['-', '*', '_']) then
     begin
       EndParagraph;
+      ClearFloats;
       BeginBlock(blockOther);
       AddDecor(decorRule, 0, Y + Size / 2, Wrap, 1);
       Y := Y + Size;
@@ -1040,6 +1269,11 @@ begin
     Inc(I);
   end;
   EndParagraph;
+  { The label reaches down past the last float, without the space kept
+    below it }
+  for I := 0 to Length(Floats) - 1 do
+    if Floats[I].Rect.Bottom - Size * MarkDownBoxGap > Y then
+      Y := Floats[I].Rect.Bottom - Size * MarkDownBoxGap;
   { Without a MaxWidth the label is as wide as its widest line }
   if MaxWidth > 0 then
     W := MaxWidth
@@ -1096,6 +1330,20 @@ begin
     end;
     Canvas.Fill(C);
   end;
+  if Assigned(FOnDrawRect) then
+    for I := 0 to FBoxCount - 1 do
+    begin
+      R := FBoxes[I].Rect;
+      R.X := R.X + Bounds.X;
+      R.Y := R.Y + Bounds.Y;
+      Canvas.Push;
+      try
+        Canvas.Clip(R);
+        FOnDrawRect(Self, Canvas, FBoxes[I].Name, R);
+      finally
+        Canvas.Pop;
+      end;
+    end;
   for I := 0 to FFragmentCount - 1 do
   begin
     Font := GetFont(Canvas, FFragments[I].Style);

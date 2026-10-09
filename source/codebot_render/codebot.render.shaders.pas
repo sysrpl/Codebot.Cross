@@ -118,6 +118,49 @@ type
     function Shaders: TShaderCollection;
   end;
 
+{ ShadowLighting is GLSL source for a fragment shader which reads a shadow
+  map recorded by a TShadowBuffer. It defines the function
+
+    float shadowLit(sampler2DShadow map, vec4 c)
+
+  which returns how lit a point is from 0 to 1, where c is the point in the
+  clip space of the light. Points outside of the map are lit. Put it before
+  the uniforms of the shader, as on OpenGL ES it also gives sampler2DShadow
+  the precision it needs.
+
+  The map is filtered, so each lookup compares four texels and blends them.
+  The shadow is softened by nine lookups a texel apart, except on the
+  Raspberry Pi, which has too little fill rate for that at 1080p and uses
+  four lookups half a texel apart, covering the same area with a little less
+  softening. }
+
+const
+{$if defined(linux) and (defined(cpuarm) or defined(cpuaarch64))}
+  ShadowPrecision = 'precision highp sampler2DShadow;'#10;
+  ShadowSamples =
+    '  for (int x = 0; x < 2; x++)'#10 +
+    '    for (int y = 0; y < 2; y++)'#10 +
+    '      lit += texture(map, vec3(p.xy + (vec2(x, y) - 0.5) * texel, p.z));'#10 +
+    '  return lit / 4.0;'#10;
+{$else}
+  ShadowPrecision = '';
+  ShadowSamples =
+    '  for (int x = -1; x <= 1; x++)'#10 +
+    '    for (int y = -1; y <= 1; y++)'#10 +
+    '      lit += texture(map, vec3(p.xy + vec2(x, y) * texel, p.z));'#10 +
+    '  return lit / 9.0;'#10;
+{$endif}
+  ShadowLighting =
+    ShadowPrecision +
+    'float shadowLit(sampler2DShadow map, vec4 c) {'#10 +
+    '  vec3 p = c.xyz / c.w * 0.5 + 0.5;'#10 +
+    '  if (p.x < 0.0 || p.x > 1.0 || p.y < 0.0 || p.y > 1.0 || p.z > 1.0)'#10 +
+    '    return 1.0;'#10 +
+    '  vec2 texel = 1.0 / vec2(textureSize(map, 0));'#10 +
+    '  float lit = 0.0;'#10 +
+    ShadowSamples +
+    '}'#10;
+
 implementation
 
 uses

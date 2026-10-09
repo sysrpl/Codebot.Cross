@@ -482,12 +482,17 @@ type
     function LoadBitmap(const Name: string): IBitmap; overload;
     { Check the store if an image already exists. If not found load a new jpg, png,
       psd, tga, pic or gif image from a file or memory and associated it with the
-      store using name as a key. }
-    function LoadBitmap(const Name: string; FileName: string): IBitmap; overload;
+      store using name as a key. When Mipmaps is true a new image is given
+      mipmaps, so it stays smooth when drawn much smaller than its size. An
+      image already in the store is returned as it was loaded. }
+    function LoadBitmap(const Name: string; FileName: string;
+      Mipmaps: Boolean = False): IBitmap; overload;
     { Load the image from memory }
-    function LoadBitmap(const Name: string; Memory: Pointer; Size: LongWord): IBitmap; overload;
+    function LoadBitmap(const Name: string; Memory: Pointer; Size: LongWord;
+      Mipmaps: Boolean = False): IBitmap; overload;
     { Load the image from a resource of the program }
-    function LoadBitmapResource(const Name, ResName: string): IBitmap;
+    function LoadBitmapResource(const Name, ResName: string;
+      Mipmaps: Boolean = False): IBitmap;
     { Release space used by a bitmap and dispose of the underlying resources. }
     procedure DisposeBitmap(Bitmap: IBitmap);
     { Check the store if a font exists using name as a the key.
@@ -528,9 +533,10 @@ type
     procedure Push;
     { Pop canvas state from the stack }
     procedure Pop;
-    { Clip drawing to a rectangle. You can use an empty rect to remove the
-      clipping or combine mutliple calls to intersect the previous clipping
-      regions }
+    { Clip drawing to a rectangle placed with the current matrix. Calls
+      intersect with the clipping already in effect, and Pop restores the
+      clipping in effect at Push, so clips nest. An empty rect removes the
+      clipping until the next Pop. }
     procedure Clip(const Rect: TRectF); overload;
     { Shortcut to remove the clipping }
     procedure Clip; overload;
@@ -1036,9 +1042,18 @@ type
     procedure WriteLine(const S: string);
   end;
 
+  { TCanvasClip is a rectangle passed to Clip and the transform it was placed
+    with. The clips in effect are kept so that Pop can put the scissor back
+    exactly, including clips from outer pushes. }
+  TCanvasClip = record
+    Rect: TRectF;
+    Transform: TNVGxform;
+  end;
+
   TCanvasStack = class
     BlendMode: TBlendMode;
-    ClipRect: TRectF;
+    ClipStart: Integer;
+    ClipCount: Integer;
     Opacity: Float;
     Winding: TWinding;
     FillRule: TFillRule;
@@ -1064,7 +1079,10 @@ type
     LastPen: IPen;
     LastBrush: IBrush;
     LastFont: IFont;
-    ClipRect: TRectF;
+    { Clips from ClipStart to ClipCount - 1 make up the scissor in effect }
+    Clips: array of TCanvasClip;
+    ClipStart: Integer;
+    ClipCount: Integer;
     BlendMode: TBlendMode;
     Opacity: Float;
     Winding: TWinding;
@@ -1074,6 +1092,7 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure CheckMatrix;
+    procedure ApplyClips;
     procedure SelectObject(Pen: IPen); overload;
     procedure SelectObject(Brush: IBrush); overload;
     procedure SelectObject(Font: IFont); overload;
@@ -1088,9 +1107,12 @@ type
     function NewBitmap(Id: Integer; const Name: string): IBitmap; overload;
     procedure DisposeBitmap(Bitmap: IBitmap);
     function LoadBitmap(const Name: string): IBitmap; overload;
-    function LoadBitmap(const Name: string; FileName: string): IBitmap; overload;
-    function LoadBitmap(const Name: string; Memory: Pointer; Size: LongWord): IBitmap; overload;
-    function LoadBitmapResource(const Name, ResName: string): IBitmap;
+    function LoadBitmap(const Name: string; FileName: string;
+      Mipmaps: Boolean = False): IBitmap; overload;
+    function LoadBitmap(const Name: string; Memory: Pointer; Size: LongWord;
+      Mipmaps: Boolean = False): IBitmap; overload;
+    function LoadBitmapResource(const Name, ResName: string;
+      Mipmaps: Boolean = False): IBitmap;
     function CloneFont(Font: IFont): IFont;
     function NewFont(Id: Integer; const Name: string): IFont;
     function LoadFont(const Name: string): IFont; overload;
@@ -1407,6 +1429,9 @@ begin
   glViewport(0, 0, Width, Height);
   nvgBeginFrame(C.Ctx, Width, Height, 1);
   Canvas.Push;
+  { The new frame has no scissor, and clips of the back buffer do not apply
+    to the bitmap. Unbind pops them back. }
+  C.ClipStart := C.ClipCount;
   C.LastPen := nil;
   C.LastBrush := nil;
   C.LastFont := nil;
@@ -2239,6 +2264,31 @@ begin
   end;
 end;
 
+{ Rebuild the scissor from the clips in effect, each with the transform it
+  was placed with. The canvas matrix is applied again before the next draw. }
+procedure TCanvas.ApplyClips;
+var
+  T: TNVGxform;
+  R: TRectF;
+  I: Integer;
+begin
+  nvgResetScissor(Ctx);
+  if ClipCount = ClipStart then
+    Exit;
+  for I := ClipStart to ClipCount - 1 do
+  begin
+    T := Clips[I].Transform;
+    R := Clips[I].Rect;
+    nvgResetTransform(Ctx);
+    nvgTransform(Ctx, T[0], T[1], T[2], T[3], T[4], T[5]);
+    if I = ClipStart then
+      nvgScissor(Ctx, R.X, R.Y, R.Width, R.Height)
+    else
+      nvgIntersectScissor(Ctx, R.X, R.Y, R.Width, R.Height);
+  end;
+  M.Changed := True;
+end;
+
 procedure TCanvas.SelectObject(Brush: IBrush);
 var
   HasChanged: Boolean;
@@ -2344,6 +2394,8 @@ begin
     LastFont := nil;
     Opacity := 1;
     BlendMode := blendAlpha;
+    ClipStart := 0;
+    ClipCount := 0;
     M.Identity;
     M.Changed := False;
   end
@@ -2448,7 +2500,17 @@ begin
     Result := B as IBitmap;
 end;
 
-function TCanvas.LoadBitmap(const Name: string; FileName: string): IBitmap; overload;
+{ The flags of a new image, with mipmaps if they are wanted }
+
+function BitmapFlags(Mipmaps: Boolean): Integer;
+begin
+  Result := NVG_IMAGE_DEFAULT;
+  if Mipmaps then
+    Result := Result or NVG_IMAGE_GENERATE_MIPMAPS;
+end;
+
+function TCanvas.LoadBitmap(const Name: string; FileName: string;
+  Mipmaps: Boolean = False): IBitmap; overload;
 var
   S: string;
 begin
@@ -2460,21 +2522,23 @@ begin
   if Result = nil then
   begin
     S := AdjustPathDelimiter(FileName);
-    Result := NewBitmap(nvgCreateImage(Ctx, S, NVG_IMAGE_DEFAULT), Name);
+    Result := NewBitmap(nvgCreateImage(Ctx, S, BitmapFlags(Mipmaps)), Name);
   end;
 end;
 
-function TCanvas.LoadBitmap(const Name: string; Memory: Pointer; Size: LongWord): IBitmap; overload;
+function TCanvas.LoadBitmap(const Name: string; Memory: Pointer; Size: LongWord;
+  Mipmaps: Boolean = False): IBitmap; overload;
 begin
   Result := nil;
   if Name = '' then
     Exit;
   Result := LoadBitmap(Name);
   if Result = nil then
-    Result := NewBitmap(nvgCreateImageMem(Ctx, NVG_IMAGE_DEFAULT, Memory, Size), Name);
+    Result := NewBitmap(nvgCreateImageMem(Ctx, BitmapFlags(Mipmaps), Memory, Size), Name);
 end;
 
-function TCanvas.LoadBitmapResource(const Name, ResName: string): IBitmap;
+function TCanvas.LoadBitmapResource(const Name, ResName: string;
+  Mipmaps: Boolean = False): IBitmap;
 var
   S: TResourceStream;
 begin
@@ -2486,7 +2550,7 @@ begin
 	begin
 		S := TResourceStream.Create(HINSTANCE, ResName, RT_RCDATA);
     try
-      Result := NewBitmap(nvgCreateImageMem(Ctx, NVG_IMAGE_DEFAULT, S.Memory, S.Size), Name);
+      Result := NewBitmap(nvgCreateImageMem(Ctx, BitmapFlags(Mipmaps), S.Memory, S.Size), Name);
     finally
       S.Free;
     end;
@@ -2613,7 +2677,8 @@ begin
   Matrix.Push;
   S := TCanvasStack.Create;
   S.BlendMode := BlendMode;
-  S.ClipRect := ClipRect;
+  S.ClipStart := ClipStart;
+  S.ClipCount := ClipCount;
   S.Opacity := Opacity;
   S.Winding := Winding;
   S.FillRule := FillRule;
@@ -2633,8 +2698,13 @@ begin
   C := Self;
   S := Stack;
   C.BlendMode := S.BlendMode;
-  C.Clip;
-  C.Clip(S.ClipRect);
+  { The scissor is only rebuilt when clipping changed since the push }
+  if (ClipStart <> S.ClipStart) or (ClipCount <> S.ClipCount) then
+  begin
+    ClipStart := S.ClipStart;
+    ClipCount := S.ClipCount;
+    ApplyClips;
+  end;
   C.Opacity := S.Opacity;
   C.Winding := S.Winding;
   C.FillRule := S.FillRule;
@@ -2645,20 +2715,35 @@ end;
 
 procedure TCanvas.Clip(const Rect: TRectF); overload;
 begin
+  { The scissor is placed with the current transform, so a changed matrix
+    is applied first }
   if Rect.Empty then
-    nvgResetScissor(Ctx)
-  else if ClipRect.Empty then
+  begin
+    Clip;
+    Exit;
+  end;
+  CheckMatrix;
+  if ClipCount = ClipStart then
     nvgScissor(Ctx, Rect.X, Rect.Y, Rect.Width, Rect.Height)
   else
     nvgIntersectScissor(Ctx, Rect.X, Rect.Y, Rect.Width, Rect.Height);
-  ClipRect := Rect;
+  if ClipCount = Length(Clips) then
+    SetLength(Clips, ClipCount * 2 + 4);
+  Clips[ClipCount].Rect := Rect;
+  Clips[ClipCount].Transform := M.Data;
+  Inc(ClipCount);
 end;
 
 procedure TCanvas.Clip; overload;
 begin
-  if ClipRect.Empty then
-    nvgResetScissor(Ctx);
-  ClipRect := RectEmpty;
+  nvgResetScissor(Ctx);
+  { Clips added since the last push are dropped. Clips from outer pushes are
+    kept for Pop to restore, but no longer take effect. }
+  if Stack <> nil then
+    ClipCount := Stack.ClipCount
+  else
+    ClipCount := 0;
+  ClipStart := ClipCount;
 end;
 
 procedure TCanvas.Clear;

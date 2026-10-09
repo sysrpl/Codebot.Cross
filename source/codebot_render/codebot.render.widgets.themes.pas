@@ -79,6 +79,10 @@ type
       are drawn last. The theme draws nothing in a cell, selected or not,
       other than the lines between cells when the grid has GridLines set. }
     procedure DrawScrollGrid(Grid: TScrollGrid); virtual;
+    { Draw a scroll box, which is the frame and background of a list box when
+      it is framed, and its scroll bars. The widgets inside are drawn after it,
+      clipped to its client area. }
+    procedure DrawScrollBox(Box: TScrollBox); virtual;
     { Draw the header of a scroll grid over the top of its cells, which is
       one header cell for each column which can be seen }
     procedure DrawGridHeader(Grid: TScrollGrid);
@@ -134,6 +138,8 @@ type
     function CalcCloseRect(Window: TWindow): TRectF; override;
     procedure PushMatrix(Matrix: IMatrix); override;
     procedure PopMatrix; override;
+    procedure PushClip(const Rect: TRectF); override;
+    procedure PopClip; override;
     { The canvas the theme draws on }
     property Canvas: ICanvas read FCanvas;
     { The height of a line of text in the theme font }
@@ -548,6 +554,8 @@ begin
       DrawListBox(TListBox(Widget))
     else if Widget is TScrollGrid then
       DrawScrollGrid(TScrollGrid(Widget))
+    else if Widget is TScrollBox then
+      DrawScrollBox(TScrollBox(Widget))
     else if Widget is TWindow then
     begin
       DrawWindow(TWindow(Widget));
@@ -584,6 +592,37 @@ end;
 procedure TCanvasTheme.PopMatrix;
 begin
   Canvas.Matrix.Pop;
+end;
+
+procedure TCanvasTheme.PushClip(const Rect: TRectF);
+begin
+  Canvas.Push;
+  Canvas.Clip(Rect);
+end;
+
+procedure TCanvasTheme.PopClip;
+begin
+  Canvas.Pop;
+end;
+
+procedure TCanvasTheme.DrawScrollBox(Box: TScrollBox);
+var
+  Bounds, Track, Thumb: TRectF;
+  TextColor, SelectColor, SelectTextColor: TColorF;
+  Bar: TMemoBar;
+begin
+  if Box.Framed then
+    DrawListFrame(Box, TextColor, SelectColor, SelectTextColor);
+  Bounds := Box.Computed.Bounds;
+  for Bar := Low(TMemoBar) to High(TMemoBar) do
+    if Box.BarVisible(Bar) then
+    begin
+      Track := Box.BarRect(Bar);
+      Thumb := Box.ThumbRect(Bar);
+      Track.Offset(Bounds.X, Bounds.Y);
+      Thumb.Offset(Bounds.X, Bounds.Y);
+      DrawScrollBar(Box, Track, Thumb, Bar = barHorz);
+    end;
 end;
 
 procedure TCanvasTheme.DropColors(Widget: TSpinBox; out Frame, Back, Hot, Text,

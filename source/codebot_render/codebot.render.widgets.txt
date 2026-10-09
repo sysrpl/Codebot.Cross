@@ -1,6 +1,6 @@
 The Codebot.Render.Widgets unit defines the widget system, which is a user interface drawn on a canvas inside a scene. TWidget is the base class of all widgets, and TMainWidget is the parent of a layout and also shows message boxes.
 
-- The controls are TEdit, TMemo, TPushButton, TGlyphButton, TGlyphImage, TCheckBox, TLabel, TSlider, TSpinBox, TListBox, TScrollGrid, and TSpacer.
+- The controls are TEdit, TMemo, TPushButton, TGlyphButton, TGlyphImage, TCheckBox, TLabel, TSlider, TSpinBox, TListBox, TScrollGrid, TPaintBox, and TSpacer. TScrollBox holds other widgets in an area which scrolls.
 - The containers are THBox, TVBox, and TWindow.
 - TCustomWidget is the base class for widgets that draw themselves.
 

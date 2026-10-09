@@ -129,6 +129,8 @@ type
   TSlider = class;
   TSpinBox = class;
   TCustomWidget = class;
+  TPaintBox = class;
+  TScrollBox = class;
   TContainerWidget = class;
   THBox = class;
   TVBox = class;
@@ -168,6 +170,11 @@ type
     procedure PushMatrix(Matrix: IMatrix); virtual;
     { Put the transform back as it was before PushMatrix }
     procedure PopMatrix; virtual;
+    { Clip what follows to a rectangle, inside of any clipping already in
+      use, until PopClip }
+    procedure PushClip(const Rect: TRectF); virtual;
+    { Put the clipping back as it was before PushClip }
+    procedure PopClip; virtual;
   end;
 
   { The class of a theme }
@@ -290,7 +297,20 @@ type
     procedure Resize; virtual;
     procedure Repack; virtual;
     function GetBorders: TRectF; virtual;
+    { Where the children are placed from, relative to the top left of the
+      widget. A scroll box moves its children by its scroll position. }
+    function ClientOffset: TPointF; virtual;
+    { When true, children are drawn clipped to Rect and the mouse only finds
+      them inside of it. Rect is relative to the main widget, like computed
+      bounds. }
+    function ClientClip(out Rect: TRectF): Boolean; virtual;
     function CanSelect: Boolean; virtual;
+    { When true, clicking something inside the widget which can not be
+      selected selects this widget instead. A scroll box does this so its
+      keys scroll it. }
+    function SelectsForChildren: Boolean; virtual;
+    { Called on each parent of a widget when the widget becomes selected }
+    procedure ChildSelected(Child: TWidget); virtual;
     procedure AddState(Part: TWidgetStatePart);
     procedure RemoveState(Part: TWidgetStatePart);
     procedure Change; virtual;
@@ -432,6 +452,8 @@ type
     procedure MessageBoxClose(Sender: TObject; ModalResult: TModalResult);
     procedure MessageProxy(Sender: TObject; ModalResult: TModalResult);
     procedure SetActiveWindow(Value: TWindow);
+    { Give a widget the input focus and tell its parents }
+    procedure SelectWidget(Widget: TWidget);
   protected
     procedure SetModal(Window: TWindow);
     procedure UnsetModal(Window: TWindow);
@@ -1281,6 +1303,143 @@ type
     property OnMouseUp;
   end;
 
+{ TPaintBox is a widget of a size you choose which draws nothing itself and
+  is not drawn by the theme. OnPaint is called each frame with the canvas of
+  the scene host and the rectangle of the paint box on the canvas, and
+  drawing is clipped to the rectangle. Set its Width and Height, which are
+  100 by 100 by default. }
+
+  TPaintEvent = procedure(Sender: TObject; Surface: ICanvas; const Rect: TRectF) of object;
+
+  TPaintBox = class(TWidget)
+  private
+    FOnPaint: TPaintEvent;
+  protected
+    procedure Paint(Stage: TPaintStage); override;
+  public
+    constructor Create(Parent: TWidget; const Name: string = ''); override;
+    { OnPaint fires when the paint box should be drawn }
+    property OnPaint: TPaintEvent read FOnPaint write FOnPaint;
+    property OnClick;
+    property OnKeyDown;
+    property OnMouseDown;
+    property OnMouseMove;
+    property OnMouseUp;
+  end;
+
+{ TScrollBox shows the widgets inside of it in an area which scrolls. Its
+  children are stacked from top to bottom like a vertical box, and the box
+  keeps the size it is given, 300 by 200 by default. When the children do not
+  fit, a vertical or horizontal scroll bar is shown, or both. The children are
+  clipped to the area inside the frame and scroll bars, and the mouse only
+  reaches them inside that area.
+
+  The mouse wheel scrolls up and down, or across with Shift held, and the bars
+  can be dragged or clicked beside their thumbs to scroll by a page. Clicking
+  in the scroll box on something which can not be selected selects the scroll
+  box, after which the arrow, Home, End, Prior, and Next keys scroll it. When
+  a widget inside the scroll box is selected it is scrolled into view.
+
+  Text which wraps, such as a label with a MaxWidth, does not know the width
+  it is given. Set its width to FitWidth so it fits beside the vertical scroll
+  bar without a horizontal one.
+
+  The frame and background are drawn like a list box. When Framed is false
+  neither is drawn and the children reach the edges of the scroll box.
+
+  The client area, inside the frame and scroll bars, can be given a
+  background which stays in place as the children scroll. Image is drawn
+  first, placed by ImageMode, then OnPaintBackground is called with the
+  canvas and the client area on it, and both are clipped to the client area.
+  ImageBrightness darkens the image towards black below 0.5 and lightens it
+  towards white above 0.5. }
+
+  { TTileMode is how an image fills an area. tileNone draws the image once
+    at the top left of the area, tileRepeat repeats it across and down from
+    the top left, and tileScale stretches it to fill the area. }
+  TTileMode = (tileNone, tileRepeat, tileScale);
+
+  TScrollBoxDrag = (boxDragNone, boxDragVert, boxDragHorz);
+
+  TScrollBox = class(TWidget)
+  private
+    FScrollX: Float;
+    FScrollY: Float;
+    FContentWidth: Float;
+    FContentHeight: Float;
+    FFramed: Boolean;
+    FBars: array[TMemoBar] of Boolean;
+    FDrag: TScrollBoxDrag;
+    FDragOffset: Float;
+    FImage: IBitmap;
+    FImageMode: TTileMode;
+    FImageBrightness: Float;
+    FOnPaintBackground: TPaintEvent;
+    procedure SetFramed(Value: Boolean);
+    procedure SetScrollX(Value: Float);
+    procedure SetScrollY(Value: Float);
+    function Inset: Float;
+    function LineSize: Float;
+    procedure UpdateBars;
+    procedure ClampScroll;
+    procedure DragThumb(Bar: TMemoBar; Position: Float);
+    procedure DrawImage(Surface: ICanvas; const Area: TRectF);
+  protected
+    function AutoSize: Boolean; override;
+    function CanSelect: Boolean; override;
+    procedure Paint(Stage: TPaintStage); override;
+    function SelectsForChildren: Boolean; override;
+    procedure ChildSelected(Child: TWidget); override;
+    function ClientOffset: TPointF; override;
+    function ClientClip(out Rect: TRectF): Boolean; override;
+    procedure DoKeyDown(var Args: TSceneKeyArgs); override;
+    procedure DoMouseDown(var Args: TSceneMouseArgs); override;
+    procedure DoMouseMove(var Args: TSceneMouseArgs); override;
+    procedure DoMouseUp(var Args: TSceneMouseArgs); override;
+    procedure DoMouseWheel(var Args: TSceneWheelArgs); override;
+  public
+    constructor Create(Parent: TWidget; const Name: string = ''); override;
+    function Pack: Boolean; override;
+    { Scroll so that a widget inside the scroll box can be seen }
+    procedure ScrollToWidget(Widget: TWidget);
+    { The width content can have and fit beside the vertical scroll bar }
+    function FitWidth: Float;
+    { The methods below are used by themes to draw the scroll box. Rectangles
+      are relative to the top left of the scroll box. }
+    { The area the children are seen in, inside the frame and scroll bars }
+    function ClientArea: TRectF;
+    { True if a scroll bar is showing }
+    function BarVisible(Bar: TMemoBar): Boolean;
+    { The rectangle of a scroll bar }
+    function BarRect(Bar: TMemoBar): TRectF;
+    { The rectangle of the thumb of a scroll bar }
+    function ThumbRect(Bar: TMemoBar): TRectF;
+    { The size of the children, measured when the scroll box is packed }
+    property ContentWidth: Float read FContentWidth;
+    property ContentHeight: Float read FContentHeight;
+    { The number of pixels the children are scrolled. Setting them keeps the
+      children inside the scroll box. }
+    property ScrollX: Float read FScrollX write SetScrollX;
+    property ScrollY: Float read FScrollY write SetScrollY;
+    { Draw a frame and background, True by default }
+    property Framed: Boolean read FFramed write SetFramed;
+    { An image drawn behind the children which does not scroll }
+    property Image: IBitmap read FImage write FImage;
+    { How the image fills the client area, tileNone by default }
+    property ImageMode: TTileMode read FImageMode write FImageMode;
+    { From 0, black, through 0.5, the image as it is, to 1, white. The
+      default is 0.5. }
+    property ImageBrightness: Float read FImageBrightness write FImageBrightness;
+    { OnPaintBackground fires each frame before the children are drawn, with
+      the client area on the canvas, to draw a background which does not
+      scroll. Drawing is clipped to the client area. }
+    property OnPaintBackground: TPaintEvent read FOnPaintBackground write FOnPaintBackground;
+    property OnKeyDown;
+    property OnMouseDown;
+    property OnMouseMove;
+    property OnMouseUp;
+  end;
+
 { TContainerWidget is the base class for widgets which hold and arrange other
   widgets }
 
@@ -1480,13 +1639,15 @@ end;
 function TComputedWidget.Bounds: TRectF;
 var
   W: TWidget;
+  P: TPointF;
 begin
   Result := FWidget.FBounds;
   W := FWidget.FParent;
   while W <> nil do
   begin
-    Result.X := Result.X + W.FBounds.X;
-    Result.Y := Result.Y + W.FBounds.Y;
+    P := W.ClientOffset;
+    Result.X := Result.X + W.FBounds.X + P.X;
+    Result.Y := Result.Y + W.FBounds.Y + P.Y;
     W := W.FParent;
   end;
 end;
@@ -1622,11 +1783,20 @@ begin
     Result := Result.FParent;
 end;
 
+{ RectsOverlap is true when two rectangles share some area }
+
+function RectsOverlap(const A, B: TRectF): Boolean;
+begin
+  Result := (A.X < B.X + B.Width) and (B.X < A.X + A.Width) and
+    (A.Y < B.Y + B.Height) and (B.Y < A.Y + A.Height);
+end;
+
 procedure TWidget.ThemeRender(Stage: TPaintStage);
 var
   W: TWidget;
   T: TTheme;
-  Transformed: Boolean;
+  Clip: TRectF;
+  Transformed, Clipped: Boolean;
 begin
   if Opacity = 0 then Exit;
   if not Visible then Exit;
@@ -1689,8 +1859,20 @@ begin
     T.Render(Self, Stage);
     { Widgets which draw themselves do so after the theme has drawn them }
     Paint(Stage);
-    for W in FChildren do
-      W.ThemeRender(Stage);
+    { Children which can not be seen through the clip are skipped. Only the
+      prePaint stage is clipped, so what is drawn in the postPaint stage,
+      such as the list of a spin box, can reach outside of the widget. }
+    Clipped := ClientClip(Clip);
+    if Clipped and (Stage = prePaint) then
+      T.PushClip(Clip);
+    try
+      for W in FChildren do
+        if (not Clipped) or RectsOverlap(W.Computed.Bounds, Clip) then
+          W.ThemeRender(Stage);
+    finally
+      if Clipped and (Stage = prePaint) then
+        T.PopClip;
+    end;
   finally
     if Transformed then
       T.PopMatrix;
@@ -1712,6 +1894,27 @@ begin
   Result.Y := 0;
   Result.Width := 0;
   Result.Height := 0;
+end;
+
+function TWidget.ClientOffset: TPointF;
+begin
+  Result.X := 0;
+  Result.Y := 0;
+end;
+
+function TWidget.ClientClip(out Rect: TRectF): Boolean;
+begin
+  Rect := Default(TRectF);
+  Result := False;
+end;
+
+function TWidget.SelectsForChildren: Boolean;
+begin
+  Result := False;
+end;
+
+procedure TWidget.ChildSelected(Child: TWidget);
+begin
 end;
 
 procedure TWidget.AddState(Part: TWidgetStatePart);
@@ -1862,6 +2065,7 @@ var
   W: TWidget;
   R: TRectF;
   I: Integer;
+  Inside: Boolean;
 begin
   Result := nil;
   if not FComputed.Visible then
@@ -1894,7 +2098,12 @@ begin
     if TWindow(Self).SizeRect.Contains(X - R.X, Y - R.Y) then
       Exit(Self);
   end;
-  if FChildren.Length > 0 then
+  { Children which are clipped are only found inside of the clip }
+  if ClientClip(R) and not R.Contains(X, Y) then
+    Inside := False
+  else
+    Inside := FChildren.Length > 0;
+  if Inside then
     for I := FChildren.Length - 1 downto 0 do
     begin
       W := FChildren[I];
@@ -1904,7 +2113,7 @@ begin
       if Result <> nil then
         Exit;
     end;
-  if FChildren.Length > 0 then
+  if Inside then
     for I := FChildren.Length - 1 downto 0 do
     begin
       W := FChildren[I];
@@ -1998,17 +2207,16 @@ var
   var
     C: TWidget;
   begin
+    Result := True;
     if W.CanSelect then
+      M.SelectWidget(W)
+    else
     begin
-      if M.FSelected <> nil then
-        M.FSelected.RemoveState(wsSelected);
-      M.FSelected := W;
-      W.AddState(wsSelected);
-      Result := True;
-    end
-    else for C in W do
-      if Select(C) then
-        Break;
+      for C in W do
+        if Select(C) then
+          Exit;
+      Result := False;
+    end;
   end;
 
   procedure ContainerActivate(C: TWidget);
@@ -2473,6 +2681,24 @@ begin
   end;
 end;
 
+procedure TMainWidget.SelectWidget(Widget: TWidget);
+var
+  P: TWidget;
+begin
+  if FSelected <> nil then
+    FSelected.RemoveState(wsSelected);
+  FSelected := Widget;
+  if Widget = nil then
+    Exit;
+  Widget.AddState(wsSelected);
+  P := Widget.FParent;
+  while P <> nil do
+  begin
+    P.ChildSelected(Widget);
+    P := P.FParent;
+  end;
+end;
+
 function TMainWidget.WidgetPoint(Widget: TWidget; X, Y: Float): TPointF;
 var
   T: TWidget;
@@ -2613,14 +2839,18 @@ begin
     begin
       C := H;
       if (C <> nil) and (C.CanSelect) then
-        S := C;
-      if S <> nil then
+        S := C
+      else if C <> nil then
       begin
-        if FSelected <> nil then
-          FSelected.RemoveState(wsSelected);
-        FSelected := S;
-        FSelected.AddState(wsSelected);
+        { A parent may take the focus for what can not be selected }
+        S := C.FParent;
+        while (S <> nil) and not S.SelectsForChildren do
+          S := S.FParent;
+        if (S <> nil) and not S.CanSelect then
+          S := nil;
       end;
+      if S <> nil then
+        SelectWidget(S);
     end;
     if FCapture <> nil then
       FCapture.RemoveState(wsPressed);
@@ -2643,12 +2873,7 @@ begin
       FCapture.AddState(wsPressed);
     end;
     if (FActiveWindow <> nil) and (S <> nil) and S.IsParent(FActiveWindow) then
-    begin
-      if FSelected <> nil then
-        FSelected.RemoveState(wsSelected);
-      FSelected := S;
-      FSelected.AddState(wsSelected);
-    end;
+      SelectWidget(S);
   finally
     Args.X := X0;
     Args.Y := Y0;
@@ -5995,6 +6220,606 @@ begin
     FOnPaint(Self);
 end;
 
+{ TPaintBox }
+
+constructor TPaintBox.Create(Parent: TWidget; const Name: string = '');
+begin
+  inherited Create(Parent, Name);
+  Width := 100;
+  Height := 100;
+end;
+
+{ The paint box is painted once a frame, before any children. The transform
+  of its window is already on the canvas. }
+
+procedure TPaintBox.Paint(Stage: TPaintStage);
+var
+  Surface: ICanvas;
+  R: TRectF;
+begin
+  inherited Paint(Stage);
+  if (Stage <> prePaint) or (not Assigned(FOnPaint)) or (SceneHost = nil) then
+    Exit;
+  Surface := SceneHost.Canvas;
+  if Surface = nil then
+    Exit;
+  R := Computed.Bounds;
+  Surface.Push;
+  try
+    Surface.Clip(R);
+    FOnPaint(Self, Surface, R);
+  finally
+    Surface.Pop;
+  end;
+end;
+
+{ StackChildren places the packed children of a widget in a column from top
+  to bottom, packing them first. Each pair of children is kept apart by the
+  larger of their margins, and each child is aligned across the width of the
+  widest. The column is at least MinWidth by MinHeight and its size is
+  returned. }
+
+procedure StackChildren(Box: TWidget; MinWidth, MinHeight: Float;
+  out Width, Height: Float);
+var
+  Child, Last: TWidget;
+  W, X, Y: Float;
+  A, B: Float;
+begin
+  W := MinWidth;
+  for Child in Box do
+  begin
+    if Child.Unpacked then
+      Continue;
+    if not Child.Computed.Visible then
+      Continue;
+    if Child.FNeedsPack then
+      Child.Pack;
+  end;
+  for Child in Box do
+  begin
+    if Child.Unpacked then
+      Continue;
+    if not Child.Computed.Visible then
+      Continue;
+    X := Child.Margin * 2 + Child.Width;
+    if X > W then
+      W := X;
+  end;
+  Y := 0;
+  A := 0;
+  B := 0;
+  Last := nil;
+  for Child in Box do
+  begin
+    if Child.Unpacked then
+      Continue;
+    if not Child.Computed.Visible then
+      Continue;
+    B := Child.Margin;
+    if B > A then
+      Y := Y + B
+    else
+      Y := Y + A;
+    A := Child.Margin;
+    Child.Y := Y;
+    case Child.Align of
+      alignNear: Child.X := Child.Margin;
+      alignCenter: Child.X := (W - Child.Width) / 2;
+      alignFar: Child.X := W - Child.Width - Child.Margin;
+    end;
+    Y := Y + Child.Height;
+    Last := Child;
+  end;
+  if Last <> nil then
+    Y := Y + Last.Margin;
+  if Y < MinHeight then
+    Y := MinHeight;
+  Width := W;
+  Height := Y;
+end;
+
+{ TScrollBox }
+
+constructor TScrollBox.Create(Parent: TWidget; const Name: string = '');
+begin
+  inherited Create(Parent, Name);
+  FFramed := True;
+  FImageBrightness := 0.5;
+  FBounds.Width := 300;
+  FBounds.Height := 200;
+end;
+
+function TScrollBox.AutoSize: Boolean;
+begin
+  Result := False;
+end;
+
+function TScrollBox.CanSelect: Boolean;
+begin
+  Result := Computed.Enabled and Computed.Visible;
+end;
+
+procedure TScrollBox.SetFramed(Value: Boolean);
+begin
+  if Value = FFramed then Exit;
+  FFramed := Value;
+  UpdateBars;
+  ClampScroll;
+end;
+
+procedure TScrollBox.SetScrollX(Value: Float);
+begin
+  FScrollX := Value;
+  ClampScroll;
+end;
+
+procedure TScrollBox.SetScrollY(Value: Float);
+begin
+  FScrollY := Value;
+  ClampScroll;
+end;
+
+{ The space the frame takes on each side }
+
+function TScrollBox.Inset: Float;
+begin
+  if FFramed then
+    Result := 2
+  else
+    Result := 0;
+end;
+
+{ The distance one notch of the wheel or an arrow key scrolls }
+
+function TScrollBox.LineSize: Float;
+var
+  T: TTheme;
+begin
+  T := Computed.Theme;
+  if T = nil then
+    Result := 20
+  else
+    Result := Round(T.CalcTextHeight) + 6;
+end;
+
+{ Children are moved by whole pixels so text inside them stays sharp }
+
+function TScrollBox.ClientOffset: TPointF;
+var
+  Area: TRectF;
+begin
+  Area := ClientArea;
+  Result.X := Area.X - Round(FScrollX);
+  Result.Y := Area.Y - Round(FScrollY);
+end;
+
+function TScrollBox.ClientClip(out Rect: TRectF): Boolean;
+var
+  B: TRectF;
+begin
+  B := Computed.Bounds;
+  Rect := ClientArea;
+  Rect.Offset(B.X, B.Y);
+  Result := True;
+end;
+
+{ The children are stacked like a vertical box. Unpacked children stay where
+  they are put, and count toward the size of the content. }
+
+function TScrollBox.Pack: Boolean;
+var
+  Child: TWidget;
+  W, H: Float;
+begin
+  Result := inherited Pack;
+  if not Result then
+    Exit;
+  StackChildren(Self, 0, 0, W, H);
+  for Child in Self do
+    if Child.Unpacked and Child.Computed.Visible then
+    begin
+      if Child.X + Child.Width > W then
+        W := Child.X + Child.Width;
+      if Child.Y + Child.Height > H then
+        H := Child.Y + Child.Height;
+    end;
+  FContentWidth := W;
+  FContentHeight := H;
+  UpdateBars;
+  ClampScroll;
+end;
+
+{ A bar is shown when the content does not fit. Showing one bar takes room
+  from the other direction, which can then need a bar of its own, so the
+  test is made twice. The bars only change when the scroll box is packed or
+  framed, so they are kept rather than found each time they are needed. }
+
+procedure TScrollBox.UpdateBars;
+var
+  W, H: Float;
+  I: Integer;
+begin
+  FBars[barVert] := False;
+  FBars[barHorz] := False;
+  for I := 1 to 2 do
+  begin
+    W := Width - Inset * 2;
+    H := Height - Inset * 2;
+    if FBars[barVert] then
+      W := W - ScrollBarSize;
+    if FBars[barHorz] then
+      H := H - ScrollBarSize;
+    if FContentHeight > H then
+      FBars[barVert] := True;
+    if FContentWidth > W then
+      FBars[barHorz] := True;
+  end;
+end;
+
+function TScrollBox.BarVisible(Bar: TMemoBar): Boolean;
+begin
+  Result := FBars[Bar];
+end;
+
+function TScrollBox.ClientArea: TRectF;
+var
+  I: Float;
+begin
+  I := Inset;
+  Result := NewRectF(I, I, Width - I * 2, Height - I * 2);
+  if BarVisible(barVert) then
+    Result.Width := Result.Width - ScrollBarSize;
+  if BarVisible(barHorz) then
+    Result.Height := Result.Height - ScrollBarSize;
+  if Result.Width < 1 then
+    Result.Width := 1;
+  if Result.Height < 1 then
+    Result.Height := 1;
+end;
+
+function TScrollBox.FitWidth: Float;
+begin
+  Result := Width - Inset * 2 - ScrollBarSize;
+  if Result < 1 then
+    Result := 1;
+end;
+
+function TScrollBox.BarRect(Bar: TMemoBar): TRectF;
+var
+  I: Float;
+begin
+  I := Inset;
+  if Bar = barVert then
+  begin
+    Result := NewRectF(Width - ScrollBarSize - I, I, ScrollBarSize, Height - I * 2);
+    if BarVisible(barHorz) then
+      Result.Height := Result.Height - ScrollBarSize;
+  end
+  else
+  begin
+    Result := NewRectF(I, Height - ScrollBarSize - I, Width - I * 2, ScrollBarSize);
+    if BarVisible(barVert) then
+      Result.Width := Result.Width - ScrollBarSize;
+  end;
+end;
+
+function TScrollBox.ThumbRect(Bar: TMemoBar): TRectF;
+var
+  Area: TRectF;
+  Len, View, Content, Scroll, Thumb: Float;
+begin
+  Result := BarRect(Bar);
+  Area := ClientArea;
+  if Bar = barVert then
+  begin
+    Len := Result.Height;
+    View := Area.Height;
+    Content := FContentHeight;
+    Scroll := FScrollY;
+  end
+  else
+  begin
+    Len := Result.Width;
+    View := Area.Width;
+    Content := FContentWidth;
+    Scroll := FScrollX;
+  end;
+  { The thumb fills the bar when there is nothing to scroll }
+  if (Content <= View) or (Content <= 0) then
+    Exit;
+  Thumb := Len * View / Content;
+  if Thumb < 20 then
+    Thumb := 20;
+  if Thumb > Len then
+    Thumb := Len;
+  if Bar = barVert then
+  begin
+    Result.Y := Result.Y + (Len - Thumb) * Scroll / (Content - View);
+    Result.Height := Thumb;
+  end
+  else
+  begin
+    Result.X := Result.X + (Len - Thumb) * Scroll / (Content - View);
+    Result.Width := Thumb;
+  end;
+end;
+
+procedure TScrollBox.ClampScroll;
+var
+  Area: TRectF;
+  Max: Float;
+begin
+  Area := ClientArea;
+  Max := FContentWidth - Area.Width;
+  if FScrollX > Max then
+    FScrollX := Max;
+  if FScrollX < 0 then
+    FScrollX := 0;
+  Max := FContentHeight - Area.Height;
+  if FScrollY > Max then
+    FScrollY := Max;
+  if FScrollY < 0 then
+    FScrollY := 0;
+end;
+
+procedure TScrollBox.ScrollToWidget(Widget: TWidget);
+var
+  Area, R: TRectF;
+begin
+  if (Widget = nil) or not Widget.IsParent(Self) then
+    Exit;
+  if not ClientClip(Area) then
+    Exit;
+  R := Widget.Computed.Bounds;
+  if R.Bottom > Area.Bottom then
+    FScrollY := FScrollY + (R.Bottom - Area.Bottom);
+  { The top and left are kept in view when the widget is larger than the
+    area it is seen in }
+  if R.Top < Area.Top then
+    FScrollY := FScrollY - (Area.Top - R.Top);
+  if R.Right > Area.Right then
+    FScrollX := FScrollX + (R.Right - Area.Right);
+  if R.Left < Area.Left then
+    FScrollX := FScrollX - (Area.Left - R.Left);
+  ClampScroll;
+end;
+
+procedure TScrollBox.DragThumb(Bar: TMemoBar; Position: Float);
+var
+  Track, Thumb, Area: TRectF;
+  Len, Size, View, Content, Value: Float;
+begin
+  Track := BarRect(Bar);
+  Thumb := ThumbRect(Bar);
+  Area := ClientArea;
+  if Bar = barVert then
+  begin
+    Len := Track.Height;
+    Size := Thumb.Height;
+    View := Area.Height;
+    Content := FContentHeight;
+    Value := Position - FDragOffset - Track.Y;
+  end
+  else
+  begin
+    Len := Track.Width;
+    Size := Thumb.Width;
+    View := Area.Width;
+    Content := FContentWidth;
+    Value := Position - FDragOffset - Track.X;
+  end;
+  if (Content <= View) or (Len <= Size) then
+    Exit;
+  Value := Value / (Len - Size) * (Content - View);
+  if Bar = barVert then
+    FScrollY := Value
+  else
+    FScrollX := Value;
+  ClampScroll;
+end;
+
+{ The image is drawn where its mode places it, and the brightness is a
+  black or white cover over the same place }
+
+procedure TScrollBox.DrawImage(Surface: ICanvas; const Area: TRectF);
+var
+  Brush: IBitmapBrush;
+  R: TRectF;
+  C: TColorF;
+  B, Opacity: Float;
+begin
+  if (FImage = nil) or (FImage.Width = 0) or (FImage.Height = 0) then
+    Exit;
+  Opacity := Computed.Opacity;
+  case FImageMode of
+    tileNone:
+      begin
+        R := NewRectF(Area.X, Area.Y, FImage.Width, FImage.Height);
+        Surface.DrawImage(FImage, R.X, R.Y, Opacity);
+      end;
+    tileRepeat:
+      begin
+        R := Area;
+        Brush := NewBrush(FImage);
+        Brush.Offset := NewPointF(Area.X, Area.Y);
+        Brush.Opacity := Opacity;
+        Surface.FillRect(Brush, R);
+      end;
+    tileScale:
+      begin
+        R := Area;
+        Surface.DrawImage(FImage, NewRectF(0, 0, FImage.Width, FImage.Height),
+          R, Opacity);
+      end;
+  end;
+  B := FImageBrightness;
+  if B < 0 then
+    B := 0
+  else if B > 1 then
+    B := 1;
+  if B = 0.5 then
+    Exit;
+  if B < 0.5 then
+    C := NewColorF(0, 0, 0, (0.5 - B) * 2 * Opacity)
+  else
+    C := NewColorF(1, 1, 1, (B - 0.5) * 2 * Opacity);
+  Surface.Rect(R);
+  Surface.Fill(C);
+end;
+
+{ The background is painted after the frame and scroll bars, and before the
+  children, which the widget draws clipped after this }
+
+procedure TScrollBox.Paint(Stage: TPaintStage);
+var
+  Surface: ICanvas;
+  Area: TRectF;
+begin
+  inherited Paint(Stage);
+  if Stage <> prePaint then
+    Exit;
+  if (FImage = nil) and not Assigned(FOnPaintBackground) then
+    Exit;
+  if SceneHost = nil then
+    Exit;
+  Surface := SceneHost.Canvas;
+  if Surface = nil then
+    Exit;
+  ClientClip(Area);
+  Surface.Push;
+  try
+    Surface.Clip(Area);
+    DrawImage(Surface, Area);
+    if Assigned(FOnPaintBackground) then
+      FOnPaintBackground(Self, Surface, Area);
+  finally
+    Surface.Pop;
+  end;
+end;
+
+function TScrollBox.SelectsForChildren: Boolean;
+begin
+  Result := True;
+end;
+
+{ A widget inside the scroll box which becomes selected, such as by the Tab
+  key, is scrolled into view }
+
+procedure TScrollBox.ChildSelected(Child: TWidget);
+begin
+  ScrollToWidget(Child);
+end;
+
+procedure TScrollBox.DoKeyDown(var Args: TSceneKeyArgs);
+var
+  Area: TRectF;
+begin
+  case Args.Key of
+    VK_UP, VK_DOWN, VK_LEFT, VK_RIGHT, VK_HOME, VK_END, VK_PRIOR, VK_NEXT: ;
+  else
+    inherited DoKeyDown(Args);
+    Exit;
+  end;
+  if Assigned(OnKeyDown) then
+    OnKeyDown(Self, Args);
+  if Args.Handled then
+    Exit;
+  Args.Handled := True;
+  Area := ClientArea;
+  case Args.Key of
+    VK_UP: FScrollY := FScrollY - LineSize;
+    VK_DOWN: FScrollY := FScrollY + LineSize;
+    VK_LEFT: FScrollX := FScrollX - LineSize;
+    VK_RIGHT: FScrollX := FScrollX + LineSize;
+    VK_HOME: FScrollY := 0;
+    VK_END: FScrollY := FContentHeight;
+    VK_PRIOR: FScrollY := FScrollY - Area.Height;
+    VK_NEXT: FScrollY := FScrollY + Area.Height;
+  end;
+  ClampScroll;
+end;
+
+procedure TScrollBox.DoMouseDown(var Args: TSceneMouseArgs);
+var
+  Area, Thumb: TRectF;
+begin
+  inherited DoMouseDown(Args);
+  if Args.Button <> buttonLeft then
+    Exit;
+  FDrag := boxDragNone;
+  Area := ClientArea;
+  if BarVisible(barVert) and BarRect(barVert).Contains(Args.X, Args.Y) then
+  begin
+    Thumb := ThumbRect(barVert);
+    if Thumb.Contains(Args.X, Args.Y) then
+    begin
+      FDrag := boxDragVert;
+      FDragOffset := Args.Y - Thumb.Y;
+    end
+    else
+    begin
+      { Clicking beside the thumb scrolls by a page }
+      if Args.Y < Thumb.Y then
+        FScrollY := FScrollY - Area.Height
+      else
+        FScrollY := FScrollY + Area.Height;
+      ClampScroll;
+    end;
+  end
+  else if BarVisible(barHorz) and BarRect(barHorz).Contains(Args.X, Args.Y) then
+  begin
+    Thumb := ThumbRect(barHorz);
+    if Thumb.Contains(Args.X, Args.Y) then
+    begin
+      FDrag := boxDragHorz;
+      FDragOffset := Args.X - Thumb.X;
+    end
+    else
+    begin
+      if Args.X < Thumb.X then
+        FScrollX := FScrollX - Area.Width
+      else
+        FScrollX := FScrollX + Area.Width;
+      ClampScroll;
+    end;
+  end;
+end;
+
+procedure TScrollBox.DoMouseMove(var Args: TSceneMouseArgs);
+begin
+  inherited DoMouseMove(Args);
+  if not (wsPressed in State) then
+    Exit;
+  case FDrag of
+    boxDragVert: DragThumb(barVert, Args.Y);
+    boxDragHorz: DragThumb(barHorz, Args.X);
+  end;
+end;
+
+procedure TScrollBox.DoMouseUp(var Args: TSceneMouseArgs);
+begin
+  inherited DoMouseUp(Args);
+  FDrag := boxDragNone;
+end;
+
+{ The wheel is passed on to the parents when there is nothing to scroll, so
+  a scroll box inside another one lets the outer one scroll }
+
+procedure TScrollBox.DoMouseWheel(var Args: TSceneWheelArgs);
+begin
+  if (skShift in Args.Shift) or not BarVisible(barVert) then
+  begin
+    if not BarVisible(barHorz) then
+      Exit;
+    FScrollX := FScrollX - Args.Delta * LineSize * 3;
+  end
+  else
+    FScrollY := FScrollY - Args.Delta * LineSize * 3;
+  ClampScroll;
+  Args.Handled := True;
+end;
+
 { TContainerWidget }
 
 var
@@ -6115,67 +6940,16 @@ end;
 
 function TVBox.Pack: Boolean;
 var
-  Child, Last: TWidget;
   S: TSizeF;
-  W, X, Y: Float;
-  A, B: Float;
+  W, H: Float;
 begin
   Result := inherited Pack;
   if not Result then
     Exit;
   S := Main.Theme.CalcSize(Self, tpEverything);
-  W := S.X;
-  X := 0;
-  for Child in Self do
-  begin
-    if Child.Unpacked then
-      Continue;
-    if not Child.Computed.Visible then
-      Continue;
-    if Child.FNeedsPack then
-      Child.Pack;
-  end;
-  for Child in Self do
-  begin
-    if Child.Unpacked then
-      Continue;
-    if not Child.Computed.Visible then
-      Continue;
-    X := Child.Margin * 2 + Child.Width;
-    if X > W then
-      W := X;
-  end;
-  Y := 0;
-  A := 0;
-  B := 0;
-  Last := nil;
-  for Child in Self do
-  begin
-    if Child.Unpacked then
-      Continue;
-    if not Child.Computed.Visible then
-      Continue;
-    B := Child.Margin;
-    if B > A then
-      Y := Y + B
-    else
-      Y := Y + A;
-    A := Child.Margin;
-    Child.Y := Y;
-    case Child.Align of
-      alignNear: Child.X := Child.Margin;
-      alignCenter: Child.X := (W - Child.Width) / 2;
-      alignFar: Child.X := W - Child.Width - Child.Margin;
-    end;
-    Y := Y + Child.Height;
-    Last := Child;
-  end;
-  if Last <> nil then
-    Y := Y + Last.Margin;
-  if Y < S.Y then
-    Y := S.Y;
+  StackChildren(Self, S.X, S.Y, W, H);
   FBounds.Width := W;
-  FBounds.Height := Y;
+  FBounds.Height := H;
 end;
 
 { TTheme }
@@ -6190,6 +6964,14 @@ begin
 end;
 
 procedure TTheme.PopMatrix;
+begin
+end;
+
+procedure TTheme.PushClip(const Rect: TRectF);
+begin
+end;
+
+procedure TTheme.PopClip;
 begin
 end;
 
