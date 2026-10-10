@@ -524,6 +524,8 @@ type
     procedure SetOpacity(Value: Float);
     function GetMatrix: IMatrix;
     procedure SetMatrix(Value: IMatrix);
+    function GetTextScale: Float;
+    procedure SetTextScale(Value: Float);
     function GetWinding: TWinding;
     procedure SetWinding(const Value: TWinding);
     function GetFillRule: TFillRule;
@@ -610,6 +612,9 @@ type
     property Opacity: Float read GetOpacity write SetOpacity;
     { Global rendering can be transformed using this property }
     property Matrix: IMatrix read GetMatrix write SetMatrix;
+    { The size of all text drawn and measured is multiplied by this property,
+      which is 1 by default }
+    property TextScale: Float read GetTextScale write SetTextScale;
     { Counter clockwise creates solid shapes and clockwise creates shapes with holes. }
     property Winding: TWinding read GetWinding write SetWinding;
     { The rule used by Fill to find holes in paths, fillWinding by default }
@@ -1080,6 +1085,7 @@ type
     LastPen: IPen;
     LastBrush: IBrush;
     LastFont: IFont;
+    TextScale: Float;
     { Clips from ClipStart to ClipCount - 1 make up the scissor in effect }
     Clips: array of TCanvasClip;
     ClipStart: Integer;
@@ -1168,6 +1174,8 @@ type
     procedure SetOpacity(Value: Float);
     function GetMatrix: IMatrix;
     procedure SetMatrix(Value: IMatrix);
+    function GetTextScale: Float;
+    procedure SetTextScale(Value: Float);
     function GetWinding: TWinding;
     procedure SetWinding(const Value: TWinding);
     function GetFillRule: TFillRule;
@@ -2221,6 +2229,7 @@ begin
   { The NanoVG backend follows the OpenGL version selected in render.inc }
   Ctx := nvgCreateGL(NVG_ANTIALIAS or NVG_STENCIL_STROKES);
   Opacity := 1;
+  TextScale := 1;
   Matrix := NewMatrix;
   M := Matrix as TMatrix;
   nvgPathWinding(Ctx, NVG_CCW);
@@ -2363,9 +2372,9 @@ begin
   if not HasChanged then
     Exit;
   nvgFontFaceId(Ctx, F.Id);
-  nvgFontSize(Ctx, F.Size);
+  nvgFontSize(Ctx, F.Size * TextScale);
   nvgFontBlur(Ctx, F.Blur);
-  nvgTextLetterSpacing(Ctx, F.LetterSpacing);
+  nvgTextLetterSpacing(Ctx, F.LetterSpacing * TextScale);
   nvgTextLineHeight(Ctx, F.LineSpacing);
   nvgTextAlign(Ctx, Aligns[F.Align] or Layouts[F.Layout]);
 end;
@@ -3178,6 +3187,24 @@ end;
 function TCanvas.GetMatrix: IMatrix;
 begin
   Result := Matrix;
+end;
+
+function TCanvas.GetTextScale: Float;
+begin
+  Result := TextScale;
+end;
+
+{ The font selected last is forgotten so that the next text drawn or measured
+  takes the new scale }
+
+procedure TCanvas.SetTextScale(Value: Float);
+begin
+  if Value <= 0 then
+    Value := 1;
+  if Value = TextScale then
+    Exit;
+  TextScale := Value;
+  LastFont := nil;
 end;
 
 procedure TCanvas.SetMatrix(Value: IMatrix);

@@ -128,6 +128,11 @@ type
     function TitleSize: Float; virtual; abstract;
     procedure Init(Canvas: ICanvas); virtual;
     procedure Fixup;
+    { A fixed size of the theme multiplied by the text scale of the canvas,
+      so widgets grow with their text. Sizes measured from text are already
+      scaled and must not be passed. }
+    function Scaled(Value: Float): Float; overload;
+    function Scaled(const Size: TSizeF): TSizeF; overload;
     property Pen: IPen read FPen;
   public
     procedure Render(Widget: TWidget; Stage: TPaintStage); override;
@@ -438,6 +443,16 @@ begin
   FGlyphHeight := Round(Canvas.MeasureText(Glyph, 'Wg').Y);
 end;
 
+function TCanvasTheme.Scaled(Value: Float): Float;
+begin
+  Result := Value * Canvas.TextScale;
+end;
+
+function TCanvasTheme.Scaled(const Size: TSizeF): TSizeF;
+begin
+  Result := NewPointF(Size.X * Canvas.TextScale, Size.Y * Canvas.TextScale);
+end;
+
 function TCanvasTheme.MeasureText(Font: IFont; const Text: string): TPointF;
 begin
   Result := Canvas.MeasureText(Font, Text);
@@ -492,7 +507,7 @@ begin
     F := Glyph;
     F.Color := CalcColor(Widget, colorText);
     S := F.Size;
-    F.Size := Rect.Height;
+    F.Size := Rect.Height / Canvas.TextScale;
   end
   else
   begin
@@ -1584,27 +1599,27 @@ begin
     else if Widget is TMemo then
       Result := NewPointF(260, 100)
     else if Widget is TEdit then
-      Result := NewPointF(160, 30)
+      Result := Scaled(NewPointF(160, 30))
     else if Widget is TPushButton then
     begin
       Result.X := MeasureText(Font, '[ ' + Widget.Text + ' ]').X;
-      Result.Y := 30;
-      if Result.X < 80 then
-        Result.X := 80;
+      Result.Y := Scaled(30);
+      if Result.X < Scaled(80) then
+        Result.X := Scaled(80);
     end
     else if Widget is TGlyphButton then
-      Result := NewPointF(30, 30)
+      Result := Scaled(NewPointF(30, 30))
     else if Widget is TGlyphImage then
-      Result := NewPointF(48, 48)
+      Result := Scaled(NewPointF(48, 48))
     else if Widget is TCheckBox then
     begin
       Result.X := MeasureText(Font, '[ ' + Widget.Text + ' ]').X + 24;
-      Result.Y := 24;
+      Result.Y := Scaled(24);
     end
     else if Widget is TSlider then
-      Result := NewPointF(150, 20)
+      Result := Scaled(NewPointF(150, 20))
     else if Widget is TSpinBox then
-      Result := NewPointF(150, 20)
+      Result := Scaled(NewPointF(150, 20))
     else if Widget is TLabel then
     begin
       M := TLabel(Widget).MaxWidth;
@@ -1635,7 +1650,7 @@ begin
   { Indentation }
   if Part = tpIndent then
   begin
-    Result := NewPointF(16, 0);
+    Result := Scaled(NewPointF(16, 0));
     Exit;
   end;
   { TWindow parts }
@@ -1644,14 +1659,14 @@ begin
       tpCaption:
         begin
           Result.X := Widget.Width;
-          Result.Y := 22;
+          Result.Y := Scaled(22);
         end;
 		else
     end;
   { TSlider parts }
   if Widget is TSlider then
     case Part of
-      tpThumb: Result := NewPointF(14, 14);
+      tpThumb: Result := Scaled(NewPointF(14, 14));
     else
     end;
   { TCheckBox parts }
@@ -2160,27 +2175,27 @@ begin
     else if Widget is TMemo then
       Result := NewPointF(260, 100)
     else if Widget is TEdit then
-      Result := NewPointF(160, 24)
+      Result := Scaled(NewPointF(160, 24))
     else if Widget is TPushButton then
     begin
       Result.X := MeasureText(Font, '[ ' + Widget.Text + ' ]').X;
-      Result.Y := 25;
-      if Result.X < 75 then
-        Result.X := 75;
+      Result.Y := Scaled(25);
+      if Result.X < Scaled(75) then
+        Result.X := Scaled(75);
     end
     else if Widget is TGlyphButton then
-      Result := NewPointF(30, 30)
+      Result := Scaled(NewPointF(30, 30))
     else if Widget is TGlyphImage then
-      Result := NewPointF(48, 48)
+      Result := Scaled(NewPointF(48, 48))
     else if Widget is TCheckBox then
     begin
       Result.X := MeasureText(Font, '[ ' + Widget.Text + ' ]').X + 24;
-      Result.Y := 24;
+      Result.Y := Scaled(24);
     end
     else if Widget is TSlider then
-      Result := NewPointF(150, 20)
+      Result := Scaled(NewPointF(150, 20))
     else if Widget is TSpinBox then
-      Result := NewPointF(150, 24)
+      Result := Scaled(NewPointF(150, 24))
     else if Widget is TLabel then
     begin
       M := TLabel(Widget).MaxWidth;
@@ -2211,7 +2226,7 @@ begin
   { Indentation }
   if Part = tpIndent then
   begin
-    Result := NewPointF(16, 0);
+    Result := Scaled(NewPointF(16, 0));
     Exit;
   end;
   { TWindow parts }
@@ -2220,14 +2235,14 @@ begin
       tpCaption:
         begin
           Result.X := Widget.Width;
-          Result.Y := 26;
+          Result.Y := Scaled(26);
         end;
     else
     end
   { TSlider parts }
   else if Widget is TSlider then
     case Part of
-      tpThumb: Result := NewPointF(8, 16);
+      tpThumb: Result := Scaled(NewPointF(8, 16));
     else
     end
   { TCheckBox parts }
@@ -2842,27 +2857,27 @@ begin
     else if Widget is TMemo then
       Result := NewPointF(260, 100)
     else if Widget is TEdit then
-      Result := NewPointF(160, 30)
+      Result := Scaled(NewPointF(160, 30))
     else if Widget is TPushButton then
     begin
       Result.X := MeasureText(Font, '[ ' + Widget.Text + ' ]').X;
-      Result.Y := 30;
-      if Result.X < 80 then
-        Result.X := 80;
+      Result.Y := Scaled(30);
+      if Result.X < Scaled(80) then
+        Result.X := Scaled(80);
     end
     else if Widget is TGlyphButton then
-      Result := NewPointF(30, 30)
+      Result := Scaled(NewPointF(30, 30))
     else if Widget is TGlyphImage then
-      Result := NewPointF(48, 48)
+      Result := Scaled(NewPointF(48, 48))
     else if Widget is TCheckBox then
     begin
       Result.X := MeasureText(Font, '[ ' + Widget.Text + ' ]').X + 24;
-      Result.Y := 24;
+      Result.Y := Scaled(24);
     end
     else if Widget is TSlider then
-      Result := NewPointF(150, 20)
+      Result := Scaled(NewPointF(150, 20))
     else if Widget is TSpinBox then
-      Result := NewPointF(150, 24)
+      Result := Scaled(NewPointF(150, 24))
     else if Widget is TLabel then
     begin
       M := TLabel(Widget).MaxWidth;
@@ -2893,7 +2908,7 @@ begin
   { Indentation }
   if Part = tpIndent then
   begin
-    Result := NewPointF(16, 0);
+    Result := Scaled(NewPointF(16, 0));
     Exit;
   end;
   { TWindow parts }
@@ -2902,14 +2917,14 @@ begin
       tpCaption:
         begin
           Result.X := Widget.Width;
-          Result.Y := 30;
+          Result.Y := Scaled(30);
         end;
     else
     end
   { TSlider parts }
   else if Widget is TSlider then
     case Part of
-      tpThumb: Result := NewPointF(14, 14);
+      tpThumb: Result := Scaled(NewPointF(14, 14));
     else
     end
   { TCheckBox parts }
@@ -3530,29 +3545,29 @@ begin
     else if Widget is TMemo then
       Result := NewPointF(260, 100)
     else if Widget is TEdit then
-      Result := NewPointF(160, ButtonHeight)
+      Result := NewPointF(Scaled(160), ButtonHeight)
     else if Widget is TPushButton then
     begin
       Font.Size := FontSize;
       Result.X := MeasureText(Font, '[ ' + Widget.Text + ' ]').X + 8;
       Result.Y := ButtonHeight;
-      if Result.X < 80 then
-        Result.X := 80;
+      if Result.X < Scaled(80) then
+        Result.X := Scaled(80);
     end
     else if Widget is TGlyphButton then
-      Result := NewPointF(30, 30)
+      Result := Scaled(NewPointF(30, 30))
     else if Widget is TGlyphImage then
-      Result := NewPointF(48, 48)
+      Result := Scaled(NewPointF(48, 48))
     else if Widget is TCheckBox then
     begin
       Font.Size := FontSize;
       Result.X := MeasureText(Font, '[ ' + Widget.Text + ' ]').X + 24;
-      Result.Y := 22;
+      Result.Y := Scaled(22);
     end
     else if Widget is TSlider then
-      Result := NewPointF(150, 22)
+      Result := Scaled(NewPointF(150, 22))
     else if Widget is TSpinBox then
-      Result := NewPointF(150, ButtonHeight)
+      Result := NewPointF(Scaled(150), ButtonHeight)
     else if Widget is TLabel then
     begin
       M := TLabel(Widget).MaxWidth;
@@ -3572,7 +3587,7 @@ begin
   end;
   if Part = tpIndent then
   begin
-    Result := NewPointF(16, 0);
+    Result := Scaled(NewPointF(16, 0));
     Exit;
   end;
   if Widget is TWindow then
@@ -3704,17 +3719,17 @@ end;
 
 function TExperienceTheme.CaptionHeight: Float;
 begin
-  Result := 28;
+  Result := Scaled(28);
 end;
 
 function TExperienceTheme.ButtonHeight: Float;
 begin
-  Result := 24;
+  Result := Scaled(24);
 end;
 
 function TExperienceTheme.ThumbSize: TSizeF;
 begin
-  Result := NewPointF(11, 20);
+  Result := Scaled(NewPointF(11, 20));
 end;
 
 { The thick blue frame }
@@ -4063,17 +4078,17 @@ end;
 
 function TVistaTheme.CaptionHeight: Float;
 begin
-  Result := 30;
+  Result := Scaled(30);
 end;
 
 function TVistaTheme.ButtonHeight: Float;
 begin
-  Result := 24;
+  Result := Scaled(24);
 end;
 
 function TVistaTheme.ThumbSize: TSizeF;
 begin
-  Result := NewPointF(11, 19);
+  Result := Scaled(NewPointF(11, 19));
 end;
 
 { The glass frame around the client area }
@@ -4408,17 +4423,17 @@ end;
 
 function TCupertinoTheme.CaptionHeight: Float;
 begin
-  Result := 28;
+  Result := Scaled(28);
 end;
 
 function TCupertinoTheme.ButtonHeight: Float;
 begin
-  Result := 24;
+  Result := Scaled(24);
 end;
 
 function TCupertinoTheme.ThumbSize: TSizeF;
 begin
-  Result := NewPointF(18, 18);
+  Result := Scaled(NewPointF(18, 18));
 end;
 
 function TCupertinoTheme.WindowRadius: Float;
