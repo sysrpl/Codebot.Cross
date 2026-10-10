@@ -53,6 +53,27 @@ type
     property WidgetMatrix: IMatrix read FWidgetMatrix write SetWidgetMatrix;
   end;
 
+{ TSimpleWidgetScene is a widget scene which needs no Render method. It
+  clears the scene and draws the widgets each frame, and the first time it
+  renders it places the widgets added to Widget in the middle of the scene.
+  They are placed once, so a window can still be dragged from there. Widgets
+  with a Sector are left where their sector puts them.
+
+  CloseEvent can be given to the OnClick of a button or the OnClose of a
+  window to end the program. }
+
+  TSimpleWidgetScene = class(TWidgetScene)
+  private
+    FCentered: Boolean;
+  protected
+    { Place the widgets added to Widget in the middle of the scene }
+    procedure CenterWidgets;
+  public
+    procedure Render; override;
+    { An event handler which closes the window of the host }
+    procedure CloseHandler(Sender: TObject);
+  end;
+
 implementation
 
 { TWidgetScene }
@@ -204,6 +225,42 @@ begin
       WidgetDialogHost := FWidget;
   end;
   Result := FWidget;
+end;
+
+{ TSimpleWidgetScene }
+
+procedure TSimpleWidgetScene.CenterWidgets;
+var
+  W: TWidget;
+  I: Integer;
+begin
+  for I := 0 to Widget.ChildCount - 1 do
+  begin
+    W := Widget.Child[I];
+    if W.Sector <> 0 then
+      Continue;
+    { Pack sizes the widget to fit what it holds }
+    W.Pack;
+    W.X := Round((Width - W.Width) / 2);
+    W.Y := Round((Height - W.Height) / 2);
+  end;
+end;
+
+procedure TSimpleWidgetScene.Render;
+begin
+  inherited Render;
+  if not FCentered then
+  begin
+    FCentered := True;
+    CenterWidgets;
+  end;
+  WidgetsRender;
+end;
+
+procedure TSimpleWidgetScene.CloseHandler(Sender: TObject);
+begin
+  if Host.Window <> nil then
+    Host.Window.Close;
 end;
 
 end.
