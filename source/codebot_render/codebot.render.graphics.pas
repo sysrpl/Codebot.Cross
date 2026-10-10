@@ -665,6 +665,7 @@ uses
   SysUtils, Classes,
   Codebot.Collections,
   Codebot.OpenGL,
+  Codebot.Render.Contexts,
   Codebot.Render.NanoVG;
 
 const
@@ -2377,9 +2378,15 @@ begin
   nvgBeginPath(Ctx);
 end;
 
+{ NanoVG draws with blending for premultiplied alpha and with culling and
+  depth testing off, and leaves them that way. The state of the render
+  context is put back when a frame ends, so what is drawn with OpenGL after
+  the canvas is not blended or tested as the canvas was. }
+
 procedure TCanvas.EndFrame;
 begin
   nvgEndFrame(Ctx);
+  RestoreContextState;
 end;
 
 procedure TCanvas.Flip(W, H: Integer);
@@ -2389,6 +2396,7 @@ begin
     if RenderBitmap <> nil then
       RenderBitmap.Unbind;
     nvgEndFrame(Ctx);
+    RestoreContextState;
     LastPen := nil;
     LastBrush := nil;
     LastFont := nil;

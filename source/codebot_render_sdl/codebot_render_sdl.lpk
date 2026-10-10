@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="5">
+  <Package Version="6">
     <Name Value="codebot_render_sdl"/>
     <Type Value="RunAndDesignTime"/>
     <CompilerOptions>
@@ -11,25 +11,24 @@
       </SearchPaths>
       <Other>
         <CompilerMessages>
-          <IgnoredMessages idx5024="True"/>
+          <IgnoredMessages idx5091="True" idx5024="True"/>
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="2">
-      <Item1>
+    <Files>
+      <Item>
         <Filename Value="codebot.render.application.pas"/>
         <UnitName Value="Codebot.Render.Application"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <Filename Value="codebot.platform.sdl.pas"/>
         <UnitName Value="Codebot.Platform.SDL"/>
-      </Item2>
+      </Item>
     </Files>
-    <CompatibilityMode Value="True"/>
-    <RequiredPkgs Count="1">
-      <Item1>
+    <RequiredPkgs>
+      <Item>
         <PackageName Value="codebot_render"/>
-      </Item1>
+      </Item>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

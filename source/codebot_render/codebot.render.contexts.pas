@@ -191,6 +191,12 @@ type
     procedure PushDepthWriting(DepthWriting: Boolean);
     { Restore previous ability to write to the depth buffer }
     procedure PopDepthWriting;
+    { Put the OpenGL state back to what the context keeps track of: blending
+      on with the straight alpha blend function, and culling, depth testing,
+      and depth writing as they were last pushed. It is for code which draws
+      with OpenGL outside of the context and leaves this state changed, as
+      the canvas does. }
+    procedure RestoreState;
     {$endregion}
     {$region viewports}
     { Get the current viewport }
@@ -322,6 +328,12 @@ type
 
 function Ctx: TRenderContext;
 
+{ RestoreContextState calls RestoreState of the render context of the current
+  thread, and does nothing when there is none. The canvas calls it when it
+  ends a frame. }
+
+procedure RestoreContextState;
+
 resourcestring
   SNoOpenGL = 'The OpenGL library could not be loaded';
   SNoContext = 'No context is available';
@@ -343,6 +355,12 @@ begin
   if InternalContext = nil then
     raise EContextError.Create(SNoContext);
   Result := TRenderContext(InternalContext);
+end;
+
+procedure RestoreContextState;
+begin
+  if InternalContext <> nil then
+    TRenderContext(InternalContext).RestoreState;
 end;
 
 { TContextManagedObject }
@@ -595,6 +613,24 @@ begin
   if FDepthWritingStack.Index < 0 then
     Exit;
   FDepthWriting := FDepthWritingStack.Pop;
+  if FDepthWriting then
+    glDepthMask(GL_TRUE)
+  else
+    glDepthMask(GL_FALSE);
+end;
+
+procedure TRenderContext.RestoreState;
+begin
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  if FCull then
+    glEnable(GL_CULL_FACE)
+  else
+    glDisable(GL_CULL_FACE);
+  if FDepthTest then
+    glEnable(GL_DEPTH_TEST)
+  else
+    glDisable(GL_DEPTH_TEST);
   if FDepthWriting then
     glDepthMask(GL_TRUE)
   else

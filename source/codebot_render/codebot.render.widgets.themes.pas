@@ -2179,6 +2179,8 @@ begin
     end
     else if Widget is TSlider then
       Result := NewPointF(150, 20)
+    else if Widget is TSpinBox then
+      Result := NewPointF(150, 24)
     else if Widget is TLabel then
     begin
       M := TLabel(Widget).MaxWidth;
@@ -2859,6 +2861,8 @@ begin
     end
     else if Widget is TSlider then
       Result := NewPointF(150, 20)
+    else if Widget is TSpinBox then
+      Result := NewPointF(150, 24)
     else if Widget is TLabel then
     begin
       M := TLabel(Widget).MaxWidth;

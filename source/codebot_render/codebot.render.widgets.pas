@@ -2820,7 +2820,6 @@ procedure TMainWidget.DispatchMouseDown(var Args: TSceneMouseArgs);
 var
   X0, Y0: Float;
   C, S, H: TWidget;
-  R: TRectF;
 begin
   FMousePos.X := Args.X;
   FMousePos.Y := Args.Y;
@@ -2860,7 +2859,6 @@ begin
     FHot := H;
     if FHot <> nil then
     begin
-      R := H.FComputed.Bounds;
       MouseLocal(H, Args);
       H.DoMouseDown(Args);
       FHot := H;
@@ -2884,7 +2882,6 @@ procedure TMainWidget.DispatchMouseMove(var Args: TSceneMouseArgs);
 var
   X0, Y0: Float;
   H: TWidget;
-  R: TRectF;
 begin
   FMousePos.X := Args.X;
   FMousePos.Y := Args.Y;
@@ -2897,7 +2894,6 @@ begin
     if FCapture <> nil then
     begin
       Args.Handled := True;
-      R := FCapture.FComputed.Bounds;
       H := FindWidget(Args.X, Args.Y);
       if H <> FCapture then
       begin
@@ -2922,7 +2918,6 @@ begin
       FHot.AddState(wsHot);
     if H <> nil then
     begin
-      R := H.FComputed.Bounds;
       MouseLocal(H, Args);
       H.DoMouseMove(Args);
     end;
@@ -2936,7 +2931,6 @@ procedure TMainWidget.DispatchMouseUp(var Args: TSceneMouseArgs);
 var
   X0, Y0: Float;
   H, C: TWidget;
-  R: TRectF;
 begin
   FMousePos.X := Args.X;
   FMousePos.Y := Args.Y;
@@ -2957,7 +2951,6 @@ begin
       C := FCapture;
       FCapture := nil;
       C.RemoveState(wsPressed);
-      R := C.FComputed.Bounds;
       MouseLocal(C, Args);
       C.DoMouseUp(Args);
       if C = H then
@@ -2965,7 +2958,6 @@ begin
     end
     else if H <> nil then
     begin
-      R := H.FComputed.Bounds;
       MouseLocal(H, Args);
       H.DoMouseUp(Args);
     end;
