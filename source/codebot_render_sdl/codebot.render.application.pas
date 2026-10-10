@@ -278,7 +278,9 @@ begin
   if Params.MultiSampling then
     Params.MultiSamples := FMultiSamples;
   OpenGLSetAttributes(Params);
-  Flags := SDL_WINDOW_OPENGL or SDL_WINDOW_SHOWN;
+  { The window is hidden until Run draws the first frame, otherwise it shows
+    white while the scene loads }
+  Flags := SDL_WINDOW_OPENGL or SDL_WINDOW_HIDDEN;
   if FSizeable then
     Flags := Flags or SDL_WINDOW_RESIZABLE;
   if not FDecorated then
@@ -345,6 +347,7 @@ var
   RenderContext: TRenderContext;
   Current: TSceneClass;
   Event: TSDL_Event;
+  Shown: Boolean;
 begin
   if SceneClass <> nil then
     FSceneClass := SceneClass;
@@ -367,6 +370,7 @@ begin
           FSecond := 0;
           SetSceneHost(Self);
           Current := nil;
+          Shown := False;
           try
             while not FTerminated do
             begin
@@ -402,6 +406,13 @@ begin
                 FFrameRate := FFrames;
                 FFrames := 0;
                 FSecond := FTime;
+              end;
+              { The window is shown once the scene has loaded, and the size is
+                read after showing it as a fullscreen window changes size then }
+              if not Shown then
+              begin
+                SDL_ShowWindow(FSDLWindow);
+                Shown := True;
               end;
               FContext.GetSize(FWidth, FHeight);
               FScene.Update(FWidth, FHeight, FTime);
