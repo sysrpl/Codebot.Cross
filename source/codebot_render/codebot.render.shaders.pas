@@ -279,24 +279,23 @@ begin
   end;
 end;
 
-constructor TShaderProgram.CreateFromAsset(const Name: string);
+{ Read the source of a shader from an asset }
+
+function AssetSource(const Name: string): string;
 var
-  V, F: string;
   S: TStream;
 begin
-  S := Ctx.GetAssetStream(Name + '.vert');
+  S := Ctx.GetAssetStream(Name);
   try
-    V := StreamReadStr(S);
+    Result := StreamReadStr(S);
   finally
     S.Free;
   end;
-  S := Ctx.GetAssetStream(Name + '.frag');
-  try
-    F := StreamReadStr(S);
-  finally
-    S.Free;
-  end;
-  CreateFromSource(V, F);
+end;
+
+constructor TShaderProgram.CreateFromAsset(const Name: string);
+begin
+  CreateFromSource(AssetSource(Name + '.vert'), AssetSource(Name + '.frag'));
 end;
 
 constructor TShaderProgram.CreateFromFile(const ProgramName: string);
@@ -308,13 +307,16 @@ constructor TShaderProgram.CreateFromFile(const VertFileName, FragFileName: stri
 var
   V, F: string;
 begin
-  V := VertFileName;
-  F := FragFileName;
-  if not FileExists(V) then
-    V := Ctx.GetAssetFile(V);
-  if not FileExists(F) then
-    F := Ctx.GetAssetFile(F);
-  CreateFromSource(FileReadStr(V), FileReadStr(F));
+  { A name which is not a file is the name of an asset }
+  if FileExists(VertFileName) then
+    V := FileReadStr(VertFileName)
+  else
+    V := AssetSource(VertFileName);
+  if FileExists(FragFileName) then
+    F := FileReadStr(FragFileName)
+  else
+    F := AssetSource(FragFileName);
+  CreateFromSource(V, F);
 end;
 
 procedure TShaderProgram.Push;
@@ -419,14 +421,14 @@ begin
     Result := nil;
   if Result = nil then
   begin
-    S := Ctx.GetAssetFile(PathCombine('shaders', AName));
+    S := AssetSource(PathCombine('shaders', AName));
     if AName.EndsWith('.vert') then
       Result := TVertexShader.Create
     else if AName.EndsWith('.frag') then
       Result := TFragmentShader.Create
     else
       raise EContextAssetError.Create(SAssetNotUnderstood);
-    Result.Compile(FileReadStr(S));
+    Result.Compile(S);
     Result.Name := AName;
   end;
 end;
@@ -434,7 +436,6 @@ end;
 function TShaderCollection.GetProg(const AName: string): TShaderProgram;
 var
   Item: TContextManagedObject;
-  S: string;
 begin
   Item := GetObject(AName);
   if (Item <> nil) and (Item is TShaderProgram) then
@@ -443,10 +444,9 @@ begin
     Result := nil;
   if Result = nil then
   begin
-    { A program is a pair of files named after the program ending in .vert
+    { A program is a pair of assets named after the program ending in .vert
       and .frag }
-    S := Ctx.GetAssetFile(PathCombine('shaders', AName + '.vert'));
-    Result := TShaderProgram.CreateFromFile(FileChangeExt(S, ''));
+    Result := TShaderProgram.CreateFromAsset(PathCombine('shaders', AName));
     Result.Name := AName;
   end;
 end;

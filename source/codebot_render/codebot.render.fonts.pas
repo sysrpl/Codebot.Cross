@@ -458,13 +458,17 @@ end;
 function TFontCollection.GetFont(const AName: string): TFont;
 var
   Item: TContextManagedObject;
-  S: string;
+  S: TStream;
 begin
   Item := GetObject(AName);
   if (Item <> nil) and (Item is TFont) then
     Exit(TFont(Item));
-  S := Ctx.GetAssetFile(PathCombine('fonts', AName + '.ttf'));
-  Result := TFont.Create(S);
+  S := Ctx.GetAssetStream(PathCombine('fonts', AName + '.ttf'));
+  try
+    Result := TFont.CreateFromStream(S);
+  finally
+    S.Free;
+  end;
   Result.Name := AName;
 end;
 

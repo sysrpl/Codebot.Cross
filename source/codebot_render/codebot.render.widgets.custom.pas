@@ -657,7 +657,7 @@ begin
     Exit;
   S := MarkDownFontFiles[Style];
   try
-    Result := Canvas.LoadFont(ChangeFileExt(S, ''), Ctx.GetAssetFile(FontRes + '/' + S));
+    Result := Canvas.LoadFontAsset(ChangeFileExt(S, ''), FontRes + '/' + S);
   except
     Result := nil;
   end;

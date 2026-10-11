@@ -493,6 +493,12 @@ type
     { Load the image from a resource of the program }
     function LoadBitmapResource(const Name, ResName: string;
       Mipmaps: Boolean = False): IBitmap;
+    { Load the image from an asset of the program, which is in its dat file
+      or is a file in its assets folder. AssetName is the path of the image
+      below the assets folder, such as 'cards/table.jpg'. See
+      Codebot.Render.Assets. }
+    function LoadBitmapAsset(const Name, AssetName: string;
+      Mipmaps: Boolean = False): IBitmap;
     { Release space used by a bitmap and dispose of the underlying resources. }
     procedure DisposeBitmap(Bitmap: IBitmap);
     { Check the store if a font exists using name as a the key.
@@ -505,6 +511,10 @@ type
     function LoadFont(const Name: string; Memory: Pointer; Size: LongWord): IFont; overload;
     { Load the font from a resource of the program }
     function LoadFontResource(const Name, ResName: string): IFont;
+    { Load the font from an asset of the program, which is in its dat file
+      or is a file in its assets folder. AssetName is the path of the font
+      below the assets folder, such as 'fonts/roboto.ttf'. }
+    function LoadFontAsset(const Name, AssetName: string): IFont;
     { Note: It is an intentional design that fonts cannot be disposed }
   end;
 
@@ -671,6 +681,7 @@ uses
   Codebot.Collections,
   Codebot.OpenGL,
   Codebot.Render.Contexts,
+  Codebot.Render.Assets,
   Codebot.Render.NanoVG;
 
 const
@@ -1120,12 +1131,15 @@ type
       Mipmaps: Boolean = False): IBitmap; overload;
     function LoadBitmapResource(const Name, ResName: string;
       Mipmaps: Boolean = False): IBitmap;
+    function LoadBitmapAsset(const Name, AssetName: string;
+      Mipmaps: Boolean = False): IBitmap;
     function CloneFont(Font: IFont): IFont;
     function NewFont(Id: Integer; const Name: string): IFont;
     function LoadFont(const Name: string): IFont; overload;
     function LoadFont(const Name: string; FileName: string): IFont; overload;
     function LoadFont(const Name: string; Memory: Pointer; Size: LongWord): IFont; overload;
     function LoadFontResource(const Name, ResName: string): IFont;
+    function LoadFontAsset(const Name, AssetName: string): IFont;
     { ICanvas }
     procedure Push;
     procedure Pop;
@@ -2574,6 +2588,40 @@ begin
   end;
 end;
 
+{ The image is read from the bytes of the asset, which are not needed once
+  the image has been made }
+
+function TCanvas.LoadBitmapAsset(const Name, AssetName: string;
+  Mipmaps: Boolean = False): IBitmap;
+var
+  S: TStream;
+  M: TMemoryStream;
+begin
+  Result := nil;
+  if Name = '' then
+    Exit;
+  Result := LoadBitmap(Name);
+  if Result <> nil then
+    Exit;
+  S := AssetRequire(AssetName);
+  try
+    if S is TCustomMemoryStream then
+      Result := LoadBitmap(Name, TCustomMemoryStream(S).Memory, S.Size, Mipmaps)
+    else
+    begin
+      M := TMemoryStream.Create;
+      try
+        M.LoadFromStream(S);
+        Result := LoadBitmap(Name, M.Memory, M.Size, Mipmaps);
+      finally
+        M.Free;
+      end;
+    end;
+  finally
+    S.Free;
+  end;
+end;
+
 procedure TCanvas.DisposeBitmap(Bitmap: IBitmap);
 begin
   if Bitmap is IRenderBitmap then
@@ -2662,6 +2710,30 @@ begin
   if F = nil then
     F := NewFont(nvgCreateFontMem(Ctx, Name, Memory, Size, False), Name);
   Result := CloneFont(F);
+end;
+
+{ A font keeps using the memory it was loaded from, so the bytes of a font in
+  a dat file are the ones the dat file keeps until the program ends }
+
+function TCanvas.LoadFontAsset(const Name, AssetName: string): IFont;
+var
+  F: IFont;
+  Data: Pointer;
+  Size: LongWord;
+  FileName: string;
+begin
+  Result := nil;
+  if Name = '' then
+    Exit;
+  F := Fonts.FindName(Name);
+  if F <> nil then
+    Result := CloneFont(F)
+  else if AssetPackData(AssetName, Data, Size) then
+    Result := LoadFont(Name, Data, Size)
+  else if AssetFindFile(AssetName, FileName) then
+    Result := LoadFont(Name, FileName)
+  else
+    AssetNotFound(AssetName);
 end;
 
 function TCanvas.LoadFontResource(const Name, ResName: string): IFont;

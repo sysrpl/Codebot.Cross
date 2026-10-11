@@ -1,0 +1,5 @@
+The Codebot.Render.Assets unit finds the assets of a program, which are the fonts, images, sounds, and other files it loads while it runs. An asset is named by its path below the assets folder, such as fonts/roboto.ttf.
+
+Assets are files in the assets folder unless the program has set an asset key. A program with a key keeps its assets in one dat file beside the program, named after it, such as cardgames.dat, when that file is there. Every byte of a dat file is changed with xor by the four bytes of the key. The program makes its own dat file when it is started with --build-dat, which the scene hosts handle before they open a window.
+
+AssetOpen opens an asset from either place as a stream, AssetExists tells if there is one, and AssetText reads one as text. The canvas, textures, and audio each have a method which loads from an asset by name.

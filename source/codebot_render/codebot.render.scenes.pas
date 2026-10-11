@@ -72,7 +72,12 @@ type
 
   A host calls PlatformDispatch from Codebot.Platform once a frame before
   updating its scene, so dialogs executed by the scene deliver their OnClose
-  events on the render thread. }
+  events on the render thread.
+
+  A program which sets AssetKey keeps its assets in a dat file beside the
+  program, when one is there, instead of in an assets folder. Such a program
+  makes its dat file when it is started with --build-dat, which a host
+  handles with BuildDat before it opens a window. See Codebot.Render.Assets. }
 
   TSceneHost = class(TComponent)
   protected
@@ -91,6 +96,13 @@ type
     { Hosts which own an OpenGL context apply VSync to it }
     function GetVSync: Boolean; virtual;
     procedure SetVSync(Value: Boolean); virtual;
+    function GetAssetKey: LongWord;
+    procedure SetAssetKey(Value: LongWord);
+    { BuildDat returns true if the program was started with --build-dat. The
+      dat file has then been built from the assets folder and ExitCode set,
+      and the host must end the program without running a scene. A host
+      calls this before it creates a window. }
+    function BuildDat: Boolean;
   public
     { The canvas used for vector graphics, sharing Ctx with the scenes }
     property Canvas: ICanvas read FCanvas;
@@ -112,6 +124,11 @@ type
     { When VSync is True each frame waits for the vertical sync of the
       display. It is used from the render thread. }
     property VSync: Boolean read GetVSync write SetVSync;
+    { The key of the dat file holding the assets of the program, which is
+      four bytes such as $A1B2C3D4. It is the same for every host, and is
+      set before a scene is run. Zero, the default, means there is no key,
+      and assets are then files in the assets folder. }
+    property AssetKey: LongWord read GetAssetKey write SetAssetKey;
   end;
 
 { The scene host which is current on the calling thread }
@@ -204,6 +221,9 @@ const
 
 implementation
 
+uses
+  Codebot.Render.Assets;
+
 threadvar
   CurrentHost: TSceneHost;
 
@@ -218,6 +238,21 @@ begin
 end;
 
 { TSceneHost }
+
+function TSceneHost.GetAssetKey: LongWord;
+begin
+  Result := Codebot.Render.Assets.AssetKey;
+end;
+
+procedure TSceneHost.SetAssetKey(Value: LongWord);
+begin
+  Codebot.Render.Assets.AssetKey := Value;
+end;
+
+function TSceneHost.BuildDat: Boolean;
+begin
+  Result := AssetBuildRequested;
+end;
 
 function TSceneHost.GetClipboard: string;
 begin

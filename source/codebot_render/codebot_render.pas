@@ -19,7 +19,8 @@ uses
   Codebot.Render.Widgets.Dialogs, Codebot.Interop.MPV, 
   Codebot.Render.Widgets.Video, Codebot.Interop.MiniMp3, 
   Codebot.Interop.Vorbis, Codebot.Interop.Xmp, Codebot.Hardware, 
-  Codebot.OpenGL.SDL, Codebot.Interop.MinGW, LazarusPackageIntf;
+  Codebot.OpenGL.SDL, Codebot.Interop.MinGW, Codebot.Render.Assets, 
+  LazarusPackageIntf;
 
 implementation
 

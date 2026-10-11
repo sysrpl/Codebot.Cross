@@ -52,6 +52,10 @@ type
     procedure LoadFromStream(Stream: TStream);
     { Load a texture from a file }
     procedure LoadFromFile(const FileName: string);
+    { Load a texture from an asset of the program, which is in its dat file
+      or is a file in its assets folder. Name is the path of the image below
+      the assets folder, such as 'cards/back.png'. }
+    procedure LoadFromAsset(const Name: string);
     { Output texture coords given x and y pixels }
     procedure Coord(X, Y: Integer; out V: TVec2);
     { Make the texture current optionally at a texture slot }
@@ -229,6 +233,18 @@ begin
   LoadFromBitmap(B);
 end;
 
+procedure TTexture.LoadFromAsset(const Name: string);
+var
+  S: TStream;
+begin
+  S := Ctx.GetAssetStream(Name);
+  try
+    LoadFromStream(S);
+  finally
+    S.Free;
+  end;
+end;
+
 procedure TTexture.Coord(X, Y: Integer; out V: TVec2);
 begin
   if FWidth < 1 then
@@ -313,7 +329,7 @@ end;
 function TTextureCollection.GetTexture(const AName: string): TTexture;
 var
   Item: TContextManagedObject;
-  S: string;
+  S: TStream;
 begin
   Item := GetObject(AName);
   if (Item <> nil) and (Item is TTexture) then
@@ -322,10 +338,16 @@ begin
     Result := nil;
   if Result = nil then
   begin
-    S := Ctx.GetAssetFile(PathCombine('textures', AName));
-    Result := TTexture.Create;
-    Result.Name := AName;
-    Result.LoadFromFile(S);
+    { The asset is found before the texture is made, so a name which is not
+      found leaves no texture behind }
+    S := Ctx.GetAssetStream(PathCombine('textures', AName));
+    try
+      Result := TTexture.Create;
+      Result.Name := AName;
+      Result.LoadFromStream(S);
+    finally
+      S.Free;
+    end;
   end;
 end;
 

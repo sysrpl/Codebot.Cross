@@ -156,6 +156,7 @@ implementation
 
 uses
   Math,
+  Codebot.Render.Assets,
   Codebot.Platform.SDL;
 
 { TStepThread calls Step on a scene at a fixed rate. An exception raised by
@@ -328,15 +329,15 @@ end;
   the canvas uses to delete its textures. }
 
 procedure TApplication.CreateCanvas;
-var
-  FontFile: string;
+const
+  DefaultFontAsset = 'fonts/roboto.ttf';
 begin
   FCanvas := NewCanvas;
   { Scenes may have no assets folder, so the default font is optional }
   FFont := nil;
-  if Ctx.FindAssetFile('fonts/roboto.ttf', FontFile) then
+  if AssetExists(DefaultFontAsset) then
   try
-    FFont := FCanvas.LoadFont('default', FontFile);
+    FFont := FCanvas.LoadFontAsset('default', DefaultFontAsset);
   except
     FFont := nil;
   end;
@@ -349,6 +350,10 @@ var
   Event: TSDL_Event;
   Shown: Boolean;
 begin
+  { Started with --build-dat the program builds its dat file and ends
+    without opening a window }
+  if (not FRunning) and BuildDat then
+    Exit;
   if SceneClass <> nil then
     FSceneClass := SceneClass;
   { A running application switches scenes on the next frame }

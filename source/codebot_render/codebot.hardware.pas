@@ -324,6 +324,10 @@ type
     function Add(const Name: string; const FileName: string): TAudioSource; overload;
     { Add a source from a stream, which is read from its start }
     function Add(const Name: string; Stream: TStream): TAudioSource; overload;
+    { Add a source from an asset of the program, which is in its dat file or
+      is a file in its assets folder. AssetName is the path of the sound
+      below the assets folder, such as 'sounds/ding.wav'. }
+    function AddAsset(const Name: string; const AssetName: string): TAudioSource;
     { Remove and destroy a source, unloading it from any bank }
     procedure Remove(Source: TAudioSource);
     { Find a source by name or return nil }
@@ -639,7 +643,7 @@ implementation
 
 uses
   Math, CTypes, Codebot.Platform, Codebot.Interop.SDL2, Codebot.Interop.MiniMp3,
-  Codebot.Interop.Vorbis, Codebot.Interop.Xmp;
+  Codebot.Interop.Vorbis, Codebot.Interop.Xmp, Codebot.Render.Assets;
 
 { Audio }
 
@@ -2008,6 +2012,18 @@ begin
   Result := TAudioSource.Create(Name, Data, Size);
   SetLength(FSources, Length(FSources) + 1);
   FSources[Length(FSources) - 1] := Result;
+end;
+
+function TAudio.AddAsset(const Name: string; const AssetName: string): TAudioSource;
+var
+  S: TStream;
+begin
+  S := AssetRequire(AssetName);
+  try
+    Result := Add(Name, S);
+  finally
+    S.Free;
+  end;
 end;
 
 procedure TAudio.Remove(Source: TAudioSource);

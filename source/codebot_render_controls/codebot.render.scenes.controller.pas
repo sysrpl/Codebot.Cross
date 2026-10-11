@@ -96,6 +96,9 @@ type
 
 implementation
 
+uses
+  Codebot.Render.Assets;
+
 { Input conversion }
 
 function ShiftKeys: TShiftKeys;
@@ -175,6 +178,10 @@ end;
 
 procedure TSceneController.OpenScene(Box: TGraphicsBox; SceneClass: TSceneClass);
 begin
+  { Started with --build-dat the program builds its dat file and ends
+    without showing a scene }
+  if BuildDat then
+    Halt(ExitCode);
   if Box <> FBox then
   begin
     { The render thread reads the box events, so they are only changed while
@@ -231,17 +238,17 @@ begin
 end;
 
 procedure TSceneController.BoxRenderStart(Sender: TObject);
-var
-  FontFile: string;
+const
+  DefaultFontAsset = 'fonts/roboto.ttf';
 begin
   if Assigned(FOnRenderStart) then
     FOnRenderStart(Sender);
   FCanvas := FBox.Canvas;
   { Scenes may have no assets folder, so the default font is optional }
   FFont := nil;
-  if Ctx.FindAssetFile('fonts/roboto.ttf', FontFile) then
+  if AssetExists(DefaultFontAsset) then
   try
-    FFont := FCanvas.LoadFont('default', FontFile);
+    FFont := FCanvas.LoadFontAsset('default', DefaultFontAsset);
   except
     FFont := nil;
   end;

@@ -145,7 +145,6 @@ type
     TBoolStack = TStack<Boolean>;
     TIntStack = TStack<Integer>;
   private var
-    FAssetFolder: string;
     FCull: Boolean;
     FCullStack: TBoolStack;
     FDepthTest: Boolean;
@@ -219,11 +218,16 @@ type
     procedure SaveToFile(const FileName: string);
     {$endregion}
     {$region assets and collections}
-    { Search for an asset stream first using a resource name then using
-      GetAssetFile.  }
+    { Search for an asset stream first using a resource name, then in the
+      dat file of the program if it has one, then as a file in the assets
+      folder. An EContextAssetError exception is raised if it is not found.
+      The stream must be freed. See Codebot.Render.Assets. }
     function GetAssetStream(const Name: string): TStream;
-    { Search upwards for an asset returning the valid filename or raise
-      an EContextAssetError exception }
+    { Search upwards for an asset which is a file in the assets folder,
+      returning the valid filename or raising an EContextAssetError
+      exception. An asset which is only in the dat file of the program has
+      no filename, so use GetAssetStream, or a method which loads from an
+      asset by name, to load assets from either place. }
     function GetAssetFile(const FileName: string): string;
     { Search upwards for an asset the same way as GetAssetFile, returning
       False instead of raising an exception if it cannot be found }
@@ -344,6 +348,9 @@ resourcestring
 
 
 implementation
+
+uses
+  Codebot.Render.Assets;
 
 { Each render thread has its own render context }
 
@@ -481,7 +488,6 @@ begin
   if not OpenGLInfo.IsValid then
     raise EContextError.Create(SNoOpenGL);
   InternalContext := Self;
-  FAssetFolder := 'assets';
   FProjectionCurrent.Identity;
   FModelviewCurrent.Identity;
   FMatrixChange := True;
@@ -733,32 +739,17 @@ end;
 
 {$region assets and collections}
 function TRenderContext.GetAssetStream(const Name: string): TStream;
-var
-  S: string;
 begin
   if ResLoadData(Name, Result) then
     Exit;
-  S := GetAssetFile(Name);
-  Result := TFileStream.Create(S, fmOpenRead);
+  Result := AssetOpen(Name);
+  if Result = nil then
+    raise EContextAssetError.CreateFmt(SAssetNotFound, [Name]);
 end;
 
 function TRenderContext.FindAssetFile(const FileName: string; out Path: string): Boolean;
-var
-  S: string;
-  I: Integer;
 begin
-  Path := '';
-  S := PathCombine(FAssetFolder, FileName);
-  for I := 0 to 9 do
-  begin
-    if FileExists(S) then
-    begin
-      Path := S;
-      Exit(True);
-    end;
-    S := PathCombine('..', S);
-  end;
-  Result := False;
+  Result := AssetFindFile(FileName, Path);
 end;
 
 function TRenderContext.GetAssetFile(const FileName: string): string;
@@ -769,7 +760,7 @@ end;
 
 procedure TRenderContext.SetAssetFolder(const Folder: string);
 begin
-  FAssetFolder := Folder;
+  AssetFolder := Folder;
 end;
 
 function TRenderContext.GetCollection(const Name: string): TContextCollection;
