@@ -21,6 +21,7 @@ unit Codebot.Render.Graphics;
 interface
 
 uses
+  Codebot.Platform,
   Codebot.System,
   Codebot.Graphics.Types,
   Codebot.Geometry;
@@ -489,6 +490,11 @@ type
       Mipmaps: Boolean = False): IBitmap; overload;
     { Load the image from memory }
     function LoadBitmap(const Name: string; Memory: Pointer; Size: LongWord;
+      Mipmaps: Boolean = False): IBitmap; overload;
+    { Load the image from the pixels of bitmap data, such as the result of
+      ResampleBitmap. The pixels are copied, so the bitmap data can be changed
+      or released afterwards. }
+    function LoadBitmap(const Name: string; Data: IBitmapData;
       Mipmaps: Boolean = False): IBitmap; overload;
     { Load the image from a resource of the program }
     function LoadBitmapResource(const Name, ResName: string;
@@ -1128,6 +1134,8 @@ type
     function LoadBitmap(const Name: string; FileName: string;
       Mipmaps: Boolean = False): IBitmap; overload;
     function LoadBitmap(const Name: string; Memory: Pointer; Size: LongWord;
+      Mipmaps: Boolean = False): IBitmap; overload;
+    function LoadBitmap(const Name: string; Data: IBitmapData;
       Mipmaps: Boolean = False): IBitmap; overload;
     function LoadBitmapResource(const Name, ResName: string;
       Mipmaps: Boolean = False): IBitmap;
@@ -2566,6 +2574,17 @@ begin
   Result := LoadBitmap(Name);
   if Result = nil then
     Result := NewBitmap(nvgCreateImageMem(Ctx, BitmapFlags(Mipmaps), Memory, Size), Name);
+end;
+
+function TCanvas.LoadBitmap(const Name: string; Data: IBitmapData;
+  Mipmaps: Boolean = False): IBitmap; overload;
+begin
+  Result := nil;
+  if Name = '' then
+    Exit;
+  Result := LoadBitmap(Name);
+  if Result = nil then
+    Result := NewBitmap(nvgCreateImageBitmap(Ctx, Data, BitmapFlags(Mipmaps)), Name);
 end;
 
 function TCanvas.LoadBitmapResource(const Name, ResName: string;
