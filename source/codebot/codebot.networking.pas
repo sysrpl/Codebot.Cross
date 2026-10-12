@@ -352,6 +352,8 @@ begin
     FHandle := socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if FHandle = INVALID_SOCKET then
     Exit(False);
+  SocketNoSigPipe(FHandle);
+  FillChar(Addr, SizeOf(Addr), 0);
   Addr.sin_family := AF_INET;
   Addr.sin_addr.s_addr := FAddress.Address;
   Addr.sin_port := htons(FPort);
@@ -421,6 +423,7 @@ begin
     FHandle := socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if FHandle = INVALID_SOCKET then
     Exit;
+  FillChar(Addr, SizeOf(Addr), 0);
   Addr.sin_family := AF_INET;
   if FAddress.Resolve then
     Addr.sin_addr.s_addr := FAddress.Address
@@ -468,6 +471,7 @@ begin
   if H = INVALID_SOCKET then
     Exit(False);
   Socket.FHandle := H;
+  SocketNoSigPipe(H);
   Socket.FAddress := TAddressName.Create(Addr.sin_addr.s_addr);
   Socket.FPort := ntohs(Addr.sin_port);
   Socket.FKind := FKind;
@@ -492,7 +496,11 @@ begin
   Result := WSAGetLastError;
 end;
 {$else}
+{$ifdef darwin}
+function __errno_location: PInteger; cdecl; external 'c' name '__error';
+{$else}
 function __errno_location: PInteger; cdecl; external 'c' name '__errno_location';
+{$endif}
 
 function GetErrno: Integer;
 begin
@@ -639,9 +647,6 @@ begin
   end;
 end;
 
-var
-  BytesWritten: Integer;
-
 function TSocket.WriteStream(Stream: TStream; Task: IAsyncTask = nil): Boolean;
 
   procedure DoProgress(Delta: Integer);
@@ -662,7 +667,6 @@ var
   S: string;
   I: Integer;
 begin
-  BytesWritten := 0;
   Result := False;
   Buffer := GetMem(BufferSize);
   try
@@ -672,11 +676,7 @@ begin
       if I < 1 then
         Exit(True);
       //S := StrCopyData(Buffer, I);
-
-      BytesWritten := BytesWritten + I;
-      System.WriteLn('BytesWritten ', I);
-      System.WriteLn('Hash ', HashBuffer(hashMD5, Buffer^, I).AsHex);
-      if WriteAll(Buffer, I) then
+      if WriteAll(Buffer^, I) then
       begin
         if IsCancelled then
           Break

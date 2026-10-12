@@ -20,6 +20,7 @@ uses
   Codebot.Graphics.Windows.InterfacedBitmap, 
   Codebot.Graphics.Windows.SurfaceD2D, 
   Codebot.Forms.ColorDialog, 
+  Codebot.Graphics.MacOS.SurfaceQuartz, 
   LazarusPackageIntf;
 
 implementation

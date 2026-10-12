@@ -150,6 +150,12 @@ const
   libssl = 'libssl.so.3';
   libcrypto = 'libcrypto.so.3';
 {$endif}
+{$ifdef darwin}
+  { OpenSSL is not part of macOS. These are base names, and the versioned
+    library is searched for in the Homebrew and MacPorts folders. }
+  libssl = 'libssl';
+  libcrypto = 'libcrypto';
+{$endif}
 
 function InitSSL(ThrowExceptions: Boolean = False): Boolean;
 function InitCrypto(ThrowExceptions: Boolean = False): Boolean;
@@ -161,6 +167,34 @@ var
   InitializedSSL: Boolean;
   LoadedCrypto: Boolean;
   InitializedCrypto: Boolean;
+
+{$ifdef darwin}
+{ Load OpenSSL 3, or else OpenSSL 1.1, by its plain name and then from the
+  Homebrew (Apple Silicon and Intel) and MacPorts folders. The unversioned
+  libssl.dylib and libcrypto.dylib in /usr/lib must never be loaded, because
+  macOS aborts any program which loads them. }
+
+function OpenSSLLoad(const Name: string; out FileName: string): HModule;
+const
+  Versions: array[0..1] of string = ('.3.dylib', '.1.1.dylib');
+  Folders: array[0..5] of string = ('', '/opt/homebrew/opt/openssl@3/lib/',
+    '/usr/local/opt/openssl@3/lib/', '/opt/local/lib/',
+    '/opt/homebrew/opt/openssl@1.1/lib/', '/usr/local/opt/openssl@1.1/lib/');
+var
+  V, F: string;
+begin
+  for V in Versions do
+    for F in Folders do
+    begin
+      FileName := F + Name + V;
+      Result := LibraryLoad(FileName);
+      if Result <> ModuleNil then
+        Exit;
+    end;
+  FileName := Name + Versions[0];
+  Result := ModuleNil;
+end;
+{$endif}
 
 function InitSSL(ThrowExceptions: Boolean = False): Boolean;
 var
@@ -198,7 +232,11 @@ begin
   Result := False;
   FailedModuleName := libssl;
   FailedProcName := '';
+  {$ifdef darwin}
+  Module := OpenSSLLoad(libssl, FailedModuleName);
+  {$else}
   Module := LibraryLoad(libssl);
+  {$endif}
   if Module = ModuleNil then
   begin
     CheckExceptions;
@@ -280,7 +318,11 @@ begin
   Result := False;
   FailedModuleName := libcrypto;
   FailedProcName := '';
+  {$ifdef darwin}
+  Module := OpenSSLLoad(libcrypto, FailedModuleName);
+  {$else}
   Module := LibraryLoad(FailedModuleName);
+  {$endif}
   if Module = ModuleNil then
   begin
     CheckExceptions;

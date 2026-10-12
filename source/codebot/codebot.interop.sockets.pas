@@ -70,15 +70,27 @@ type
   end;
 
   PSockAddrIn = ^TSockAddrIn;
+  { BSD derived systems such as macOS begin socket addresses with a length byte
+    followed by a one byte family, where others use a two byte family }
   TSockAddrIn = packed record
     case LongInt of
         0: (
+        {$ifdef darwin}
+        sin_len: Byte;
+        sin_family: Byte;
+        {$else}
         sin_family: Word;
+        {$endif}
         sin_port: Word;
         sin_addr: TInAddr;
         sin_zero: array[0..7] of AnsiChar);
       1: (
+        {$ifdef darwin}
+        sa_len: Byte;
+        sa_family: Byte;
+        {$else}
         sa_family: Word;
+        {$endif}
         sa_data: array[0..13] of AnsiChar);
   end;
 
@@ -87,8 +99,14 @@ type
 
   { Unix domain socket address, also supported on Windows 10 1803 and later }
   TUnixAddrIn = packed record
+    {$ifdef darwin}
+    len: Byte;
+    family: Byte;
+    path: array[0..103] of AnsiChar;
+    {$else}
     family: Word;
     path: array[0..107] of AnsiChar;
+    {$endif}
   end;
 
   PUnixAddr = ^TUnixAddr;
@@ -180,7 +198,8 @@ const
   IMPLINK_LOWEXPER = 156;
   IMPLINK_HIGHEXPER = 158;
 
-  {$ifdef unix}
+  { macOS has no MSG_NOSIGNAL, and SocketNoSigPipe is used instead }
+  {$if defined(unix) and not defined(darwin)}
   MSG_NOSIGNAL  = $4000;
   {$else}
   MSG_NOSIGNAL  = $0000;
@@ -249,6 +268,9 @@ const
   SO_RCVTIMEO = $1006; // receive timeout
   SO_ERROR = $1007; // get error status and clear
   SO_TYPE = $1008; // get socket type
+  {$ifdef darwin}
+  SO_NOSIGPIPE = $1022; // do not raise SIGPIPE when writing to a closed socket
+  {$endif}
 
 { Options for connect and disconnect data and options. Used only by
   non-TCP/IP transports such as DECNet, OSI TP4, etc. }
@@ -483,9 +505,19 @@ const
 
 function ioctlsocket(s: TSocketHandle; cmd: LongWord; var arg: LongWord): LongInt; apicall; libsocket;
 {$else}
+  {$ifdef darwin}
+  O_NONBLOCK = $0004;
+  {$else}
   O_NONBLOCK = 2048;
+  {$endif}
 
+{ fcntl is variadic, which matters on macOS for Apple Silicon where variadic
+  arguments are passed on the stack }
+{$ifdef darwin}
+function fcntl(s: TSocketHandle; cmd: LongInt): LongInt; cdecl; varargs; libsocket;
+{$else}
 function fcntl(s: TSocketHandle; cmd, arg: LongInt): LongInt; apicall; libsocket;
+{$endif}
 {$endif}
 
 { Socket routines }
@@ -557,7 +589,25 @@ function WSAGetLastError: LongInt; apicall; libsocket;
 
 function SocketsInit: Boolean;
 
+{ Stop writes to a socket closed by its peer from raising SIGPIPE, which would
+  end the program. This is needed on macOS, which has no MSG_NOSIGNAL, and does
+  nothing elsewhere. }
+procedure SocketNoSigPipe(S: TSocketHandle);
+
 implementation
+
+procedure SocketNoSigPipe(S: TSocketHandle);
+{$ifdef darwin}
+var
+  Value: LongInt;
+begin
+  Value := 1;
+  setsockopt(S, SOL_SOCKET, SO_NOSIGPIPE, @Value, SizeOf(Value));
+end;
+{$else}
+begin
+end;
+{$endif}
 
 {$ifdef windows}
 var

@@ -13,7 +13,9 @@ unit Codebot.IO.SerialPort;
 
 interface
 
-{$if defined(linux) or defined(windows)}
+{ TSerialPort is not supported on macOS, where the entire unit is ignored and
+  compiles empty }
+{$if (defined(linux) or defined(windows)) and not defined(darwin)}
 uses
   SysUtils, Classes, TypInfo;
 
@@ -118,7 +120,7 @@ procedure EnumSerialPorts(Ports: TStrings);
 
 implementation
 
-{$if defined(linux) or defined(windows)}
+{$if (defined(linux) or defined(windows)) and not defined(darwin)}
 {$ifdef linux}
 const
   O_RDWR = $02;

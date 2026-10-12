@@ -1,6 +1,6 @@
 { included by codebot.text.xml.pas }
 
-{$ifdef linux}
+{$ifdef unix}
 {$region xml interface}
 uses
   Codebot.Interop.Linux.Xml2;
@@ -745,7 +745,13 @@ begin
       begin
         B := xmlEncodeSpecialChars(FNode.doc, PChar(Value));
         xmlNodeSetContent(FNode, B);
+        { The macOS libxml2 rejects xmlMemFree for memory it did not allocate
+          with its debug allocator }
+        {$ifdef darwin}
+        xmlFree(B);
+        {$else}
         xmlMemFree(B);
+        {$endif}
       end;
     XML_DOCUMENT_NODE:
       SetXml(Value);

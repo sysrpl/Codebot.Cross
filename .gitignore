@@ -18,6 +18,9 @@ lib
 *.7z
 *.ico
 *.dbg
+*.app
+*.dSYM
+.DS_Store
 tools/bugout/bugout
 tools/bugout/lib/x86_64-linux/bugout.or
 examples/torment/torment

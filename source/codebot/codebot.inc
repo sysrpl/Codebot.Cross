@@ -28,6 +28,13 @@
   {$endif}
 {$endif}
 
+{$ifdef darwin}
+  {$define apicall := cdecl}
+  {$ifdef lclcocoa}
+    {$define platformok}
+  {$endif}
+{$endif}
+
 {$ifdef windows}
   {$define apicall := stdcall}
   {$ifdef lclwin32}

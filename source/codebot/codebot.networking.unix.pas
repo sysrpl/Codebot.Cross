@@ -80,6 +80,7 @@ begin
   H := socket(AF_UNIX, SOCK_STREAM, 0);
   if H = INVALID_SOCKET then
     Exit;
+  SocketNoSigPipe(H);
   FillChar(Addr, SizeOf(Addr), 0);
   Addr.family := AF_UNIX;
   Move(Path[1], Addr.path[0], Length(Path));

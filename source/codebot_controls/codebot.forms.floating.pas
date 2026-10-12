@@ -10,6 +10,9 @@
 unit Codebot.Forms.Floating;
 
 {$i ../codebot/codebot.inc}
+{$ifdef darwin}
+  {$modeswitch objectivec1}
+{$endif}
 
 interface
 
@@ -492,6 +495,112 @@ begin
   Result := False;
   if Assigned(DwmIsCompositionEnabled) then
     Result := (DwmIsCompositionEnabled(Enabled) = S_OK) and Enabled;
+end;
+
+procedure TFloatingForm.SetFaded(Value: Boolean);
+begin
+  if FFaded <> Value then
+  begin
+    FFaded := Value;
+    Visible := not FFaded;
+  end;
+end;
+{$elseif defined(darwin)}
+uses
+  CocoaAll;
+
+{ TFloatingForm }
+
+type
+  PFormBorderStyle = ^TFormBorderStyle;
+
+constructor TFloatingForm.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  BorderStyle := bsNone;
+  FOpacity := $FF;
+  FInteractive := True;
+end;
+
+procedure TFloatingForm.Loaded;
+begin
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+  inherited Loaded;
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+end;
+
+{ Make the window of a floating form see through wherever nothing is drawn,
+  and apply its opacity and whether it takes mouse input. The window is kept
+  as an untyped pointer and cast where it is used, because the compiler fails
+  when it writes dwarf 3 debug information for anything declared as an
+  Objective-C class. }
+
+procedure ApplyWindowStyle(Form: TFloatingForm);
+var
+  View: Pointer;
+begin
+  if Form.FWindow = nil then
+    Exit;
+  if csDesigning in Form.ComponentState then
+    Exit;
+  NSWindow(Form.FWindow).setOpaque(False);
+  NSWindow(Form.FWindow).setBackgroundColor(NSColor.clearColor);
+  { The shadow of a see through window follows what was drawn when it was
+    last calculated, which leaves a stale outline as the drawing changes }
+  NSWindow(Form.FWindow).setHasShadow(False);
+  NSWindow(Form.FWindow).setAlphaValue(Form.FOpacity / $FF);
+  { Setting this explicitly, even to false, also makes the window take mouse
+    input over its see through areas, which would otherwise pass through }
+  NSWindow(Form.FWindow).setIgnoresMouseEvents(not Form.FInteractive);
+  { The content of a form is a scroll view, which must not fill itself }
+  View := Pointer(Form.Handle);
+  if NSObject(View).isKindOfClass(NSScrollView) then
+    NSScrollView(View).setDrawsBackground(False);
+end;
+
+procedure TFloatingForm.CreateHandle;
+begin
+  PFormBorderStyle(@BorderStyle)^ := bsNone;
+  inherited CreateHandle;
+  FWindow := nil;
+  if HandleAllocated and not (csDesigning in ComponentState) then
+    FWindow := Pointer(NSView(Handle).window);
+  ApplyWindowStyle(Self);
+end;
+
+procedure TFloatingForm.SetInteractive(Value: Boolean);
+begin
+  if FInteractive <> Value then
+  begin
+    FInteractive := Value;
+    ApplyWindowStyle(Self);
+  end;
+end;
+
+procedure TFloatingForm.Paint;
+begin
+  inherited Paint;
+end;
+
+procedure TFloatingForm.MoveSize(Rect: TRectI);
+begin
+  SetBounds(Rect.Left, Rect.Top, Rect.Width, Rect.Height);
+end;
+
+procedure TFloatingForm.SetOpacity(Value: Byte);
+begin
+  if Value <> FOpacity then
+  begin
+    FOpacity := Value;
+    ApplyWindowStyle(Self);
+  end;
+end;
+
+{ Windows are always composited on macOS }
+
+function TFloatingForm.GetCompositing: Boolean;
+begin
+  Result := True;
 end;
 
 procedure TFloatingForm.SetFaded(Value: Boolean);

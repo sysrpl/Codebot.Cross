@@ -13,7 +13,8 @@ unit Codebot.Interop.Linux.Xml2;
 
 interface
 
-{$ifdef linux}
+{ Despite the unit name libxml2 is also used on macOS, which includes it }
+{$ifdef unix}
 uses
   Codebot.Core;
 
@@ -1133,7 +1134,11 @@ implementation
 {$ifdef unix}
 const
   libxml2 = 'libxml2.' + SharedSuffix;
+  {$ifdef darwin}
+  libxml22 = 'libxml2.2.' + SharedSuffix;
+  {$else}
   libxml22 = libxml2 + '.2';
+  {$endif}
 
 var
   Loaded: Boolean;
@@ -1401,6 +1406,11 @@ begin
     TryLoad('xmlFree', @xmlFree);
   if not Result then
     Exit;
+  {$ifdef darwin}
+  { xmlFree is a global variable holding a function pointer, so the address
+    found is that of the variable. Read the function pointer stored in it. }
+  @xmlFree := PPointer(@xmlFree)^;
+  {$endif}
   FailedModuleName := '';
   FailedProcName := '';;
   Initialized := True;

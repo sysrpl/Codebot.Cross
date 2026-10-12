@@ -210,7 +210,8 @@ function XmlValidate(const Xml: string): Boolean;
 
 implementation
 
-{$ifdef linux}
+{ libxml2 is used on Linux and macOS }
+{$ifdef unix}
   {$i codebot.text.xml.linux.inc}
 {$endif}
 {$ifdef windows}

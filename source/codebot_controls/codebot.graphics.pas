@@ -496,7 +496,7 @@ procedure ThemeNotifyRemove(Event: TMethodEvent);
 { Fill strings with the names of registered themes }
 procedure ThemeNames(Strings: TStrings);
 
-{ The name of the drawing backend in use, Cairo or Direct2D }
+{ The name of the drawing backend in use, Cairo, Direct2D, or Quartz }
 function GraphicsEngine: string;
 
 implementation
@@ -689,6 +689,92 @@ end;
 function NewScreenCapture: IBitmap;
 begin
   Result := NewScreenCaptureD2D;
+end;
+{$endif}
+{$ifdef darwin}
+uses
+  Codebot.Platform.LCL,
+  Codebot.Graphics.MacOS.SurfaceQuartz;
+
+function NewMatrix: IMatrix;
+begin
+  Result := NewMatrixQuartz;
+end;
+
+function NewPen(Brush: IBrush; Width: Float = 1; Join: TLineJoin = jnMiter): IPen; overload;
+begin
+  Result := NewPenQuartz(Brush, Width);
+  Result.LineJoin := Join;
+  Result.LineCap := JoinCaps[Join];
+end;
+
+function NewPen(Color: TColorB; Width: Float = 1; Join: TLineJoin = jnMiter): IPen;
+begin
+  Result := NewPenQuartz(Color, Width);
+  Result.LineJoin := Join;
+  Result.LineCap := JoinCaps[Join];
+end;
+
+function NewBrush(Color: TColorB): ISolidBrush;
+begin
+  Result := NewSolidBrushQuartz(Color);
+end;
+
+function NewBrush(Bitmap: IBitmap): IBitmapBrush;
+begin
+  Result := NewBitmapBrushQuartz(Bitmap);
+end;
+
+function NewBrush(X1, Y1, X2, Y2: Float): ILinearGradientBrush;
+begin
+  Result := NewLinearGradientBrushQuartz(X1, Y1, X2, Y2);
+end;
+
+function NewBrush(const A, B: TPointF): ILinearGradientBrush;
+begin
+  Result := NewLinearGradientBrushQuartz(A, B);
+end;
+
+function NewBrush(const Rect: TRectF): IRadialGradientBrush;
+begin
+  Result := NewRadialGradientBrushQuartz(Rect);
+end;
+
+function NewFont(const FontName: string; FontSize: Integer = 10): IFont;
+begin
+  Result := NewFontQuartz(FontName, FontSize);
+end;
+
+function NewFont(Font: TFont = nil): IFont;
+begin
+  Result := NewFontQuartz(Font);
+  if (Font = nil) or (Font.Color = clDefault) then
+    Result.Color := ColorToRGB(clWindowText);
+end;
+
+function NewSurface(Canvas: TCanvas): ISurface;
+begin
+  Result := NewSurfaceQuartz(Canvas);
+end;
+
+function NewSurface(Control: TWinControl): ISurface;
+begin
+  Result := NewSurfaceQuartz(Control);
+end;
+
+function NewBitmap(Width: Integer = 0; Height: Integer = 0): IBitmap;
+begin
+  Result := NewBitmapQuartz(Width, Height);
+end;
+
+function NewSplash: ISplash;
+begin
+  Result := NewSplashQuartz;
+end;
+
+function NewScreenCapture: IBitmap;
+begin
+  Result := NewScreenCaptureQuartz;
 end;
 {$endif}
 
@@ -3235,6 +3321,9 @@ begin
   {$endif}
   {$ifdef windows}
   Result := 'Direct2D';
+  {$endif}
+  {$ifdef darwin}
+  Result := 'Quartz';
   {$endif}
 end;
 

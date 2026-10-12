@@ -19,7 +19,7 @@
         <UsageCount Value="31"/>
         <IsVisibleTab Value="True"/>
         <TopLine Value="13"/>
-        <CursorPos X="39" Y="18"/>
+        <CursorPos X="39" Y="30"/>
       </Unit>
       <Unit>
         <Filename Value="docker.spacing.pas"/>
