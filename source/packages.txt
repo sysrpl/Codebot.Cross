@@ -126,6 +126,7 @@ Programs that use the library should list Codebot.System first in their uses cla
 | codebot_render_controls | The LCL host of codebot_render, which runs scenes inside a TGraphicsBox on a form. | codebot_render, codebot_controls, LCL | Runtime |
 | codebot_render_design | Registers TGraphicsBox with the IDE. | codebot_render_controls | Design time |
 | codebot_render_sdl | The SDL host of codebot_render, which runs scenes in an SDL window without the LCL. | codebot_render | Runtime |
+| codebot_render_sdl_design | Adds the Codebot rendering project to the new project dialog of the IDE. | IDEIntf | Design time |
 | codebot_terminal | TTerminal, a terminal emulator control built on the VTE library. | codebot, LCL | Runtime |
 | codebot_terminal_design | Registers TTerminal with the IDE and adds a Terminal window to the IDE. | codebot_terminal, IDEIntf | Design time |
 | codebot_webkit | TWebBrowser, a web browser control built on WebKitGTK, with an address bar and a status indicator. | codebot_controls, LCL | Runtime |

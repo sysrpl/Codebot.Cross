@@ -255,6 +255,7 @@ begin
   for R := Low(GlyphRanges) to High(GlyphRanges) do
     Inc(Count, GlyphRanges[R, 1] - GlyphRanges[R, 0] + 1);
   SetLength(FGlyphs, Count);
+  Places := nil;
   SetLength(Places, Count);
   Count := 0;
   for R := Low(GlyphRanges) to High(GlyphRanges) do
@@ -302,6 +303,7 @@ begin
   end;
   AtlasHeight := PenY + RowHeight + GlyphPadding;
   { Render the glyphs as coverage values }
+  Coverage := nil;
   SetLength(Coverage, AtlasWidth * AtlasHeight);
   FillChar(Coverage[0], Length(Coverage), 0);
   for I := 0 to Count - 1 do
@@ -316,6 +318,7 @@ begin
     Glyph.T1 := (Places[I].Y + Places[I].H) / AtlasHeight;
   end;
   { Expand coverage to white pixels with coverage in alpha }
+  Pixels := nil;
   SetLength(Pixels, Length(Coverage) * 4);
   J := 0;
   for I := 0 to Length(Coverage) - 1 do

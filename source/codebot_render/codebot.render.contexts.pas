@@ -695,6 +695,7 @@ begin
   Bitmap.SetSize(W, H);
   if (W < 1) or (H < 1) then
     Exit;
+  Data := nil;
   SetLength(Data, W * H * 4);
   glPixelStorei(GL_PACK_ALIGNMENT, 4);
   glReadPixels(FViewport.X, FViewport.Y, W, H, GL_RGBA, GL_UNSIGNED_BYTE,

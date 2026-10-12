@@ -151,12 +151,16 @@ function xmp_set_player(c: TXmpContext; param, val: cint): cint; cdecl; external
 
 implementation
 
+{$ifdef windows}
 uses
   { On Windows the C runtime is linked by Codebot.Interop.MinGW }
   Codebot.Interop.MinGW;
+{$endif}
 
-{ Prebuilt in shared/libs for x86_64-linux, aarch64-linux and x86_64-win64 }
-{$if defined(win64) or (defined(linux) and (defined(cpux86_64) or defined(cpuaarch64)))}
+{ Prebuilt in shared/libs for x86_64-linux, aarch64-linux, x86_64-win64 and
+  x86_64-darwin }
+{$if defined(win64) or (defined(linux) and (defined(cpux86_64) or defined(cpuaarch64))) or
+  (defined(darwin) and defined(cpux86_64))}
   {$linklib libcodebotaudio.a}
 {$else}
   {$error libcodebotaudio.a is not built for this target, run source/audio/build.sh to build it}

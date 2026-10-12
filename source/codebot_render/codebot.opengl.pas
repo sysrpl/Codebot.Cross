@@ -4849,10 +4849,18 @@ const
   LibName = 'opengl32.dll';
   ProcAddressName = 'wglGetProcAddress';
 {$endif}
+{$ifdef darwin}
+const
+  { OpenGL on macOS has no routine which looks up functions by name. Every
+    function is exported by the framework itself. }
+  LibName = '/System/Library/Frameworks/OpenGL.framework/OpenGL';
+{$endif}
 
 var
   Lib: HModule;
+  {$ifndef darwin}
   ProcAddress: function(Name: PChar): Pointer; apicall;
+  {$endif}
 
 function DefaultGetProc(Name: PChar): Pointer;
 begin
@@ -4862,10 +4870,14 @@ begin
     Lib := LibraryLoad(LibName);
     if Lib = 0 then
       Exit;
+    {$ifndef darwin}
     ProcAddress := LibraryGetProc(Lib, ProcAddressName);
+    {$endif}
   end;
+  {$ifndef darwin}
   if @ProcAddress <> nil then
     Result := ProcAddress(Name);
+  {$endif}
   {$ifdef windows}
   { wglGetProcAddress may return small values instead of nil on failure }
   if (UIntPtr(Result) < 4) or (IntPtr(Result) = -1) then
@@ -6545,8 +6557,9 @@ begin
   Result.Depth := 24;
   Result.Stencil := 8;
   { Multisampling is off by default on the Raspberry Pi, where it costs too
-    much at 1080p }
-  {$ifdef raspberrypi}
+    much at 1080p, and on macOS, where it costs too much on integrated
+    graphics }
+  {$if defined(raspberrypi) or defined(darwin)}
   Result.MultiSampling := False;
   Result.MultiSamples := 0;
   {$else}

@@ -8,9 +8,18 @@
       <SearchPaths>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Conditionals Value="// On macOS the SDL2, SDL2_image and assimp libraries are found through
+// run paths. Programs using this package look for them next to the
+// executable, in the Frameworks folder of an application bundle, and in
+// the shared libs folder of Codebot.
+// The libraries need macOS 10.13, High Sierra, so programs are linked for it.
+if TargetOS = 'darwin' then begin
+  UsageLinkerOptions += ' -rpath @executable_path -rpath @executable_path/../Frameworks -rpath $PkgDir(codebot_render)../../shared/libs/$(TargetCPU)-$(TargetOS)';
+  UsageCustomOptions += ' -WM10.13';
+end;"/>
       <Other>
         <CompilerMessages>
-          <IgnoredMessages idx5024="True"/>
+          <IgnoredMessages idx6058="True" idx5024="True" idx5023="True"/>
         </CompilerMessages>
       </Other>
     </CompilerOptions>

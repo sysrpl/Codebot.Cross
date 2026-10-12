@@ -456,7 +456,7 @@ var
   B, TopDict, TopDictIdx: TStbttBuf;
   CsType, CharStrings, FdArrayOff, FdSelectOff: UInt32;
 begin
-  FillChar(Info, SizeOf(Info), 0);
+  Info := Default(TStbttFontInfo);
   Result := False;
   Info.Data := Data;
   Info.FontStart := FontStart;
@@ -1052,7 +1052,7 @@ type
 
 procedure stbtt__csctx_init(out C: TStbttCsCtx; Bounds: Boolean);
 begin
-  FillChar(C, SizeOf(C), 0);
+  C := Default(TStbttCsCtx);
   C.Bounds := Bounds;
 end;
 
@@ -1177,10 +1177,12 @@ begin
 end;
 
 function stbtt__run_charstring(const Info: TStbttFontInfo; GlyphIndex: Integer; var C: TStbttCsCtx): Boolean;
+type
+  TStack = array[0..47] of Single;
 var
   InHeader, HasSubrs, ClearStack, Alternate: Boolean;
   MaskBits, SubrStackHeight, SP, V, I, B0, B1: Integer;
-  S: array[0..47] of Single;
+  S: TStack;
   SubrStack: array[0..9] of TStbttBuf;
   Subrs, B: TStbttBuf;
   F, DX1, DX2, DX3, DX4, DX5, DX6, DY1, DY2, DY3, DY4, DY5, DY6, DX, DY: Single;
@@ -1195,7 +1197,7 @@ var
 
 begin
   Result := False;
-  FillChar(S, SizeOf(S), 0);
+  S := Default(TStack);
   InHeader := True;
   MaskBits := 0;
   SubrStackHeight := 0;
@@ -2176,7 +2178,7 @@ var
   Scanline, Scanline2: PSingle;
   ScanYTop, ScanYBottom, Sum, K: Single;
 begin
-  FillChar(HH, SizeOf(HH), 0);
+  HH := Default(TStbttHHeap);
   Active := nil;
   J := 0;
   if Bitmap.W > 64 then

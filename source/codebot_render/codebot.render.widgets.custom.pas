@@ -9,7 +9,6 @@ uses
   Codebot.System,
   Codebot.Graphics.Types,
   Codebot.Render.Graphics,
-  Codebot.Render.Contexts,
   Codebot.Render.Widgets,
   Codebot.Render.Widgets.Themes;
 

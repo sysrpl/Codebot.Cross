@@ -184,6 +184,7 @@ begin
     LoadFromData(0, 0, nil);
     Exit;
   end;
+  Data := nil;
   SetLength(Data, Bitmap.Width * Bitmap.Height * 4);
   Source := Bitmap.Pixels;
   Dest := @Data[0];

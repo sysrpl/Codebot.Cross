@@ -262,7 +262,6 @@ uses
 
 const
   FONS_UTF8_ACCEPT = 0;
-  FONS_UTF8_REJECT = 12;
 
 function fons__hashint(A: Cardinal): Cardinal;
 begin

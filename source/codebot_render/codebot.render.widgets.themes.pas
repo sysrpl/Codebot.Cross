@@ -8,7 +8,6 @@ uses
   Codebot.System,
   Codebot.Graphics.Types,
   Codebot.Render.Graphics,
-  Codebot.Render.Contexts,
   Codebot.Render.Widgets;
 
 { Themes load their fonts from the fonts folder of the render context assets }

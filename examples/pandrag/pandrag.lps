@@ -8,16 +8,15 @@
       <Unit>
         <Filename Value="pandrag.lpr"/>
         <Loaded Value="True"/>
-        <UsageCount Value="95"/>
-        <EditorIndex Value="1"/>
+        <UsageCount Value="96"/>
+        <EditorIndex Value="3"/>
         <CursorPos X="18" Y="6"/>
       </Unit>
       <Unit>
         <Filename Value="main.pas"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
-        <UsageCount Value="95"/>
-        <IsVisibleTab Value="True"/>
+        <UsageCount Value="96"/>
         <TopLine Value="100"/>
         <CursorPos X="18" Y="109"/>
       </Unit>
@@ -66,8 +65,26 @@
         <TopLine Value="54"/>
         <CursorPos X="13" Y="70"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\..\source\codebot_render\codebot.render.assets.pas"/>
+        <UnitName Value="Codebot.Render.Assets"/>
+        <Loaded Value="True"/>
+        <UsageCount Value="10"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="293"/>
+        <CursorPos X="19" Y="312"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\fpc\rtl\objpas\classes\classesh.inc"/>
+        <Loaded Value="True"/>
+        <UsageCount Value="10"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="1020"/>
+        <CursorPos X="14" Y="1032"/>
+      </Unit>
     </Units>
-    <JumpHistory HistoryIndex="6">
+    <JumpHistory HistoryIndex="8">
       <Position>
         <Filename Value="main.pas"/>
         <Caret Line="38" TopLine="19"/>
@@ -95,6 +112,14 @@
       <Position>
         <Filename Value="main.pas"/>
         <Caret Line="117" Column="35" TopLine="102"/>
+      </Position>
+      <Position>
+        <Filename Value="main.pas"/>
+        <Caret Line="109" Column="18" TopLine="100"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\source\codebot_render\codebot.render.assets.pas"/>
+        <Caret Line="312" Column="19" TopLine="293"/>
       </Position>
     </JumpHistory>
     <RunParams>

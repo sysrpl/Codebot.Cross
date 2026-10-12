@@ -440,7 +440,9 @@ begin
   Result := nil;
   if not OpenGLInfoPrivate.IsValid then
     Exit;
+  {$push}{$warn 4055 off}
   W := PSDL_Window(Window);
+  {$pop}
   if W = nil then
     Exit;
   OpenGLSetAttributes(Params);

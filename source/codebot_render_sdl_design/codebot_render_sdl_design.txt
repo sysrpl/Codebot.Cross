@@ -1,0 +1,3 @@
+The codebot_render_sdl_design package is the design time package of codebot_render_sdl. It is installed in the Lazarus IDE and is not used by programs. The package requires only IDEIntf, so it can be installed on every system.
+
+Codebot.Render.Sdl.Registration adds the Codebot rendering project to the new project dialog of the IDE. The project it creates runs a scene in an SDL window using Codebot.Render.Application.

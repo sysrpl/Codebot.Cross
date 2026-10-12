@@ -883,7 +883,9 @@ end;
 
 function Offset(Vertex, Field: Pointer): Pointer; inline;
 begin
+  {$push}{$warn 4055 off}
   Result := Pointer(PtrUInt(Field) - PtrUInt(Vertex));
+  {$pop}
 end;
 
 { TFlatVertex }

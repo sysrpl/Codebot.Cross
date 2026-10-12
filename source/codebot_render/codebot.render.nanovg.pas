@@ -1072,7 +1072,7 @@ begin
     Exit(nil);
   end;
   { Init font rendering }
-  FillChar(FontParams, SizeOf(FontParams), 0);
+  FontParams := Default(TFonsParams);
   FontParams.Width := NVG_INIT_FONTIMAGE_SIZE;
   FontParams.Height := NVG_INIT_FONTIMAGE_SIZE;
   FontParams.Flags := FONS_ZERO_TOPLEFT;
@@ -1664,7 +1664,7 @@ const
 var
   DX, DY, D: Single;
 begin
-  FillChar(Result, SizeOf(Result), 0);
+  Result := Default(TNVGpaint);
   { Calculate transform aligned to the line }
   DX := EX - SX;
   DY := EY - SY;
@@ -1696,7 +1696,7 @@ var
 begin
   R := (InR + OutR) * 0.5;
   F := OutR - InR;
-  FillChar(Result, SizeOf(Result), 0);
+  Result := Default(TNVGpaint);
   nvgTransformIdentity(Result.XForm);
   Result.XForm[4] := CX;
   Result.XForm[5] := CY;
@@ -1710,7 +1710,7 @@ end;
 
 function nvgBoxGradient(Ctx: PNVGcontext; X, Y, W, H, R, F: Single; ICol, OCol: TNVGcolor): TNVGpaint;
 begin
-  FillChar(Result, SizeOf(Result), 0);
+  Result := Default(TNVGpaint);
   nvgTransformIdentity(Result.XForm);
   Result.XForm[4] := X + W * 0.5;
   Result.XForm[5] := Y + H * 0.5;
@@ -1724,7 +1724,7 @@ end;
 
 function nvgImagePattern(Ctx: PNVGcontext; OX, OY, EX, EY, Angle: Single; Image: Integer; Alpha: Single): TNVGpaint;
 begin
-  FillChar(Result, SizeOf(Result), 0);
+  Result := Default(TNVGpaint);
   nvgTransformRotate(Result.XForm, Angle);
   Result.XForm[4] := OX;
   Result.XForm[5] := OY;
@@ -2152,6 +2152,7 @@ begin
     end;
     Exit;
   end;
+  Areas := nil;
   SetLength(Areas, Cache.NPaths);
   Largest := -1;
   Biggest := 0;
@@ -3986,7 +3987,6 @@ const
   NSVG_SHADER_IMG = 3;
 
   { GLNVGcallType }
-  GLNVG_NONE = 0;
   GLNVG_FILL = 1;
   GLNVG_CONVEXFILL = 2;
   GLNVG_STROKE = 3;
@@ -4013,7 +4013,6 @@ type
     Flags: Integer;
   end;
 
-  PGLNVGblend = ^TGLNVGblend;
   TGLNVGblend = record
     SrcRGB: GLenum;
     DstRGB: GLenum;
@@ -4273,7 +4272,7 @@ begin
     Str[1] := Opts
   else
     Str[1] := '';
-  FillChar(Shader, SizeOf(Shader), 0);
+  Shader := Default(TGLNVGshader);
   Prog := glCreateProgram;
   Vert := glCreateShader(GL_VERTEX_SHADER);
   Frag := glCreateShader(GL_FRAGMENT_SHADER);
@@ -5297,7 +5296,7 @@ var
   GL: PGLNVGcontext;
 begin
   GL := AllocMem(SizeOf(TGLNVGcontext));
-  FillChar(Params, SizeOf(Params), 0);
+  Params := Default(TNVGparams);
   Params.RenderCreate := glnvg__renderCreate;
   Params.RenderCreateTexture := glnvg__renderCreateTexture;
   Params.RenderDeleteTexture := glnvg__renderDeleteTexture;

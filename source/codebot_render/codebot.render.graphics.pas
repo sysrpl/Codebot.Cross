@@ -2455,7 +2455,7 @@ var
   I: Integer;
 begin
   Result := S;
-  {$ifdef linux}
+  {$ifdef unix}
   for I := 1 to Length(Result) do
     if Result[I] = '\' then Result[I] := '/';
   {$else}

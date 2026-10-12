@@ -297,7 +297,15 @@ function ExpandDir(const Dir: string): string;
 begin
   Result := Trim(Dir);
   if Result = '' then
+  begin
     Result := GetCurrentDir;
+    { A program started from the Finder on macOS has the root as its current
+      folder, so the home folder of the user is used in its place }
+    {$ifdef darwin}
+    if Result = '/' then
+      Result := GetUserDir;
+    {$endif}
+  end;
   Result := ExpandFileName(ExpandHome(Result));
   while (Length(Result) > RootLength) and (Result[Length(Result)] in AllowDirectorySeparators) do
     SetLength(Result, Length(Result) - 1);

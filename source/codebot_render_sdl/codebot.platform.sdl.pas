@@ -73,6 +73,12 @@ uses
 
 { SDL_image routines }
 
+{ On macOS the compiler ignores the library name of an external routine, so
+  the library is linked here }
+{$ifdef darwin}
+  {$linklib SDL2_image}
+{$endif}
+
 function IMG_Load_RW(src: PSDL_RWops; freesrc: LongInt): PSDL_Surface; cdecl; external 'SDL2_image';
 function IMG_SavePNG_RW(surface: PSDL_Surface; dst: PSDL_RWops; freedst: LongInt): LongInt; cdecl; external 'SDL2_image';
 function IMG_SaveJPG_RW(surface: PSDL_Surface; dst: PSDL_RWops; freedst: LongInt; quality: LongInt): LongInt; cdecl; external 'SDL2_image';

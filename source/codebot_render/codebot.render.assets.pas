@@ -13,8 +13,8 @@ uses
 
   An asset comes from one of two places:
 
-    A file in the assets folder, which is searched for from the current
-    directory and then from the folders above it
+    A file in the assets folder, which is beside the program. On macOS it
+    is also searched for in the folders above the program.
 
     A dat file, which holds every asset of a program in one file. It is kept
     beside the program and is named after it, such as cardgames.dat.
@@ -41,7 +41,12 @@ uses
              UTF-8, its offset as 8 bytes, and its size as 8 bytes
 
   Names are compared without regard to case, so a program finds the same
-  assets on every system. }
+  assets on every system.
+
+  The working directory is never used to find an asset. Every search starts
+  from the program itself, so a program finds its assets however it was
+  started. The dat file beside the program is looked for first, and then the
+  assets folder beside the program. }
 
 type
   EAssetError = class(Exception);
@@ -68,6 +73,8 @@ var
 
 procedure AssetXor(Data: PByte; Count: SizeInt; Position: Int64; Key: LongWord);
 
+{ The full path of this program }
+function AssetProgramFileName: string;
 { The dat file of this program, which is beside the program and has its name }
 function AssetPackFileName: string;
 { True if this program has a key and its dat file is being used }
@@ -106,7 +113,8 @@ function AssetPackBuild(const Folder, FileName: string; Key: LongWord): Integer;
   caller must end the program without running it.
 
   A file name may follow the switch to say where the dat file is written.
-  Without one it is written beside the program. With no key nothing is
+  Without one it is written beside the program, and a name which is not a
+  full path is beside the program too. With no key nothing is
   built and ExitCode is one. }
 
 function AssetBuildRequested: Boolean;
@@ -126,8 +134,9 @@ const
   PackMagic: array[0..3] of Byte = (Ord('C'), Ord('D'), Ord('A'), Ord('T'));
   PackVersion = 1;
   PackHeaderSize = 24;
-  { How many folders above the current directory are searched }
-  SearchDepth = 9;
+  { How many folders above the folder of the program are searched. Only
+    macOS looks above it, the other systems look beside the program alone. }
+  SearchDepth = {$ifdef darwin}9{$else}0{$endif};
 
 type
   TPackEntry = record
@@ -144,6 +153,9 @@ type
 
   TPackEntries = array of TPackEntry;
 
+  { The bytes at the start of a dat file }
+  TPackHeader = array[0..PackHeaderSize - 1] of Byte;
+
   TPackState = (psUnknown, psNone, psOpen, psInvalid);
 
 var
@@ -151,6 +163,35 @@ var
   PackState: TPackState = psUnknown;
   PackFile: TFileStream;
   PackEntries: TPackEntries;
+  { The full path of the program and the folder searches start from, which
+    ends with a separator. They are found once when the unit starts. }
+  ProgramFileName: string;
+  SearchFolder: string;
+
+{$ifdef darwin}
+function proc_pidpath(pid: LongInt; buffer: PAnsiChar; buffersize: LongWord): LongInt; cdecl; external name 'proc_pidpath';
+function getpid: LongInt; cdecl; external name 'getpid';
+{$endif}
+
+{ Find the program and the folder which is searched. On macOS the system is
+  asked for the path of the program, which is always a full path and is the
+  program itself when it was started through a link. }
+
+procedure FindFolders;
+{$ifdef darwin}
+var
+  Buffer: array[0..4095] of AnsiChar;
+  I: Integer;
+{$endif}
+begin
+  ProgramFileName := ParamStr(0);
+  {$ifdef darwin}
+  I := proc_pidpath(getpid, @Buffer[0], SizeOf(Buffer));
+  if I > 0 then
+    SetString(ProgramFileName, PAnsiChar(@Buffer[0]), I);
+  {$endif}
+  SearchFolder := ExtractFilePath(ProgramFileName);
+end;
 
 procedure AssetXor(Data: PByte; Count: SizeInt; Position: Int64; Key: LongWord);
 var
@@ -245,16 +286,21 @@ begin
   end;
 end;
 
+function AssetProgramFileName: string;
+begin
+  Result := ProgramFileName;
+end;
+
 function AssetPackFileName: string;
 begin
-  Result := ChangeFileExt(ExpandFileName(ParamStr(0)), '.dat');
+  Result := ChangeFileExt(ProgramFileName, '.dat');
 end;
 
 { Read the header and the index of the dat file. PackLock is held. }
 
 procedure PackRead(const FileName: string);
 var
-  Header: array[0..PackHeaderSize - 1] of Byte;
+  Header: TPackHeader;
   Index: array of Byte;
   P: PByte;
   Count, IndexSize: LongWord;
@@ -264,6 +310,7 @@ var
   Len: Integer;
   I: Integer;
 begin
+  Header := Default(TPackHeader);
   PackFile := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
   try
     if PackFile.Read(Header, PackHeaderSize) <> PackHeaderSize then
@@ -472,42 +519,63 @@ begin
   end;
 end;
 
-function AssetFindFile(const Name: string; out FileName: string): Boolean;
+{ Give the folder above a folder, or nothing when there is none. Both end
+  with a separator, so neither is ever relative to the working directory. }
+
+function FolderAbove(const Folder: string): string;
+begin
+  Result := ExtractFilePath(ExcludeTrailingPathDelimiter(Folder));
+  if (Result = Folder) or (Result = '') or
+    (Result[Length(Result)] <> DirectorySeparator) then
+    Result := '';
+end;
+
+{ Search for a file or a folder below the assets folder, in the folder of the
+  program and on macOS the folders above it. Name is empty to search for the
+  assets folder itself. }
+
+function AssetSearch(const Name: string; IsFolder: Boolean; out Path: string): Boolean;
+
+  function Check(const Folder: string): Boolean;
+  var
+    S: string;
+  begin
+    S := Folder + AssetFolder;
+    if Name <> '' then
+      S := S + DirectorySeparator + Name;
+    if IsFolder then
+      Result := DirectoryExists(S)
+    else
+      Result := FileExists(S);
+    if Result then
+      Path := S;
+  end;
+
 var
   S: string;
   I: Integer;
 begin
-  FileName := '';
-  S := AssetFolder + DirectorySeparator + Name;
+  Path := '';
+  S := SearchFolder;
   for I := 0 to SearchDepth do
   begin
-    if FileExists(S) then
-    begin
-      FileName := S;
+    if S = '' then
+      Break;
+    if Check(S) then
       Exit(True);
-    end;
-    S := '..' + DirectorySeparator + S;
+    S := FolderAbove(S);
   end;
   Result := False;
 end;
 
-function AssetFindFolder(out Folder: string): Boolean;
-var
-  S: string;
-  I: Integer;
+function AssetFindFile(const Name: string; out FileName: string): Boolean;
 begin
-  Folder := '';
-  S := AssetFolder;
-  for I := 0 to SearchDepth do
-  begin
-    if DirectoryExists(S) then
-    begin
-      Folder := ExpandFileName(S);
-      Exit(True);
-    end;
-    S := '..' + DirectorySeparator + S;
-  end;
-  Result := False;
+  Result := AssetSearch(Name, False, FileName);
+end;
+
+function AssetFindFolder(out Folder: string): Boolean;
+begin
+  Result := AssetSearch('', True, Folder);
 end;
 
 function AssetExists(const Name: string): Boolean;
@@ -597,7 +665,7 @@ var
   Dest: TFileStream;
   Source: TFileStream;
   Buffer: array of Byte;
-  Header: array[0..PackHeaderSize - 1] of Byte;
+  Header: TPackHeader;
   Index: TMemoryStream;
   Item: array[0..15] of Byte;
   P: PByte;
@@ -621,7 +689,7 @@ begin
   try
     try
       { The header is written last, when the place of the index is known }
-      FillChar(Header, SizeOf(Header), 0);
+      Header := Default(TPackHeader);
       Dest.WriteBuffer(Header, PackHeaderSize);
       Position := PackHeaderSize;
       for I := 0 to Length(Entries) - 1 do
@@ -718,7 +786,12 @@ begin
     Exit;
   end;
   if (Found < ParamCount) and (Copy(ParamStr(Found + 1), 1, 1) <> '-') then
-    FileName := ExpandFileName(ParamStr(Found + 1))
+  begin
+    { A name which is not a full path is beside the program }
+    FileName := ParamStr(Found + 1);
+    if not ((FileName[1] in ['/', '\']) or (Copy(FileName, 2, 1) = ':')) then
+      FileName := SearchFolder + FileName;
+  end
   else
     FileName := AssetPackFileName;
   if not AssetFindFolder(Folder) then
@@ -748,6 +821,7 @@ begin
 end;
 
 initialization
+  FindFolders;
   InitCriticalSection(PackLock);
 finalization
   PackFree;

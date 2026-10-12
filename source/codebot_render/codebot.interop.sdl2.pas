@@ -14,6 +14,13 @@ unit Codebot.Interop.SDL2;
 {$packrecords c}
 {$define libsdl2 := external 'SDL2'}
 
+{ On macOS the compiler ignores the library name of an external routine, so
+  the library is linked here. It is found through the run paths set by the
+  codebot_render package. }
+{$ifdef darwin}
+  {$linklib SDL2}
+{$endif}
+
 interface
 
 type

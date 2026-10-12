@@ -1209,8 +1209,10 @@ const
   libassimpalt = 'libassimp.so';
 {$endif}
 {$ifdef darwin}
-  libassimp = 'libassimp.5.dylib';
-  libassimpalt = 'libassimp.dylib';
+  { The library is looked for on the run paths of the program first, which
+    the codebot_render package sets, and then by its plain name }
+  libassimp = '@rpath/libassimp.5.dylib';
+  libassimpalt = 'libassimp.5.dylib';
 {$endif}
 
 { Load the assimp library returning True if the required functions were found.

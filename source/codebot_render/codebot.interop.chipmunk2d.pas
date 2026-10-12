@@ -1355,9 +1355,9 @@ function InitChipmunk2D(ThrowExceptions: Boolean = False): Boolean;
 implementation
 
 uses
-  SysUtils, Codebot.Core,
+  SysUtils, Codebot.Core
   { On Windows the C runtime is linked by Codebot.Interop.MinGW }
-  Codebot.Interop.MinGW;
+  {$ifdef windows}, Codebot.Interop.MinGW{$endif};
 
 { The static library built by Chipmunk2D/build-single.sh. The codebot_render
   package adds the folder it is written to to the library path. }
@@ -1365,8 +1365,10 @@ uses
 const
   libchipmunk2d = 'libchipmunk2d.a';
 
-{ Prebuilt in shared/libs for x86_64-linux, aarch64-linux and x86_64-win64 }
-{$if defined(win64) or (defined(linux) and (defined(cpux86_64) or defined(cpuaarch64)))}
+{ Prebuilt in shared/libs for x86_64-linux, aarch64-linux, x86_64-win64 and
+  x86_64-darwin }
+{$if defined(win64) or (defined(linux) and (defined(cpux86_64) or defined(cpuaarch64))) or
+  (defined(darwin) and defined(cpux86_64))}
   {$linklib libchipmunk2d.a}
 {$else}
   {$error libchipmunk2d.a is not built for this target, run source/Chipmunk2D/build-single.sh to build it}

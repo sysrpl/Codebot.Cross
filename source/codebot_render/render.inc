@@ -22,6 +22,13 @@
 
 {$define videowidget}
 
+{ The video widget is left out of macOS builds, where libmpv is not part of
+  the system and would add about forty other libraries to every program }
+
+{$ifdef darwin}
+  {$undef videowidget}
+{$endif}
+
 { Select the OpenGL version used by Codebot.OpenGL by adding one of these to
   your build defines or by removing the '.' infront of one directive below.
 

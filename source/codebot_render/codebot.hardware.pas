@@ -870,6 +870,7 @@ begin
     Exit;
   if not (CharEquals(Source, 0, 'OggS') and CharEquals(Source, $1D, 'vorbis')) then
     Exit;
+  R := Default(TMemoryReader);
   if not VorbisOpen(R, Source, Size, V) then
     Exit;
   try
@@ -1912,7 +1913,7 @@ begin
   FInitialized := SDL_InitSubSystem(SDL_INIT_AUDIO) = 0;
   if not FInitialized then
     Exit;
-  FillChar(Spec, SizeOf(Spec), 0);
+  Spec := Default(TSDL_AudioSpec);
   Spec.freq := DefSampleRate;
   Spec.format := AUDIO_S16;
   Spec.channels := DefChannels;

@@ -2003,7 +2003,9 @@ end;
 
 function TShape.GetGroup: Pointer;
 begin
+  {$push}{$warn 4055 off}
   Result := Pointer(cpShapeGetFilter(Ref).group);
+  {$pop}
 end;
 
 procedure TShape.SetGroup(Value: Pointer);
@@ -2011,7 +2013,9 @@ var
   F: cpShapeFilter;
 begin
   F := cpShapeGetFilter(Ref);
+  {$push}{$warn 4055 off}
   F.group := cpGroup(Value);
+  {$pop}
   cpShapeSetFilter(Ref, F);
 end;
 

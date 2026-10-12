@@ -247,8 +247,9 @@ begin
   FDepthBits := 24;
   FStencilBits := 8;
   { Multisampling is off by default on the Raspberry Pi, where it costs too
-    much at 1080p }
-  {$ifdef raspberrypi}
+    much at 1080p, and on macOS, where it costs too much on integrated
+    graphics }
+  {$if defined(raspberrypi) or defined(darwin)}
   FMultiSamples := 0;
   {$else}
   FMultiSamples := 4;
@@ -298,7 +299,9 @@ begin
   end;
   if FSDLWindow = nil then
     raise EApplicationError.CreateFmt(SSDLWindowFailed, [SDL_GetError]);
+  {$push}{$warn 4055 off}
   FContext := OpenGLContextCreate(GLwindow(FSDLWindow), Params);
+  {$pop}
   if FContext = nil then
     raise EApplicationError.CreateFmt(SSDLContextFailed, [SDL_GetError]);
   FContext.VSync := FVSync;
