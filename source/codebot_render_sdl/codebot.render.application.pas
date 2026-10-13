@@ -420,6 +420,11 @@ begin
               if not Shown then
               begin
                 SDL_ShowWindow(FSDLWindow);
+                {$ifdef darwin}
+                { A program started by the IDE is not made the front
+                  application, so bring the window forward once it is visible }
+                SDL_RaiseWindow(FSDLWindow);
+                {$endif}
                 Shown := True;
               end;
               FContext.GetSize(FWidth, FHeight);
