@@ -1019,7 +1019,8 @@ begin
       if R.Contains(X, Y) then
       begin
         FDownIndex := I;
-        FSelecting := FColumns[I] <> Selected;
+        { A column which cannot be selected is clicked the first time }
+        FSelecting := FColumns[I].CanSelect and (FColumns[I] <> Selected);
         Invalidate;
         Selected := FColumns[I];
         Exit;

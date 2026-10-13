@@ -608,6 +608,237 @@ procedure TWindowsHotkeyCapture.DoUnregister(Key: Word; ShiftState: TShiftState)
 begin
   UnregisterHotKey(FWindow, HotkeyId(Key, ShiftState));
 end;
+{$elseif defined(darwin)}
+{$linkframework Carbon}
+
+{ TMacHotkeyCapture registers hotkeys with RegisterEventHotKey of the Carbon
+  event manager, which also works in a Cocoa program. A pressed hotkey arrives
+  as a keyboard event of the application on the main thread. }
+
+type
+  TMacHotKeyId = packed record
+    Signature: LongWord;
+    Id: LongWord;
+  end;
+
+  TMacEventType = packed record
+    EventClass: LongWord;
+    EventKind: LongWord;
+  end;
+
+  TMacEventHandler = function(Next, Event, UserData: Pointer): LongInt; cdecl;
+
+function RegisterEventHotKey(KeyCode, Modifiers: LongWord; Id: TMacHotKeyId;
+  Target: Pointer; Options: LongWord; out HotKey: Pointer): LongInt; cdecl; external;
+function UnregisterEventHotKey(HotKey: Pointer): LongInt; cdecl; external;
+function GetApplicationEventTarget: Pointer; cdecl; external;
+function InstallEventHandler(Target: Pointer; Handler: TMacEventHandler;
+  NumTypes: PtrUInt; var List: TMacEventType; UserData: Pointer;
+  Reference: PPointer): LongInt; cdecl; external;
+function RemoveEventHandler(Reference: Pointer): LongInt; cdecl; external;
+function GetEventParameter(Event: Pointer; Name, ParamType: LongWord;
+  ActualType: PLongWord; BufferSize: PtrUInt; ActualSize: PPtrUInt;
+  Data: Pointer): LongInt; cdecl; external;
+
+const
+  MacEventClassKeyboard = $6B657962; { 'keyb' }
+  MacEventHotKeyPressed = 5;
+  MacEventParamDirectObject = $2D2D2D2D; { '----' }
+  MacTypeEventHotKeyId = $686B6964; { 'hkid' }
+  MacHotKeySignature = $43424F54; { 'CBOT' }
+  MacCmdKey = $0100;
+  MacShiftKey = $0200;
+  MacOptionKey = $0800;
+  MacControlKey = $1000;
+
+type
+  TMacHotkey = record
+    Id: LongWord;
+    HotKey: Pointer;
+  end;
+
+  TMacHotkeyCapture = class(THotkeyCapture)
+  private
+    FHandler: Pointer;
+    FHotkeys: array of TMacHotkey;
+  protected
+    procedure DoRegister(Key: Word; ShiftState: TShiftState); override;
+    procedure DoUnregister(Key: Word; ShiftState: TShiftState); override;
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+  THotkeyCaptureImpl = TMacHotkeyCapture;
+
+{ KeyToMac converts an LCL key code to a key code of a Mac keyboard, or
+  returns -1 if there is no such key }
+
+function KeyToMac(Key: Word): Integer;
+const
+  Letters: array[0..25] of Byte = (0, 11, 8, 2, 14, 3, 5, 4, 34, 38, 40, 37,
+    46, 45, 31, 35, 12, 15, 1, 17, 32, 9, 13, 7, 16, 6);
+  Digits: array[0..9] of Byte = (29, 18, 19, 20, 21, 23, 22, 26, 28, 25);
+  Functions: array[0..11] of Byte = (122, 120, 99, 118, 96, 97, 98, 100, 101,
+    109, 103, 111);
+begin
+  case Key of
+    VK_A..VK_Z: Result := Letters[Key - VK_A];
+    VK_0..VK_9: Result := Digits[Key - VK_0];
+    VK_F1..VK_F12: Result := Functions[Key - VK_F1];
+    VK_RETURN: Result := 36;
+    VK_TAB: Result := 48;
+    VK_SPACE: Result := 49;
+    VK_BACK: Result := 51;
+    VK_ESCAPE: Result := 53;
+    VK_HELP, VK_INSERT: Result := 114;
+    VK_HOME: Result := 115;
+    VK_PRIOR: Result := 116;
+    VK_DELETE: Result := 117;
+    VK_END: Result := 119;
+    VK_NEXT: Result := 121;
+    VK_LEFT: Result := 123;
+    VK_RIGHT: Result := 124;
+    VK_DOWN: Result := 125;
+    VK_UP: Result := 126;
+  else
+    Result := -1;
+  end;
+end;
+
+function ShiftToMac(ShiftState: TShiftState): LongWord;
+begin
+  Result := 0;
+  if ssShift in ShiftState then
+    Result := Result or MacShiftKey;
+  if ssAlt in ShiftState then
+    Result := Result or MacOptionKey;
+  if ssCtrl in ShiftState then
+    Result := Result or MacControlKey;
+  if (ssMeta in ShiftState) or (ssSuper in ShiftState) then
+    Result := Result or MacCmdKey;
+end;
+
+{ The hotkey id holds the key in its low word and the shift state above it,
+  so the hotkey can be found again when it is pressed or unregistered }
+
+const
+  MacIdShift = $10000;
+  MacIdAlt = $20000;
+  MacIdCtrl = $40000;
+  MacIdMeta = $80000;
+  MacIdSuper = $100000;
+
+function HotkeyId(Key: Word; ShiftState: TShiftState): LongWord;
+begin
+  Result := Key;
+  if ssShift in ShiftState then
+    Result := Result or MacIdShift;
+  if ssAlt in ShiftState then
+    Result := Result or MacIdAlt;
+  if ssCtrl in ShiftState then
+    Result := Result or MacIdCtrl;
+  if ssMeta in ShiftState then
+    Result := Result or MacIdMeta;
+  if ssSuper in ShiftState then
+    Result := Result or MacIdSuper;
+end;
+
+function HotkeyHandler(Next, Event, UserData: Pointer): LongInt; cdecl;
+var
+  Capture: TMacHotkeyCapture;
+  Id: TMacHotKeyId;
+  Key: Word;
+  ShiftState: TShiftState;
+  H: THotkeyNotify;
+  I: Integer;
+begin
+  Result := 0;
+  Capture := TMacHotkeyCapture(UserData);
+  Id.Signature := 0;
+  Id.Id := 0;
+  if GetEventParameter(Event, MacEventParamDirectObject, MacTypeEventHotKeyId,
+    nil, SizeOf(Id), nil, @Id) <> 0 then
+    Exit;
+  if Id.Signature <> MacHotKeySignature then
+    Exit;
+  Key := Id.Id and $FFFF;
+  ShiftState := [];
+  if Id.Id and MacIdShift <> 0 then
+    Include(ShiftState, ssShift);
+  if Id.Id and MacIdAlt <> 0 then
+    Include(ShiftState, ssAlt);
+  if Id.Id and MacIdCtrl <> 0 then
+    Include(ShiftState, ssCtrl);
+  if Id.Id and MacIdMeta <> 0 then
+    Include(ShiftState, ssMeta);
+  if Id.Id and MacIdSuper <> 0 then
+    Include(ShiftState, ssSuper);
+  I := Capture.FindHotkey(Key, ShiftState);
+  if I > -1 then
+  begin
+    H := Capture[I];
+    if Assigned(H.Notify) then
+      H.Notify(Capture, Key, ShiftState);
+  end;
+end;
+
+constructor TMacHotkeyCapture.Create;
+var
+  EventType: TMacEventType;
+begin
+  inherited Create;
+  EventType.EventClass := MacEventClassKeyboard;
+  EventType.EventKind := MacEventHotKeyPressed;
+  InstallEventHandler(GetApplicationEventTarget, @HotkeyHandler, 1, EventType,
+    Self, @FHandler);
+end;
+
+destructor TMacHotkeyCapture.Destroy;
+begin
+  { The inherited destructor unregisters every hotkey }
+  inherited Destroy;
+  if FHandler <> nil then
+    RemoveEventHandler(FHandler);
+end;
+
+procedure TMacHotkeyCapture.DoRegister(Key: Word; ShiftState: TShiftState);
+var
+  Id: TMacHotKeyId;
+  HotKey: Pointer;
+  Code, I: Integer;
+begin
+  Code := KeyToMac(Key);
+  if Code < 0 then
+    Exit;
+  Id.Signature := MacHotKeySignature;
+  Id.Id := HotkeyId(Key, ShiftState);
+  HotKey := nil;
+  if RegisterEventHotKey(Code, ShiftToMac(ShiftState), Id,
+    GetApplicationEventTarget, 0, HotKey) <> 0 then
+    Exit;
+  I := Length(FHotkeys);
+  SetLength(FHotkeys, I + 1);
+  FHotkeys[I].Id := Id.Id;
+  FHotkeys[I].HotKey := HotKey;
+end;
+
+procedure TMacHotkeyCapture.DoUnregister(Key: Word; ShiftState: TShiftState);
+var
+  Id: LongWord;
+  I, J: Integer;
+begin
+  Id := HotkeyId(Key, ShiftState);
+  for I := 0 to Length(FHotkeys) - 1 do
+    if FHotkeys[I].Id = Id then
+    begin
+      UnregisterEventHotKey(FHotkeys[I].HotKey);
+      for J := I to Length(FHotkeys) - 2 do
+        FHotkeys[J] := FHotkeys[J + 1];
+      SetLength(FHotkeys, Length(FHotkeys) - 1);
+      Break;
+    end;
+end;
 {$endif}
 
 function IsKeyValid(Key: Word): Boolean;
@@ -795,7 +1026,7 @@ var
 
 function HotkeyCapture: THotkeyCapture;
 begin
-  {$if (defined(linux) and (defined(lclgtk2) or defined(lclgtk3))) or defined(windows)}
+  {$if (defined(linux) and (defined(lclgtk2) or defined(lclgtk3))) or defined(windows) or defined(darwin)}
   if InternalCapture = nil then
     InternalCapture := THotkeyCaptureImpl.Create;
   {$endif}
