@@ -123,8 +123,9 @@
         <UnitName Value="Codebot.Networking.Web"/>
       </Item21>
       <Item22>
-        <Filename Value="codebot.pas"/>
-        <UnitName Value="codebot"/>
+        <Filename Value="codebotpackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotPackage"/>
       </Item22>
       <Item23>
         <Filename Value="codebot.system.pas"/>

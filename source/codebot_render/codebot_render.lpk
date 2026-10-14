@@ -57,8 +57,9 @@ end;"/>
         <UnitName Value="Codebot.Render.World"/>
       </Item8>
       <Item9>
-        <Filename Value="codebot_render.pas"/>
-        <UnitName Value="codebot_render"/>
+        <Filename Value="codebotrenderpackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotRenderPackage"/>
       </Item9>
       <Item10>
         <Filename Value="render.inc"/>

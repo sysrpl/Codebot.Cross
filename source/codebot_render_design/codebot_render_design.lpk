@@ -14,12 +14,17 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="1">
+    <Files Count="2">
       <Item1>
         <Filename Value="codebot.render.registration.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="Codebot.Render.Registration"/>
       </Item1>
+      <Item2>
+        <Filename Value="codebotrenderdesignpackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotRenderDesignPackage"/>
+      </Item2>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">

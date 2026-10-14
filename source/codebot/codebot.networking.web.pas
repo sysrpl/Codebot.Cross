@@ -92,9 +92,9 @@ type
     rsNoConnect,
     { No response was received }
     rsNoResponse,
-    { Status code was not 200 OK }
+    { Status code was not a 2xx success code }
     rsError,
-    { Status code was 200 OK }
+    { Status code was a 2xx success code such as 200 OK or 204 No Content }
     rsSuccess,
     { Task was cancelled }
     rsCancelled);
@@ -472,15 +472,12 @@ begin
 end;
 
 function TReadBuffer.Read(out Text: string): Integer;
-var
-  P: PChar;
 begin
   if FLength > 0 then
   begin
-    P := PChar(FBuffer);
-    Inc(P, FIndex - 1);
-    Text := P^;
+    Text := Copy(FBuffer, FIndex, FLength);
     Result := FLength;
+    Inc(FIndex, FLength);
     FLength := 0;
   end
   else
@@ -562,6 +559,7 @@ var
   Socket: TSocket;
   ReadBuffer: TReadBuffer;
   Read: Boolean;
+  Port: Word;
   C: Char;
 begin
   Result := rsNoConnect;
@@ -571,7 +569,12 @@ begin
   ReadBuffer := TReadBuffer.Create;
   try
     Socket.Secure := True; //Url.Secure;
-    if Socket.Connect(Url.Domain, 443) then
+    { Honor an explicit https port, otherwise use the standard https port }
+    if Url.Secure then
+      Port := Url.Port
+    else
+      Port := 443;
+    if Socket.Connect(Url.Domain, Port) then
     begin
       if IsCancelled then
         Exit;
@@ -579,15 +582,15 @@ begin
       if not Socket.WriteStream(Request, Task) then
         Exit;
       Read := False;
-      while not Read do
+      { Stop waiting if the connection closes before a response arrives }
+      while (not Read) and Socket.Connected and (not IsCancelled) do
         while Socket.Read(Data) > 0 do
         begin
-          Read := True;
           Buffer := Buffer + Data;
-          WriteLn(Buffer);
           if Header.Extract(Buffer) then
           begin
-            if Header.Code = 200 then
+            Read := True;
+            if (Header.Code >= 200) and (Header.Code < 300) then
               Result := rsSuccess
             else
               Result := rsError;

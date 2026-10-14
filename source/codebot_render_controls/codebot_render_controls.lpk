@@ -15,7 +15,7 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="6">
+    <Files Count="7">
       <Item1>
         <Filename Value="codebot.render.controls.pas"/>
         <UnitName Value="Codebot.Render.Controls"/>
@@ -40,6 +40,11 @@
         <Filename Value="codebot.render.controls.child.pas"/>
         <UnitName Value="Codebot.Render.Controls.Child"/>
       </Item6>
+      <Item7>
+        <Filename Value="codebotrendercontrolspackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotRenderControlsPackage"/>
+      </Item7>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

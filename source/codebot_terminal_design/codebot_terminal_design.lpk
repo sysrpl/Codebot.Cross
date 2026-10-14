@@ -14,7 +14,7 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="3">
+    <Files Count="4">
       <Item1>
         <Filename Value="codebot.terminal.registration.pas"/>
         <HasRegisterProc Value="True"/>
@@ -28,6 +28,11 @@
         <Filename Value="codebot.terminal.emulatordialog.pas"/>
         <UnitName Value="Codebot.Terminal.EmulatorDialog"/>
       </Item3>
+      <Item4>
+        <Filename Value="codebotterminaldesignpackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotTerminalDesignPackage"/>
+      </Item4>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">

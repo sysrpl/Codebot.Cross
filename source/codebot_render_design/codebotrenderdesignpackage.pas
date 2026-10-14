@@ -1,23 +1,23 @@
 { This file was automatically created by Lazarus. Do not edit!
   This source is only used to compile and install the package.
- }
+  }
 
-unit codebot_terminal;
+unit CodebotRenderDesignPackage;
 
 {$warn 5023 off : no warning about unused units}
 interface
 
 uses
-  Codebot.Terminal.Types, Codebot.Terminal.Controls,
-  Codebot.Terminal.Controls.Gtk3, Codebot.Terminal.Controls.Gtk2,
-  LazarusPackageIntf;
+  Codebot.Render.Registration, LazarusPackageIntf;
 
 implementation
 
 procedure Register;
 begin
+  RegisterUnit('Codebot.Render.Registration',
+    @Codebot.Render.Registration.Register);
 end;
 
 initialization
-  RegisterPackage('codebot_terminal', @Register);
+  RegisterPackage('codebot_render_design', @Register);
 end.

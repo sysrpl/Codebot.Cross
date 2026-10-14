@@ -41,6 +41,7 @@ type
     FPort: Word;
     FService: string;
     FDefaultRegion: string;
+    FRegionVar: string;
     FAccessIdVar: string;
     FAccessId: string;
     FSecretKeyVar: string;
@@ -54,12 +55,20 @@ type
     destructor Destroy; override;
     { The name of the provider }
     function Provider: string;
-    { The host name for a region or the default host if region is empty }
+    { The host name for a region or the default host if region is empty.
+      Providers with a single global host always return the default host. }
     function EndPoint(const Region: string = ''): string;
     { The port used to connect to the provider }
     function Port: Word;
-    { The region used when none is given }
+    { The region used when none is given. Some providers name an environment
+      variable which overrides this region. }
     function DefaultRegion: string;
+    { Convert a GetBucketLocation result to a region. A blank location is the
+      default region and the legacy location EU is eu-west-1. A location such
+      as us-south-standard which begins with a known region becomes that
+      region. Providers with a single global host always use the default
+      region. }
+    function LocationRegion(const Location: string): string;
     { Output the names and values of regions supported by the provider }
     procedure ListRegions(out Regions: TNamedStrings);
     { The access key id, read from the environment if not set }
@@ -68,33 +77,32 @@ type
     property SecretKey: string read GetSecretKey write FSecretKey;
   end;
 
-{ S3Configs provides some default S3 configurations. These configurations are
-  not exhaustive. Feel free to define your own.
+{ Built in providers
 
-  All methods conform to the TS3ConfigFactory prototype and can be used in the
-  constructor of a TS3Client.
+  TS3Config.Create accepts the provider names below. Unless AccessId and
+  SecretKey are set directly, each provider reads its credentials from the
+  environment variables listed with it.
 
-  Each configuration below depends on environment variables to store your S3
-  credentials. The following is a list of those environment variable names
-  you must have populated to use these configurations.
+    amazon        AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
+    wasabi        WAS_ACCESS_KEY_ID and WAS_SECRET_ACCESS_KEY
+    digitalocean  DO_ACCESS_KEY_ID and DO_SECRET_ACCESS_KEY
+    google        GOOG_ACCESS_KEY_ID and GOOG_SECRET_ACCESS_KEY
+    ibm           IBM_ACCESS_KEY_ID and IBM_SECRET_ACCESS_KEY
+    scaleway      SCW_ACCESS_KEY and SCW_SECRET_KEY
+    ovh           OVH_ACCESS_KEY_ID and OVH_SECRET_ACCESS_KEY
+    hetzner       HETZNER_ACCESS_KEY_ID and HETZNER_SECRET_ACCESS_KEY
 
-    AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY
-    DO_ACCESS_KEY_ID and DO_SECRET_ACCESS_KEY
-    GOOG_ACCESS_KEY_ID and GOOG_SECRET_ACCESS_KEY
-    IBM_ACCESS_KEY_ID and IBM_SECRET_ACCESS_KEY
-    MS_ACCESS_KEY_ID and MS_SECRET_ACCESS_KEY
-    WAS_ACCESS_KEY_ID and WAS_SECRET_ACCESS_KEY
-
-  If you prefer an alternate method for managing access keys you can simply
-  define your own functions which create TS3Config instances.
+  These providers support per object acls, so objects can be uploaded as
+  private or public. Acl support on hetzner is not confirmed. Google uses
+  HMAC keys and a single global host.
 
   Note:
 
   On Linux you can set these variables in your $HOME/.profile files using
   code like this.
 
-    export AWS_ACCESS_KEY_ID = <your access key id>
-    export AWS_SECRET_ACCESS_KEY = <secret access key> }
+    export AWS_ACCESS_KEY_ID=<your access key id>
+    export AWS_SECRET_ACCESS_KEY=<secret access key> }
 
 { TS3Request includes the end point that will accept the request and a valid
   http and authorized request header }
@@ -105,6 +113,32 @@ type
     { Http request header }
     Header: string;
   end;
+
+{ TS3Access chooses who can read an object.
+
+  accessDefault sends no acl, so the object follows the bucket's own rules.
+  This works with every provider and is the safest choice.
+
+  accessPrivate and accessPublic send the canned acl private or public-read.
+  The built in providers support them, but Amazon buckets with acls disabled
+  and Google buckets with uniform access reject them. A rejected acl fails
+  the request with an error such as AccessControlListNotSupported. }
+
+  TS3Access = (accessDefault, accessPrivate, accessPublic);
+
+{ S3UrlDecode decodes the keys and prefixes in a ListObjects response. Those
+  requests ask for url encoding so that any key can be represented in xml. }
+
+function S3UrlDecode(const S: string): string;
+
+{ S3ResponseHeader returns the value of a response header from a document
+  returned by Send or SendAsync, or an empty string if the header is missing.
+  Headers are kept when a response has no xml body, as with HeadObject.
+  Names are not case sensitive, for example Content-Length or x-amz-meta-x. }
+
+function S3ResponseHeader(Response: IDocument; const Name: string): string;
+
+type
 
 {$region async}
 { To perform async commands use an async task. You can use the task with the
@@ -160,8 +194,8 @@ type
   Note:
 
   You will need to either set valid access key environment variables for your
-  preferred S3 compatible service or define your own TS3ConfigFactory where
-  you can implement your own TS3KeyStore functions for retrieving access keys.
+  preferred S3 compatible service or set Config.AccessId and Config.SecretKey
+  directly.
 
   Bucket note:
 
@@ -172,7 +206,7 @@ type
 
   Example usage:
 
-  S3 := TS3Methods.Create(S3Config.Wasabi);
+  S3 := TS3Methods.Create('wasabi');
   ...
   Request := S3.ListBuckets;
   if S3.Send(Request, Document) then
@@ -198,8 +232,8 @@ type
     {$region requests}
     { Request to list all buckets }
     function ListBuckets: TS3Request;
-    { Request to get bucket region. Due to legacy constraints a blank value
-      returned from this request should be interpreted as us-east-1. }
+    { Request to get bucket region. Pass the result to Config.LocationRegion
+      to convert it to a region. }
     function GetBucketLocation(const Bucket: string): TS3Request;
     { Request to get bucket access control list }
     function GetBucketAcl(const Bucket: string): TS3Request;
@@ -219,11 +253,34 @@ type
     function ListObjects(const Bucket: string; NextToken: string = '';
       Prefix: string = ''; Delimiter: string = ''): TS3Request;
     {$endregion}
+    {$region objects}
+    { Request to download an object. Send the request with Send or SendAsync
+      along with a stream to receive the object's contents. }
+    function GetObject(const Bucket, Key: string): TS3Request;
+    { Request an object's details without its contents. The response has no
+      body, so read the details with S3ResponseHeader, for example
+      Content-Length, Content-Type, Last-Modified, ETag, x-amz-storage-class,
+      and user metadata named x-amz-meta-*. }
+    function HeadObject(const Bucket, Key: string): TS3Request;
+    { Request to upload an object of a given size. Send the request with
+      SendObject or SendObjectAsync along with a stream of the object's
+      contents. The access argument can upload the object as private or
+      public. See TS3Access for which providers accept this. }
+    function PutObject(const Bucket, Key: string; Size: Int64;
+      const ContentType: string = ''; Access: TS3Access = accessDefault): TS3Request;
+    { Request to delete an object }
+    function DeleteObject(const Bucket, Key: string): TS3Request;
+    { Request to get an object access control list }
+    function GetObjectAcl(const Bucket, Key: string): TS3Request;
+    { Request to make an existing object private or public. The value
+      accessDefault is treated as accessPrivate. }
+    function PutObjectAcl(const Bucket, Key: string; Access: TS3Access): TS3Request;
+    {$endregion}
     {$region send}
     { Generate a presigned url for public access to an object }
     function Presign(const Bucket, Path: string; Expires: Integer = 0): string;
     { Send a request to your S3 servers outputting the response to a XML
-      document. Returns true if the status code is 200 OK.
+      document. Returns true if the status code is a 2xx success code.
 
       First overload can be used when querying or sending commands to S3
       Second overload can be used when receiving files from S3 }
@@ -253,6 +310,12 @@ type
       S3.SendAsync(Request, Task); }
     procedure SendAsync(const Request: TS3Request; Task: IAsyncDocTask); overload;
     procedure SendAsync(const Request: TS3Request; Stream: TStream; Task: IAsyncStreamTask); overload;
+    { SendObject sends a PutObject request followed by the object contents read
+      from body. The body is read from its current position and is not freed.
+      SendObjectAsync is the same but performed asynchronously, and the body
+      must remain valid until the task completes. }
+    function SendObject(const Request: TS3Request; Body: TStream; out Response: IDocument): Boolean;
+    procedure SendObjectAsync(const Request: TS3Request; Body: TStream; Task: IAsyncDocTask);
     {$endregion}
     { The current provider configuration }
     property Config: TS3Config read GetConfig;
@@ -266,21 +329,203 @@ uses
 const
   DefPort = 443;
 
+{ Built in list of S3 providers. Each provider gives:
+
+    host           Region end points are [service.]region.host. When host is
+                   empty the provider has a single global end point.
+    defaultHost    End point used when no region is given. When empty the end
+                   point of the default region is used.
+    service        Optional prefix of region end points
+    accessId       Environment variable holding the access key id
+    secretKey      Environment variable holding the secret access key
+    defaultRegion  Region used when none is given
+    regionVar      Optional environment variable which overrides defaultRegion
+    port           Optional port, 443 if not given
+    regions        Names and values of the regions
+
+  Non-ascii characters are written as json unicode escapes. Their backslash
+  is concatenated separately to keep this source plain ascii. }
+
+const
+  ServiceList =
+    '{' +
+    '"amazon": {' +
+      '"host": "amazonaws.com",' +
+      '"defaultHost": "s3.amazonaws.com",' +
+      '"service": "s3",' +
+      '"accessId": "AWS_ACCESS_KEY_ID",' +
+      '"secretKey": "AWS_SECRET_ACCESS_KEY",' +
+      '"defaultRegion": "us-east-1",' +
+      '"regions": [' +
+        '{"name": "US East (N. Virginia)", "value": "us-east-1"},' +
+        '{"name": "US East (Ohio)", "value": "us-east-2"},' +
+        '{"name": "US West (N. California)", "value": "us-west-1"},' +
+        '{"name": "US West (Oregon)", "value": "us-west-2"},' +
+        '{"name": "Africa (Cape Town)", "value": "af-south-1"},' +
+        '{"name": "Asia Pacific (Mumbai)", "value": "ap-south-1"},' +
+        '{"name": "Asia Pacific (Hyderabad)", "value": "ap-south-2"},' +
+        '{"name": "Asia Pacific (Singapore)", "value": "ap-southeast-1"},' +
+        '{"name": "Asia Pacific (Jakarta)", "value": "ap-southeast-3"},' +
+        '{"name": "Asia Pacific (Melbourne)", "value": "ap-southeast-4"},' +
+        '{"name": "Asia Pacific (Tokyo)", "value": "ap-northeast-1"},' +
+        '{"name": "Asia Pacific (Sydney)", "value": "ap-southeast-2"},' +
+        '{"name": "Asia Pacific (Seoul)", "value": "ap-northeast-2"},' +
+        '{"name": "Asia Pacific (Osaka)", "value": "ap-northeast-3"},' +
+        '{"name": "Canada (Central)", "value": "ca-central-1"},' +
+        '{"name": "China (Beijing)", "value": "cn-north-1"},' +
+        '{"name": "China (Ningxia)", "value": "cn-northwest-1"},' +
+        '{"name": "Europe (Frankfurt)", "value": "eu-central-1"},' +
+        '{"name": "Europe (Ireland)", "value": "eu-west-1"},' +
+        '{"name": "Europe (London)", "value": "eu-west-2"},' +
+        '{"name": "Europe (Paris)", "value": "eu-west-3"},' +
+        '{"name": "Europe (Milan)", "value": "eu-south-1"},' +
+        '{"name": "Europe (Spain)", "value": "eu-south-2"},' +
+        '{"name": "Europe (Zurich)", "value": "eu-central-2"},' +
+        '{"name": "Europe (Stockholm)", "value": "eu-north-1"},' +
+        '{"name": "South America (S' + '\' + 'u00e3o Paulo)", "value": "sa-east-1"},' +
+        '{"name": "Middle East (Bahrain)", "value": "me-south-1"},' +
+        '{"name": "Middle East (UAE)", "value": "me-central-1"},' +
+        '{"name": "Israel (Tel Aviv)", "value": "il-central-1"}' +
+      ']' +
+    '},' +
+    '"wasabi": {' +
+      '"host": "wasabisys.com",' +
+      '"defaultHost": "s3.wasabisys.com",' +
+      '"service": "s3",' +
+      '"accessId": "WAS_ACCESS_KEY_ID",' +
+      '"secretKey": "WAS_SECRET_ACCESS_KEY",' +
+      '"defaultRegion": "us-east-1",' +
+      '"regions": [' +
+        '{"name": "US East 1 (N. Virginia)", "value": "us-east-1"},' +
+        '{"name": "US East 2 (N. Virginia)", "value": "us-east-2"},' +
+        '{"name": "US Central 1 (Texas)", "value": "us-central-1"},' +
+        '{"name": "US West 1 (Oregon)", "value": "us-west-1"},' +
+        '{"name": "US West 2 (San Jose)", "value": "us-west-2"},' +
+        '{"name": "CA Central 1 (Toronto)", "value": "ca-central-1"},' +
+        '{"name": "EU Central 1 (Amsterdam)", "value": "eu-central-1"},' +
+        '{"name": "EU Central 2 (Frankfurt)", "value": "eu-central-2"},' +
+        '{"name": "EU West 1 (London)", "value": "eu-west-1"},' +
+        '{"name": "EU West 2 (Paris)", "value": "eu-west-2"},' +
+        '{"name": "EU West 3 (London)", "value": "eu-west-3"},' +
+        '{"name": "EU South 1 (Milan)", "value": "eu-south-1"},' +
+        '{"name": "AP Northeast 1 (Tokyo)", "value": "ap-northeast-1"},' +
+        '{"name": "AP Northeast 2 (Osaka)", "value": "ap-northeast-2"},' +
+        '{"name": "AP Southeast 1 (Singapore)", "value": "ap-southeast-1"},' +
+        '{"name": "AP Southeast 2 (Sydney)", "value": "ap-southeast-2"}' +
+      ']' +
+    '},' +
+    '"digitalocean": {' +
+      '"host": "digitaloceanspaces.com",' +
+      '"defaultHost": "nyc3.digitaloceanspaces.com",' +
+      '"service": "",' +
+      '"accessId": "DO_ACCESS_KEY_ID",' +
+      '"secretKey": "DO_SECRET_ACCESS_KEY",' +
+      '"defaultRegion": "nyc3",' +
+      '"regions": [' +
+        '{"name": "New York 3", "value": "nyc3"},' +
+        '{"name": "San Francisco 2", "value": "sfo2"},' +
+        '{"name": "San Francisco 3", "value": "sfo3"},' +
+        '{"name": "Atlanta 1", "value": "atl1"},' +
+        '{"name": "Toronto 1", "value": "tor1"},' +
+        '{"name": "Amsterdam 3", "value": "ams3"},' +
+        '{"name": "Frankfurt 1", "value": "fra1"},' +
+        '{"name": "London 1", "value": "lon1"},' +
+        '{"name": "Singapore 1", "value": "sgp1"},' +
+        '{"name": "Bangalore 1", "value": "blr1"},' +
+        '{"name": "Sydney 1", "value": "syd1"}' +
+      ']' +
+    '},' +
+    '"google": {' +
+      '"host": "",' +
+      '"defaultHost": "storage.googleapis.com",' +
+      '"service": "",' +
+      '"accessId": "GOOG_ACCESS_KEY_ID",' +
+      '"secretKey": "GOOG_SECRET_ACCESS_KEY",' +
+      '"defaultRegion": "auto",' +
+      '"regions": []' +
+    '},' +
+    '"ibm": {' +
+      '"host": "cloud-object-storage.appdomain.cloud",' +
+      '"defaultHost": "s3.us-south.cloud-object-storage.appdomain.cloud",' +
+      '"service": "s3",' +
+      '"accessId": "IBM_ACCESS_KEY_ID",' +
+      '"secretKey": "IBM_SECRET_ACCESS_KEY",' +
+      '"defaultRegion": "us-south",' +
+      '"regions": [' +
+        '{"name": "Dallas", "value": "us-south"},' +
+        '{"name": "Washington DC", "value": "us-east"},' +
+        '{"name": "Toronto", "value": "ca-tor"},' +
+        '{"name": "S' + '\' + 'u00e3o Paulo", "value": "br-sao"},' +
+        '{"name": "London", "value": "eu-gb"},' +
+        '{"name": "Frankfurt", "value": "eu-de"},' +
+        '{"name": "Madrid", "value": "eu-es"},' +
+        '{"name": "Tokyo", "value": "jp-tok"},' +
+        '{"name": "Osaka", "value": "jp-osa"},' +
+        '{"name": "Sydney", "value": "au-syd"}' +
+      ']' +
+    '},' +
+    '"scaleway": {' +
+      '"host": "scw.cloud",' +
+      '"defaultHost": "s3.fr-par.scw.cloud",' +
+      '"service": "s3",' +
+      '"accessId": "SCW_ACCESS_KEY",' +
+      '"secretKey": "SCW_SECRET_KEY",' +
+      '"defaultRegion": "fr-par",' +
+      '"regions": [' +
+        '{"name": "Paris", "value": "fr-par"},' +
+        '{"name": "Amsterdam", "value": "nl-ams"},' +
+        '{"name": "Warsaw", "value": "pl-waw"}' +
+      ']' +
+    '},' +
+    '"ovh": {' +
+      '"host": "io.cloud.ovh.net",' +
+      '"defaultHost": "s3.gra.io.cloud.ovh.net",' +
+      '"service": "s3",' +
+      '"accessId": "OVH_ACCESS_KEY_ID",' +
+      '"secretKey": "OVH_SECRET_ACCESS_KEY",' +
+      '"defaultRegion": "gra",' +
+      '"regions": [' +
+        '{"name": "Gravelines", "value": "gra"},' +
+        '{"name": "Roubaix", "value": "rbx"},' +
+        '{"name": "Strasbourg", "value": "sbg"},' +
+        '{"name": "Paris", "value": "eu-west-par"},' +
+        '{"name": "Milan", "value": "eu-south-mil"},' +
+        '{"name": "Frankfurt", "value": "de"},' +
+        '{"name": "London", "value": "uk"},' +
+        '{"name": "Warsaw", "value": "waw"},' +
+        '{"name": "Beauharnois", "value": "bhs"},' +
+        '{"name": "Toronto", "value": "ca-east-tor"},' +
+        '{"name": "Singapore", "value": "sgp"},' +
+        '{"name": "Sydney", "value": "ap-southeast-syd"},' +
+        '{"name": "Mumbai", "value": "ap-south-mum"}' +
+      ']' +
+    '},' +
+    '"hetzner": {' +
+      '"host": "your-objectstorage.com",' +
+      '"defaultHost": "fsn1.your-objectstorage.com",' +
+      '"service": "",' +
+      '"accessId": "HETZNER_ACCESS_KEY_ID",' +
+      '"secretKey": "HETZNER_SECRET_ACCESS_KEY",' +
+      '"defaultRegion": "fsn1",' +
+      '"regions": [' +
+        '{"name": "Falkenstein", "value": "fsn1"},' +
+        '{"name": "Nuremberg", "value": "nbg1"},' +
+        '{"name": "Helsinki", "value": "hel1"}' +
+      ']' +
+    '}' +
+    '}';
+
 var
   InternalServiceRegions: TObject;
 
 function ServiceRegions: TJsonNode;
-const
-  CDN = 'https://cdn.jsdelivr.net/gh/sysrpl/s3.regions/services.js';
 var
   N: TJsonNode;
-  S: string;
 begin
   if InternalServiceRegions = nil then
   begin
     N := TJsonNode.Create;
-    if WebGet(CDN, S) then
-      N.Parse(S);
+    N.Parse(ServiceList);
     InternalServiceRegions := N;
   end;
   Result := TJsonNode(InternalServiceRegions);
@@ -299,6 +544,7 @@ begin
     if FPort = 0 then
       FPort := DefPort;
     FDefaultRegion := FNode.Force('defaultRegion').AsString;
+    FRegionVar := FNode.Force('regionVar').AsString;
     FAccessIdVar := FNode.Force('accessId').AsString;
     FSecretKeyVar := FNode.Force('secretKey').AsString;
   end
@@ -310,9 +556,10 @@ begin
   end;
 end;
 
+{ FNode belongs to the shared ServiceRegions tree and must not be freed here }
+
 destructor TS3Config.Destroy;
 begin
-  FNode.Free;
   inherited Destroy;
 end;
 
@@ -325,10 +572,16 @@ function TS3Config.EndPoint(const Region: string = ''): string;
 var
   S: string;
 begin
+  if FHost = '' then
+    Exit(FDefaultHost);
   S := Region;
   if S = '' then
-    Result := FDefaultHost
-  else if FService <> '' then
+  begin
+    if FDefaultHost <> '' then
+      Exit(FDefaultHost);
+    S := DefaultRegion;
+  end;
+  if FService <> '' then
     Result := FService + '.' + S + '.' + FHost
   else
     Result := S + '.' + FHost;
@@ -341,7 +594,36 @@ end;
 
 function TS3Config.DefaultRegion: string;
 begin
-  Result := FDefaultRegion;
+  Result := '';
+  if FRegionVar <> '' then
+    Result := Trim(GetEnvironmentVariable(FRegionVar));
+  if Result = '' then
+    Result := FDefaultRegion;
+end;
+
+function TS3Config.LocationRegion(const Location: string): string;
+var
+  N: TJsonNode;
+  S, Best: string;
+begin
+  Result := Trim(Location);
+  if (FHost = '') or (Result = '') then
+    Exit(DefaultRegion);
+  if Result = 'EU' then
+    Exit('eu-west-1');
+  { Use the longest known region which the location begins with, for example
+    us-south-standard becomes us-south }
+  Best := '';
+  for N in FNode.Force('regions').AsArray do
+  begin
+    S := N.Force('value').AsString;
+    if S = Result then
+      Exit;
+    if (Length(S) > Length(Best)) and Result.BeginsWith(S + '-') then
+      Best := S;
+  end;
+  if Best <> '' then
+    Result := Best;
 end;
 
 procedure TS3Config.ListRegions(out Regions: TNamedStrings);
@@ -365,47 +647,6 @@ begin
     FSecretKey :=  GetEnvironmentVariable(FSecretKeyVar);
   Result := FSecretKey;
 end;
-
-{
-function DOPub: string; begin Result := GetEnvironmentVariable('DO_ACCESS_KEY_ID'); end;
-function DOPriv: string; begin Result := GetEnvironmentVariable('DO_ACCESS_KEY'); end;
-
-class function S3Configs.DigitalOcean: TS3Config;
-begin
-  Result := TS3Config.Create('nyc3.digitaloceanspaces.com', 'nyc3', DOPub, DOPriv);
-end;
-
-function GOOGPub: string; begin Result := GetEnvironmentVariable('GOOG_ACCESS_KEY_ID'); end;
-function GOOGPriv: string; begin Result := GetEnvironmentVariable('GOOG_SECRET_ACCESS_KEY'); end;
-
-class function S3Configs.Google: TS3Config;
-begin
-  Result := TS3Config.Create('storage.googleapis.com', 'us-east-1', GOOGPub, GOOGPriv);
-end;
-
-function IBMPub: string; begin Result := GetEnvironmentVariable('IBM_ACCESS_KEY_ID'); end;
-function IBMPriv: string; begin Result := GetEnvironmentVariable('IBM_SECRET_ACCESS_KEY'); end;
-
-class function S3Configs.IBM: TS3Config;
-begin
-  Result := TS3Config.Create('cloud-object-storage.appdomain.cloud', 'us-east', IBMPub, IBMPriv);
-end;
-
-function MSPub: string; begin Result := GetEnvironmentVariable('MS_ACCESS_KEY_ID'); end;
-function MSPriv: string; begin Result := GetEnvironmentVariable('MS_SECRET_ACCESS_KEY'); end;
-
-class function S3Configs.Microsoft: TS3Config;
-begin
-  Result := TS3Config.Create('blob.core.windows.net', 'unknown', MSPub, MSPriv);
-end;
-
-function WASPub: string; begin Result := GetEnvironmentVariable('WAS_ACCESS_KEY_ID'); end;
-function WASPriv: string; begin Result := GetEnvironmentVariable('WAS_SECRET_ACCESS_KEY'); end;
-
-class function S3Configs.Wasabi: TS3Config;
-begin
-  Result := TS3Config.Create('s3.wasabisys.com', 'us-east-1', WASPub, WASPriv);
-end;}
 
 { THeaderPair }
 
@@ -518,6 +759,7 @@ end;
 
 const
   NoContent = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+  UnsignedPayload = 'UNSIGNED-PAYLOAD';
   Service = 's3';
   Version = 'aws4_request';
 
@@ -558,7 +800,61 @@ begin
       Result := Result + '%' + IntToHex(Ord(S[I]), 2);
 end;
 
+function S3UrlDecode(const S: string): string;
+
+  function HexValue(C: Char): Integer;
+  begin
+    case C of
+      '0'..'9': Result := Ord(C) - Ord('0');
+      'A'..'F': Result := Ord(C) - Ord('A') + 10;
+      'a'..'f': Result := Ord(C) - Ord('a') + 10;
+    else
+      Result := -1;
+    end;
+  end;
+
+var
+  Hi, Lo, I, J: Integer;
+begin
+  SetLength(Result, Length(S));
+  I := 1;
+  J := 0;
+  while I <= Length(S) do
+  begin
+    Inc(J);
+    Result[J] := S[I];
+    if S[I] = '+' then
+      Result[J] := ' '
+    else if (S[I] = '%') and (I + 2 <= Length(S)) then
+    begin
+      Hi := HexValue(S[I + 1]);
+      Lo := HexValue(S[I + 2]);
+      if (Hi > -1) and (Lo > -1) then
+      begin
+        Result[J] := Chr(Hi * 16 + Lo);
+        Inc(I, 2);
+      end;
+    end;
+    Inc(I);
+  end;
+  SetLength(Result, J);
+end;
+
 { Note: Query parameters should be UriEncode'd before they are sent to GenerateRequest }
+
+{ Signature version 4 requires query parameters sorted by name, then by value,
+  in byte order }
+
+function QueryCompare(List: TStringList; Index1, Index2: Integer): Integer;
+var
+  A, B: string;
+begin
+  A := List[Index1];
+  B := List[Index2];
+  Result := CompareStr(A.FirstOf('='), B.FirstOf('='));
+  if Result = 0 then
+    Result := CompareStr(A.SecondOf('='), B.SecondOf('='));
+end;
 
 function QueryEncode(Query: string): string;
 var
@@ -573,7 +869,7 @@ begin
   try
     for S in Query.Split('&') do
       List.Add(S);
-    List.Sorted := True;
+    List.CustomSort(QueryCompare);
     S := List[0];
     Result := S.FirstOf('=') + '=' + S.SecondOf('=');
     for I := 1 to List.Count - 1 do
@@ -586,7 +882,11 @@ begin
   end;
 end;
 
-function GenerateRequest(Config: TS3Config; const Region, Verb: string; Url: TUrl; Headers: THeaderPairs = nil): string;
+{ PayloadHash is the hex SHA256 of the request body, NoContent for an empty
+  body, or UnsignedPayload when the body is not hashed }
+
+function GenerateRequest(Config: TS3Config; const Region, Verb: string; Url: TUrl;
+  Headers: THeaderPairs = nil; const PayloadHash: string = NoContent): string;
 var
   Date: TDateTime;
   DateShort: string;
@@ -609,7 +909,7 @@ begin
     Query := QueryEncode(Url.Resource.SecondOf('?'));
     Headers
       .Add('Host', Url.Domain)
-      .Add('X-Amz-Content-Sha256', NoContent)
+      .Add('X-Amz-Content-Sha256', PayloadHash)
       .Add('X-Amz-Date', DateLong);
     CanonicalRequest :=
       Verb + #10 +
@@ -620,7 +920,7 @@ begin
         CanonicalRequest := CanonicalRequest + LowerCase(Name) + ':' + Value + #10;
     CanonicalRequest := CanonicalRequest + #10 +
       Headers.Names + #10 +
-      NoContent;
+      PayloadHash;
     StringToSign :=
       'AWS4-HMAC-SHA256'#10 +
       DateLong + #10 +
@@ -682,7 +982,7 @@ begin
   CanonicalRequest :=
     'GET'#10 +
     Resource + #10 +
-    'X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJ25NK7ETIMG7CGRQ' +
+    'X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=' + Config.AccessId +
     UriEncode('/' + DateShort + '/' + Region + '/s3/aws4_request') +
     '&X-Amz-Date=' + DateLong + '&X-Amz-Expires=' + Seconds + '&X-Amz-SignedHeaders=host'#10 +
     'host:' + Host + #10 +
@@ -707,7 +1007,7 @@ begin
   Result := Result + Resource +
     '?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=' + Config.AccessId +
     UriEncode('/' + DateShort + '/' + Region + '/s3/aws4_request') +
-    '&X-Amz-Date=' + DateLong + '&X-Amz-Expires=' + Seconds + '&X-Amz-SignedHeaders=host'#10 +
+    '&X-Amz-Date=' + DateLong + '&X-Amz-Expires=' + Seconds + '&X-Amz-SignedHeaders=host' +
     '&X-Amz-Signature=' + Signature;
 end;
 
@@ -728,11 +1028,22 @@ end;
 
 { TS3Methods }
 
+{ Bucket regions are cached as case sensitive bucket=region pairs }
+
+function NewBucketCache: TStrings;
+var
+  List: TStringList;
+begin
+  List := TStringList.Create;
+  List.CaseSensitive := True;
+  Result := List;
+end;
+
 constructor TS3Methods.Create(const AProvider: string);
 begin
   inherited Create;
   FConfig := TS3Config.Create(AProvider);
-  FBuckets := TStringList.Create;
+  FBuckets := NewBucketCache;
 end;
 
 destructor TS3Methods.Destroy;
@@ -751,7 +1062,7 @@ procedure TS3Methods.Reconfigure(const AProvider: string);
 begin
   FBuckets.Free;
   FConfig.Free;
-  FBuckets := TStringList.Create;
+  FBuckets := NewBucketCache;
   FConfig := TS3Config.Create(AProvider);
 end;
 
@@ -777,7 +1088,7 @@ var
   I: Integer;
 begin
   Result := '';
-  I := FBuckets.IndexOf(UpperCase(Bucket));
+  I := FBuckets.IndexOfName(Bucket);
   if I < 0 then
   begin
     Request.EndPoint := FConfig.EndPoint;
@@ -785,32 +1096,19 @@ begin
       FConfig.EndPoint + '/' + Bucket + '?location');
     if Send(Request, D) then
     begin
-      Result := D.Root.Text;
-      if Result = '' then
-        Result := FConfig.DefaultRegion;
-      FBuckets.Add(UpperCase(Bucket));
-      FBuckets.Add(Result);
+      Result := FConfig.LocationRegion(D.Root.Text);
+      AddRegion(Bucket, Result);
     end;
   end
   else
-    Result := FBuckets[I + 1];
+    Result := FBuckets.ValueFromIndex[I];
   if Result = '' then
     Result := FConfig.DefaultRegion;
 end;
 
 procedure TS3Methods.AddRegion(const Bucket, Region: string);
-var
-  I: Integer;
 begin
-  I := FBuckets.IndexOf(UpperCase(Bucket));
-  if I < 0 then
-  begin
-    FBuckets.Add(UpperCase(Bucket));
-    if Region <> '' then
-      FBuckets.Add(Region)
-    else
-      FBuckets.Add(FConfig.DefaultRegion);
-  end;
+  FBuckets.Values[Bucket] := FConfig.LocationRegion(Region);
 end;
 
 function TS3Methods.ListBuckets: TS3Request;
@@ -875,6 +1173,78 @@ begin
 end;
 {$endregion}
 
+{$region objects}
+const
+  AccessAcl: array[TS3Access] of string = ('', 'private', 'public-read');
+
+{ ObjectRequest builds a signed request for an object in a bucket. Headers is
+  consumed by GenerateRequest. }
+
+function ObjectRequest(S3: TS3Methods; const Verb, Bucket, Key, Query: string;
+  Headers: THeaderPairs; const PayloadHash: string = NoContent): TS3Request;
+var
+  Region, Url: string;
+begin
+  Region := S3.FindRegion(Bucket);
+  Result.EndPoint := S3.Config.EndPoint(Region);
+  Url := Result.EndPoint + '/' + Bucket + '/' + UrlEncode(Key);
+  if Query <> '' then
+    Url := Url + '?' + Query;
+  Result.Header := GenerateRequest(S3.Config, Region, Verb, Url, Headers, PayloadHash);
+end;
+
+function TS3Methods.GetObject(const Bucket, Key: string): TS3Request;
+begin
+  Result := ObjectRequest(Self, 'GET', Bucket, Key, '', nil);
+end;
+
+function TS3Methods.HeadObject(const Bucket, Key: string): TS3Request;
+begin
+  Result := ObjectRequest(Self, 'HEAD', Bucket, Key, '', nil);
+end;
+
+function TS3Methods.PutObject(const Bucket, Key: string; Size: Int64;
+  const ContentType: string = ''; Access: TS3Access = accessDefault): TS3Request;
+var
+  Headers: THeaderPairs;
+  S: string;
+begin
+  S := ContentType;
+  if S = '' then
+    S := 'application/octet-stream';
+  Headers := NewHeaders
+    .Add('Content-Length', IntToStr(Size))
+    .Add('Content-Type', S);
+  if Access <> accessDefault then
+    Headers.Add('X-Amz-Acl', AccessAcl[Access]);
+  { The body is not hashed so that large files are only read once. This is
+    allowed because requests are always sent over https. }
+  Result := ObjectRequest(Self, 'PUT', Bucket, Key, '', Headers, UnsignedPayload);
+end;
+
+function TS3Methods.DeleteObject(const Bucket, Key: string): TS3Request;
+begin
+  Result := ObjectRequest(Self, 'DELETE', Bucket, Key, '', nil);
+end;
+
+function TS3Methods.GetObjectAcl(const Bucket, Key: string): TS3Request;
+begin
+  Result := ObjectRequest(Self, 'GET', Bucket, Key, 'acl', nil);
+end;
+
+function TS3Methods.PutObjectAcl(const Bucket, Key: string; Access: TS3Access): TS3Request;
+var
+  Headers: THeaderPairs;
+begin
+  if Access = accessDefault then
+    Access := accessPrivate;
+  Headers := NewHeaders
+    .Add('Content-Length', '0')
+    .Add('X-Amz-Acl', AccessAcl[Access]);
+  Result := ObjectRequest(Self, 'PUT', Bucket, Key, 'acl', Headers);
+end;
+{$endregion}
+
 {$region send}
 function TS3Methods.Presign(const Bucket, Path: string; Expires: Integer = 0): string;
 var
@@ -887,227 +1257,6 @@ begin
       Url := Url + ':' + IntToStr(FConfig.Port);
   Url := Url + '/' + Bucket + '/' + UrlEncode(Path);
   Result := GenerateUrl(FConfig, Url, Region, Expires);
-end;
-
-type
-  TReadBuffer = class
-    FSocket: TSocket;
-    FBuffer: string;
-    FIndex: Integer;
-    FLength: Integer;
-  public
-    procedure Reset(Socket: TSocket; Buffer: string);
-    function Read(var Buffer; BufferSize: LongWord): Integer; overload;
-    function Read(out Text: string): Integer; overload;
-  end;
-
-procedure TReadBuffer.Reset(Socket: TSocket; Buffer: string);
-begin
-  FSocket := Socket;
-  FBuffer := Buffer;
-  FIndex := 1;
-  FLength := Length(FBuffer);
-end;
-
-function TReadBuffer.Read(var Buffer; BufferSize: LongWord): Integer;
-var
-  B: PByte;
-begin
-  if FLength > 0 then
-  begin
-    Result := 0;
-    B := PByte(@Buffer);
-    while (FLength > 0) and (BufferSize > 0) do
-    begin
-      B^ := Byte(FBuffer[FIndex]);
-      Inc(FIndex);
-      Dec(FLength);
-      Dec(BufferSize);
-      Inc(Result);
-    end;
-  end
-  else
-    Result := FSocket.Read(Buffer, BufferSize);
-end;
-
-function TReadBuffer.Read(out Text: string): Integer; overload;
-var
-  P: PChar;
-begin
-  if FLength > 0 then
-  begin
-    P := PChar(FBuffer);
-    Inc(P, FIndex - 1);
-    Text := P^;
-    Result := FLength;
-    FLength := 0;
-  end
-  else
-    Result := FSocket.Read(Text);
-end;
-
-function InternalSend(const Request: TS3Request; Port: Word; Stream: TStream; Task: IAsyncDocTask = nil): Boolean;
-
-  procedure DoProgress(Delta: Int64);
-  begin
-    if (Delta > 0) and (Task <> nil) then
-      (Task as IAsyncRunnerBase).Tick(Delta);
-  end;
-
-  function IsCancelled: Boolean;
-  begin
-    Result := (Task <> nil) and Task.Cancelled;
-  end;
-
-  function ReadChunk(S: TReadBuffer; Chunk: string): string;
-  var
-    Buffer: string;
-    P: PChar;
-    I, J: Integer;
-  begin
-    Result := '';
-    if IsCancelled then
-      Exit;
-    Chunk := '$' + Chunk;
-    I := StrToIntDef(Chunk, 0);
-    if I = 0 then
-      Exit;
-    SetLength({%H-}Buffer, I);
-    P := PChar(Buffer);
-    while I > 0 do
-    begin
-      if IsCancelled then
-        Exit;
-      J := S.Read(P^, LongWord(I));
-      if J = 0 then
-        Exit;
-      DoProgress(J);
-      Inc(P, J);
-      Dec(I, J);
-    end;
-    Result := Buffer;
-  end;
-
-  procedure ErrorNoConnect;
-  var
-    D: IDocument;
-    F: IFiler;
-    S: string;
-  begin
-    D := NewDocument;
-    F := D.Force('Error').Filer;
-    F.WriteStr('Kind', 'No Connect');
-    F.WriteStr('Message', 'Could not connect to ' + Request.EndPoint + ':' + IntToStr(Port));
-    S := D.Xml;
-    Stream.Write(PChar(S)^, Length(S));
-  end;
-
-  procedure ErrorNoWrite(ErrorCode: Integer);
-  var
-    D: IDocument;
-    F: IFiler;
-    S: string;
-  begin
-    D := NewDocument;
-    F := D.Force('Error').Filer;
-    if ErrorCode = 0 then
-    begin
-      F.WriteStr('Kind', 'No Header');
-      F.WriteStr('Message', 'No response hreader received');
-    end
-    else
-    begin
-      F.WriteStr('Kind', 'Error Code');
-      F.WriteStr('Message', 'Recevied ' +  IntToStr(ErrorCode) + ' response error');
-    end;
-    S := D.Xml;
-    Stream.Write(PChar(S)^, Length(S));
-  end;
-
-var
-  Header: THttpResponseHeader;
-  Buffer, Data, Encoding, Chunk: string;
-  Connected, Read, Written: Boolean;
-  ErrorCode: Integer;
-  Socket: TSocket;
-  ReadBuffer: TReadBuffer;
-  C: Char;
-begin
-  Result := False;
-  Header.Clear;
-  Buffer := '';
-  Connected := False;
-  Read := False;
-  Written := False;
-  ErrorCode := 0;
-  Socket := TSocket.Create;
-  ReadBuffer := TReadBuffer.Create;
-  try
-    Socket.Secure := True;
-    if Socket.Connect(Request.EndPoint, Port) then
-    begin
-      Connected := True;
-      if IsCancelled then
-        Exit;
-      Socket.Write(Request.Header);
-      while not Read do
-        while Socket.Read(Data) > 0 do
-        begin
-          Read := True;
-          Buffer := Buffer + Data;
-          if Header.Extract(Buffer) then
-          begin
-            ReadBuffer.Reset(Socket, Buffer);
-            ErrorCode := Header.Code;
-            Result := ErrorCode = 200;
-            Encoding := Header.Keys.Values['Transfer-Encoding'];
-            if StrContains(Encoding, 'chunked', True) then
-            repeat
-              Chunk := '';
-              if IsCancelled then
-                Exit;
-              while ReadBuffer.Read({%H-}C, 1) = 1 do
-              begin
-                if IsCancelled then
-                  Exit;
-                if (C = #10) and (Chunk <> '') then
-                begin
-                  Data := ReadChunk(ReadBuffer, Chunk);
-                  if IsCancelled then
-                    Exit;
-                  Chunk := '';
-                  if Length(Data) < 1 then
-                    Break;
-                  Written := True;
-                  Stream.Write(Pointer(Data)^, Length(Data));
-                end
-                else if C > ' ' then
-                  Chunk := Chunk + C;
-              end;
-            until Chunk = ''
-            else while ReadBuffer.Read(Data) > 0 do
-            begin
-              if IsCancelled then
-                Exit;
-              DoProgress(Length(Data));
-              Written := True;
-              Stream.Write(Pointer(Data)^, Length(Data));
-            end;
-            Break;
-          end;
-        end;
-    end;
-  finally
-    ReadBuffer.Free;
-    Socket.Free;
-    if IsCancelled then
-      Result := False;
-  end;
-  if not Result then
-    if not Connected then
-      ErrorNoConnect
-    else if not Written then
-      ErrorNoWrite(ErrorCode);
 end;
 
 procedure ResponseCodes(Status: TResponseStatus; out Name: string; var Code: Integer);
@@ -1141,24 +1290,65 @@ begin
       Code := 0;
 end;
 
-function InternalDoc(const Body: string; Status: TResponseStatus; Code: Integer): IDocument;
+{ InternalDoc converts a response to a document. When the response has no xml
+  body its headers are stored as Headers/Header elements, each with a Name in
+  lower case and a Value. }
+
+function InternalDoc(const Body: string; Status: TResponseStatus;
+  const Header: THttpResponseHeader): IDocument;
 const
   Xmlns = ' xmlns="http://s3.amazonaws.com/doc/2006-03-01/"';
 var
   Name: string;
+  Code: Integer;
+  Headers: INode;
   F: IFiler;
+  I: Integer;
 begin
   Result := NewDocument;
   if Body.BeginsWith('<?xml') then
     Result.Xml := Body.ReplaceOne(Xmlns, '')
   else
-    Result.Force('Error');
+  begin
+    if Status = rsSuccess then
+      { Requests such as PutObject, DeleteObject, and HeadObject succeed with
+        no body }
+      Result.Force('Response')
+    else
+      Result.Force('Error');
+    Headers := Result.Root.Force('Headers');
+    for I := 0 to Header.Keys.Count - 1 do
+    begin
+      F := Headers.Nodes.Add('Header').Filer;
+      F.WriteStr('Name', LowerCase(Header.Keys.Names[I]));
+      F.WriteStr('Value', Header.Keys.ValueByIndex[I]);
+    end;
+  end;
   if Status <> rsSuccess then
   begin
     F := Result.Root.Force('ResponseStatus').Filer;
+    Code := Header.Code;
     ResponseCodes(Status, Name, Code);
     F.WriteStr('Name', Name);
     F.WriteInt('Code', Code);
+  end;
+end;
+
+function S3ResponseHeader(Response: IDocument; const Name: string): string;
+var
+  N: INode;
+  F: IFiler;
+  S: string;
+begin
+  Result := '';
+  if (Response = nil) or (Response.Root = nil) then
+    Exit;
+  S := LowerCase(Name);
+  for N in Response.Root.SelectList('Headers/Header') do
+  begin
+    F := N.Filer;
+    if F.ReadStr('Name') = S then
+      Exit(F.ReadStr('Value'));
   end;
 end;
 
@@ -1170,7 +1360,7 @@ var
 begin
   Status := WebSendRequest('https://' + Request.EndPoint + ':' + IntToStr(FConfig.Port),
     Request.Header, Body, ResponseHeader);
-  Response := InternalDoc(Body, Status, ResponseHeader.Code);
+  Response := InternalDoc(Body, Status, ResponseHeader);
   Result := Status = rsSuccess;
 end;
 
@@ -1184,12 +1374,82 @@ begin
   Result := Status = rsSuccess;
 end;
 
+{ TJoinStream reads a request header followed by a request body without
+  copying the body into memory. It only supports reading, which is all a
+  socket needs to send it. The body is not owned. }
+
+type
+  TJoinStream = class(TStream)
+  private
+    FHead: TStringStream;
+    FTail: TStream;
+  public
+    constructor Create(const Head: string; Tail: TStream);
+    destructor Destroy; override;
+    function Read(var Buffer; Count: Longint): Longint; override;
+  end;
+
+constructor TJoinStream.Create(const Head: string; Tail: TStream);
+begin
+  inherited Create;
+  FHead := TStringStream.Create(Head);
+  FTail := Tail;
+end;
+
+destructor TJoinStream.Destroy;
+begin
+  FHead.Free;
+  inherited Destroy;
+end;
+
+function TJoinStream.Read(var Buffer; Count: Longint): Longint;
+var
+  P: PByte;
+begin
+  Result := FHead.Read(Buffer, Count);
+  if (Result < Count) and (FTail <> nil) then
+  begin
+    P := PByte(@Buffer);
+    Inc(P, Result);
+    Result := Result + FTail.Read(P^, Count - Result);
+  end;
+end;
+
+{ SendBody sends a request header and body, outputting the response to a XML
+  document. Task may be nil. }
+
+function SendBody(const Request: TS3Request; Port: Word; Body: TStream;
+  out Response: IDocument; Task: IAsyncTask = nil): Boolean;
+var
+  Stream: TStream;
+  ResponseHeader: THttpResponseHeader;
+  Text: string;
+  Status: TResponseStatus;
+begin
+  Stream := TJoinStream.Create(Request.Header, Body);
+  try
+    Status := WebSendRequestStream('https://' + Request.EndPoint + ':' +
+      IntToStr(Port), Stream, Text, ResponseHeader, Task);
+  finally
+    Stream.Free;
+  end;
+  Response := InternalDoc(Text, Status, ResponseHeader);
+  Result := Status = rsSuccess;
+end;
+
+function TS3Methods.SendObject(const Request: TS3Request; Body: TStream;
+  out Response: IDocument): Boolean;
+begin
+  Result := SendBody(Request, FConfig.Port, Body, Response);
+end;
+
 { Async support }
 
 type
   TAsyncParams<T> = record
     Request: TS3Request;
     Port: Word;
+    Body: TStream;
     Success: Boolean;
     Result: T;
   end;
@@ -1216,9 +1476,15 @@ var
   Body: string;
   Status: TResponseStatus;
 begin
+  if Params.Body <> nil then
+  begin
+    Params.Success := SendBody(Params.Request, Params.Port, Params.Body,
+      Params.Result, Task);
+    Exit;
+  end;
   Status := WebSendRequest('https://' + Params.Request.EndPoint + ':' +
     IntToStr(Params.Port), Params.Request.Header, Body, ResponseHeader, Task);
-  Params.Result := InternalDoc(Body, Status, ResponseHeader.Code);
+  Params.Result := InternalDoc(Body, Status, ResponseHeader);
   Params.Success := Status = rsSuccess;
 end;
 
@@ -1236,12 +1502,29 @@ var
 begin
   Params.Request := Request;
   Params.Port := FConfig.Port;
+  Params.Body := nil;
+  TThreadRunner<TAsyncDocParams>.Create(Params, Task, DocExecute, DocComplete);
+end;
+
+procedure TS3Methods.SendObjectAsync(const Request: TS3Request; Body: TStream;
+  Task: IAsyncDocTask);
+var
+  Params: TAsyncDocParams;
+begin
+  Params.Request := Request;
+  Params.Port := FConfig.Port;
+  Params.Body := Body;
   TThreadRunner<TAsyncDocParams>.Create(Params, Task, DocExecute, DocComplete);
 end;
 
 procedure StreamExecute(var Params: TAsyncStreamParams; Task: IAsyncTask);
+var
+  ResponseHeader: THttpResponseHeader;
+  Status: TResponseStatus;
 begin
-  Params.Success := InternalSend(Params.Request, Params.Port, Params.Result, Task as IAsyncDocTask);
+  Status := WebSendRequest('https://' + Params.Request.EndPoint + ':' +
+    IntToStr(Params.Port), Params.Request.Header, Params.Result, ResponseHeader, Task);
+  Params.Success := Status = rsSuccess;
 end;
 
 procedure StreamComplete(var Params: TAsyncStreamParams; Task: IAsyncTask);
@@ -1258,6 +1541,7 @@ var
 begin
   Params.Request := Request;
   Params.Port := FConfig.Port;
+  Params.Body := nil;
   Params.Result := Stream;
   TThreadRunner<TAsyncStreamParams>.Create(Params, Task, StreamExecute, StreamComplete);
 end;

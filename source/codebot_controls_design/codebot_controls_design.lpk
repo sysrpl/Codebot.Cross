@@ -19,7 +19,7 @@
         </ConfigFile>
       </Other>
     </CompilerOptions>
-    <Files Count="11">
+    <Files Count="12">
       <Item1>
         <Filename Value="codebot.design.registration.pas"/>
         <HasRegisterProc Value="True"/>
@@ -65,6 +65,11 @@
         <Filename Value="codebot.design.appexplorer.pas"/>
         <UnitName Value="Codebot.Design.AppExplorer"/>
       </Item11>
+      <Item12>
+        <Filename Value="codebotcontrolsdesignpackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotControlsDesignPackage"/>
+      </Item12>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

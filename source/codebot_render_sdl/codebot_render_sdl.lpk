@@ -24,6 +24,11 @@
         <Filename Value="codebot.platform.sdl.pas"/>
         <UnitName Value="Codebot.Platform.SDL"/>
       </Item>
+      <Item>
+        <Filename Value="codebotrendersdlpackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotRenderSdlPackage"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

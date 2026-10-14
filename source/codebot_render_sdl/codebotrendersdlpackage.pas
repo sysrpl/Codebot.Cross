@@ -2,15 +2,13 @@
   This source is only used to compile and install the package.
   }
 
-unit codebot_webkit;
+unit CodebotRenderSdlPackage;
 
 {$warn 5023 off : no warning about unused units}
 interface
 
 uses
-  Codebot.Interop.WebKit, Codebot.WebKit.Controls,
-  Codebot.WebKit.Controls.Gtk3, Codebot.WebKit.Controls.Extras,
-  Codebot.Interop.WebView2, Codebot.WebKit.Controls.Win, LazarusPackageIntf;
+  Codebot.Render.Application, Codebot.Platform.SDL, LazarusPackageIntf;
 
 implementation
 
@@ -19,5 +17,5 @@ begin
 end;
 
 initialization
-  RegisterPackage('codebot_webkit', @Register);
+  RegisterPackage('codebot_render_sdl', @Register);
 end.

@@ -14,7 +14,7 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="5">
+    <Files Count="6">
       <Item1>
         <Filename Value="terminal.inc"/>
         <Type Value="Include"/>
@@ -35,6 +35,11 @@
         <Filename Value="codebot.terminal.controls.gtk2.pas"/>
         <UnitName Value="Codebot.Terminal.Controls.Gtk2"/>
       </Item5>
+      <Item6>
+        <Filename Value="codebotterminalpackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotTerminalPackage"/>
+      </Item6>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="2">

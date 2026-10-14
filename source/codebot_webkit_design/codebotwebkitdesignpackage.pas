@@ -2,22 +2,22 @@
   This source is only used to compile and install the package.
   }
 
-unit codebot_render_design;
+unit CodebotWebkitDesignPackage;
 
 {$warn 5023 off : no warning about unused units}
 interface
 
 uses
-  Codebot.Render.Registration, LazarusPackageIntf;
+  Codebot.WebKit.Registration, LazarusPackageIntf;
 
 implementation
 
 procedure Register;
 begin
-  RegisterUnit('Codebot.Render.Registration',
-    @Codebot.Render.Registration.Register);
+  RegisterUnit('Codebot.WebKit.Registration',
+    @Codebot.WebKit.Registration.Register);
 end;
 
 initialization
-  RegisterPackage('codebot_render_design', @Register);
+  RegisterPackage('codebot_webkit_design', @Register);
 end.

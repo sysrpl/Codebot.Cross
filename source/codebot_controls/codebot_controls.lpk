@@ -101,8 +101,9 @@
         <Type Value="Text"/>
       </Item20>
       <Item21>
-        <Filename Value="codebot_controls.pas"/>
-        <UnitName Value="codebot_controls"/>
+        <Filename Value="codebotcontrolspackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotControlsPackage"/>
       </Item21>
       <Item22>
         <Filename Value="codebot.controls.extras.pas"/>
