@@ -14,7 +14,7 @@ unit Codebot.Design.Registration;
 interface
 
 uses
-  Classes, PropEdits, ComponentEditors, MenuIntf,
+  Classes, Graphics, PropEdits, ComponentEditors, MenuIntf,
   Codebot.Design.Editors,
   Codebot.Design.Forms,
   Codebot.Design.AppExplorer,
@@ -66,6 +66,9 @@ begin
     TSurfaceBitmapPropertyEditor);
   RegisterPropertyEditor(TypeInfo(TTextItems), TTextStorage, 'Items',
     TTextItemsPropertyEditor);
+  { Registered after the LCL color editor, so it is used for every TColor }
+  RegisterPropertyEditor(TypeInfo(Graphics.TColor), nil, '',
+    TAdvancedColorPropertyEditor);
   { Component editors }
   RegisterComponentEditor(TSizingPanel, TSizingPanelEditor);
   RegisterComponentEditor(TDrawImage, TRenderImageEditor);

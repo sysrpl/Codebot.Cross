@@ -14,8 +14,8 @@ unit Codebot.Design.Editors;
 interface
 
 uses
-  SysUtils, Classes, Graphics, PropEdits, ComponentEditors, ProjectIntf,
-  TypInfo,
+  SysUtils, Classes, Graphics, PropEdits, GraphPropEdits, ComponentEditors,
+  ProjectIntf, LazIDEIntf, TypInfo,
   Codebot.Graphics,
   Codebot.Graphics.Types,
   Codebot.Controls.Containers,
@@ -69,6 +69,15 @@ type
     function GetAttributes: TPropertyAttributes; override;
   end;
 
+{ TAdvancedColorPropertyEditor replaces the color dialog of the default TColor
+  property editor with a TAdvancedColorDialog. The custom colors are kept in
+  the Lazarus configuration directory. }
+
+  TAdvancedColorPropertyEditor = class(TColorPropertyEditor)
+  public
+    procedure Edit; override;
+  end;
+
 { TSizingPanelEditor }
 
   TSizingPanelEditor = class(TComponentEditor)
@@ -111,6 +120,42 @@ type
   end;
 
 implementation
+
+uses
+  Codebot.Forms.ColorDialog;
+
+{ TAdvancedColorPropertyEditor }
+
+{ The custom colors file in the Lazarus configuration directory, ~/.lazarus on
+  Linux and %LOCALAPPDATA%\lazarus on Windows unless the IDE was started with
+  another --primary-config-path }
+
+function CustomColorsFile: string;
+begin
+  Result := '';
+  if LazarusIDE <> nil then
+    Result := LazarusIDE.GetPrimaryConfigPath;
+  if Result = '' then
+    Exit;
+  Result := IncludeTrailingPathDelimiter(Result) + 'codebot_customcolors.txt';
+end;
+
+procedure TAdvancedColorPropertyEditor.Edit;
+var
+  Dialog: TAdvancedColorDialog;
+begin
+  Dialog := TAdvancedColorDialog.Create(nil);
+  try
+    Dialog.Color := TColor(GetOrdValue);
+    { An empty name makes the dialog use its own default file }
+    Dialog.CustomColorsFile := CustomColorsFile;
+    { A TColor has no alpha, the alpha picked in the dialog is ignored }
+    if Dialog.Execute then
+      SetOrdValue(Dialog.Color);
+  finally
+    Dialog.Free;
+  end;
+end;
 
 { TImageStripIndexPropertyEditor }
 
