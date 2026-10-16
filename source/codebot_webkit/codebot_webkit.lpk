@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="5">
+  <Package Version="6">
     <Name Value="codebot_webkit"/>
     <Type Value="RunAndDesignTime"/>
     <CompilerOptions>
@@ -14,49 +14,50 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="8">
-      <Item1>
+    <SupportedWidgetsets Value="gtk3,win32"/>
+    <SupportedTargetOS Value="linux,win64"/>
+    <Files>
+      <Item>
         <Filename Value="webkit.inc"/>
         <Type Value="Include"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <Filename Value="codebot.interop.webkit.pas"/>
         <UnitName Value="Codebot.Interop.WebKit"/>
-      </Item2>
-      <Item3>
+      </Item>
+      <Item>
         <Filename Value="codebot.webkit.controls.pas"/>
         <UnitName Value="Codebot.WebKit.Controls"/>
-      </Item3>
-      <Item4>
+      </Item>
+      <Item>
         <Filename Value="codebot.webkit.controls.gtk3.pas"/>
         <UnitName Value="Codebot.WebKit.Controls.Gtk3"/>
-      </Item4>
-      <Item5>
+      </Item>
+      <Item>
         <Filename Value="codebot.webkit.controls.extras.pas"/>
         <UnitName Value="Codebot.WebKit.Controls.Extras"/>
-      </Item5>
-      <Item6>
+      </Item>
+      <Item>
         <Filename Value="codebot.interop.webview2.pas"/>
         <UnitName Value="Codebot.Interop.WebView2"/>
-      </Item6>
-      <Item7>
+      </Item>
+      <Item>
         <Filename Value="codebot.webkit.controls.win.pas"/>
         <UnitName Value="Codebot.WebKit.Controls.Win"/>
-      </Item7>
-      <Item8>
+      </Item>
+      <Item>
         <Filename Value="codebotwebkitpackage.pas"/>
         <Type Value="Main Unit"/>
         <UnitName Value="CodebotWebkitPackage"/>
-      </Item8>
+      </Item>
     </Files>
-    <CompatibilityMode Value="True"/>
-    <RequiredPkgs Count="2">
-      <Item1>
+    <RequiredPkgs>
+      <Item>
         <PackageName Value="codebot_controls"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <PackageName Value="LCL"/>
-      </Item2>
+      </Item>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

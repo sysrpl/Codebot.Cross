@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="5">
+  <Package Version="6">
     <Name Value="codebot_terminal"/>
-    <Type Value="RunAndDesignTime"/>
     <CompilerOptions>
       <Version Value="11"/>
       <SearchPaths>
@@ -14,41 +13,42 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="6">
-      <Item1>
+    <SupportedWidgetsets Value="gtk2,gtk3"/>
+    <SupportedTargetOS Value="linux"/>
+    <Files>
+      <Item>
         <Filename Value="terminal.inc"/>
         <Type Value="Include"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <Filename Value="codebot.terminal.types.pas"/>
         <UnitName Value="Codebot.Terminal.Types"/>
-      </Item2>
-      <Item3>
+      </Item>
+      <Item>
         <Filename Value="codebot.terminal.controls.pas"/>
         <UnitName Value="Codebot.Terminal.Controls"/>
-      </Item3>
-      <Item4>
+      </Item>
+      <Item>
         <Filename Value="codebot.terminal.controls.gtk3.pas"/>
         <UnitName Value="Codebot.Terminal.Controls.Gtk3"/>
-      </Item4>
-      <Item5>
+      </Item>
+      <Item>
         <Filename Value="codebot.terminal.controls.gtk2.pas"/>
         <UnitName Value="Codebot.Terminal.Controls.Gtk2"/>
-      </Item5>
-      <Item6>
+      </Item>
+      <Item>
         <Filename Value="codebotterminalpackage.pas"/>
         <Type Value="Main Unit"/>
         <UnitName Value="CodebotTerminalPackage"/>
-      </Item6>
+      </Item>
     </Files>
-    <CompatibilityMode Value="True"/>
-    <RequiredPkgs Count="2">
-      <Item1>
+    <RequiredPkgs>
+      <Item>
         <PackageName Value="codebot"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <PackageName Value="LCL"/>
-      </Item2>
+      </Item>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="5">
+  <Package Version="6">
     <Name Value="codebot_terminal_design"/>
     <Type Value="DesignTime"/>
     <CompilerOptions>
@@ -14,34 +14,35 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <Files Count="4">
-      <Item1>
+    <SupportedWidgetsets Value="gtk2,gtk3"/>
+    <SupportedTargetOS Value="linux"/>
+    <Files>
+      <Item>
         <Filename Value="codebot.terminal.registration.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="Codebot.Terminal.Registration"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <Filename Value="codebot.terminal.emulatordialog.lfm"/>
         <Type Value="LFM"/>
-      </Item2>
-      <Item3>
+      </Item>
+      <Item>
         <Filename Value="codebot.terminal.emulatordialog.pas"/>
         <UnitName Value="Codebot.Terminal.EmulatorDialog"/>
-      </Item3>
-      <Item4>
+      </Item>
+      <Item>
         <Filename Value="codebotterminaldesignpackage.pas"/>
         <Type Value="Main Unit"/>
         <UnitName Value="CodebotTerminalDesignPackage"/>
-      </Item4>
+      </Item>
     </Files>
-    <CompatibilityMode Value="True"/>
-    <RequiredPkgs Count="2">
-      <Item1>
+    <RequiredPkgs>
+      <Item>
         <PackageName Value="codebot_terminal"/>
-      </Item1>
-      <Item2>
+      </Item>
+      <Item>
         <PackageName Value="IDEIntf"/>
-      </Item2>
+      </Item>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
