@@ -1,0 +1,188 @@
+object ConvertDialog: TConvertDialog
+  Left = 400
+  Height = 400
+  Top = 200
+  Width = 480
+  BorderStyle = bsDialog
+  Caption = 'Convert to Control'
+  ClientHeight = 400
+  ClientWidth = 480
+  Position = poScreenCenter
+  OnCloseQuery = FormCloseQuery
+  object SourceLabel: TLabel
+    Left = 12
+    Height = 17
+    Top = 12
+    Width = 456
+    AutoSize = False
+    Caption = 'Source:'
+  end
+  object ClassNameLabel: TLabel
+    Left = 12
+    Height = 17
+    Top = 46
+    Width = 100
+    Caption = 'Class name:'
+  end
+  object ClassNameEdit: TEdit
+    Left = 120
+    Height = 28
+    Top = 40
+    Width = 348
+    TabOrder = 0
+    OnChange = ClassNameEditChange
+  end
+  object UnitNameLabel: TLabel
+    Left = 12
+    Height = 17
+    Top = 80
+    Width = 100
+    Caption = 'Unit name:'
+  end
+  object UnitNameEdit: TEdit
+    Left = 120
+    Height = 28
+    Top = 74
+    Width = 348
+    TabOrder = 1
+    OnChange = UnitNameEditChange
+  end
+  object PageLabel: TLabel
+    Left = 12
+    Height = 17
+    Top = 114
+    Width = 100
+    Caption = 'Palette page:'
+  end
+  object PageCombo: TComboBox
+    Left = 120
+    Height = 28
+    Top = 108
+    Width = 348
+    Sorted = True
+    TabOrder = 2
+  end
+  object PackageGroup: TGroupBox
+    Left = 12
+    Height = 152
+    Top = 146
+    Width = 456
+    Caption = 'Package'
+    ClientHeight = 132
+    ClientWidth = 452
+    TabOrder = 3
+    object NewPackageRadio: TRadioButton
+      Left = 12
+      Height = 21
+      Top = 4
+      Width = 120
+      Caption = 'New package'
+      TabOrder = 0
+      OnChange = PackageRadioChange
+    end
+    object PackageFileLabel: TLabel
+      Left = 32
+      Height = 17
+      Top = 36
+      Width = 80
+      Caption = 'File:'
+    end
+    object PackageFileEdit: TEdit
+      Left = 120
+      Height = 28
+      Top = 30
+      Width = 284
+      TabOrder = 1
+    end
+    object PackageFileButton: TButton
+      Left = 408
+      Height = 28
+      Top = 30
+      Width = 32
+      Caption = '...'
+      TabOrder = 2
+      OnClick = PackageFileButtonClick
+    end
+    object ExistingPackageRadio: TRadioButton
+      Left = 12
+      Height = 21
+      Top = 66
+      Width = 140
+      Caption = 'Existing package'
+      TabOrder = 3
+      OnChange = PackageRadioChange
+    end
+    object PackageCombo: TComboBox
+      Left = 32
+      Height = 28
+      Top = 92
+      Width = 372
+      Style = csDropDownList
+      TabOrder = 4
+    end
+    object PackageButton: TButton
+      Left = 408
+      Height = 28
+      Top = 92
+      Width = 32
+      Caption = '...'
+      TabOrder = 5
+      OnClick = PackageButtonClick
+    end
+  end
+  object InstallCheck: TCheckBox
+    Left = 12
+    Height = 21
+    Top = 308
+    Width = 200
+    Caption = 'Install the package now'
+    Checked = True
+    State = cbChecked
+    TabOrder = 4
+  end
+  object OpenCheck: TCheckBox
+    Left = 12
+    Height = 21
+    Top = 332
+    Width = 200
+    Caption = 'Open the new unit'
+    Checked = True
+    State = cbChecked
+    TabOrder = 5
+  end
+  object ConvertButton: TButton
+    Left = 296
+    Height = 30
+    Top = 360
+    Width = 84
+    Caption = 'Convert'
+    Default = True
+    ModalResult = 1
+    TabOrder = 6
+  end
+  object CancelButton: TButton
+    Left = 384
+    Height = 30
+    Top = 360
+    Width = 84
+    Cancel = True
+    Caption = 'Cancel'
+    ModalResult = 2
+    TabOrder = 7
+  end
+  object PackageSaveDialog: TSaveDialog
+    Title = 'New Package'
+    DefaultExt = '.lpk'
+    Filter = 'Lazarus packages (*.lpk)|*.lpk'
+    Options = [ofPathMustExist, ofEnableSizing, ofViewDetail]
+    Left = 200
+    Top = 330
+  end
+  object PackageDialog: TOpenDialog
+    Title = 'Existing Package'
+    Filter = 'Lazarus packages (*.lpk)|*.lpk'
+    Options = [ofFileMustExist, ofEnableSizing, ofViewDetail]
+    Left = 240
+    Top = 330
+  end
+end

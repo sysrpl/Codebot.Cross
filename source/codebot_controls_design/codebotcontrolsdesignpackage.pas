@@ -10,8 +10,7 @@ interface
 uses
   Codebot.Design.Registration, Codebot.Design.Editors, Codebot.Design.Forms,
   Codebot.Design.ImageListEditor, Codebot.Design.SurfaceBitmapEditor,
-  Codebot.Design.TextStorageEditor, Codebot.Design.AppExplorer,
-  LazarusPackageIntf;
+  Codebot.Design.TextStorageEditor, LazarusPackageIntf;
 
 implementation
 

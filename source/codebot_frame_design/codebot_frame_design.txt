@@ -1,0 +1,11 @@
+The codebot_frame_design package converts a form or frame of the Lazarus form designer into a new control. It is installed in the Lazarus IDE and is not used by programs. The package requires IDEIntf.
+
+The new control is a TCustomControl descendant with all of the components, event handlers, and code of the form or frame. Its layout is created in code by its constructor rather than loaded from a form resource. The unit of the control is placed in a new or existing package, along with a Register procedure that adds the control to the component palette. With dynamic packages, the package can then be installed without rebuilding or restarting the IDE.
+
+Codebot.Frame.Registration adds the Convert form or frame to control item to the designer menu and to the Tools menu. The items are enabled when the active editor tab has a form or frame open in the designer.
+
+Codebot.Frame.ConvertDialog defines the dialog that asks for the name of the new control and the package it is added to.
+
+Codebot.Frame.Packages writes a new run and design time package when one is chosen, adds the new unit and the packages it requires to the package, and opens and installs the package in the IDE.
+
+Codebot.Frame.Converter writes the source of the control, using Codebot.Frame.Lfm to read the form file, Codebot.Frame.Source to change the unit of the form, and Codebot.Frame.Resources to store properties which cannot be written as code.

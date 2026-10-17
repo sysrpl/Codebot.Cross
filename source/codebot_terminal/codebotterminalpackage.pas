@@ -8,16 +8,9 @@ unit CodebotTerminalPackage;
 interface
 
 uses
-  Codebot.Terminal.Types, Codebot.Terminal.Controls,
-  Codebot.Terminal.Controls.Gtk3, Codebot.Terminal.Controls.Gtk2,
-  LazarusPackageIntf;
+  Codebot.Terminal.Types, Codebot.Terminal.Controls, 
+  Codebot.Terminal.Controls.Gtk3, Codebot.Terminal.Controls.Gtk2;
 
 implementation
 
-procedure Register;
-begin
-end;
-
-initialization
-  RegisterPackage('codebot_terminal', @Register);
 end.

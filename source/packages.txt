@@ -121,7 +121,9 @@ Programs that use the library should list Codebot.System first in their uses cla
 | --- | --- | --- | --- |
 | codebot | The core of the library: basic types, collections, text and data formats, geometry, animation, networking, and the interfaces for graphics and the platform. | LazUtils | Runtime |
 | codebot_controls | LCL controls and forms that draw themselves using antialiased vector graphics, and the graphics backends for Linux and Windows. | codebot, LCL | Runtime |
-| codebot_controls_design | Registers the components of codebot_controls with the IDE, along with their property editors and the Application Explorer. | codebot_controls, IDEIntf, RunTimeTypeInfoControls | Design time |
+| codebot_controls_design | Registers the components of codebot_controls with the IDE, along with their property editors and forms. | codebot_controls, IDEIntf | Design time |
+| codebot_explorer | Adds the Application Explorer to the IDE, which browses the components of the IDE and edits their properties. | IDEIntf, RunTimeTypeInfoControls | Design time |
+| codebot_frame_design | Converts a form or frame of the form designer into a new control whose layout is created in code, and adds it to a new or existing package. | IDEIntf | Design time |
 | codebot_render | A cross platform graphics and game engine drawn using OpenGL, with scenes, widgets, physics, audio, and input. | codebot | Runtime |
 | codebot_render_controls | The LCL host of codebot_render, which runs scenes inside a TGraphicsBox on a form. | codebot_render, codebot_controls, LCL | Runtime |
 | codebot_render_design | Registers TGraphicsBox with the IDE. | codebot_render_controls | Design time |

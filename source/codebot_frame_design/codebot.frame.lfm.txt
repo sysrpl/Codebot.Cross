@@ -1,0 +1,5 @@
+The Codebot.Frame.Lfm unit reads the text of a form file into a tree of TLfmObject objects, one for each component, each with its TLfmProperty properties.
+
+A simple value, such as a number, string, identifier, or set, is kept as Pascal source, so that it can be written into code as it is. The lines of a list, the hexadecimal text of binary data, and the items of a collection are kept separately. Each property also keeps its text as it appears in the form file, so that a property which cannot be written as code can be converted to binary form and stored as a resource.
+
+ParseLfm reads the text of a form file and returns its root object, raising ELfmError with the line number when the text cannot be read.

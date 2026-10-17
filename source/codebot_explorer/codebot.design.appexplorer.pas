@@ -8,7 +8,7 @@
 
 { Codebot.Design.AppExplorer is the Lazarus Application Explorer, a utility to
   browse the hierarchy of components of the IDE or of your applications. It
-  is added to the IDE menu by Codebot.Design.Registration, and can be shown in
+  is added to the IDE menu by Codebot.Explorer.Registration, and can be shown in
   a program of your own by calling ShowAppExplorer. }
 
 unit Codebot.Design.AppExplorer;

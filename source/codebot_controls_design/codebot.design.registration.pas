@@ -14,10 +14,9 @@ unit Codebot.Design.Registration;
 interface
 
 uses
-  Classes, Graphics, PropEdits, ComponentEditors, MenuIntf,
+  Classes, Graphics, PropEdits, ComponentEditors,
   Codebot.Design.Editors,
   Codebot.Design.Forms,
-  Codebot.Design.AppExplorer,
   Codebot.Graphics,
   Codebot.Animation,
   Codebot.Controls,
@@ -39,11 +38,6 @@ procedure Register;
 implementation
 
 {$R palette_icons.res}
-
-procedure AppExplorerItemClick(Sender: TObject);
-begin
-  ShowAppExplorer;
-end;
 
 procedure Register;
 begin
@@ -79,9 +73,6 @@ begin
     'Codebot.Controls');
   RegisterForm(TBannerForm, 'Banner Form', 'A form a customizable header and footer',
     'Codebot.Controls.Banner');
-  { The application explorer is added to the information items of the IDE menu }
-  RegisterIDEMenuCommand(itmInfoHelps, 'AppExplorerItem', 'Application Explorer',
-    nil, AppExplorerItemClick, nil, 'menu_information');
 end;
 
 end.

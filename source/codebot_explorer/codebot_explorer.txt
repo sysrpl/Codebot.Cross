@@ -1,0 +1,5 @@
+The codebot_explorer package adds the Application Explorer to the Lazarus IDE. It is installed in the IDE and is not used by programs. The package requires IDEIntf and RunTimeTypeInfoControls.
+
+Codebot.Explorer.Registration adds the Application Explorer item to the information items of the IDE menu.
+
+Codebot.Design.AppExplorer defines the Application Explorer, which shows a tree of every component owned by the application and edits the properties of the selected component. A program can also show it by calling ShowAppExplorer.

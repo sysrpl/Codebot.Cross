@@ -1,0 +1,7 @@
+The Codebot.Frame.Converter unit converts a form or frame of the designer into the source of a control.
+
+TFrameConverter copies the unit of the form and changes it. The unit is renamed, the form class becomes a TCustomControl descendant with the new class name, and the fields of the components move to a private section. A constructor calls CreateLayout, which creates each component, places it in its parent, and sets the properties from the form file. References to other components and the items of collections are set once every component exists. The properties of the form itself which a control also has are set on the control, with the client size of the form becoming the size of the control, and an OnCreate or OnDestroy handler is called from the constructor or destructor.
+
+Properties which cannot be written as code are stored as resources and loaded by the control. A Register procedure adds the control to the chosen page of the component palette.
+
+What could not be converted is collected as messages, along with code which uses members a form has and a control does not, or the global variable of the form.

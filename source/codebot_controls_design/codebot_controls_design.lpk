@@ -19,7 +19,7 @@
         </ConfigFile>
       </Other>
     </CompilerOptions>
-    <Files Count="12">
+    <Files Count="10">
       <Item1>
         <Filename Value="codebot.design.registration.pas"/>
         <HasRegisterProc Value="True"/>
@@ -58,30 +58,19 @@
         <UnitName Value="Codebot.Design.TextStorageEditor"/>
       </Item9>
       <Item10>
-        <Filename Value="codebot.design.appexplorer.lfm"/>
-        <Type Value="LFM"/>
-      </Item10>
-      <Item11>
-        <Filename Value="codebot.design.appexplorer.pas"/>
-        <UnitName Value="Codebot.Design.AppExplorer"/>
-      </Item11>
-      <Item12>
         <Filename Value="codebotcontrolsdesignpackage.pas"/>
         <Type Value="Main Unit"/>
         <UnitName Value="CodebotControlsDesignPackage"/>
-      </Item12>
+      </Item10>
     </Files>
     <CompatibilityMode Value="True"/>
-    <RequiredPkgs Count="3">
+    <RequiredPkgs Count="2">
       <Item1>
         <PackageName Value="codebot_controls"/>
       </Item1>
       <Item2>
         <PackageName Value="IDEIntf"/>
       </Item2>
-      <Item3>
-        <PackageName Value="RunTimeTypeInfoControls"/>
-      </Item3>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>
