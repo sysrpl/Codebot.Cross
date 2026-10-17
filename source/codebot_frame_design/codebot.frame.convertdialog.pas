@@ -100,7 +100,7 @@ implementation
 {$R *.lfm}
 
 uses
-  ComponentReg, PackageIntf;
+  LazFileUtils, ComponentReg, PackageIntf, IDEOptionsIntf, MacroIntf;
 
 const
   DefaultPage = 'Custom';
@@ -182,10 +182,7 @@ begin
   end;
   LoadPages;
   LoadPackages;
-  if PackageCombo.Items.Count > 0 then
-    ExistingPackageRadio.Checked := True
-  else
-    NewPackageRadio.Checked := True;
+  NewPackageRadio.Checked := True;
   UpdateControls;
 end;
 
@@ -210,26 +207,69 @@ begin
   PageCombo.Text := DefaultPage;
 end;
 
-{ Lists the open packages which can register components and can be written to }
+{ The folders of Lazarus and of the FPC sources, whose packages are never
+  offered as the package a control is added to }
+
+procedure SystemFolders(Folders: TStrings);
+var
+  S: string;
+begin
+  if IDEEnvironmentOptions <> nil then
+  begin
+    S := IDEEnvironmentOptions.GetParsedLazarusDirectory;
+    if S <> '' then
+      Folders.Add(IncludeTrailingPathDelimiter(ExpandFileName(S)));
+  end;
+  if IDEMacros <> nil then
+  begin
+    S := '$(FPCSrcDir)';
+    if IDEMacros.SubstituteMacros(S) and (S <> '') then
+      Folders.Add(IncludeTrailingPathDelimiter(ExpandFileName(S)));
+  end;
+end;
+
+{ True if FileName is inside one of Folders }
+
+function InFolders(const FileName: string; Folders: TStrings): Boolean;
+var
+  S: string;
+begin
+  for S in Folders do
+    if CompareFilenames(Copy(FileName, 1, Length(S)), S) = 0 then
+      Exit(True);
+  Result := False;
+end;
+
+{ Lists the open user packages which can register components and can be
+  written to, leaving out the packages of Lazarus and FPC }
 
 procedure TConvertDialog.LoadPackages;
 var
   Package: TIDEPackage;
+  Folders: TStringList;
   I: Integer;
 begin
   PackageCombo.Items.Clear;
   FPackageFiles.Clear;
   if PackageEditingInterface = nil then
     Exit;
-  for I := 0 to PackageEditingInterface.GetPackageCount - 1 do
-  begin
-    Package := PackageEditingInterface.GetPackages(I);
-    if Package.IsVirtual or Package.ReadOnly then
-      Continue;
-    if Package.PackageType = lptRunTime then
-      Continue;
-    PackageCombo.Items.Add(Package.Name);
-    FPackageFiles.Add(Package.Filename);
+  Folders := TStringList.Create;
+  try
+    SystemFolders(Folders);
+    for I := 0 to PackageEditingInterface.GetPackageCount - 1 do
+    begin
+      Package := PackageEditingInterface.GetPackages(I);
+      if Package.IsVirtual or Package.ReadOnly then
+        Continue;
+      if Package.PackageType = lptRunTime then
+        Continue;
+      if InFolders(ExpandFileName(Package.Filename), Folders) then
+        Continue;
+      PackageCombo.Items.Add(Package.Name);
+      FPackageFiles.Add(Package.Filename);
+    end;
+  finally
+    Folders.Free;
   end;
   if PackageCombo.Items.Count > 0 then
     PackageCombo.ItemIndex := 0;
