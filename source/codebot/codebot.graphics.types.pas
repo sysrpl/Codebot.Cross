@@ -425,7 +425,7 @@ type
 { TColorB is a 32 bit color with byte channels stored blue, green, red,
   then alpha }
 
-  TColorB = packed record
+   TColorB = packed record
   public
     { The channels of the color }
     Blue, Green, Red, Alpha: Byte;

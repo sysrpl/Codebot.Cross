@@ -80,6 +80,9 @@ type
     FUnitNameEdited: Boolean;
     function NewPackageFile: string;
     function PackageFolder: string;
+    function IndexOfPackageFile(const PackageFile: string): Integer;
+    function IndexOfPackageName(const PackageName: string): Integer;
+    procedure SelectPackage;
     procedure LoadPages;
     procedure LoadPackages;
     procedure UpdateControls;
@@ -100,10 +103,58 @@ implementation
 {$R *.lfm}
 
 uses
-  LazFileUtils, ComponentReg, PackageIntf, IDEOptionsIntf, MacroIntf;
+  LazFileUtils, LazConfigStorage, BaseIDEIntf, ComponentReg, PackageIntf,
+  IDEOptionsIntf, MacroIntf;
 
 const
   DefaultPage = 'Custom';
+  DefaultPackage = 'usercontrols';
+  ConfigFile = 'codebotframedesign.xml';
+  LastPackagePath = 'ConvertDialog/LastPackage/Value';
+
+{ Reads the package file chosen the last time a control was converted, or
+  returns an empty string if there is none }
+
+function LoadLastPackage: string;
+var
+  Config: TConfigStorage;
+begin
+  Result := '';
+  if not Assigned(GetIDEConfigStorage) then
+    Exit;
+  try
+    Config := GetIDEConfigStorage(ConfigFile, True);
+    try
+      Result := Config.GetValue(LastPackagePath, '');
+    finally
+      Config.Free;
+    end;
+  except
+    Result := '';
+  end;
+end;
+
+{ Remembers the package file chosen for a converted control, so that it is
+  chosen again the next time the dialog is shown }
+
+procedure SaveLastPackage(const PackageFile: string);
+var
+  Config: TConfigStorage;
+begin
+  if not Assigned(GetIDEConfigStorage) then
+    Exit;
+  try
+    Config := GetIDEConfigStorage(ConfigFile, True);
+    try
+      Config.SetDeleteValue(LastPackagePath, PackageFile, '');
+      Config.WriteToDisk;
+    finally
+      Config.Free;
+    end;
+  except
+    { The choice is not remembered if the file cannot be written }
+  end;
+end;
 
 { Makes a default control class name from the class name of the form or frame,
   so that TSettingsFrame becomes TSettingsControl }
@@ -182,7 +233,7 @@ begin
   end;
   LoadPages;
   LoadPackages;
-  NewPackageRadio.Checked := True;
+  SelectPackage;
   UpdateControls;
 end;
 
@@ -241,7 +292,7 @@ begin
 end;
 
 { Lists the open user packages which can register components and can be
-  written to, leaving out the packages of Lazarus and FPC }
+  written to, leaving out the packages of Lazarus, FPC, and Codebot }
 
 procedure TConvertDialog.LoadPackages;
 var
@@ -265,6 +316,8 @@ begin
         Continue;
       if InFolders(ExpandFileName(Package.Filename), Folders) then
         Continue;
+      if LowerCase(Package.Name).StartsWith('codebot') then
+        Continue;
       PackageCombo.Items.Add(Package.Name);
       FPackageFiles.Add(Package.Filename);
     end;
@@ -273,6 +326,47 @@ begin
   end;
   if PackageCombo.Items.Count > 0 then
     PackageCombo.ItemIndex := 0;
+end;
+
+function TConvertDialog.IndexOfPackageFile(const PackageFile: string): Integer;
+var
+  I: Integer;
+begin
+  if PackageFile <> '' then
+    for I := 0 to FPackageFiles.Count - 1 do
+      if CompareFilenames(ExpandFileName(FPackageFiles[I]),
+        ExpandFileName(PackageFile)) = 0 then
+        Exit(I);
+  Result := -1;
+end;
+
+function TConvertDialog.IndexOfPackageName(const PackageName: string): Integer;
+var
+  I: Integer;
+begin
+  for I := 0 to PackageCombo.Items.Count - 1 do
+    if SameText(PackageCombo.Items[I], PackageName) then
+      Exit(I);
+  Result := -1;
+end;
+
+{ Chooses the package used the last time a control was converted if it is
+  still listed, then the usercontrols package, and otherwise a new package }
+
+procedure TConvertDialog.SelectPackage;
+var
+  I: Integer;
+begin
+  I := IndexOfPackageFile(LoadLastPackage);
+  if I < 0 then
+    I := IndexOfPackageName(DefaultPackage);
+  if I > -1 then
+  begin
+    PackageCombo.ItemIndex := I;
+    ExistingPackageRadio.Checked := True;
+  end
+  else
+    NewPackageRadio.Checked := True;
 end;
 
 procedure TConvertDialog.UpdateControls;
@@ -455,7 +549,10 @@ begin
     Dialog.Init(Root, FileName);
     Result := Dialog.ShowModal = mrOK;
     if Result then
+    begin
       Dialog.GetOptions(Options);
+      SaveLastPackage(Options.PackageFile);
+    end;
   finally
     Dialog.Free;
   end;
