@@ -423,6 +423,7 @@ procedure TFrameConverter.WriteObject(Obj: TLfmObject; const ParentName: string;
   ParentLive: TComponent);
 var
   Live: TComponent;
+  Prop: TLfmProperty;
   I: Integer;
 begin
   if Obj.IsInherited or (Obj.Name = '') then
@@ -443,8 +444,16 @@ begin
   FLayout.Add(Body + Obj.Name + ' := ' + Obj.TypeName + '.Create(Self);');
   WriteAttach(Obj.Name, Live, ParentLive, ParentName);
   for I := 0 to Obj.Properties.Count - 1 do
-    WriteProperty(Live, TLfmProperty(Obj.Properties[I]), Obj.Name + '.', Obj.Name, Body,
-      FLayout, FLater);
+  begin
+    Prop := TLfmProperty(Obj.Properties[I]);
+    { A component which is not a control has a Left and Top in the form file
+      which are only its position in the designer, so they are skipped when
+      the component has no such properties }
+    if (Live <> nil) and (SameText(Prop.Name, 'Left') or SameText(Prop.Name, 'Top')) and
+      (GetPropInfo(Live, Prop.Name) = nil) then
+      Continue;
+    WriteProperty(Live, Prop, Obj.Name + '.', Obj.Name, Body, FLayout, FLater);
+  end;
   if Obj.IsInline then
   begin
     if Obj.Children.Count > 0 then
