@@ -591,4 +591,6 @@ initialization
   NewFileDialog := NewFileDialogSDL;
   NewPictureDialog := NewPictureDialogSDL;
   PlatformClipboard := TClipboardSDL.Create;
+finalization
+  PlatformDefaults;
 end.

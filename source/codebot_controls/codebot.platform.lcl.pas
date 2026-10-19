@@ -502,4 +502,6 @@ initialization
   NewPictureDialog := NewPictureDialogLCL;
   PlatformClipboard := TClipboardLCL.Create;
   SystemColorToRGB := SystemColorToRGBLCL;
+finalization
+  PlatformDefaults;
 end.

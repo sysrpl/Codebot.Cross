@@ -468,6 +468,12 @@ const
 
 procedure PlatformDispatch;
 
+{ PlatformDefaults assigns the default platform routines and clipboard. A
+  backend unit calls it from its finalization, so that nothing refers to its
+  code once its package is unloaded. }
+
+procedure PlatformDefaults;
+
 { Platform routines and services assigned by the backend }
 
 var
@@ -910,14 +916,19 @@ begin
     Result := $F0F0F0;
 end;
 
-initialization
-  PendingLock := TCriticalSection.Create;
+procedure PlatformDefaults;
+begin
   NewBitmapData := DefaultBitmapData;
   NewMessageDialog := DefaultMessageDialog;
   NewFileDialog := DefaultFileDialog;
   NewPictureDialog := DefaultPictureDialog;
   PlatformClipboard := TDefaultClipboard.Create;
   SystemColorToRGB := DefaultSystemColorToRGB;
+end;
+
+initialization
+  PendingLock := TCriticalSection.Create;
+  PlatformDefaults;
 finalization
   PlatformClipboard := nil;
   Pending := nil;
