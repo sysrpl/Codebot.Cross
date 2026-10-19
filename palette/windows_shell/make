@@ -1,0 +1,10 @@
+#!/bin/bash
+../../../../lazarus/tools/lazres ../../source/codebot_windows_shell_design/palette_icons.res \
+	TExplorerTree.bmp \
+	TExplorerView.bmp \
+	TExplorerEdit.bmp \
+	TExplorerPreview.bmp \
+	TExplorerBinding.bmp \
+	TShellFileOperation.bmp \
+	TShellNotify.bmp \
+	TShellLink.bmp

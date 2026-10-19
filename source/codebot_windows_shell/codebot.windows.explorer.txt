@@ -1,0 +1,9 @@
+The Codebot.Windows.Explorer unit defines controls which host the parts of Windows Explorer. They show the same folders, icons, columns, context menus, and previews as Windows Explorer, and work with any shell folder, including virtual folders such as This PC, Control Panel, and the Recycle Bin.
+
+TExplorerView shows the items of a folder using the explorer browser. It has the view modes, columns, sorting, grouping, filtering, and search of Windows Explorer, keeps a history of the folders shown for GoBack and GoForward, and has methods to copy, paste, rename, and delete the selected items. TExplorerTree shows the folder tree of the navigation pane, optionally with checkboxes. TExplorerEdit shows the path of a folder as an edit with autocomplete, as a breadcrumb with a menu of subfolders for each folder, or as an edit with a drop down tree. TExplorerPreview shows a file using the preview handlers of Windows, and for files without one shows their thumbnail and details such as their size, version, dimensions, or duration.
+
+TExplorerBinding links views, trees, edits, and previews. When one of them moves to a folder the others follow, and previews show the item selected in a view.
+
+Paths are file system paths, shell parsing names such as ::{20D04FE0-3AEA-1069-A2D8-08002B30309D} for This PC, or known folders such as shell:Downloads, and the empty path is the desktop. ShellPathToIDList and ShellIDListToPath convert paths to item lists and back. A path is kept as it is given, such as shell:Downloads, while it names the folder shown.
+
+The windows Windows creates inside the explorer controls pass their mouse and keyboard input to the control, so the usual events such as OnMouseDown, OnKeyDown, OnContextPopup, and OnDragOver work. At design time those windows are transparent to the mouse so the form designer can select the controls. The unit is for Windows only.

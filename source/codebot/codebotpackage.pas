@@ -18,7 +18,7 @@ uses
   Codebot.Networking.Web, Codebot.System, Codebot.Support, 
   Codebot.Text.Formats, Codebot.Text.Json, Codebot.Text, Codebot.Text.Xml, 
   Codebot.Text.Store, Codebot.IO.SerialPort, Codebot.Unique, Codebot.Process, 
-  LazarusPackageIntf;
+  Codebot.Binding, LazarusPackageIntf;
 
 implementation
 

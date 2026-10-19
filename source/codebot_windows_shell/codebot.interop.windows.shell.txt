@@ -1,0 +1,3 @@
+The Codebot.Interop.Windows.Shell unit declares the parts of the Windows shell API which the Free Pascal ShlObj unit is missing or declares in a form which cannot be used. It covers the explorer browser and namespace tree control with their events, IFolderView2 and IColumnManager for the folder view, autocomplete, item images, preview handlers, search folders and conditions, file operations, known folders, change notifications, and the property system.
+
+Interfaces are declared only up to the last method the explorer units use, so later methods of an interface are left out. Parameters which take objects the explorer units never create, such as progress sinks, are declared as IUnknown and passed as nil. The unit is for Windows only.

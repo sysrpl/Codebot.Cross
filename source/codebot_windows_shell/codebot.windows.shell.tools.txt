@@ -1,0 +1,9 @@
+The Codebot.Windows.Shell.Tools unit defines non-visual components which use the Windows shell.
+
+TShellFileOperation copies, moves, renames, deletes, and creates files and folders the way Windows Explorer does. Windows shows its progress dialog, asks the user about conflicts, and records the operations so they can be undone in Windows Explorer. Operations can be added with AddCopy, AddMove, AddRename, AddDelete, and AddNewFolder and then performed together by Execute, or performed at once with Copy, Move, Rename, Delete, and NewFolder. With the foAllowUndo option, which is set by default, deleted items go to the recycle bin.
+
+TShellNotify reports changes Windows makes to files, folders, and drives through its OnChange event, such as items being created, deleted, or renamed, drives being added, or media being inserted. Set Path to the folder to watch, Recursive to include its subfolders, and Active to start.
+
+TShellLink reads and writes shortcuts, the .lnk files of the desktop and the start menu. Set Target and the other properties and call Save, or call Load to read a shortcut. Resolve finds the target of a shortcut whose target was moved.
+
+Paths are file system paths, shell parsing names, or known folders such as shell:Downloads. The unit is for Windows only.

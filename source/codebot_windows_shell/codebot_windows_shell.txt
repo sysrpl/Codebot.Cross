@@ -1,0 +1,7 @@
+The codebot_windows_shell package holds controls and components built on the Windows shell, the part of Windows which provides Windows Explorer, its folder views, and its file operations. The package is for Windows only and requires the codebot package and the LCL. Its components are added to the component palette by the codebot_windows_shell_design package.
+
+Codebot.Windows.Explorer defines the explorer controls. TExplorerView shows the items of a folder, TExplorerTree shows the folder tree of the navigation pane, TExplorerEdit shows a path as an edit, a breadcrumb, or a drop down tree, and TExplorerPreview shows the preview of a file. TExplorerBinding links them so they all follow the same folder.
+
+Codebot.Windows.Shell.Tools defines the non-visual components. TShellFileOperation copies, moves, renames, and deletes files with the Windows progress dialog and undo, TShellNotify reports changes to files and folders, and TShellLink reads and writes shortcuts.
+
+Codebot.Interop.Windows.Shell declares the shell interfaces, constants, and functions which the Free Pascal ShlObj unit is missing.

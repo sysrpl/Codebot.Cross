@@ -1,0 +1,129 @@
+object MainForm: TMainForm
+  Left = 300
+  Height = 600
+  Top = 200
+  Width = 1000
+  Caption = 'Explorer'
+  ClientHeight = 600
+  ClientWidth = 1000
+  Position = poScreenCenter
+  OnCreate = FormCreate
+  object ToolPanel: TPanel
+    Left = 0
+    Height = 36
+    Top = 0
+    Width = 1000
+    Align = alTop
+    BevelOuter = bvNone
+    ClientHeight = 36
+    ClientWidth = 1000
+    TabOrder = 0
+    object BackButton: TButton
+      Left = 4
+      Height = 26
+      Top = 5
+      Width = 60
+      Caption = 'Back'
+      Enabled = False
+      OnClick = BackButtonClick
+      TabOrder = 0
+    end
+    object ForwardButton: TButton
+      Left = 68
+      Height = 26
+      Top = 5
+      Width = 60
+      Caption = 'Forward'
+      Enabled = False
+      OnClick = ForwardButtonClick
+      TabOrder = 1
+    end
+    object UpButton: TButton
+      Left = 132
+      Height = 26
+      Top = 5
+      Width = 60
+      Caption = 'Up'
+      OnClick = UpButtonClick
+      TabOrder = 2
+    end
+    object PathEdit: TExplorerEdit
+      Left = 196
+      Height = 26
+      Top = 5
+      Width = 562
+      Anchors = [akTop, akLeft, akRight]
+      Mode = emBreadcrumb
+      TabOrder = 3
+    end
+    object SearchEdit: TEdit
+      Left = 766
+      Height = 26
+      Top = 5
+      Width = 230
+      Anchors = [akTop, akRight]
+      OnKeyDown = SearchEditKeyDown
+      TabOrder = 4
+      TextHint = 'Search'
+    end
+  end
+  object Tree: TExplorerTree
+    Left = 0
+    Height = 541
+    Top = 36
+    Width = 240
+    Align = alLeft
+    TabOrder = 1
+  end
+  object TreeSplitter: TSplitter
+    Left = 240
+    Height = 541
+    Top = 36
+    Width = 5
+  end
+  object Preview: TExplorerPreview
+    Left = 720
+    Height = 541
+    Top = 36
+    Width = 280
+    Align = alRight
+    TabOrder = 3
+  end
+  object PreviewSplitter: TSplitter
+    Left = 715
+    Height = 541
+    Top = 36
+    Width = 5
+    Align = alRight
+    ResizeAnchor = akRight
+  end
+  object View: TExplorerView
+    Left = 245
+    Height = 541
+    Top = 36
+    Width = 470
+    Align = alClient
+    Path = 'shell:Downloads'
+    OnNavigated = ViewNavigated
+    OnSelectionChanged = ViewSelectionChanged
+    TabOrder = 2
+  end
+  object StatusBar: TStatusBar
+    Left = 0
+    Height = 23
+    Top = 577
+    Width = 1000
+    Panels = <>
+    SimplePanel = True
+  end
+  object Binding: TExplorerBinding
+    Left = 400
+    Top = 300
+    Bindings = (
+      'Tree'
+      'PathEdit'
+      'View'
+      'Preview'
+    )
+  end
+end

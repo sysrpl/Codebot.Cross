@@ -1,0 +1,3 @@
+The codebot_windows_shell_design package is the design time package of codebot_windows_shell. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot_windows_shell.
+
+Codebot.Windows.Shell.Registration adds TExplorerTree, TExplorerView, TExplorerEdit, TExplorerPreview, TExplorerBinding, TShellFileOperation, TShellNotify, and TShellLink to the Windows Shell page of the component palette. Codebot.Windows.Explorer.BindingEditor provides the editor which chooses the explorer views, trees, edits, and previews bound to a TExplorerBinding, and Codebot.Windows.Explorer.Editors provides the editor of paths, which lists shell places and special folders.

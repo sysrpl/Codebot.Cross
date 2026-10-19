@@ -1,0 +1,107 @@
+object ExplorerBindingForm: TExplorerBindingForm
+  Left = 400
+  Height = 330
+  Top = 200
+  Width = 450
+  BorderStyle = bsDialog
+  Caption = 'Explorer Binding Editor'
+  ClientHeight = 330
+  ClientWidth = 450
+  KeyPreview = True
+  OnKeyDown = FormKeyDown
+  Position = poDesktopCenter
+  object SourceLabel: TLabel
+    Left = 8
+    Height = 17
+    Top = 8
+    Width = 100
+    Caption = '&Available controls:'
+    FocusControl = SourceList
+  end
+  object SourceList: TListBox
+    Left = 8
+    Height = 250
+    Top = 28
+    Width = 193
+    ItemHeight = 0
+    MultiSelect = True
+    Sorted = True
+    TabOrder = 0
+    OnDblClick = AddButtonClick
+  end
+  object AddButton: TButton
+    Left = 210
+    Height = 25
+    Top = 84
+    Width = 30
+    Caption = '>'
+    TabOrder = 1
+    OnClick = AddButtonClick
+  end
+  object AddAllButton: TButton
+    Left = 210
+    Height = 25
+    Top = 116
+    Width = 30
+    Caption = '>>'
+    TabOrder = 2
+    OnClick = AddAllButtonClick
+  end
+  object RemoveAllButton: TButton
+    Left = 210
+    Height = 25
+    Top = 148
+    Width = 30
+    Caption = '<<'
+    TabOrder = 3
+    OnClick = RemoveAllButtonClick
+  end
+  object RemoveButton: TButton
+    Left = 210
+    Height = 25
+    Top = 180
+    Width = 30
+    Caption = '<'
+    TabOrder = 4
+    OnClick = RemoveButtonClick
+  end
+  object DestLabel: TLabel
+    Left = 249
+    Height = 17
+    Top = 8
+    Width = 100
+    Caption = '&Bound controls:'
+    FocusControl = DestList
+  end
+  object DestList: TListBox
+    Left = 249
+    Height = 250
+    Top = 28
+    Width = 193
+    ItemHeight = 0
+    MultiSelect = True
+    Sorted = True
+    TabOrder = 5
+    OnDblClick = RemoveButtonClick
+  end
+  object OKButton: TButton
+    Left = 274
+    Height = 25
+    Top = 294
+    Width = 80
+    Caption = 'OK'
+    Default = True
+    ModalResult = 1
+    TabOrder = 6
+  end
+  object CancelButton: TButton
+    Left = 362
+    Height = 25
+    Top = 294
+    Width = 80
+    Cancel = True
+    Caption = 'Cancel'
+    ModalResult = 2
+    TabOrder = 7
+  end
+end

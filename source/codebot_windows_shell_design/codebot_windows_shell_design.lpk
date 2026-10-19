@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="6">
+    <PathDelim Value="\"/>
+    <Name Value="codebot_windows_shell_design"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx5024="True"/>
+        </CompilerMessages>
+      </Other>
+    </CompilerOptions>
+    <SupportedWidgetsets Value="win32"/>
+    <SupportedTargetOS Value="win64"/>
+    <Files>
+      <Item>
+        <Filename Value="codebot.windows.shell.registration.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="Codebot.Windows.Shell.Registration"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.windows.explorer.bindingeditor.lfm"/>
+        <Type Value="LFM"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.windows.explorer.bindingeditor.pas"/>
+        <UnitName Value="Codebot.Windows.Explorer.BindingEditor"/>
+      </Item>
+      <Item>
+        <Filename Value="codebotwindowsshelldesignpackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotWindowsShellDesignPackage"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.windows.explorer.editors.pas"/>
+        <UnitName Value="Codebot.Windows.Explorer.Editors"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="codebot_windows_shell"/>
+      </Item>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
