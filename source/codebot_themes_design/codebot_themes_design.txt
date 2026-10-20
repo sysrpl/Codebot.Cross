@@ -1,6 +1,6 @@
 The codebot_themes_design package themes the windows of the Lazarus IDE. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot, whose Codebot.Text.Json reads the theme files, and IDEIntf.
 
-A theme changes the colors of every window of the IDE, including its menus, tabs, lists, edits, buttons, and title bars, and the font of its windows and menus. Dark themes also use the dark parts of the visual styles of Windows, such as dark scroll bars and dark check boxes. The theme is chosen with the Themes item of the Tools menu, and is remembered between sessions of the IDE. The same dialog chooses the color scheme and the font of the source editor. For now the themes work on Windows only. Choosing the color scheme needs a Lazarus whose IDEIntf has the GetColorSchemeName and SetColorSchemeName methods and the EditorFontName and EditorFontSize properties of TIDEEditorOptions.
+A theme changes the colors of every window of the IDE, including its menus, tabs, lists, edits, buttons, and title bars, and the font of its windows and menus. Dark themes also use the dark parts of the visual styles of Windows, such as dark scroll bars and dark check boxes, or the dark theme of GTK. The theme is chosen with the Themes item of the Tools menu, and is remembered between sessions of the IDE. The same dialog chooses the color scheme and the font of the source editor. The themes work on Windows and with the GTK3 widgetset on Linux. Choosing the color scheme needs a Lazarus whose IDEIntf has the GetColorSchemeName and SetColorSchemeName methods and the EditorFontName and EditorFontSize properties of TIDEEditorOptions.
 
 Codebot.Themes.Registration starts the themes when the package is registered, adds the menu item, and takes the theme away before the package is unloaded.
 
@@ -17,3 +17,5 @@ Codebot.Themes.Windows.Colors replaces the system colors the LCL uses with the c
 Codebot.Themes.Windows.Hooks themes the parts of the windows which Windows draws itself, by patching the routines the IDE and Windows draw with.
 
 Codebot.Themes.Windows.DarkMode calls the routines of Windows which switch its controls between their light and dark visual styles.
+
+Codebot.Themes.Gtk3 themes the windows with the GTK3 widgetset by adding a style sheet to the screen, made from the palette of the theme.

@@ -321,12 +321,20 @@ var
       (R.Top + R.Bottom - Canvas.TextHeight(S)) div 2, S, Index);
   end;
 
+  { The corners are drawn with the radius of the theme, or a small one when
+    the theme leaves them as the system has them }
+
   procedure Button(const R: TRect; const S: string; Edge: Integer);
+  var
+    D: Integer;
   begin
+    D := ThemeList[Theme].ButtonRadius * 2;
+    if D < 0 then
+      D := 6;
     Canvas.Brush.Style := bsSolid;
     Canvas.Brush.Color := C(COLOR_BTNHIGHLIGHT);
     Canvas.Pen.Color := C(Edge);
-    Canvas.RoundRect(R.Left, R.Top, R.Right, R.Bottom, 6, 6);
+    Canvas.RoundRect(R.Left, R.Top, R.Right, R.Bottom, D, D);
     CenterText(R, S, COLOR_BTNTEXT);
   end;
 
@@ -342,7 +350,7 @@ begin
   if Theme < 0 then
     Exit;
   Canvas := FPreview.Canvas;
-  Canvas.Font.Name := ThemeList[Theme].FontName;
+  Canvas.Font.Name := ThemeFontName(Theme);
   Canvas.Font.Size := ThemeList[Theme].FontSize;
   R := FPreview.ClientRect;
   H := Canvas.TextHeight('Wg');

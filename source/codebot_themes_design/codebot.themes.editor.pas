@@ -175,6 +175,12 @@ var
 begin
   FillChar(LogFont, SizeOf(LogFont), 0);
   LogFont.lfCharSet := DEFAULT_CHARSET;
+  { Windows needs a pitch of 0 and tells the pitch of each font, while GTK3
+    lists only the fonts of the pitch asked for and leaves the pitch of each
+    font unset when none is asked for }
+  {$ifndef windows}
+  LogFont.lfPitchAndFamily := FIXED_PITCH;
+  {$endif}
   DC := GetDC(0);
   try
     EnumFontFamiliesEx(DC, @LogFont, EnumFont, PtrInt(Strings), 0);

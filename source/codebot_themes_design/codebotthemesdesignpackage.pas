@@ -11,7 +11,7 @@ uses
   Codebot.Themes.Registration, Codebot.Themes.Palettes,
   Codebot.Themes.Manager, Codebot.Themes.Editor, Codebot.Themes.Dialog,
   Codebot.Themes.Windows.DarkMode, Codebot.Themes.Windows.Colors,
-  Codebot.Themes.Windows.Hooks, LazarusPackageIntf;
+  Codebot.Themes.Windows.Hooks, Codebot.Themes.Gtk3, LazarusPackageIntf;
 
 implementation
 

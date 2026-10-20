@@ -1,7 +1,7 @@
 {
   "name": "Midnight",
   "dark": true,
-  "font": { "name": "Segoe UI Variable Text", "size": 9 },
+  "font": { "name": ["Segoe UI Variable Text", "Ubuntu Sans", "Cantarell"], "size": 9, "linuxSize": 10 },
   "colors": {
     "scrollBar": "#2A3550",
     "background": "#0F1626",

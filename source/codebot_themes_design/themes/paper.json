@@ -1,7 +1,7 @@
 {
   "name": "Paper",
   "dark": false,
-  "font": { "name": "Calibri", "size": 10 },
+  "font": { "name": ["Calibri", "Carlito", "Ubuntu Sans"], "size": 10, "linuxSize": 11 },
   "colors": {
     "scrollBar": "#E6DFD0",
     "background": "#F4EFE4",

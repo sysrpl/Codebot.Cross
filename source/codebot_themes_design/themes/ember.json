@@ -1,7 +1,7 @@
 {
   "name": "Ember",
   "dark": true,
-  "font": { "name": "Bahnschrift", "size": 9 },
+  "font": { "name": ["Bahnschrift", "Nimbus Sans Narrow", "Liberation Sans"], "size": 9, "linuxSize": 10 },
   "colors": {
     "scrollBar": "#4A3A30",
     "background": "#1A1512",

@@ -1,7 +1,7 @@
 {
   "name": "Plum",
   "dark": true,
-  "font": { "name": "Verdana", "size": 8 },
+  "font": { "name": ["Verdana", "DejaVu Sans"], "size": 8, "linuxSize": 9 },
   "colors": {
     "scrollBar": "#3E2F4E",
     "background": "#17111F",

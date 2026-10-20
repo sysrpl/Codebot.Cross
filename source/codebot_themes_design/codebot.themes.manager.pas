@@ -37,6 +37,9 @@ uses
   Codebot.Themes.Windows.Colors,
   Codebot.Themes.Windows.Hooks,
   {$endif}
+  {$ifdef lclgtk3}
+  Codebot.Themes.Gtk3,
+  {$endif}
   Codebot.Themes.Palettes;
 
 const
@@ -82,7 +85,7 @@ end;
 
 procedure TFontWatcher.FormAdded(Sender: TObject; Form: TCustomForm);
 begin
-  ApplyFont(Form, ThemeList[Current].FontName, ThemeList[Current].FontSize);
+  ApplyFont(Form, ThemeFontName(Current), ThemeList[Current].FontSize);
 end;
 
 { The themes of the user are loaded last, so that they replace the themes
@@ -162,15 +165,18 @@ begin
   Theme := ThemeList[Index];
   { The menu font is set first, so that the menus measure their items with
     it when the windows are themed again }
-  if Theme.FontName = 'default' then
+  if ThemeFontName(Index) = 'default' then
     DarkHooksSetMenuFont('')
   else
-    DarkHooksSetMenuFont(Theme.FontName);
+    DarkHooksSetMenuFont(ThemeFontName(Index));
   if Theme.Custom then
     DarkColorsSetPalette(Theme.Colors, Theme.Dark);
   DarkHooksSetTheme(Theme.Custom);
   {$endif}
-  ApplyFonts(ThemeList[Index].FontName, ThemeList[Index].FontSize);
+  {$ifdef lclgtk3}
+  Gtk3ThemesSetTheme(Index);
+  {$endif}
+  ApplyFonts(ThemeFontName(Index), ThemeList[Index].FontSize);
 end;
 
 function ThemesStart: Boolean;
@@ -199,6 +205,17 @@ begin
   ThemesApply(Current);
   Result := True;
   {$endif}
+  {$ifdef lclgtk3}
+  if not Gtk3ThemesInstall then
+    Exit;
+  LoadThemes;
+  Current := FindTheme(LoadThemeName);
+  Started := True;
+  Watcher := TFontWatcher.Create;
+  Screen.AddHandlerFormAdded(Watcher.FormAdded);
+  ThemesApply(Current);
+  Result := True;
+  {$endif}
 end;
 
 procedure ThemesStop;
@@ -216,6 +233,9 @@ begin
   { The brushes the LCL cached while the widgetset had the class of this
     package are made again }
   UpdateHandleObjects(True);
+  {$endif}
+  {$ifdef lclgtk3}
+  Gtk3ThemesUninstall;
   {$endif}
 end;
 

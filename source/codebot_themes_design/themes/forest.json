@@ -1,7 +1,8 @@
 {
   "name": "Forest",
   "dark": true,
-  "font": { "name": "Tahoma", "size": 9 },
+  "buttonRadius": 8,
+  "font": { "name": ["Tahoma", "DejaVu Sans Condensed", "DejaVu Sans"], "size": 9, "linuxSize": 10 },
   "colors": {
     "scrollBar": "#2C3E35",
     "background": "#101A15",

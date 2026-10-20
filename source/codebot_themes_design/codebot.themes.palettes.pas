@@ -28,16 +28,20 @@ type
 
 { TThemeInfo is a theme. A theme which is not custom uses the colors and
   visual styles of the system, and its colors are not used. A dark theme
-  uses the dark parts of the visual styles of the system. The font name
-  default with a size of 0 is the font of the system. }
+  uses the dark parts of the visual styles of the system. FontNames lists
+  the fonts of the theme in the order they are preferred, so that one theme
+  can name a font of each system. A theme with no font names and a size of
+  0 uses the font of the system. ButtonRadius is the radius of the corners
+  of buttons in pixels, or -1 to leave them as the system has them. }
 
   TThemeInfo = record
     Name: string;
     Custom: Boolean;
     Dark: Boolean;
     Colors: TPaletteColors;
-    FontName: string;
+    FontNames: array of string;
     FontSize: Integer;
+    ButtonRadius: Integer;
   end;
 
 const
@@ -89,8 +93,12 @@ const
     $2D2D30, { COLOR_MENUBAR }
     $2D2D30  { COLOR_FORM }
   );
-  { The colors the system has with its default light theme, which the
-    dialog shows for themes which are not custom }
+
+var
+  { The colors of the system, which the dialog shows for themes which are
+    not custom. They start as the colors of the default light theme of
+    Windows, and are replaced with the colors the system has when those are
+    known. }
   SystemColors: TPaletteColors = (
     $C8C8C8, { COLOR_SCROLLBAR }
     $000000, { COLOR_BACKGROUND }
@@ -125,8 +133,6 @@ const
     $FFFFFF, { COLOR_MENUBAR }
     $F0F0F0  { COLOR_FORM }
   );
-
-var
   { The themes, in the order the dialog lists them: System Default first,
     then the others by name }
   ThemeList: array of TThemeInfo;
@@ -145,11 +151,14 @@ function DefaultTheme: Integer;
 function FindTheme(const Name: string): Integer;
 { The system color Index of the theme at Theme in ThemeList }
 function ThemeColor(Theme, Index: Integer): TColor;
+{ The first font of the theme at Theme in ThemeList which is installed, or
+  default if none of them are }
+function ThemeFontName(Theme: Integer): string;
 
 implementation
 
 uses
-  Codebot.Text.Json;
+  Forms, Codebot.Text.Json;
 
 const
   SystemName = 'System Default';
@@ -167,8 +176,9 @@ begin
   Result.Dark := False;
   for I := Low(Result.Colors) to High(Result.Colors) do
     Result.Colors[I] := NoColor;
-  Result.FontName := 'default';
+  Result.FontNames := nil;
   Result.FontSize := 0;
+  Result.ButtonRadius := -1;
 end;
 
 function DarkTheme: TThemeInfo;
@@ -177,8 +187,13 @@ begin
   Result.Custom := True;
   Result.Dark := True;
   Result.Colors := DarkColors;
-  Result.FontName := 'Segoe UI';
+  Result.FontNames := ['Segoe UI', 'Ubuntu Sans', 'Noto Sans'];
+  {$ifdef linux}
+  Result.FontSize := 10;
+  {$else}
   Result.FontSize := 9;
+  {$endif}
+  Result.ButtonRadius := -1;
 end;
 
 { Colors are written as #RRGGBB }
@@ -199,6 +214,32 @@ begin
     if (ColorNames[I] <> '') and SameText(ColorNames[I], Name) then
       Exit(I);
   Result := -1;
+end;
+
+{ A font is written as one name or as an array of names }
+
+procedure ReadFontNames(Node: TJsonNode; var Theme: TThemeInfo);
+var
+  Item: TJsonNode;
+  S: string;
+begin
+  if Node.Kind = nkString then
+  begin
+    S := Trim(Node.AsString);
+    if S <> '' then
+      Theme.FontNames := [S];
+    Exit;
+  end;
+  if Node.Kind <> nkArray then
+    Exit;
+  Theme.FontNames := nil;
+  for Item in Node do
+    if Item.Kind = nkString then
+    begin
+      S := Trim(Item.AsString);
+      if S <> '' then
+        Theme.FontNames := Theme.FontNames + [S];
+    end;
 end;
 
 function ThemeLoadFile(const FileName: string; out Theme: TThemeInfo): Boolean;
@@ -223,11 +264,17 @@ begin
       Exit;
     if Doc.Find('dark', Node) and (Node.Kind = nkBool) then
       Theme.Dark := Node.AsBoolean;
-    if Doc.Find('font/name', Node) and (Node.Kind = nkString) and
-      (Node.AsString <> '') then
-      Theme.FontName := Node.AsString;
+    if Doc.Find('font/name', Node) then
+      ReadFontNames(Node, Theme);
     if Doc.Find('font/size', Node) and (Node.Kind = nkNumber) then
       Theme.FontSize := Round(Node.AsNumber);
+    { Fonts of the same size look smaller on Linux than on Windows }
+    {$ifdef linux}
+    if Doc.Find('font/linuxSize', Node) and (Node.Kind = nkNumber) then
+      Theme.FontSize := Round(Node.AsNumber);
+    {$endif}
+    if Doc.Find('buttonRadius', Node) and (Node.Kind = nkNumber) then
+      Theme.ButtonRadius := Round(Node.AsNumber);
     if Doc.Find('colors', Node) and (Node.Kind = nkObject) then
       for Item in Node do
       begin
@@ -335,6 +382,19 @@ begin
   if C = NoColor then
     Exit(clBlack);
   Result := RGBToColor((C shr 16) and $FF, (C shr 8) and $FF, C and $FF);
+end;
+
+{ The fonts are looked for when they are used rather than when the themes
+  are loaded, as the fonts of the system may not be known yet }
+
+function ThemeFontName(Theme: Integer): string;
+var
+  S: string;
+begin
+  for S in ThemeList[Theme].FontNames do
+    if SameText(S, 'default') or (Screen.Fonts.IndexOf(S) >= 0) then
+      Exit(S);
+  Result := 'default';
 end;
 
 initialization

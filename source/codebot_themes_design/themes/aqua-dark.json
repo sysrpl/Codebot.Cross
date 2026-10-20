@@ -1,7 +1,8 @@
 {
   "name": "Aqua Dark",
   "dark": true,
-  "font": { "name": "Segoe UI", "size": 9 },
+  "buttonRadius": 8,
+  "font": { "name": ["Segoe UI", "Ubuntu Sans", "Noto Sans"], "size": 9, "linuxSize": 10 },
   "colors": {
     "scrollBar": "#454545",
     "background": "#2F2F2F",

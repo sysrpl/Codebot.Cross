@@ -1,6 +1,6 @@
 The Codebot.Themes.Palettes unit holds the themes of the IDE, with the colors and the font of each one. It has no code of a platform, so that the colors of a theme can be shown anywhere.
 
-A theme is a TThemeInfo, with a name, a palette of system colors in TPaletteColors, whether it is dark, and the name and size of its font. The theme named System Default is not custom: it uses the colors and visual styles of the system, and SystemColors holds the colors the dialog shows for it.
+A theme is a TThemeInfo, with a name, a palette of system colors in TPaletteColors, whether it is dark, the names of its fonts, and the size of its font. The theme named System Default is not custom: it uses the colors and visual styles of the system, and SystemColors holds the colors the dialog shows for it, which start as the colors of the light theme of Windows and are replaced with the colors of the system when the themes start where those are known, as they are with the GTK3 widgetset.
 
 The themes are loaded from JSON files, which are read with TJsonNode of Codebot.Text.Json. ThemesLoad fills ThemeList with System Default, the Dark theme whose colors are DarkColors, and the theme of every .json file in each folder it is given. A theme with the name of one loaded before replaces it, so that a later folder can change a theme of an earlier one. System Default stays first in the list, and the other themes are sorted by name. ThemeLoadFile reads one file.
 
@@ -10,7 +10,7 @@ A theme file looks like this, with the colors written as #RRGGBB:
 {
   "name": "Aqua Dark",
   "dark": true,
-  "font": { "name": "Segoe UI", "size": 9 },
+  "font": { "name": ["Segoe UI", "Ubuntu Sans", "Noto Sans"], "size": 9, "linuxSize": 10 },
   "colors": {
     "window": "#383838",
     "windowText": "#DADADA",
@@ -20,6 +20,8 @@ A theme file looks like this, with the colors written as #RRGGBB:
 }
 ```
 
-ColorNames holds the names of the colors, one for each COLOR_ constant: scrollBar, background, activeCaption, inactiveCaption, menu, window, windowFrame, menuText, windowText, captionText, activeBorder, inactiveBorder, appWorkspace, highlight, highlightText, btnFace, btnShadow, grayText, btnText, inactiveCaptionText, btnHighlight, 3dDkShadow, 3dLight, infoText, infoBk, hotLight, gradientActiveCaption, gradientInactiveCaption, menuHilight, menuBar, and form. A color a file leaves out keeps the color of the system. A file without a name is not loaded, and a font of default with a size of 0 is the font of the system.
+ColorNames holds the names of the colors, one for each COLOR_ constant: scrollBar, background, activeCaption, inactiveCaption, menu, window, windowFrame, menuText, windowText, captionText, activeBorder, inactiveBorder, appWorkspace, highlight, highlightText, btnFace, btnShadow, grayText, btnText, inactiveCaptionText, btnHighlight, 3dDkShadow, 3dLight, infoText, infoBk, hotLight, gradientActiveCaption, gradientInactiveCaption, menuHilight, menuBar, and form. A color a file leaves out keeps the color of the system. The radius of the corners of buttons in pixels may be given as buttonRadius, and without it buttons keep the corners of the system. A file without a name is not loaded.
+
+The name of the font is one name or a list of names in the order they are preferred, so that one theme can name a font of Windows and fonts of Linux which look like it. ThemeFontName returns the first font of the list which is installed, or default when none of them are. The fonts are looked for when the theme is used rather than when it is loaded, as the fonts of the system may not be known yet. The font size linuxSize, which may be left out, replaces size on Linux, where fonts of the same size look smaller. A theme with no font and a size of 0 uses the font of the system.
 
 FindTheme returns the index of a theme by name, or DefaultTheme, the index of the Dark theme, when there is no such theme. ThemeColor returns a system color of a theme.

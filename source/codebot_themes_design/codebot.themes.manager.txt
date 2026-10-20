@@ -1,6 +1,6 @@
 The Codebot.Themes.Manager unit applies the themes of Codebot.Themes.Palettes to the IDE, and remembers the theme chosen between sessions of the IDE.
 
-ThemesStart loads the themes, installs what the themes need, and applies the theme saved in codebotthemes.xml in the configuration folder of the IDE, or the default theme if none was saved. It returns false if themes can not be used on the system, which for now is every system other than Windows. ThemesApply applies a theme while the IDE runs: its colors, its menu font, and the font of every form of the IDE, including the forms created later. ThemesSave saves the name of the theme in use, and ThemesCurrent returns its index in ThemeList.
+ThemesStart loads the themes, installs what the themes need, and applies the theme saved in codebotthemes.xml in the configuration folder of the IDE, or the default theme if none was saved. It returns false if themes can not be used on the system, which is when the widgetset is neither the Windows widgetset nor the GTK3 widgetset. ThemesApply applies a theme while the IDE runs: its colors, its menu font, and the font of every form of the IDE, including the forms created later. ThemesSave saves the name of the theme in use, and ThemesCurrent returns its index in ThemeList.
 
 ThemesStop takes the theme away and everything that ThemesStart installed, giving the forms back the font of the system, so that the IDE is left as it was.
 

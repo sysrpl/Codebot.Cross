@@ -1,13 +1,13 @@
 {
   "name": "Sky",
   "dark": false,
-  "font": { "name": "Trebuchet MS", "size": 9 },
+  "font": { "name": ["Trebuchet MS", "Cantarell", "Ubuntu"], "size": 9, "linuxSize": 10 },
   "colors": {
     "scrollBar": "#D5E1EE",
     "background": "#EAF1F8",
     "activeCaption": "#DCE7F3",
     "inactiveCaption": "#DCE7F3",
-    "menu": "#F7FAFD",
+    "menu": "#E4EDF7",
     "window": "#FFFFFF",
     "windowFrame": "#A9BCD3",
     "menuText": "#1E2B3A",
