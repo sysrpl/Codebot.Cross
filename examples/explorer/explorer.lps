@@ -7,16 +7,22 @@
     <Units>
       <Unit>
         <Filename Value="explorer.lpr"/>
-        <UsageCount Value="20"/>
+        <UsageCount Value="36"/>
       </Unit>
       <Unit>
         <Filename Value="main.pas"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
-        <UsageCount Value="20"/>
-        <IsVisibleTab Value="True"/>
-        <TopLine Value="19"/>
+        <UsageCount Value="36"/>
         <CursorPos X="27" Y="14"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\source\codebot_windows_shell\codebot.windows.shell.tools.pas"/>
+        <UnitName Value="Codebot.Windows.Shell.Tools"/>
+        <Loaded Value="True"/>
+        <UsageCount Value="18"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
       </Unit>
     </Units>
     <JumpHistory HistoryIndex="-1"/>

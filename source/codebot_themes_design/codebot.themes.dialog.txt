@@ -1,0 +1,9 @@
+The Codebot.Themes.Dialog unit defines the dialog which chooses the theme of the IDE and the color scheme and the font of the source editor, on two tabs.
+
+The Theme tab lists the themes. Beside the list is a preview of the theme selected, which draws a window of the IDE in the colors and the font of the theme, with a title bar, a menu bar, tabs, a list, an edit, buttons, a check box, and a status bar.
+
+The Editor tab lists the color schemes of the source editor, with a font and a font size above them. The font can only be one whose characters all have the same width, and the size is chosen with an up and down spinner. Beside the list is a preview of the scheme selected, which draws Pascal source with line numbers in the colors of the scheme and the font chosen, with its comments, directives, strings, numbers, and reserved words each drawn in their own colors. The tab is hidden when the IDE has no color schemes.
+
+Double clicking a theme or a scheme chooses it. The Apply button applies what is chosen so far and leaves the dialog open.
+
+TThemeChoice holds what the dialog chooses. ShowThemesDialog shows the dialog with a choice selected, and returns true and the choice made if the user pressed OK. The Apply button calls the TThemeApplyProc given to ShowThemesDialog.

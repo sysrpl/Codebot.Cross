@@ -1,0 +1,19 @@
+The codebot_themes_design package themes the windows of the Lazarus IDE. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot, whose Codebot.Text.Json reads the theme files, and IDEIntf.
+
+A theme changes the colors of every window of the IDE, including its menus, tabs, lists, edits, buttons, and title bars, and the font of its windows and menus. Dark themes also use the dark parts of the visual styles of Windows, such as dark scroll bars and dark check boxes. The theme is chosen with the Themes item of the Tools menu, and is remembered between sessions of the IDE. The same dialog chooses the color scheme and the font of the source editor. For now the themes work on Windows only. Choosing the color scheme needs a Lazarus whose IDEIntf has the GetColorSchemeName and SetColorSchemeName methods and the EditorFontName and EditorFontSize properties of TIDEEditorOptions.
+
+Codebot.Themes.Registration starts the themes when the package is registered, adds the menu item, and takes the theme away before the package is unloaded.
+
+Codebot.Themes.Palettes loads the themes from JSON files, with the palette of system colors and the font of each one. The themes which come with the package are in its themes folder, and the user can add themes of their own in the codebotthemes folder of the configuration folder of the IDE.
+
+Codebot.Themes.Manager applies the themes and saves the theme chosen.
+
+Codebot.Themes.Editor lists and chooses the color schemes and the font of the source editor.
+
+Codebot.Themes.Dialog defines the dialog which lists the themes and the color schemes, with a preview of each one.
+
+Codebot.Themes.Windows.Colors replaces the system colors the LCL uses with the colors of the palette in use.
+
+Codebot.Themes.Windows.Hooks themes the parts of the windows which Windows draws itself, by patching the routines the IDE and Windows draw with.
+
+Codebot.Themes.Windows.DarkMode calls the routines of Windows which switch its controls between their light and dark visual styles.

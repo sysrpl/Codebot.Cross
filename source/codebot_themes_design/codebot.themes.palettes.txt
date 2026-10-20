@@ -1,0 +1,25 @@
+The Codebot.Themes.Palettes unit holds the themes of the IDE, with the colors and the font of each one. It has no code of a platform, so that the colors of a theme can be shown anywhere.
+
+A theme is a TThemeInfo, with a name, a palette of system colors in TPaletteColors, whether it is dark, and the name and size of its font. The theme named System Default is not custom: it uses the colors and visual styles of the system, and SystemColors holds the colors the dialog shows for it.
+
+The themes are loaded from JSON files, which are read with TJsonNode of Codebot.Text.Json. ThemesLoad fills ThemeList with System Default, the Dark theme whose colors are DarkColors, and the theme of every .json file in each folder it is given. A theme with the name of one loaded before replaces it, so that a later folder can change a theme of an earlier one. System Default stays first in the list, and the other themes are sorted by name. ThemeLoadFile reads one file.
+
+A theme file looks like this, with the colors written as #RRGGBB:
+
+```json
+{
+  "name": "Aqua Dark",
+  "dark": true,
+  "font": { "name": "Segoe UI", "size": 9 },
+  "colors": {
+    "window": "#383838",
+    "windowText": "#DADADA",
+    "btnFace": "#2F2F2F",
+    "highlight": "#1F9EDE"
+  }
+}
+```
+
+ColorNames holds the names of the colors, one for each COLOR_ constant: scrollBar, background, activeCaption, inactiveCaption, menu, window, windowFrame, menuText, windowText, captionText, activeBorder, inactiveBorder, appWorkspace, highlight, highlightText, btnFace, btnShadow, grayText, btnText, inactiveCaptionText, btnHighlight, 3dDkShadow, 3dLight, infoText, infoBk, hotLight, gradientActiveCaption, gradientInactiveCaption, menuHilight, menuBar, and form. A color a file leaves out keeps the color of the system. A file without a name is not loaded, and a font of default with a size of 0 is the font of the system.
+
+FindTheme returns the index of a theme by name, or DefaultTheme, the index of the Dark theme, when there is no such theme. ThemeColor returns a system color of a theme.
