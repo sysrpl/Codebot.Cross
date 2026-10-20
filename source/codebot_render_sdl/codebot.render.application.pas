@@ -28,8 +28,8 @@ unit Codebot.Render.Application;
 interface
 
 uses
-  SysUtils, Classes,
   Codebot.System,
+  SysUtils, Classes,
   Codebot.Platform,
   Codebot.OpenGL,
   Codebot.OpenGL.SDL,
