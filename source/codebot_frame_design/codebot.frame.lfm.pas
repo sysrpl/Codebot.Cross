@@ -10,6 +10,7 @@
   properties. Simple values are kept as Pascal source, so that they can be
   written into code as they are. }
 
+{ <include docs/codebot.frame.lfm.txt> }
 unit Codebot.Frame.Lfm;
 
 {$mode delphi}

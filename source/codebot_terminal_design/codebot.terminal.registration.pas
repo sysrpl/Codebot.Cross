@@ -9,6 +9,7 @@
 { Codebot.Terminal.Registration adds TTerminal to the component palette, and
   a Terminal window to the view menu of the IDE }
 
+{ <include docs/codebot.terminal.registration.txt> }
 unit Codebot.Terminal.Registration;
 
 {$i ../codebot_terminal/terminal.inc}

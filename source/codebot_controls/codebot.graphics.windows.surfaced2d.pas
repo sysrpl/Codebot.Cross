@@ -6,7 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
-{ <include docs/codebot.graphics.windows.surfacedirect2d.txt> }
+{ <include docs/codebot.graphics.windows.surfaced2d.txt> }
 unit Codebot.Graphics.Windows.SurfaceD2D;
 
 {$i ../codebot/codebot.inc}

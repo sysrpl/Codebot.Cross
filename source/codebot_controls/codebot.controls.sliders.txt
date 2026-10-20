@@ -1,1 +1,3 @@
-The Codebot.Controls.Sliders unit defines TSlideBar, which is a vertical or horizontal track bar. Its thumb is dragged with the mouse to select a value between Min and Max.
+# Codebot.Controls.Sliders
+
+The Codebot.Controls.Sliders unit gives you TSlideBar, a vertical or horizontal track bar whose thumb the user drags to choose a value between Min and Max.

@@ -1,3 +1,5 @@
-The Codebot.Render.Fonts unit defines TFont, which loads a TrueType font and renders its glyphs at a fixed pixel size into a texture atlas. The atlas holds the printable ASCII and Latin-1 characters. Ctx.Fonts holds fonts by name and loads them from the fonts folder of the assets.
+# Codebot.Render.Fonts
 
-The unit also defines TTextBlock, which draws text using a font and only rebuilds its vertices when the text changes.
+The Codebot.Render.Fonts unit gives you TFont, which loads a TrueType font and draws its glyphs at a fixed pixel size into a texture atlas holding the printable ASCII and Latin-1 characters. Ctx.Fonts holds fonts by name and loads them from the fonts folder of your assets. TTextBlock draws text with a font and only rebuilds its vertices when the text changes.
+
+For most text you will use the canvas of Codebot.Render.Graphics instead. These fonts are for drawing text directly with OpenGL.

@@ -1,3 +1,15 @@
-The Codebot.WebKit.Controls unit defines TWebBrowser, which is a web browser control that embeds WebKitGTK. It can load a location or a string of HTML, stop and reload a page, go back and forward, run JavaScript, and zoom. Its events report the location, title, progress, and status of a page as it loads, as well as errors, what is under the mouse, context menus, JavaScript dialogs, and downloads. An event can also allow or deny a navigation.
+# Codebot.WebKit.Controls
 
-The unit also defines TWebDownload, which is a file downloaded by a browser, and TWebInspector, which is a control that hosts the inspector of a browser.
+The Codebot.WebKit.Controls unit gives you TWebBrowser, a web browser control that embeds WebKitGTK on Linux and Microsoft Edge WebView2 on Windows.
+
+You can load a page by setting Location or calling Load, or show HTML of your own with LoadHtml. You can also stop and reload pages, move back and forward in the history, run JavaScript with ExecuteScript, zoom, make the page editable, print, capture the page to the clipboard, and show the developer tools. Changes you make before the control's window exists, such as setting Location, are kept and applied once the browser is ready.
+
+Its events tell you about the location, title, progress, and status of a page as it loads, as well as errors, the element under the mouse, context menus, and the alert, confirm, and prompt dialogs of JavaScript. OnNavigate lets you allow or deny each navigation.
+
+When the user downloads a file, it is saved to DownloadFolder, or to the user's download folder when that is empty. Each download is a TWebDownload in the Downloads list, and OnDownloadStart, OnDownloadProgress, and OnDownloadFinish let you follow it.
+
+The unit also gives you TWebInspector, a control that shows the developer tools of a browser inside your form when its WebBrowser is set and Active is True.
+
+The browser engine is loaded when your program runs rather than linked when it is built. If it is missing, the control shows a message instead of a page, and the TWebBrowser.Available class function returns False. At design time the controls show an icon and load nothing.
+
+On Windows a few features differ. You can only move one step back or forward at a time, HistoryItem returns False, and ZoomTextOnly has no effect.

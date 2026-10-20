@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.fonts.txt> }
 unit Codebot.Render.Fonts;
 
 {$i render.inc}

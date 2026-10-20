@@ -1,3 +1,9 @@
-The Codebot.Render.Scenes.Controller unit defines TSceneController, which runs a scene inside a TGraphicsBox and acts as the scene host for LCL programs. It hooks the render events of the graphics box, and creates, updates, and frees the scene on the render thread with the OpenGL context made current. OpenScene requests a scene class from the main thread. Keyboard and mouse input comes from the SDL window of the graphics box and is delivered to the scene on the render thread.
+# Codebot.Render.Scenes.Controller
 
-The controller provides scenes with the canvas of the graphics box, a default font, and the form holding the graphics box as their window. Scenes use the clipboard and dialogs provided by Codebot.Platform.LCL.
+The Codebot.Render.Scenes.Controller unit gives you TSceneController, which runs a TScene inside a TGraphicsBox and acts as its scene host. Call OpenScene with a graphics box and a scene class to start a scene, and call it again whenever you want to switch scenes. CloseScene frees the running scene on the next frame.
+
+The controller creates, updates, and frees your scene on the render thread with the context current. It delivers keyboard and mouse input from the SDL window of the graphics box to your scene on the render thread, so your scene's methods only ever run on that thread, one at a time. If your scene has a step interval, the controller runs a step thread for it and stops it before the scene is freed.
+
+Your scene gets the canvas of the graphics box, a default font loaded from `fonts/roboto.ttf` in your assets, and the form holding the graphics box as its window. It uses the clipboard and dialogs of Codebot.Platform.LCL, which reach the main thread for you.
+
+The controller hooks the render events of the graphics box, but any handlers you assigned before it are still called. The graphics box must not be rendering when the controller first attaches to it or when the controller is destroyed. Creating the controller in the OnCreate event of your form, owned by that form, takes care of both.

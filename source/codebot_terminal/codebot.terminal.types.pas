@@ -10,6 +10,7 @@
   units which implement it for each widgetset. Those units cannot use the unit
   of the control, as the two would then depend on each other. }
 
+{ <include docs/codebot.terminal.types.txt> }
 unit Codebot.Terminal.Types;
 
 {$i terminal.inc}

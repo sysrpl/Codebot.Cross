@@ -1,1 +1,5 @@
-The Codebot.Unique unit ensures that only one instance of a program runs at a time. TUniqueInstance detects whether another instance is already running by listening on a local port, and the original instance receives any messages sent by later instances. To use it, call UniqueInstance with a key, or with a string that is hashed into a key, when the program starts.
+# Codebot.Unique
+
+The Codebot.Unique unit makes sure only one copy of your program runs at a time. Call UniqueInstance with a key, or with a string that is hashed into a key, when your program starts. It listens on a local port to find out whether another copy is already running, and Original tells you whether yours is the first.
+
+Later copies can call SendMessage to pass something to the first copy, such as the files the user asked to open, and the first copy receives it on the main thread through OnMessage.

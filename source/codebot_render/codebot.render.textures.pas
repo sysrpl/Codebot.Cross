@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.textures.txt> }
 unit Codebot.Render.Textures;
 
 {$i render.inc}

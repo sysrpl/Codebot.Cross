@@ -24,6 +24,7 @@
   keeps SDL from being used by the main thread while the render thread reads
   its events. }
 
+{ <include docs/codebot.render.controls.child.txt> }
 unit Codebot.Render.Controls.Child;
 
 {$i ../codebot_render/render.inc}

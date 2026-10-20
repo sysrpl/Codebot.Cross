@@ -9,6 +9,7 @@
 { Codebot.Explorer.Registration adds the Application Explorer to the
   information items of the IDE menu }
 
+{ <include docs/codebot.explorer.registration.txt> }
 unit Codebot.Explorer.Registration;
 
 {$mode delphi}

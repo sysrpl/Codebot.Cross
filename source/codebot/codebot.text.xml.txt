@@ -1,3 +1,9 @@
-The Codebot.Text.Xml unit provides XML documents through a set of interfaces. IDocument is the root of an XML tree, INode is an element, attribute, text, or document node, and INodeList is a list of attributes or child nodes. IFiler reads and writes typed values to nodes selected by an XPath key, and can optionally encrypt them. SettingsLoad and SettingsSave read and write the settings file of the application.
+# Codebot.Text.Xml
 
-On Linux the implementation uses libxml2, and on Windows it uses MSXML.
+The Codebot.Text.Xml unit gives you XML documents through a set of interfaces. IDocument is the root of an XML tree, INode is an element, attribute, text, or document node, and INodeList is a list of attributes or child nodes. DocumentCreate makes a new document.
+
+IFiler reads and writes typed values to nodes selected by an XPath key, such as `window/width`, and can encrypt them. When a key isn't found a read returns your default value, and if you pass True for Stored, the default is written to the document too.
+
+SettingsLoad and SettingsSave read and write a settings file for your application, so remembering your program's settings takes just a few lines.
+
+The unit uses libxml2 on Linux and macOS, and MSXML on Windows.

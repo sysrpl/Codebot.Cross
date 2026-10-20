@@ -10,6 +10,7 @@
   library used by this package. The library is loaded when InitWebKit is
   called rather than linked when a program is built, so a program can start
   and report that WebKitGTK is not installed. }
+{ <include docs/codebot.interop.webkit.txt> }
 unit Codebot.Interop.WebKit;
 
 {$i webkit.inc}

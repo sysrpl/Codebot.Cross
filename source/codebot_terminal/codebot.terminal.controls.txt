@@ -1,3 +1,11 @@
-The Codebot.Terminal.Controls unit defines TTerminal, which is a terminal emulator control that runs the shell of the user using the VTE library from the GNOME terminal. The shell starts when the control is first shown. OnReady is invoked once the shell has written its prompt, OnTerminate is invoked when the shell ends, and Restart starts the shell again. TTerminalColors holds the colors of the terminal and its palette.
+# Codebot.Terminal.Controls
 
-While the control is being designed in the IDE there is no running terminal, so the control paints a prompt and a cursor instead.
+The Codebot.Terminal.Controls unit gives you TTerminal, a terminal emulator control that runs the user's shell inside your form using VTE, the library of the GNOME terminal.
+
+The shell starts the first time the control is shown. OnReady tells you when the shell has written its prompt, and OnTerminate tells you when it ends, such as when the user types exit. If you want the terminal to keep going, call Restart from OnTerminate to clear the terminal and start a new shell. HasTerminal tells you whether the control is showing a running terminal.
+
+You can choose the font of the terminal, whether it shows a vertical scroll bar, and its colors through TTerminalColors. The colors cover the text, background, bold and dim text, cursor, and selection, along with Palette, which chooses the sixteen numbered colors programs such as ls ask for. By default the terminal shows silver text on black using the Tango palette of the GNOME terminal. Dim is not used with GTK3, and Cursor, Highlight, and HighlightText are not used with GTK2, where a selection swaps the text and background colors.
+
+While you are designing your form there is no running terminal, so the control draws a prompt and a cursor in its colors and font instead.
+
+The package only builds with the GTK2 and GTK3 widgetsets, and TerminalAvailable always returns True.

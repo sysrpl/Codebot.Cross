@@ -1,1 +1,5 @@
-The Codebot.Render.Controls.Child unit creates an SDL window and places it inside the native window of an LCL control, where it fills the control. Because SDL has no child windows of its own, the window is first created hidden as a top level window and is then given a new parent by the window system, which is X11 on Linux or Windows itself. The unit also resizes and destroys the window, and moves the keyboard focus between it and the form.
+# Codebot.Render.Controls.Child
+
+The Codebot.Render.Controls.Child unit creates the SDL window of a TGraphicsBox and places it inside the native window of the control, where it fills the control. SDL has no child windows of its own, so the window is first created hidden as a top level window, and the window system then gives it a new parent. That is X11 on Linux, or Windows itself on Windows.
+
+The unit also resizes and destroys the window, and moves the keyboard focus between it and the form. Wayland is not supported.

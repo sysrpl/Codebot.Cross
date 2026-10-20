@@ -1,13 +1,16 @@
-The Codebot.System unit defines the types and routines used throughout the library. It declares Float, which is the floating point type used by the library, along with the other basic types and TArray<T>. It also loads dynamic libraries and identifies which platform the program is running on.
+# Codebot.System
 
-The unit includes the following:
+The Codebot.System unit holds the types and routines the rest of the library is written in, and you will use it in nearly every unit you write. List it first in the uses clause of your program, in place of the cthreads block Lazarus generates, so threads are ready before any other unit starts.
 
-- TArrayList<T>, an extension of dynamic arrays that can sort, search, and filter its items, and TStack<T>, a fixed size stack, along with the compare and convert function types they use.
-- Math, time, string, and file management routines.
-- Helpers that add methods to strings, numbers, and TStrings.
+It gives you:
+
+- Float, the floating point type used everywhere in the library, along with the other basic types.
+- TArrayList<T>, which extends dynamic arrays so they can push and pop, sort, search, filter, reverse, and join their items. StringArray, IntArray, Int64Array, and FloatArray already know how to sort and join their items. TStack<T> is a fixed size stack.
+- Routines for math, time, strings, and files, including ConfigAppDir and ConfigAppFile, which find where your program should keep its settings.
+- Helpers that add methods to strings, integers, dates, and TStrings, so you can write things like `S.Trim.ToUpper` or `S.Split(',')`.
 - Named values and named strings, which are simple dictionaries keyed by name.
-- Delegates, which publish an event to any number of subscribers, and TChangeNotifier, which notifies owners when something changes.
-- A null stream, which counts the bytes written to it without storing them.
-- Threading support, including mutexes, events, asynchronous tasks, TSimpleThread, and routines that wait.
+- Delegates, which let an event have any number of subscribers, and TChangeNotifier, which tells owners when something changes.
+- TNullStream, which counts the bytes written to it without storing them.
+- Threading support, including IMutex, IEvent, TSimpleThread, which runs a method on its own thread, and IAsyncTask, which lets you run cancellable work in the background and follow its progress.
 
-Finally, WriteLine writes formatted text to the console.
+When an interop unit can't load a library or one of its routines, Codebot.System raises an ELibraryException that tells you which one.

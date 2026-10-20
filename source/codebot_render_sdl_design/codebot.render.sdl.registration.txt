@@ -1,16 +1,7 @@
-The Codebot.Render.Sdl.Registration unit registers the Codebot rendering project with the Lazarus IDE, placing it in the new project dialog.
+# Codebot.Render.Sdl.Registration
 
-## The project it creates
+The Codebot.Render.Sdl.Registration unit adds the Codebot rendering project to the new project dialog of the Lazarus IDE. Choose File, New, and then Codebot rendering project to create a program that runs a scene in an SDL window.
 
-A new Codebot rendering project is a program which runs a scene in an SDL window. It is made of two files:
+Your new project is made of two files. The program sets the title of the application and runs your scene. The MainScene unit holds TMainScene, a scene for you to change into your own, which draws a rose on the canvas that turns, opens and closes its petals, and changes color over time. It needs no assets, so it runs as soon as you build it. The project requires the codebot, codebot_render, and codebot_render_sdl packages, and has no forms.
 
-- The program, which sets the title of the application and runs the scene
-- The MainScene unit, which holds TMainScene, a scene to change into your own. It draws a rose with the canvas, which turns, opens and closes, and changes color over time. It needs no assets, so the program runs as soon as it is built.
-
-The project requires the codebot, codebot_render, and codebot_render_sdl packages, and has no forms.
-
-## The encryption key
-
-When the project is created a dialog asks if the assets are encrypted with a key. If they are, a key of four bytes is made up and the program sets it with Application.AssetKey. Such a program reads its assets from a dat file beside it, and builds that file when it is started with --build-dat. See Codebot.Render.Assets.
-
-The choice is also kept in the project file as custom data, under the name in BuildDatName. A release build on macOS reads it to decide if the dat file or the assets folder is placed inside the application bundle.
+Before the project is created, you are asked whether your assets should be encrypted with a key. If you choose a key, a random key of four bytes is made up and your program sets it with Application.AssetKey. Your program then reads its assets from a dat file beside it, and builds that file when you start it with `--build-dat`. Your choice is also kept in the project file under the name in BuildDatName, so a release build on macOS knows whether to place the dat file or the assets folder inside the application bundle.

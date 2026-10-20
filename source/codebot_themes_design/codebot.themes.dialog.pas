@@ -9,6 +9,7 @@
 { Codebot.Themes.Dialog defines the dialog which lists the themes and the
   color schemes of the source editor, with a preview of the ones selected }
 
+{ <include docs/codebot.themes.dialog.txt> }
 unit Codebot.Themes.Dialog;
 
 {$mode delphi}

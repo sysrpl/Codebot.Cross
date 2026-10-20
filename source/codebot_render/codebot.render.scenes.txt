@@ -1,5 +1,9 @@
-The Codebot.Render.Scenes unit defines TScene, which is the base class of everything a host shows. A program descends from TScene to draw each frame and to handle keyboard, text, mouse, and wheel input. A scene can also be stepped at a fixed interval on its own thread.
+# Codebot.Render.Scenes
 
-TSceneHost runs scenes and provides what they share: the canvas, a default font, the window, the clipboard, the timer, and vertical sync. The two scene hosts are TSceneController in the codebot_render_controls package and TApplication in the codebot_render_sdl package.
+The Codebot.Render.Scenes unit gives you TScene, the base class of everything a host shows. You descend from TScene and override Initialize to load what your scene needs, Logic to update it once a frame, Render to draw it, and Finalize to free what you created. Calling inherited Render clears the scene for you. While your scene runs you have its Canvas, its default Font, Time, Width, Height, and Context.
 
-A host also holds the asset key of the program in its AssetKey property. A program which sets a key keeps its assets in a dat file beside the program instead of in an assets folder, and builds that file when it is started with --build-dat. The Codebot.Render.Assets unit describes this.
+Input arrives through DoKeyDown, DoKeyUp, DoTextInput, DoMouseDown, DoMouseMove, DoMouseUp, and DoMouseWheel, each with an argument record you can mark as Handled. Key codes are the VK_ virtual key codes of Codebot.Platform.
+
+If your scene needs something to happen at a steady rate apart from drawing, such as physics, override StepInterval to return the seconds between steps and override Step. The host then calls Step on a step thread of its own. Step runs at the same time as Logic and Render, so protect any data they share.
+
+TSceneHost runs scenes and provides what they share: the canvas, a default font, the window, the clipboard, the timer, the frame rate, and vertical sync. The two hosts are TSceneController in the codebot_render_controls package and TApplication in the codebot_render_sdl package. A host also holds the AssetKey of your program, which Codebot.Render.Assets describes.

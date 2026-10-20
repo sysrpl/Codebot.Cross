@@ -1,9 +1,9 @@
-The Codebot.Themes.Editor unit chooses the color scheme and the font of the source editor of the IDE. The schemes are the ones the IDE knows, such as Default, Twilight, or Ocean, including the schemes the user made in the options of the editor.
+# Codebot.Themes.Editor
 
-EditorSchemeNames lists the schemes, and EditorSchemeCurrent returns the scheme Pascal source is shown with. EditorSchemeStyle reads the colors and font style of one kind of text in a scheme, such as comments, strings, or reserved words, which the dialog uses to draw its preview.
+The Codebot.Themes.Editor unit chooses the color scheme and the font of the source editor of the IDE. The schemes are the ones the IDE knows, such as Default, Twilight, or Ocean, including any schemes you made in the editor options.
 
-EditorFontName and EditorFontSize return the font of the source editor. EditorMonospaceFonts lists the fonts whose characters all have the same width, which are the fonts suited to source.
+EditorSchemeNames lists the schemes, and EditorSchemeCurrent returns the scheme Pascal source is shown with. EditorSchemeStyle reads the colors and font style of one kind of text in a scheme, such as comments, strings, or reserved words, which the dialog uses to draw its preview. EditorFontName and EditorFontSize return the font of the source editor, and EditorMonospaceFonts lists the fonts whose characters all have the same width.
 
-EditorApply gives the source of every language the scheme, the same as choosing a scheme for each language in the options of the editor, and gives the source editor the font. The IDE saves them with its other editor options, so they are remembered between sessions of the IDE, and shows them in every editor which is open. Nothing is done if nothing changed, as every editor is loaded again.
+EditorApply gives every language the scheme, just as if you chose it for each language in the editor options, and gives the source editor the font. The IDE saves them with its other editor options and shows them in every open editor. Nothing is done if nothing changed, since every editor is loaded again.
 
-Choosing the scheme and the font needs the GetColorSchemeName and SetColorSchemeName methods and the EditorFontName and EditorFontSize properties of TIDEEditorOptions in IDEIntf, which Lazarus does not yet have, so the package needs a Lazarus which adds them.
+The unit needs the GetColorSchemeName and SetColorSchemeName methods and the EditorFontName and EditorFontSize properties of TIDEEditorOptions in IDEIntf, so the package needs a version of Lazarus that has them.

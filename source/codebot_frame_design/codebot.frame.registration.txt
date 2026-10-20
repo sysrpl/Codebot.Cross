@@ -1,1 +1,5 @@
-The Codebot.Frame.Registration unit registers the codebot_frame_design package with the Lazarus IDE. It adds a Convert form or frame to control item to the menu of the form designer and to the Tools menu. The items are only enabled when the active editor tab has a form or frame open in the designer. Both items convert that form or frame, after asking for the details of the new control using the dialog in Codebot.Frame.ConvertDialog. The conversion saves the form first, converts it using Codebot.Frame.Converter, writes the package, unit, and resource file, shows what could not be converted in the Messages window, and then opens the unit and installs the package when the user chose to.
+# Codebot.Frame.Registration
+
+The Codebot.Frame.Registration unit adds a Convert form or frame to control item to the Tools menu of the Lazarus IDE and to the right click menu of the form designer. The items are only enabled when the active editor tab has a form or frame open in the designer.
+
+When you choose it, you are asked for the details of your new control with the dialog in Codebot.Frame.ConvertDialog. Your form is then saved and converted with Codebot.Frame.Converter, the package, unit, and resource file are written, and anything that could not be converted is listed in the Messages window. Finally, the new unit is opened and the package is installed, if you chose to.

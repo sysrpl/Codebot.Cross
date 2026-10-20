@@ -1,34 +1,150 @@
-The codebot_webkit package provides a web browser as an LCL control. On Linux it embeds WebKitGTK, which is built for GTK3, and on Windows it embeds Microsoft Edge WebView2. The package builds with the GTK3 and Win32 widgetsets. The package requires codebot_controls and the LCL.
+# Codebot WebKit
 
-## Browser
+## Introduction
 
-Codebot.WebKit.Controls defines TWebBrowser, which is a control that shows web pages. It can do the following:
+The Codebot WebKit package gives you TWebBrowser, a web browser control you can place on your forms, along with an address bar, a status indicator, and a developer tools inspector that work alongside it. You can use it to show web pages and online help, to build a user interface out of HTML, or to write a complete web browser of your own.
 
-- Load a location or a string of HTML.
-- Stop and reload a page.
-- Go back and forward in its history.
-- Run JavaScript.
-- Zoom, and make the page editable.
+On Linux the browser embeds WebKitGTK, the engine used by GNOME Web, and on Windows it embeds Microsoft Edge WebView2. The package builds with the GTK3 and Win32 widgetsets, and requires the codebot_controls package and the LCL.
 
-Its events report the location, title, progress, and status of a page as it loads, as well as errors, what is under the mouse, context menus, and the alert, confirm, and prompt dialogs of JavaScript. An event can also allow or deny a navigation. Files that the browser downloads are TWebDownload objects, and TWebInspector is a control that shows the developer tools of a browser.
+The browser engine is loaded when your program runs rather than linked when it is built. If the engine is not installed, your program still starts normally and the browser control simply shows a message instead of a page, so you can tell the user what is missing.
 
-## Extras
+## Quick Start
 
-Codebot.WebKit.Controls.Extras defines controls that work alongside a browser. TWebAddressBar has an edit that shows the current location and buttons for back, forward, home, refresh, history, the inspector, print, capture, downloads, and settings. TWebStatusIndicator shows the status of a browser.
+Create a new Lazarus application. From the Codebot Webview tab of the component palette, place a TWebAddressBar on your form and set its Align property to alTop. Place a TWebStatusIndicator and set its Align to alBottom, then place a TWebBrowser and set its Align to alClient. Set the WebBrowser property of the address bar and the status indicator to your browser, and set the Location of the browser to a web page such as https://www.lazarus-ide.org. Press F9 to run your project, and you will have a working web browser.
 
-## Other units
+## TWebBrowser
 
-| Unit | Description |
+TWebBrowser shows web pages. You can load a page by setting Location or by calling Load with any address the engine understands, such as http:, https:, file:, or about:. If you want to show content your program builds itself, you can call LoadHtml with a string of HTML instead.
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  WebBrowser.LoadHtml('<h1>Welcome</h1><p>Choose a page from the menu.</p>');
+end;
+```
+
+You don't have to wait for the browser to be ready before you load a page. Changes you make before the control's window is created, such as setting Location, are kept and applied as soon as the browser is ready. While you are designing your form nothing is loaded, and the control shows a browser icon instead.
+
+If you want to check whether the browser engine is installed before showing a browser, you can call the TWebBrowser.Available class function.
+
+### Controlling navigation
+
+The browser lets you decide which pages the user can visit. OnNavigate is invoked before the browser follows a link, and you can set Action to naDeny if you want to stop it. For example, you could keep the user inside your own help pages and open everything else in their own web browser:
+
+```pascal
+procedure TForm1.WebBrowserNavigate(Sender: TObject; const Uri: string;
+  var Action: TWebNavigateAction);
+begin
+  if not Uri.StartsWith('file:') then
+  begin
+    OpenURL(Uri);
+    Action := naDeny;
+  end;
+end;
+```
+
+If a page fails to load, OnError tells you why. You can set Handled to True if you want to show your own message rather than the error page of the browser.
+
+### Running JavaScript
+
+You can run JavaScript in the page by calling ExecuteScript. When a page calls alert, confirm, or prompt, the browser shows a dialog for you, but you can handle OnScriptDialog if you want to show your own dialog or answer it in code.
+
+### Downloads
+
+When the user clicks a link to a file, the browser downloads it to DownloadFolder, or to the user's download folder if you leave it empty. You can start a download yourself by calling Download. OnDownloadStart is invoked before each download starts, and you can change the file name or set Allow to False to stop it. OnDownloadProgress and OnDownloadFinish let you follow its progress, and every download is kept as a TWebDownload in the Downloads list.
+
+### Key Properties
+
+| Property | Description |
 | --- | --- |
-| Codebot.WebKit.Controls.Gtk3 | The GTK3 widgetset classes, which create the web view and the inspector and pass their signals on to the controls. |
-| Codebot.Interop.WebKit | The part of the WebKitGTK C API that the package uses. |
-| Codebot.WebKit.Controls.Win | The Win32 widgetset classes, which create a WebView2 web view and pass its events on to the controls. |
-| Codebot.Interop.WebView2 | The part of the WebView2 API that the package uses. |
+| Location | The address of the page shown. Setting it loads the page. |
+| Title | The title of the page. |
+| LoadStatus | The status of the current load, such as started, committed, finished, or failed. |
+| Loading | A load is in progress. |
+| Progress | The progress of the current load from 0 to 100. |
+| HoverLink | The address of the link under the mouse. |
+| Editable | Lets the user edit the page. |
+| ZoomFactor | Makes the content larger or smaller. |
+| ZoomTextOnly | Zooms only the text. |
+| DeveloperTools | Allows the inspector to be shown and adds an inspect item to the context menu. |
+| DownloadFolder | The folder files are downloaded to. |
+| Downloads, DownloadCount | The files the browser has downloaded. |
 
-The web view library is loaded when InitWebKit is called, rather than being linked when the program is built. This allows a program to start normally and report that the library is not installed. The controls have no web view at design time, or when the library is missing.
+### Key Methods
+
+| Method | Description |
+| --- | --- |
+| Load, LoadHtml | Loads a page by its address, or from a string of HTML. |
+| Stop, Reload | Stops or repeats the current load. |
+| GoBack, GoForward, BackOrForward | Moves through the history. |
+| CanGoBack, CanGoForward, BackOrForwardExists | Checks whether there is a page to move to in the history. |
+| HistoryItem | Returns the title and address of a page in the history. |
+| ExecuteScript | Runs JavaScript in the page. |
+| ShowInspector, CloseInspector | Shows or closes the developer tools. |
+| Download, CancelDownload, ClearDownloads | Starts, cancels, or clears downloads. |
+| Print | Shows the print dialog for the page. |
+| CaptureToClipboard | Places an image of the visible page on the clipboard. |
+| AddListener, RemoveListener | Lets your own controls be notified of changes in the browser. |
+
+### Key Events
+
+| Event | Description |
+| --- | --- |
+| OnNavigate | Invoked before a link is followed. Set Action to naDeny to stop it. |
+| OnLocationChange | A new page started loading or was redirected. |
+| OnTitleChange | The title of the page changed. |
+| OnLoadStatusChange | The status of the load changed. |
+| OnProgress | The load progressed. |
+| OnError | A load failed. Set Handled to True to stop the error page. |
+| OnHitTest | The element under the mouse changed, such as a link, image, or editable area. |
+| OnContextMenu | A context menu is about to be shown. Set Handled to True to stop the default menu. |
+| OnScriptDialog | JavaScript called alert, confirm, or prompt. Set Handled to True to answer it yourself. |
+| OnDownloadStart, OnDownloadProgress, OnDownloadFinish | A download started, progressed, or finished. |
+
+## TWebAddressBar
+
+TWebAddressBar is a bar for navigating a browser. It has an edit that shows the location of the page, and when the user types an address and presses Enter, the browser loads it. You can choose which buttons appear on the bar using the Buttons property:
+
+| Button | Description |
+| --- | --- |
+| abBack, abForward | Moves back or forward in the history. |
+| abHome | Loads the page in HomePage. |
+| abRefresh | Reloads the page, or stops it while it is loading. |
+| abHistory | Shows a menu of the pages in the history. |
+| abInspector | Shows or hides the developer tools. |
+| abPrint | Shows the print dialog. |
+| abCapture | Places an image of the page on the clipboard. |
+| abDownloads | Shows a menu of downloaded files. |
+| abSettings | Does nothing by itself, so you can handle it in OnButtonClick and show your own settings. |
+
+By default the bar shows the back, forward, and refresh buttons. OnButtonClick is invoked whenever a button is clicked, and you can set Handled to True if you want to replace what the button does.
+
+## TWebStatusIndicator
+
+TWebStatusIndicator shows the status of a browser, much like the status bar of a desktop web browser. It shows the address of the link under the mouse, or the page and its progress while it is loading. You only need to set its WebBrowser property.
+
+## TWebInspector
+
+TWebInspector shows the developer tools of a browser inside your form, rather than in a window of their own. Set its WebBrowser property to your browser and set Active to True when you want to show the tools.
 
 ## Windows
 
-On Windows a program using the browser needs WebView2Loader.dll next to it. A copy is in the win64 folder of this package. The WebView2 runtime itself is part of Windows 11 and is installed on nearly all Windows 10 systems.
+On Windows your program will need WebView2Loader.dll next to it. The WebView2 runtime itself is part of Windows 11, and is installed on nearly all Windows 10 computers.
 
-Some features differ on Windows. Only one step back or forward in history is possible, HistoryItem returns false, ZoomTextOnly has no effect, and the progress of a load advances in steps. TWebInspector shows the developer tools page served by the WebView2 debugging server, which listens only on the local computer and is started only when a TWebInspector is created before the first web view. Without one, the developer tools open in a window of their own.
+A few features work differently on Windows:
+
+- You can only move one step back or forward in the history at a time, and HistoryItem returns False.
+- ZoomTextOnly has no effect.
+- The progress of a load moves in steps rather than smoothly.
+- TWebInspector shows the developer tools page of the WebView2 debugging server, which only listens on the local computer. The server only starts if your inspector is created before the first browser, so place the inspector on your form before the browser. Without it, the developer tools open in a window of their own.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.WebKit.Controls | Contains TWebBrowser, TWebDownload, and TWebInspector. |
+| Codebot.WebKit.Controls.Extras | Contains TWebAddressBar and TWebStatusIndicator. |
+| Codebot.WebKit.Controls.Gtk3 | Implements the controls for the GTK3 widgetset using WebKitGTK. |
+| Codebot.WebKit.Controls.Win | Implements the controls for the Win32 widgetset using WebView2. |
+| Codebot.Interop.WebKit | Declares the part of the WebKitGTK API that the package uses. |
+| Codebot.Interop.WebView2 | Declares the part of the WebView2 API that the package uses. |

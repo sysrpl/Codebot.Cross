@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.widgets.themes.txt> }
 unit Codebot.Render.Widgets.Themes;
 
 {$i render.inc}

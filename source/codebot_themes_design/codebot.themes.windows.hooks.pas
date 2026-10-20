@@ -25,6 +25,7 @@
   pointed at the same hooks. Every loaded module outside the Windows folder
   is patched, which covers the LCL when it is in a library of its own. }
 
+{ <include docs/codebot.themes.windows.hooks.txt> }
 unit Codebot.Themes.Windows.Hooks;
 
 {$mode delphi}

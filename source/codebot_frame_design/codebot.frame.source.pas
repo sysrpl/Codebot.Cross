@@ -11,6 +11,7 @@
   tokens of the unit are read, so the comments, directives, and code which
   are not changed are kept exactly as they are. }
 
+{ <include docs/codebot.frame.source.txt> }
 unit Codebot.Frame.Source;
 
 {$mode delphi}

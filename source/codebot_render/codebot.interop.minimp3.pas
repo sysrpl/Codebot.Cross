@@ -12,6 +12,7 @@
   The library is linked statically from libcodebotaudio.a, which is built
   by audio/build.sh. }
 
+{ <include docs/codebot.interop.minimp3.txt> }
 unit Codebot.Interop.MiniMp3;
 
 {$i render.inc}

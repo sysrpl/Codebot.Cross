@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.buffers.txt> }
 unit Codebot.Render.Buffers;
 
 {$i render.inc}

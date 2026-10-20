@@ -12,6 +12,7 @@
   constructor runs. Properties which cannot be written as code are stored as
   resources. }
 
+{ <include docs/codebot.frame.converter.txt> }
 unit Codebot.Frame.Converter;
 
 {$mode delphi}

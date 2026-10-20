@@ -17,6 +17,7 @@
   control paints itself instead as a prompt and a cursor in its colors and
   font. }
 
+{ <include docs/codebot.terminal.controls.txt> }
 unit Codebot.Terminal.Controls;
 
 {$i terminal.inc}

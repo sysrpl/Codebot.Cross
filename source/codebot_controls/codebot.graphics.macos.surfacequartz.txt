@@ -1,0 +1,3 @@
+# Codebot.Graphics.MacOS.SurfaceQuartz
+
+The Codebot.Graphics.MacOS.SurfaceQuartz unit is the drawing backend of Codebot.Graphics on macOS. It implements matrices, pens, brushes, fonts, surfaces, bitmaps, splash windows, and screen captures using Core Graphics for drawing, Core Text for text, and ImageIO for loading and saving images, all of which are part of macOS. You don't use it directly. Codebot.Graphics calls it for you.

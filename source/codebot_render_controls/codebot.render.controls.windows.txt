@@ -1,1 +1,3 @@
-The Codebot.Render.Controls.Windows unit defines the Windows widgetset class of TGraphicsBox. It creates the handle of the control and provides two native windows: the window of the control, which the SDL window is placed inside, and the window of the form that holds the control.
+# Codebot.Render.Controls.Windows
+
+The Codebot.Render.Controls.Windows unit is the Windows widgetset class of TGraphicsBox. It creates the handle of the control and provides two native windows: the window of the control, which the SDL window is placed inside, and the window of the form that holds the control.

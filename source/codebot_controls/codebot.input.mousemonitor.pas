@@ -6,7 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
-{ <include docs/codebot.input.mousequeue.txt> }
+{ <include docs/codebot.input.mousemonitor.txt> }
 unit Codebot.Input.MouseMonitor;
 
 {$i ../codebot/codebot.inc}

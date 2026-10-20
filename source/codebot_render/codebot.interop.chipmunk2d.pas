@@ -56,6 +56,7 @@
 
   Codebot.Chipmunk2D.Native is a Pascal port of the same library which needs
   no C library. It is not part of the package. }
+{ <include docs/codebot.interop.chipmunk2d.txt> }
 unit Codebot.Interop.Chipmunk2D;
 
 {$i render.inc}

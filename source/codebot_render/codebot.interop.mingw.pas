@@ -30,6 +30,7 @@
 
   On other systems this unit links nothing. }
 
+{ <include docs/codebot.interop.mingw.txt> }
 unit Codebot.Interop.MinGW;
 
 {$i render.inc}

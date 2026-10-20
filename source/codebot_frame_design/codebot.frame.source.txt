@@ -1,5 +1,7 @@
-The Codebot.Frame.Source unit finds the parts of the unit of a form or frame which change when it is converted into a control, and edits its text.
+# Codebot.Frame.Source
+
+The Codebot.Frame.Source unit finds the parts of the unit of a form or frame that change when it is converted into a control, and edits its text.
 
 TFormSource reads the tokens of the unit, skipping comments but keeping compiler directives. Analyze finds the unit name, the interface and implementation, the uses clauses, the declaration of the form class and its ancestor, the end of the unit, and whether the unit is written in Delphi mode. It also removes the fields of the components, the global variable of the form, and the form resource directive.
 
-Changes are added as edits of the text and made together by Apply, so the comments, directives, and code which are not changed are kept exactly as they were.
+Changes are added as edits of the text and made all at once by Apply, so the comments, directives, and code that don't change are kept exactly as they were written.

@@ -1,3 +1,16 @@
-The Codebot.Networking.Storage unit provides access to cloud storage held by S3 compatible providers. TS3Config holds the end points, regions, and credentials of a provider, and S3Configs supplies default configurations for several providers, such as DigitalOcean, Google, IBM, Microsoft, and Wasabi.
+# Codebot.Networking.Storage
 
-TS3Methods generates the S3 REST requests. These requests can be run as asynchronous tasks, which produce either an XML document through IAsyncDocTask or a stream through IAsyncStreamTask.
+The Codebot.Networking.Storage unit lets you work with buckets and files in Amazon S3 and compatible cloud storage. TS3Config holds the end points, regions, and credentials of a provider. These providers are built in, and each reads its keys from environment variables unless you set AccessId and SecretKey yourself:
+
+| Provider | Environment variables |
+| --- | --- |
+| amazon | AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY |
+| wasabi | WAS_ACCESS_KEY_ID and WAS_SECRET_ACCESS_KEY |
+| digitalocean | DO_ACCESS_KEY_ID and DO_SECRET_ACCESS_KEY |
+| google | GOOG_ACCESS_KEY_ID and GOOG_SECRET_ACCESS_KEY |
+| ibm | IBM_ACCESS_KEY_ID and IBM_SECRET_ACCESS_KEY |
+| scaleway | SCW_ACCESS_KEY and SCW_SECRET_KEY |
+| ovh | OVH_ACCESS_KEY_ID and OVH_SECRET_ACCESS_KEY |
+| hetzner | HETZNER_ACCESS_KEY_ID and HETZNER_SECRET_ACCESS_KEY |
+
+TS3Methods builds the S3 REST requests. You can run them as asynchronous tasks, which give you either an XML document through IAsyncDocTask or a stream through IAsyncStreamTask. Objects can be uploaded as private or public on the providers that support it, though Amazon buckets with ACLs disabled and Google buckets with uniform access reject that, so the default sends no ACL and follows the bucket's own rules.

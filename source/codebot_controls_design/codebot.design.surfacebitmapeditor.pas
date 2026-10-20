@@ -6,7 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
-{ <include docs/codebot.design.imagelisteditor.txt> }
+{ <include docs/codebot.design.surfacebitmapeditor.txt> }
 unit Codebot.Design.SurfaceBitmapEditor;
 
 {$mode delphi}

@@ -1,3 +1,19 @@
-The codebot_render_design package is the design time package of codebot_render_controls. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot_render_controls.
+# Codebot Render Design
 
-Codebot.Render.Registration adds TGraphicsBox, along with its palette icon, to the Codebot Render page of the component palette.
+## Introduction
+
+The Codebot Render Design package adds TGraphicsBox from the [Codebot Render Controls](../codebot_render_controls) package to the Lazarus IDE, so you can place OpenGL graphics on your forms in the form designer. The package is only used by the IDE, so you never need to add it to your own programs.
+
+The package requires the codebot_render_controls package.
+
+## Component Palette
+
+You will find TGraphicsBox on the Codebot Render tab of the component palette.
+
+Nothing is rendered while you are designing your form. The graphics box paints an OpenGL logo instead, so you can lay it out and set its properties without creating an OpenGL context. Your graphics appear when you run your program.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Render.Registration | Registers TGraphicsBox and its palette icon on the component palette. |

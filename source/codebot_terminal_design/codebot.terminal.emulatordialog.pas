@@ -9,6 +9,7 @@
 { Codebot.Terminal.EmulatorDialog is a window of the IDE which holds a
   terminal. The shell is started again whenever it ends. }
 
+{ <include docs/codebot.terminal.emulatordialog.txt> }
 unit Codebot.Terminal.EmulatorDialog;
 
 {$i ../codebot_terminal/terminal.inc}

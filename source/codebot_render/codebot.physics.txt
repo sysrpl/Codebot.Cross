@@ -1,11 +1,15 @@
-The Codebot.Physics unit wraps the Chipmunk2D physics library in records that are easier to use from Pascal.
+# Codebot.Physics
 
-- TSpace is the simulated world.
-- TBody is a rigid body within a space.
-- TShape gives a body its shape, and comes in circle, segment, and polygon kinds.
-- TJoint connects two bodies, and comes in ten kinds.
-- TArbiter describes a collision between two shapes.
+The Codebot.Physics unit makes the Chipmunk2D physics library easy to use from Pascal by wrapping it in records.
 
-Each record is the same pointer that Chipmunk2D uses, so the records convert freely to and from the routines of Codebot.Interop.Chipmunk2D, and nothing is duplicated in Pascal. The records add properties, methods such as Space.NewBody.NewCircle, and for in enumerators.
+| Record | Description |
+| --- | --- |
+| TSpace | The simulated world, with its gravity, bodies, shapes, and joints. |
+| TBody | A rigid body in a space, with its position, angle, velocity, and mass. |
+| TShape | Gives a body its shape. TCircle, TSegment, and TPolygon are its kinds. |
+| TJoint | Connects two bodies. TPinJoint, TSlideJoint, TPivotJoint, TGrooveJoint, TDampedSpringJoint, TDampedRotarySpringJoint, TRotaryLimitJoint, TRatchetJoint, TGearJoint, and TMotorJoint are its kinds. |
+| TArbiter | Describes a collision between two shapes. |
 
-The unit also includes routines that compute the moment, area, and centroid of shapes, and that build convex hulls and polylines.
+Each record is the same pointer Chipmunk2D uses, so the records convert freely to and from the routines of Codebot.Interop.Chipmunk2D, and Chipmunk2D manages everything itself without anything being duplicated in Pascal. The records add properties, methods such as `Space.NewBody.NewCircle(20)`, and for in loops over the bodies, shapes, and joints of a space.
+
+The unit also gives you routines that compute the moment, area, and centroid of shapes, and that build convex hulls and polylines.

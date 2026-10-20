@@ -12,6 +12,7 @@
   to be installed. While the control is being designed it has an ordinary
   window which the control paints on. }
 
+{ <include docs/codebot.terminal.controls.gtk3.txt> }
 unit Codebot.Terminal.Controls.Gtk3;
 
 {$i terminal.inc}

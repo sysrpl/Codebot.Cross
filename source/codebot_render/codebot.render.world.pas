@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.world.txt> }
 unit Codebot.Render.World;
 
 {$i render.inc}

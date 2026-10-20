@@ -1,1 +1,3 @@
-The Codebot.Graphics.Linux.SurfaceCairo unit implements the drawing interfaces using Cairo on Linux, including matrices, pens, brushes, fonts, surfaces, bitmaps, and splash windows. It can also capture the screen using GTK. Codebot.Graphics uses this unit as its drawing backend on Linux.
+# Codebot.Graphics.Linux.SurfaceCairo
+
+The Codebot.Graphics.Linux.SurfaceCairo unit is the drawing backend of Codebot.Graphics on Linux. It implements matrices, pens, brushes, fonts, surfaces, bitmaps, and splash windows using Cairo, and captures the screen using GTK. You don't use it directly. Codebot.Graphics calls it for you.

@@ -1,1 +1,5 @@
-The Codebot.Interop.Assimp unit declares the C API of the Open Asset Import Library, version 5.4. Assimp loads many 3D model formats into a common scene made up of meshes, materials, bones, animations, cameras, and lights. The library is loaded when InitAssimp is called.
+# Codebot.Interop.Assimp
+
+The Codebot.Interop.Assimp unit declares the API of the Open Asset Import Library, assimp 5.4, which loads many 3D model formats into a common scene of meshes, materials, bones, animations, cameras, and lights. The library is loaded when you call InitAssimp. Arrays can be indexed directly, such as `Scene.mMeshes[I].mVertices[J]`, and AiStr reads its UTF-8 strings. Define ASSIMP_DOUBLE_PRECISION if your assimp was built with double precision.
+
+Functions in every assimp 5 release are required, while math helpers and functions added in later releases are optional and are nil if your library doesn't have them.

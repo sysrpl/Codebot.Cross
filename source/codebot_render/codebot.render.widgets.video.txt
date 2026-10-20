@@ -1,3 +1,9 @@
-The Codebot.Render.Widgets.Video unit defines TVideoWidget, which is a widget that plays a video from a file or a URL using libmpv. It can play, pause, stop, and seek, and it scales the video to fit while keeping its aspect ratio. The sound is played by libmpv directly, and the widget provides volume and mute settings for it. OnPlayComplete is invoked when the video ends, and AutoRestart plays the video again from the start.
+# Codebot.Render.Widgets.Video
 
-The unit is empty unless videowidget is defined in render.inc.
+The Codebot.Render.Widgets.Video unit gives you TVideoWidget, which plays a video from a file or a URL using libmpv. Set FileName and call Play. The video is scaled to fit the widget and keeps its shape, with black bars where it doesn't fill it.
+
+Pause holds the video where it is, Play continues it, and Stop unloads it so Play starts again from the beginning. Position is where the video is in seconds and can be set to seek, and Duration is how long it is. When the video ends OnPlayComplete is invoked, and if AutoRestart is True the video plays again from the start. Pictures and events are taken from the player when the widget is painted, so OnPlayComplete doesn't fire while the widget is hidden, though the sound keeps playing.
+
+The sound is played by libmpv itself, not by Codebot.Hardware. Volume sets how loud it is from 0 to 1, Muted silences it, and HasAudio tells you whether the video has sound. Effect lets you change how the video looks with a GLSL fragment shader, written the way Shadertoy shaders are.
+
+The unit is only included when videowidget is defined in render.inc, which it is by default except on macOS.

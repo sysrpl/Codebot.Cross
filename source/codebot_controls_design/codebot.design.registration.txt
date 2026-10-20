@@ -1,5 +1,5 @@
-The Codebot.Design.Registration unit registers the codebot_controls package with the Lazarus IDE. It adds the following:
+# Codebot.Design.Registration
 
-- The components of the package, on the Codebot Controls page of the component palette.
-- The property and component editors of those components.
-- The Render Form and Banner Form kinds of form.
+The Codebot.Design.Registration unit adds the components of the codebot_controls package to the Lazarus IDE. You will find them on the Codebot Controls tab of the component palette: TImageStrip, TSlideBar, TThinButton, TDrawImage, TDrawBox, TDrawPanel, TIndeterminateProgress, TStepBubbles, THuePicker, TSaturationPicker, TAlphaPicker, TAnglePicker, TBanner, TContentGrid, TSizingPanel, TCaptionBox, THeaderBar, TDrawList, TDrawTextList, TDetailsList, TAnimationTimer, TTextStorage, TSlideEdit, TColorSlideEdit, TAdvancedColorDialog, and TExternalCommand.
+
+It also registers the property and component editors of Codebot.Design.Editors, and adds two kinds of form to the Codebot Form category of File, New: Render Form, which is a TSurfaceForm, and Banner Form, which is a TBannerForm.

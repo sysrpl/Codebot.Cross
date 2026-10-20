@@ -14,6 +14,7 @@
   defined libmpv is linked when a program using this unit is built, which
   needs the libmpv development package to be installed. }
 
+{ <include docs/codebot.interop.mpv.txt> }
 unit Codebot.Interop.MPV;
 
 {$i render.inc}

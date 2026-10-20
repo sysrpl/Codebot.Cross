@@ -9,6 +9,7 @@
 { Codebot.Frame.ConvertDialog asks for the name of the control a form or frame
   is converted into, and for the package the control is added to }
 
+{ <include docs/codebot.frame.convertdialog.txt> }
 unit Codebot.Frame.ConvertDialog;
 
 {$mode delphi}

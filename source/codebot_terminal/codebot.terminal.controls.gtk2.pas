@@ -11,6 +11,7 @@
   program using this unit is built. Building needs the libvte-dev package to
   be installed. While the control is being designed it paints a message. }
 
+{ <include docs/codebot.terminal.controls.gtk2.txt> }
 unit Codebot.Terminal.Controls.Gtk2;
 
 {$i terminal.inc}

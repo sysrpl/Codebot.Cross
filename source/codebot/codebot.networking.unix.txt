@@ -1,1 +1,3 @@
-The Codebot.Networking.Unix unit defines TUnixClientSocket, which connects to a Unix domain socket using its file name and then reads and writes data through it.
+# Codebot.Networking.Unix
+
+The Codebot.Networking.Unix unit gives you TUnixClientSocket, which connects to a Unix domain socket so you can talk to local services that listen on one.

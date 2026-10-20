@@ -1,1 +1,3 @@
-The Codebot.Render.SVG unit reads and draws SVG documents. TSvgDocument reads an SVG document from text or from a file into a tree of nodes, which include lines, polylines, polygons, circles, ellipses, rectangles, paths, and groups that share a transform and a style. TSvgRender draws a document on a canvas.
+# Codebot.Render.SVG
+
+The Codebot.Render.SVG unit reads and draws SVG documents, so you can use art from a vector drawing program in your scenes. TSvgDocument reads a document from text or a file into a tree of nodes, including lines, polylines, polygons, circles, ellipses, rectangles, paths, and groups that share a transform and a style. TSvgRender draws a document on a canvas.

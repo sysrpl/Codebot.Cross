@@ -8,6 +8,7 @@
 
 { Codebot.Interop.SDL2 declares the C API of the SDL2 library, which is linked
   when a program using this unit is built. }
+{ <include docs/codebot.interop.sdl2.txt> }
 unit Codebot.Interop.SDL2;
 
 {$i render.inc}

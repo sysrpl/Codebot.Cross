@@ -6,7 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
-{ <include docs/codebot.edits.txt> }
+{ <include docs/codebot.controls.edits.txt> }
 unit Codebot.Controls.Edits;
 
 {$i ../codebot/codebot.inc}

@@ -1,1 +1,3 @@
-The Codebot.Interop.Linux.NetWM unit provides WindowManager, which implements part of the NetWM protocol used by X11 window managers on Linux. It can identify the window manager and desktop environment, report whether compositing is enabled, find the foreground window, and show the desktop. It can also activate a window or make it sticky across workspaces.
+# Codebot.Interop.Linux.NetWM
+
+The Codebot.Interop.Linux.NetWM unit gives you WindowManager, which implements part of the NetWM protocol used by X11 window managers on Linux. You can use it to find out the window manager and desktop environment, whether compositing is on, and which window is in the foreground. It can also show the desktop, activate a window, or make a window sticky across workspaces.

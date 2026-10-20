@@ -14,6 +14,7 @@
   WebView2Loader.dll is loaded when InitWebView2 is called rather than linked
   when a program is built, so a program can start and report that WebView2 is
   not available. The DLL must be placed next to the program. }
+{ <include docs/codebot.interop.webview2.txt> }
 unit Codebot.Interop.WebView2;
 
 {$i webkit.inc}

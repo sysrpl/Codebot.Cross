@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.contexts.txt> }
 unit Codebot.Render.Contexts;
 
 {$i render.inc}

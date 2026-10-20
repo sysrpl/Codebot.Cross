@@ -1,11 +1,66 @@
-The codebot_frame_design package converts a form or frame of the Lazarus form designer into a new control. It is installed in the Lazarus IDE and is not used by programs. The package requires IDEIntf.
+# Codebot Frame Design
 
-The new control is a TCustomControl descendant with all of the components, event handlers, and code of the form or frame. Its layout is created in code by its constructor rather than loaded from a form resource. The unit of the control is placed in a new or existing package, along with a Register procedure that adds the control to the component palette. With dynamic packages, the package can then be installed without rebuilding or restarting the IDE.
+## Introduction
 
-Codebot.Frame.Registration adds the Convert form or frame to control item to the designer menu and to the Tools menu. The items are enabled when the active editor tab has a form or frame open in the designer.
+The Codebot Frame Design package lets you turn a form or frame you designed in the Lazarus form designer into a brand new control that you can place on the component palette. You get to design your control visually, with all the components, event handlers, and code you are used to, and the package writes the control for you.
 
-Codebot.Frame.ConvertDialog defines the dialog that asks for the name of the new control and the package it is added to.
+The new control is a TCustomControl descendant that holds all the components of your form or frame. Its layout is created in code by its constructor, rather than loaded from a form file, so the control behaves like any other component, and you can drop as many copies of it as you like on your forms. The control is placed in a new or existing package, along with a Register procedure that adds it to the component palette, and the package can be installed in the IDE for you as soon as the control is written.
 
-Codebot.Frame.Packages writes a new run and design time package when one is chosen, adds the new unit and the packages it requires to the package, and opens and installs the package in the IDE.
+The package is only used by the IDE, so you never need to add it to your own programs. It requires IDEIntf.
 
-Codebot.Frame.Converter writes the source of the control, using Codebot.Frame.Lfm to read the form file, Codebot.Frame.Source to change the unit of the form, and Codebot.Frame.Resources to store properties which cannot be written as code.
+## Converting a Form or Frame
+
+Open the form or frame you want to convert in the form designer, so that it is in the active editor tab. Then choose Convert form or frame to control from the Tools menu, or right click the form designer and choose it there.
+
+A dialog asks for the details of your new control:
+
+| Option | Description |
+| --- | --- |
+| Class name | The class of the new control, such as TMyCrazyGrid. |
+| Unit name | The unit the control is placed in. It is made from the class name, so TMyCrazyGrid is placed in MyCrazyGridCtrls, but you can change it. |
+| Palette page | The page of the component palette the control is added to. |
+| New package | Creates a new package for the control. You choose its file with a save dialog, and the name of the package is the name of its file. |
+| Existing package | Adds the control to a package you already have. |
+| Install the package now | Installs the package in the IDE once the control is written. |
+| Open the new unit | Opens the unit of the control in the source editor. |
+
+When you click Convert, your form is saved, and the unit of the control is written to the folder of the package in a file named after the unit in lowercase, such as mycrazygridctrls.pas. If you change your form later and convert it again, the dialog asks before replacing the unit.
+
+If your IDE is built with dynamic packages, the package is loaded right away without rebuilding or restarting the IDE. Otherwise, the IDE is rebuilt the way it is when you install any other package.
+
+## What the Converter Writes
+
+The converter starts with a copy of your form's unit and changes it into the unit of a control:
+
+- The unit is renamed, and your form class becomes a TCustomControl descendant with the new class name.
+- The fields of your components move to a private section, and the global variable of your form is removed.
+- A constructor calls a new CreateLayout method, which creates each component, places it in its parent, and sets its properties just as the form file did. References between components and the items of collections are set once every component exists.
+- The properties of your form that a control also has, such as its color and font, are set on the control, and the client size of your form becomes the size of the control.
+- If your form had OnCreate or OnDestroy handlers, they are called from the constructor and destructor.
+- Properties that cannot be written as code, such as images, are stored in a resource file beside the unit and loaded by the control, so each component reads its own data just as it does when a form is loaded.
+
+Your comments, compiler directives, and code that doesn't need to change are kept exactly as you wrote them.
+
+## Things to Watch For
+
+Anything the converter could not handle is listed in the Messages window, with the line it applies to when there is one. You may want to look out for these:
+
+- Code that uses members a form has and a control does not, such as Close, ShowModal, ModalResult, or WindowState.
+- Code that uses the global variable of your form, which no longer exists.
+- Properties of your form that a control doesn't have, which are skipped.
+- Changes you made to the components inside an embedded frame, which are skipped.
+- A form designed at a pixels per inch other than 96. The layout of the control uses the same sizes and is not scaled.
+
+Forms that inherit from another form cannot be converted.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Frame.Registration | Adds the Convert form or frame to control item to the Tools menu and the form designer, and runs the conversion. |
+| Codebot.Frame.ConvertDialog | Contains the dialog that asks for the details of the new control. |
+| Codebot.Frame.Converter | Converts a form or frame into the source of a control. |
+| Codebot.Frame.Lfm | Reads a form file into a tree of objects and properties. |
+| Codebot.Frame.Source | Finds and edits the parts of a form's unit that change when it is converted. |
+| Codebot.Frame.Resources | Stores the properties that cannot be written as code in a resource file. |
+| Codebot.Frame.Packages | Creates or changes the package of the control, and opens and installs it in the IDE. |

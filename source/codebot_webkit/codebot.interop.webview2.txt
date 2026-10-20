@@ -1,1 +1,5 @@
-The Codebot.Interop.WebView2 unit declares the part of the Microsoft Edge WebView2 API that the package uses on Windows. The interfaces are generated from WebView2.h of the Microsoft.Web.WebView2 NuGet package, keeping the order of every method. WebView2Loader.dll is loaded when InitWebView2 is called, rather than being linked when the program is built, and must be next to the program or in a folder on the PATH.
+# Codebot.Interop.WebView2
+
+The Codebot.Interop.WebView2 unit declares the part of the Microsoft Edge WebView2 API that the codebot_webkit package uses on Windows. The interfaces come from WebView2.h of the Microsoft.Web.WebView2 NuGet package, keeping the order of every method.
+
+WebView2Loader.dll is loaded when InitWebView2 is called, rather than linked when your program is built. It must be next to your program or in a folder on the PATH.

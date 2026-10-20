@@ -1,3 +1,5 @@
-The Codebot.Interop.Chipmunk2D unit declares the API of the Chipmunk2D physics library, version 7.0.3. The names of its functions, types, and fields are kept unchanged, so the Chipmunk2D documentation and examples apply directly. The C library is linked statically and must be built at single precision using Chipmunk2D/build-single.sh. The vector and matrix types cpVect, cpTransform, and cpMat2x2 are the types defined in Codebot.Geometry.
+# Codebot.Interop.Chipmunk2D
 
-For a more convenient interface, Codebot.Physics wraps this unit in records.
+The Codebot.Interop.Chipmunk2D unit declares the API of the Chipmunk2D physics library, version 7.0.3, by Scott Lembcke and Howling Moon Software. The names of its functions, types, and fields are kept unchanged, so the Chipmunk2D documentation and examples apply directly. The vector and matrix types are the ones in Codebot.Geometry.
+
+The library is linked statically from libchipmunk2d.a, which must be built at single precision using Chipmunk2D/build-single.sh. For an easier way to use it, see Codebot.Physics.

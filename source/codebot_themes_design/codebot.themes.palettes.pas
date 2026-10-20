@@ -11,6 +11,7 @@
   files. It has no code of a platform, so that the colors of a theme can be
   shown anywhere. }
 
+{ <include docs/codebot.themes.palettes.txt> }
 unit Codebot.Themes.Palettes;
 
 {$mode delphi}

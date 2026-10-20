@@ -13,6 +13,7 @@
   by audio/build.sh. It is built without the depackers and ProWizard
   loaders, so compressed modules are not supported. }
 
+{ <include docs/codebot.interop.xmp.txt> }
 unit Codebot.Interop.Xmp;
 
 {$i render.inc}

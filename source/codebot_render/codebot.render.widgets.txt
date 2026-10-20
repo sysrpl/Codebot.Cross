@@ -1,7 +1,17 @@
-The Codebot.Render.Widgets unit defines the widget system, which is a user interface drawn on a canvas inside a scene. TWidget is the base class of all widgets, and TMainWidget is the parent of a layout and also shows message boxes.
+# Codebot.Render.Widgets
 
-- The controls are TEdit, TMemo, TPushButton, TGlyphButton, TGlyphImage, TCheckBox, TLabel, TSlider, TSpinBox, TListBox, TScrollGrid, TPaintBox, and TSpacer. TScrollBox holds other widgets in an area which scrolls.
-- The containers are THBox, TVBox, and TWindow.
-- TCustomWidget is the base class for widgets that draw themselves.
+The Codebot.Render.Widgets unit gives you a user interface drawn on a canvas inside a scene, with no help from the LCL or the system. TWidget is the base class of every widget, and TMainWidget is the parent of a layout and also shows message boxes. You add widgets to a parent with Add, such as `Window.Add<TPushButton>`, and freeing a widget frees its children.
 
-TTheme is the base class of the themes, which draw the widgets and provide the sizes of their parts. The themes themselves are defined in Codebot.Render.Widgets.Themes.
+| Widgets | Description |
+| --- | --- |
+| TLabel, TEdit, TMemo | Text you show, and text the user types. |
+| TPushButton, TGlyphButton, TCheckBox | Buttons and check boxes. |
+| TSlider, TSpinBox | Pick a number. |
+| TListBox, TScrollGrid | Lists and grids that scroll. |
+| TGlyphImage, TPaintBox, TSpacer | Images, your own drawing, and empty space. |
+| THBox, TVBox | Arrange their children in a row or a column. |
+| TScrollBox | Holds other widgets in an area that scrolls. |
+| TWindow | A container with a title bar, which stacks the widgets you add and sizes itself to fit them. The user can drag, close, and resize it, and you can show it as a modal window. |
+| TCustomWidget | The base class of widgets that draw themselves. |
+
+TTheme is the base class of the themes that draw the widgets and give the sizes of their parts. The themes themselves are in Codebot.Render.Widgets.Themes.

@@ -1,1 +1,3 @@
-The Codebot.Text.Store unit defines TTextStorage, which is a component that stores text at design time. Its Data property holds a single block of text that can be read as JSON or XML, and its Items property holds a collection of named blocks of text, such as the source code of shaders.
+# Codebot.Text.Store
+
+The Codebot.Text.Store unit gives you TTextStorage, a component that stores text in your form at design time. Data holds a single block of text that you can read as JSON or XML, and Items holds any number of named blocks of text, such as the source of shaders or templates, which you can read or write by name with Values.

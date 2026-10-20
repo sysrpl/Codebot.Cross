@@ -6,6 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
+{ <include docs/codebot.design.textstorageeditor.txt> }
 unit Codebot.Design.TextStorageEditor;
 
 {$mode delphi}

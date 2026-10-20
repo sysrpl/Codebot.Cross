@@ -1,1 +1,5 @@
-The Codebot.Render.NanoVG unit is a Pascal port of NanoVG by Mikko Mononen, which is an antialiased 2D vector drawing library rendered using OpenGL. The port includes the OpenGL backend, which works with every OpenGL version that can be chosen in render.inc. Text is drawn using Codebot.Render.FontStash, and images are loaded using NewBitmapData from Codebot.Platform. The canvas in Codebot.Render.Graphics is built on top of this unit.
+# Codebot.Render.NanoVG
+
+The Codebot.Render.NanoVG unit is a Pascal port of NanoVG by Mikko Mononen, an antialiased 2D vector drawing library rendered with OpenGL. It includes the OpenGL backend from nanovg_gl.h, which works with every desktop and embedded OpenGL version you can choose in render.inc. Text is rendered with Codebot.Render.FontStash, and images are loaded using NewBitmapData from Codebot.Platform. Strings are UTF-8.
+
+Most of the time you will use the canvas of Codebot.Render.Graphics, which is built on this unit. NanoVG is licensed under the zlib license.

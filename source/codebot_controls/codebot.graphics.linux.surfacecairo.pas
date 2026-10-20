@@ -6,7 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
-{ <include docs/codebot.graphics.windows.Surfacecairo.txt> }
+{ <include docs/codebot.graphics.linux.surfacecairo.txt> }
 unit Codebot.Graphics.Linux.SurfaceCairo;
 
 {$i ../codebot/codebot.inc}

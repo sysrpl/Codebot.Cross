@@ -21,6 +21,7 @@
 
   Run returns when the window is closed, Terminate is called, or the scene
   class is set to nil. }
+{ <include docs/codebot.render.application.txt> }
 unit Codebot.Render.Application;
 
 {$i ../codebot_render/render.inc}

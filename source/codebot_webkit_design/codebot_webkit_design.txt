@@ -1,3 +1,26 @@
-The codebot_webkit_design package is the design time package of codebot_webkit. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot_webkit.
+# Codebot WebKit Design
 
-Codebot.WebKit.Registration adds TWebBrowser, TWebAddressBar, TWebStatusIndicator, and TWebInspector, along with their palette icons, to the Codebot Webview page of the component palette.
+## Introduction
+
+The Codebot WebKit Design package adds the components of the [Codebot WebKit](../codebot_webkit) package to the Lazarus IDE, so you can place a web browser and its companion controls on your forms in the form designer. The package is only used by the IDE, so you never need to add it to your own programs.
+
+The package requires the codebot_webkit package.
+
+## Component Palette
+
+You will find the components on the Codebot Webview tab of the component palette:
+
+| Component | Description |
+| --- | --- |
+| TWebBrowser | A web browser control. |
+| TWebAddressBar | A bar with an edit for the location of the page and buttons for navigating a browser. |
+| TWebStatusIndicator | Shows the link under the mouse and the progress of a page as it loads. |
+| TWebInspector | Shows the developer tools of a browser inside your form. |
+
+Nothing is loaded while you are designing your form. The browser shows a browser icon and the inspector shows a magnifying glass, so you can lay them out and set their properties without starting the browser engine.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.WebKit.Registration | Registers the components and their palette icons on the component palette. |

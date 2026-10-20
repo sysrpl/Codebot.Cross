@@ -6,7 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
-{ <include docs/codebot.graphics.types.txt> }
+{ <include docs/codebot.controls.colors.txt> }
 unit Codebot.Controls.Colors;
 
 {$i ../codebot/codebot.inc}

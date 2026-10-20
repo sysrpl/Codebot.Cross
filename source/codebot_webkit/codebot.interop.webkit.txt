@@ -1,1 +1,3 @@
-The Codebot.Interop.WebKit unit declares the part of the WebKitGTK C API used by the codebot_webkit package. The library is loaded when InitWebKit is called, rather than being linked when the program is built. This allows a program to start normally and report that WebKitGTK is not installed.
+# Codebot.Interop.WebKit
+
+The Codebot.Interop.WebKit unit declares the part of the WebKitGTK API that the codebot_webkit package uses. The library is loaded the first time InitWebKit is called, rather than linked when your program is built, so your program starts normally and can tell the user when WebKitGTK is not installed.

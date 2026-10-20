@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.svg.txt> }
 unit Codebot.Render.SVG;
 
 {$i render.inc}

@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.assets.txt> }
 unit Codebot.Render.Assets;
 
 {$i render.inc}

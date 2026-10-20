@@ -1,1 +1,3 @@
-The Codebot.Explorer.Registration unit registers the codebot_explorer package with the Lazarus IDE. It adds the Application Explorer item to the information items of the IDE menu.
+# Codebot.Explorer.Registration
+
+The Codebot.Explorer.Registration unit adds an Application Explorer item to the Help menu of the Lazarus IDE, which opens the Application Explorer.

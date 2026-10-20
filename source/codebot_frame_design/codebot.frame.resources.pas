@@ -11,6 +11,7 @@
   resource holds one property in the binary form of a form file, which the
   control reads back using TReader.ReadProperty. }
 
+{ <include docs/codebot.frame.resources.txt> }
 unit Codebot.Frame.Resources;
 
 {$mode delphi}

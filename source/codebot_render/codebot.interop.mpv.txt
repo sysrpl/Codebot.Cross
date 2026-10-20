@@ -1,1 +1,3 @@
-The Codebot.Interop.MPV unit declares the part of the libmpv C API used to play video, which includes the client API and the OpenGL render API. The unit is empty unless videowidget is defined in render.inc. When it is defined, libmpv is linked when the program is built.
+# Codebot.Interop.MPV
+
+The Codebot.Interop.MPV unit declares the part of libmpv used to play video, the client API and the OpenGL render API. It is only included when videowidget is defined in render.inc, and libmpv is then linked when your program is built, so you will need the libmpv development package installed.

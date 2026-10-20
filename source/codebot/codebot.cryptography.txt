@@ -1,3 +1,5 @@
-The Codebot.Cryptography unit provides routines for hashing data. It can compute the MD5, SHA1, SHA256, or SHA512 digest of a string, a block of memory, a stream, or a file, and it can compute an HMAC digest of each of those using a key. A digest can be converted to a string for display or storage.
+# Codebot.Cryptography
 
-The unit also includes Encrypt and Decrypt, which obscure a string using a simple method. This method is not cryptographically secure and should not be used to protect sensitive data.
+The Codebot.Cryptography unit computes hashes. HashString, HashBuffer, HashStream, and HashFile compute the MD5, SHA1, SHA256, or SHA512 digest of a string, memory, a stream, or a file, and AuthString, AuthBuffer, AuthStream, and AuthFile compute an HMAC digest of each using a key. DigestToStr turns a digest into text you can show or store.
+
+The unit also gives you Encrypt and Decrypt, which obscure a string using a simple method. They are not secure, so don't use them to protect sensitive data.

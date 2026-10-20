@@ -20,6 +20,7 @@
   glfallback is defined in render.inc and the selected version cannot be
   created or loaded, it tries OpenGL 3.3 instead, and every context created
   after it uses 3.3. }
+{ <include docs/codebot.opengl.sdl.txt> }
 unit Codebot.OpenGL.SDL;
 
 {$i render.inc}

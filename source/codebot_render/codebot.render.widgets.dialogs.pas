@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.widgets.dialogs.txt> }
 unit Codebot.Render.Widgets.Dialogs;
 
 {$i render.inc}

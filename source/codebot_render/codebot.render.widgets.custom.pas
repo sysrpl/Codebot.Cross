@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.widgets.custom.txt> }
 unit Codebot.Render.Widgets.Custom;
 
 {$i render.inc}

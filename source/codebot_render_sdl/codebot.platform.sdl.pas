@@ -19,6 +19,7 @@
   program also uses Codebot.Platform.LCL, the unit initialized last decides
   which backend is used. }
 
+{ <include docs/codebot.platform.sdl.txt> }
 unit Codebot.Platform.SDL;
 
 {$i ../codebot_render/render.inc}

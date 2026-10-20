@@ -1,3 +1,5 @@
-The Codebot.Controls unit defines many of the base classes for the controls in the package it is contained within. TSurfaceGraphicControl is a windowless control for drawing advanced graphics using the ISurface interface, while TSurfaceCustomControl provides much of the same functionality for custom windowed controls. TSurfaceForm also provides users with a base form class that can be extended and that includes an advanced drawing surface.
+# Codebot.Controls
 
-The unit also defines TNotifyCollection<T>, which is a persistent collection that reports changes to its items. Other useful items include TEdgeOffset, which helps manage the padding or margin of a control, and ArrangeControls, which lays out controls when they are inside a container.
+The Codebot.Controls unit gives you the base classes for controls that draw on a surface. TSurfaceGraphicControl is a windowless control and TSurfaceCustomControl is a windowed one. Instead of overriding Paint, you override Draw, and Surface is ready for you while Draw runs. Each control has a DrawState that tracks whether it is hot, pressed, focused, or disabled, and a ThemeName that chooses the theme it is drawn with. If you want your control to redraw when the theme changes, override ThemeAware and return True. TSurfaceForm gives your forms the same abilities.
+
+The unit also gives you TNotifyCollection<T>, a persistent collection that reports changes to its items, TEdgeOffset, which manages the padding or margin of a control, and ArrangeControls, which lays out the controls inside a container in a row.

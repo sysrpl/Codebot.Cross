@@ -10,6 +10,7 @@
   uxtheme.dll which switch the native controls of Windows 10 1809 and later
   between their light and dark visual styles }
 
+{ <include docs/codebot.themes.windows.darkmode.txt> }
 unit Codebot.Themes.Windows.DarkMode;
 
 {$mode delphi}

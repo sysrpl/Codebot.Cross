@@ -47,6 +47,7 @@
   the mouse from the events of a window it created, so in a program without
   one no key or button is ever down and the mouse never moves. }
 
+{ <include docs/codebot.hardware.txt> }
 unit Codebot.Hardware;
 
 {$i render.inc}

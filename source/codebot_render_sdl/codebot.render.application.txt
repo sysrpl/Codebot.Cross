@@ -1,3 +1,16 @@
-The Codebot.Render.Application unit runs scenes in an SDL2 window without using the LCL. TApplication is the scene host of the window and is accessed through the global Application function. A program using this unit creates no forms. Instead, it sets the properties of the window and calls Run with a scene class.
+# Codebot.Render.Application
 
-Everything runs on the thread that calls Run. That thread creates the window, the OpenGL context, and the canvas, and then on each frame it delivers the window events to the scene as input, updates the scene, and swaps the buffers. Unless the scene handles these keys itself, F1 toggles full screen and F2 toggles vertical sync.
+The Codebot.Render.Application unit runs your scenes in an SDL2 window without the LCL. Your program creates no forms. Instead, you set the properties of the global Application and call Run with your scene class:
+
+```pascal
+begin
+  Application.Title := 'Joint Demo';
+  Application.Run(TJointScene);
+end.
+```
+
+TApplication is the scene host of the window, and you reach it through the Application function rather than creating one yourself. Everything runs on the thread that calls Run. That thread creates the window, the OpenGL context, the render context, and the canvas, and then on each frame it creates or switches your scene when SceneClass changes, delivers window events to it as keyboard, text, mouse, and wheel input, updates it, and swaps the buffers. Methods queued with TThread.Queue run between frames.
+
+If your scene has a step interval, a step thread calls its Step method, and if Step raises an exception the application stops and Run raises it again. Unless your scene handles these keys itself, F1 toggles full screen and F2 toggles vertical sync.
+
+You can set Title, Width, Height, Fullscreen, Sizeable, Decorated, DepthBits, StencilBits, and MultiSamples before calling Run. MultiSamples is 4 by default, or 0 on the Raspberry Pi, and the window is created without multisampling if it can't be created with it. FilesDropped tells you about files the user dropped on the window. Run returns when the window is closed, when you call Terminate, or when you set SceneClass to nil.

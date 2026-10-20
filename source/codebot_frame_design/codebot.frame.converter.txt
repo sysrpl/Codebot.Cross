@@ -1,7 +1,13 @@
-The Codebot.Frame.Converter unit converts a form or frame of the designer into the source of a control.
+# Codebot.Frame.Converter
 
-TFrameConverter copies the unit of the form and changes it. The unit is renamed, the form class becomes a TCustomControl descendant with the new class name, and the fields of the components move to a private section. A constructor calls CreateLayout, which creates each component, places it in its parent, and sets the properties from the form file. References to other components and the items of collections are set once every component exists. The properties of the form itself which a control also has are set on the control, with the client size of the form becoming the size of the control, and an OnCreate or OnDestroy handler is called from the constructor or destructor.
+The Codebot.Frame.Converter unit turns a form or frame of the designer into the source of a control. TFrameConverter starts with a copy of the unit of your form and changes it:
 
-Properties which cannot be written as code are stored as resources and loaded by the control. A Register procedure adds the control to the chosen page of the component palette.
+- The unit is renamed, and your form class becomes a TCustomControl descendant with the new class name.
+- The fields of your components move to a private section, and the global variable of your form is removed.
+- A constructor calls CreateLayout, which creates each component, places it in its parent, and sets the properties from the form file. References to other components and the items of collections are set once every component exists.
+- The properties of your form that a control also has are set on the control, and the client size of your form becomes the size of the control.
+- OnCreate and OnDestroy handlers of your form are called from the constructor and destructor.
+- Properties that cannot be written as code are stored as resources and loaded by the control.
+- A Register procedure adds the control to the palette page you chose.
 
-What could not be converted is collected as messages, along with code which uses members a form has and a control does not, or the global variable of the form.
+Anything that could not be converted is collected as messages, along with code that uses members a form has and a control does not, such as Close or ShowModal, or the global variable of the form. Components inherited from an ancestor and changes made inside an embedded frame are skipped, and forms that inherit from another form cannot be converted.

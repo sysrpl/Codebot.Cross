@@ -1,1 +1,3 @@
-The Codebot.Render.FontStash unit is a Pascal port of fontstash by Mikko Mononen. It caches the glyphs made by Codebot.Render.TrueType in a texture atlas and produces textured quads for drawing text with a given size, color, spacing, blur, and alignment. All strings are expected to be UTF-8.
+# Codebot.Render.FontStash
+
+The Codebot.Render.FontStash unit is a Pascal port of fontstash by Mikko Mononen. It caches glyphs drawn by Codebot.Render.TrueType in a texture atlas and produces textured quads for drawing text. Strings are UTF-8. fontstash is licensed under the zlib license.

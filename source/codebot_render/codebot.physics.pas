@@ -52,6 +52,7 @@
   TVec2 and TMatrix2x3 types from Codebot.Geometry, the same as the static
   Chipmunk2D library linked by Codebot.Interop.Chipmunk2D. }
 
+{ <include docs/codebot.physics.txt> }
 unit Codebot.Physics;
 
 {$i render.inc}

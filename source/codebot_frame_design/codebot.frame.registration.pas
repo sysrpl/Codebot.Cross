@@ -9,6 +9,7 @@
 { Codebot.Frame.Registration adds the Convert to Control command to the
   designer menu and to the tools menu of the IDE }
 
+{ <include docs/codebot.frame.registration.txt> }
 unit Codebot.Frame.Registration;
 
 {$mode delphi}

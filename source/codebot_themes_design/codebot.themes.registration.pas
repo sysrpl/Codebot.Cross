@@ -10,6 +10,7 @@
   IDE when the package is registered, adds the Themes item to the Tools
   menu, and takes the theme away again before the package is unloaded }
 
+{ <include docs/codebot.themes.registration.txt> }
 unit Codebot.Themes.Registration;
 
 {$mode delphi}

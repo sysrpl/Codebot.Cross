@@ -18,6 +18,7 @@
   are down, the clipboard is kept in memory, and dialogs close as soon as they
   are shown. }
 
+{ <include docs/codebot.platform.txt> }
 unit Codebot.Platform;
 
 {$i codebot.inc}

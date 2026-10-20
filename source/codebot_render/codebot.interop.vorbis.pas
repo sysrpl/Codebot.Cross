@@ -12,6 +12,7 @@
   The library is linked statically from libcodebotaudio.a, which is built
   by audio/build.sh. }
 
+{ <include docs/codebot.interop.vorbis.txt> }
 unit Codebot.Interop.Vorbis;
 
 {$i render.inc}

@@ -6,7 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
-{ <include docs/codebot.graphics.design.registration.txt> }
+{ <include docs/codebot.design.forms.txt> }
 unit Codebot.Design.Forms;
 
 {$i ../codebot/codebot.inc}

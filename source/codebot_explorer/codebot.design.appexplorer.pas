@@ -11,6 +11,7 @@
   is added to the IDE menu by Codebot.Explorer.Registration, and can be shown in
   a program of your own by calling ShowAppExplorer. }
 
+{ <include docs/codebot.design.appexplorer.txt> }
 unit Codebot.Design.AppExplorer;
 
 {$mode delphi}

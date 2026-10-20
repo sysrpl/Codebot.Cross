@@ -1,9 +1,11 @@
-The Codebot.Windows.Shell.Tools unit defines non-visual components which use the Windows shell.
+# Codebot.Windows.Shell.Tools
 
-TShellFileOperation copies, moves, renames, deletes, and creates files and folders the way Windows Explorer does. Windows shows its progress dialog, asks the user about conflicts, and records the operations so they can be undone in Windows Explorer. Operations can be added with AddCopy, AddMove, AddRename, AddDelete, and AddNewFolder and then performed together by Execute, or performed at once with Copy, Move, Rename, Delete, and NewFolder. With the foAllowUndo option, which is set by default, deleted items go to the recycle bin.
+The Codebot.Windows.Shell.Tools unit gives you non-visual components that use the Windows shell.
 
-TShellNotify reports changes Windows makes to files, folders, and drives through its OnChange event, such as items being created, deleted, or renamed, drives being added, or media being inserted. Set Path to the folder to watch, Recursive to include its subfolders, and Active to start.
+TShellFileOperation lets you copy, move, rename, delete, and create files and folders the way Windows Explorer does. Windows shows its progress dialog, asks the user about conflicts, and records your operations so the user can undo them in Windows Explorer. You can add operations with AddCopy, AddMove, AddRename, AddDelete, AddNewFolder, and AddNewFile and then perform them together with Execute, or perform one right away with Copy, Move, Rename, Delete, or NewFolder. With the foAllowUndo option, which is set by default, deleted items go to the recycle bin.
 
-TShellLink reads and writes shortcuts, the .lnk files of the desktop and the start menu. Set Target and the other properties and call Save, or call Load to read a shortcut. Resolve finds the target of a shortcut whose target was moved.
+TShellNotify tells you about the changes Windows makes to files, folders, and drives through its OnChange event, such as items being created, deleted, or renamed, drives being added, or media being inserted. Set Path to the folder you want to watch, Recursive if you want to include its subfolders, and Active to start.
 
-Paths are file system paths, shell parsing names, or known folders such as shell:Downloads. The unit is for Windows only.
+TShellLink lets you read and write shortcuts, the .lnk files of the desktop and the start menu. Set Target and the other properties and call Save, or call Load to read a shortcut. If the target of a shortcut was moved, Resolve can find it again.
+
+Paths can be file system paths, shell parsing names, or known folders such as `shell:Downloads`. The unit is for Windows only.

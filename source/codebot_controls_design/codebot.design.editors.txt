@@ -1,4 +1,15 @@
-The Codebot.Design.Editors unit defines the property and component editors used by the codebot_controls package in the Lazarus IDE.
+# Codebot.Design.Editors
 
-- The property editors handle the image index of an image strip, theme names, surface bitmaps, and the items of a text storage.
-- The component editors open when a sizing panel, a draw image, an image strip, or a text storage is double clicked.
+The Codebot.Design.Editors unit gives you the property and component editors of the codebot_controls package.
+
+| Editor | Description |
+| --- | --- |
+| TImageStripIndexPropertyEditor | Shows the images of the linked image strip in a drop down list for the ImageIndex of a TThinButton, so you can pick an image by sight. It is not used with the GTK2 widgetset. |
+| TThemeNamePropertyEditor | Lists the names of the themes for any property named ThemeName. |
+| TSurfaceBitmapPropertyEditor | Opens the image editor for any TSurfaceBitmap property. |
+| TTextItemsPropertyEditor | Opens the text storage editor for the Items of a TTextStorage. |
+| TAdvancedColorPropertyEditor | Uses TAdvancedColorDialog for every TColor property. The custom colors of the dialog are kept in codebot_customcolors.txt in the configuration folder of the IDE. The alpha you pick is ignored, since a TColor has none. |
+| TSizingPanelEditor | Arranges the controls of a TSizingPanel in a single row when you double click it or choose Arrange controls. |
+| TRenderImageEditor | Opens the image editor when you double click a TDrawImage or choose Edit render image. |
+| TImageStripEditor | Opens the image strip editor when you double click a TImageStrip or choose Edit images. |
+| TTextStorageComponentEditor | Opens the text storage editor when you double click a TTextStorage or choose Edit items. |

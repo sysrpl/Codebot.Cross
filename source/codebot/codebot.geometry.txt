@@ -1,8 +1,11 @@
-The Codebot.Geometry unit defines the types used for 2D and 3D math.
+# Codebot.Geometry
 
-- TVec2, TVec3, and TVec4 are vectors of two, three, and four components, which are built using the Vec routines.
-- TMatrix4x4 transforms vertices in 3D, while TMatrix2x2 and TMatrix2x3 are matrices for 2D.
+The Codebot.Geometry unit gives you the types you need for 2D and 3D math.
+
+- TVec2, TVec3, and TVec4 are vectors of two, three, and four components, which you build with the Vec, Vec2, Vec3, and Vec4 routines.
+- TMatrix4x4 transforms points in 3D.
+- TMatrix2x2 is a 2D matrix without translation, and TMatrix2x3 is a 2D affine matrix that can rotate, scale, skew, and translate.
 - TQuaternion represents a rotation in 3D.
-- TLine2 is a 2D line, and TCurve2 and TBezier2 are 2D bezier curves.
+- TLine2 and TSlope2 describe 2D lines, and TBezier2 and TCurve2 are 2D cubic bezier curves.
 
-The unit also provides Triangulate, which cuts a simple polygon into triangles.
+Triangulate cuts a simple polygon into triangles.

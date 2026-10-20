@@ -10,6 +10,7 @@
   IDE, reads their colors, and chooses the scheme and the font the source
   editor uses }
 
+{ <include docs/codebot.themes.editor.txt> }
 unit Codebot.Themes.Editor;
 
 {$mode delphi}

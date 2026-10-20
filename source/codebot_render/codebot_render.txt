@@ -1,78 +1,272 @@
-The codebot_render package is a cross platform graphics and game library drawn using OpenGL. It covers rendering, scenes, widgets, physics, audio, and input, and none of it depends on the LCL, so the same scene can run in an LCL form or in an SDL window. The package requires only codebot.
+# Codebot Render
 
-A host package supplies the window that a scene runs in:
+## Introduction
 
-| Host package | Window |
+The Codebot Render package is a cross platform graphics and game engine drawn using OpenGL. It gives you everything you need to write games, simulations, visual tools, and animated user interfaces: a fast 2D vector canvas, text and fonts, images and sprites, shaders and textures, a complete widget toolkit with several themes, 2D physics, audio, and keyboard, mouse, and joystick input.
+
+A program written with this package is made of scenes. A scene draws each frame and handles input, and a host gives it a window to run in. The package does not use the LCL, so the very same scene can run inside a form of your desktop application or full screen in its own window, without changing a line of its code. You choose where your scene runs by choosing a host package:
+
+| Host package | Use it when | Your scene runs in |
+| --- | --- | --- |
+| [Codebot Render Controls](../codebot_render_controls) | You are writing a desktop application and want OpenGL graphics inside a form, alongside regular controls. | A TGraphicsBox control, managed by a TSceneController. |
+| [Codebot Render SDL](../codebot_render_sdl) | You are writing a game or a full screen program and don't need the LCL. | An SDL window, managed by the global Application. |
+
+Both hosts give your scene the same canvas, fonts, input, clipboard, and dialogs, so moving a scene from one host to the other is simply a matter of changing which package your program uses.
+
+The package requires only the codebot package.
+
+## Quick Start
+
+The quickest way to see a scene running is to choose File, New, and then Codebot rendering project, which creates a program and a scene that runs in an SDL window. You can also write a scene yourself by descending from TScene and overriding the methods you need:
+
+| Method | Description |
 | --- | --- |
-| codebot_render_controls | An LCL form |
-| codebot_render_sdl | An SDL window, without the LCL |
+| Initialize | Called once when the scene is created, with the OpenGL context ready, so you can load your fonts, images, sounds, and shaders. |
+| Logic | Called once a frame before drawing, so you can update your scene. There is no OpenGL context during Logic. |
+| Render | Called once a frame to draw your scene. |
+| Finalize | Called once when the scene is destroyed, so you can free what you created. |
 
-## OpenGL
+```pascal
+type
+  TMainScene = class(TScene)
+  public
+    procedure Render; override;
+  end;
 
-Codebot.OpenGL declares the OpenGL API for versions 3.0 through 4.6 and OpenGL ES 2.0 through 3.2, along with the context and information interfaces used for rendering. The version is chosen by a define in render.inc. If no version is chosen, OpenGL ES 3.1 is used on the Raspberry Pi and OpenGL 4.6 everywhere else, falling back to OpenGL 3.3 when 4.6 is not supported. Codebot.OpenGL.SDL creates every OpenGL context using SDL, for both hosts.
+procedure TMainScene.Render;
+var
+  Buffer: IBackBuffer;
+begin
+  inherited Render;
+  Buffer := Canvas as IBackBuffer;
+  Buffer.Flip(Width, Height);
+  try
+    Canvas.Circle(Width / 2, Height / 2, 100 + Sin(Time) * 50);
+    Canvas.Fill(NewHSL(Frac(Time * 0.1), 1, 0.6));
+  finally
+    Buffer.Flip(Width, Height);
+  end;
+end;
+```
 
-## Rendering
-
-Codebot.Render.Contexts defines TRenderContext, which is accessed through Ctx. A render context holds the matrix stacks, finds asset files, and owns the managed objects that need a context, freeing any that the program does not free itself. The managed objects are defined in these units:
-
-| Unit | Description |
-| --- | --- |
-| Codebot.Render.Shaders | Shaders and shader programs. |
-| Codebot.Render.Textures | Textures. |
-| Codebot.Render.Buffers | Texture and shadow buffers that are rendered to, and vertex buffers for several vertex layouts. |
-| Codebot.Render.Fonts | Fonts kept in a texture atlas, and blocks of text. |
-| Codebot.Render.World | A 3D world with a camera and a skybox. |
-
-## Vector graphics
-
-Codebot.Render.Graphics provides 2D vector graphics through the ICanvas interface, which draws paths, images, sprites, and text using pens, brushes, and fonts. It is built on the following units:
-
-| Unit | Description |
-| --- | --- |
-| Codebot.Render.NanoVG | A Pascal port of NanoVG, which draws the canvas. |
-| Codebot.Render.FontStash | A Pascal port of fontstash, which lays out text. |
-| Codebot.Render.TrueType | A Pascal port of stb_truetype, which makes the glyphs. |
-
-Codebot.Render.SVG reads an SVG document into a tree of shapes and draws it on a canvas.
+Calling inherited Render clears the scene for you. Drawing on the canvas happens between two flips of its back buffer, and Time tells you how many seconds your scene has been running, which makes animation easy.
 
 ## Scenes
 
-Codebot.Render.Scenes defines TScene, which a program descends from to draw each frame and to handle keyboard, text, mouse, and wheel input. It also defines TSceneHost, the base class of whatever runs a scene, which provides the scene with the canvas, a default font, the window, and the clipboard.
+TScene gives you everything you need while your scene runs:
 
-- TWidgetScene in Codebot.Render.Scenes.Widgets adds widgets to a scene.
-- TPhysicsScene in Codebot.Render.Scenes.Physics adds a physics space, which is stepped at a fixed rate on its own thread.
+| Property | Description |
+| --- | --- |
+| Canvas | The 2D canvas shared with the host. |
+| Font | The default font, loaded from `fonts/roboto.ttf` in your assets. |
+| Time | The time of the current frame in seconds. |
+| Width, Height | The size of the scene in pixels. |
+| Context | The render context of the scene. |
+| Host | The host running the scene, which also gives you the window, the clipboard, the frame rate, and vertical sync. |
+
+Input arrives through methods you can override, such as DoKeyDown, DoKeyUp, DoTextInput, DoMouseDown, DoMouseMove, DoMouseUp, and DoMouseWheel. Key codes are the VK_ virtual key codes of Codebot.Platform, and setting Handled to True stops an event from being passed on.
+
+If your scene needs something to happen at a steady rate apart from drawing, such as a physics simulation, override StepInterval to return the number of seconds between steps, and override Step. The host then calls Step on a step thread of its own. Step runs at the same time as Logic and Render, so be sure to protect any data they share.
+
+There are also scenes you can descend from that do more for you:
+
+| Scene | Description |
+| --- | --- |
+| TWidgetScene | Adds a user interface of widgets. Input goes to the widgets first and is passed on to your scene only when no widget handles it. Call WidgetsRender from your Render method to draw them. |
+| TSimpleWidgetScene | A widget scene that needs no Render method. It draws the widgets each frame and places them in the middle of the scene the first time it draws. |
+| TPhysicsScene | A widget scene that runs a 2D physics world, which is stepped on its own thread. |
+
+## Drawing with the Canvas
+
+The canvas, ICanvas, gives you smooth antialiased 2D vector graphics drawn with OpenGL. You build up a path with methods such as MoveTo, LineTo, Rect, RoundRect, Circle, and Ellipse, and then Fill it or Stroke it with a color, a pen, or a brush. Brushes can be solid colors, linear, radial, and box gradients, or bitmaps.
+
+The canvas also draws images and sprites, which show one cell of a sprite sheet, and text using fonts you load from your assets. ITextWriter writes formatted text across several lines. You can transform anything you draw with the canvas matrix, so rotating, scaling, and moving shapes is easy.
+
+Codebot.Render.SVG reads SVG documents and draws them on the canvas, so you can use art made in a vector drawing program directly in your scenes.
 
 ## Widgets
 
-Codebot.Render.Widgets is a user interface drawn on a canvas inside a scene. It includes windows, horizontal and vertical boxes, labels, edits, memos, push and glyph buttons, check boxes, sliders, spin boxes, list boxes, and scrolling grids.
+The widget toolkit lets you build a complete user interface drawn on the canvas, with no help from the LCL or the system. That means your user interface looks and works the same in a form, in a full screen game, or on a Raspberry Pi.
 
-| Unit | Description |
+You add widgets to the Widget property of your widget scene using Add, and set them up as you go:
+
+```pascal
+type
+  TMainScene = class(TSimpleWidgetScene)
+  public
+    procedure Initialize; override;
+  end;
+
+procedure TMainScene.Initialize;
+var
+  Window: TWindow;
+begin
+  inherited Initialize;
+  Window := Widget.Add<TWindow>;
+  Window.Text := 'Hello';
+  Window.Add<TLabel>.Text := 'Welcome to Codebot Render';
+  with Window.Add<TPushButton> do
+  begin
+    Text := 'Close';
+    OnClick := CloseHandler;
+  end;
+end;
+```
+
+A window stacks the widgets you add to it and sizes itself to fit them. The user can drag it, close it, and resize it, and you can show it as a modal window.
+
+| Widgets | Description |
 | --- | --- |
-| Codebot.Render.Widgets.Themes | Draws the widgets in one of several themes: Arc Dark, Chicago, Graphite, Experience, Vista, and Cupertino. |
-| Codebot.Render.Widgets.Custom | Widgets that draw themselves, including a scrolling line graph, a graph of frames per second, and a label that shows markdown. |
-| Codebot.Render.Widgets.Dialogs | File and picture dialogs made from widgets, for hosts that have none of their own. |
-| Codebot.Render.Widgets.Video | TVideoWidget, which plays video using libmpv when videowidget is defined in render.inc. |
+| TLabel, TEdit, TMemo | Text you show, and text the user types. |
+| TPushButton, TGlyphButton, TCheckBox | Buttons and check boxes. |
+| TSlider, TSpinBox | Pick a number. |
+| TListBox, TScrollGrid | Lists and grids that scroll. |
+| TGlyphImage, TPaintBox, TSpacer | Images, your own drawing, and empty space. |
+| THBox, TVBox, TScrollBox, TWindow | Containers that arrange widgets in rows, columns, scrolling areas, and windows. |
+| TCustomGraph, TPerformanceGraph | A scrolling line graph, and a graph of frames per second. |
+| TMarkDownLabel | A label whose text is written in markdown. |
+| TVideoWidget | Plays a video from a file or a URL using libmpv, and can change how it looks with a Shadertoy style shader. |
+
+The widgets are drawn by a theme. You can create one with NewTheme, such as `NewTheme(Canvas, TChicagoTheme)`, and give it to the Theme property of a widget, or override DefaultTheme in your widget scene to change the theme of every widget:
+
+| Theme | Appearance |
+| --- | --- |
+| TArcDarkTheme | A flat dark theme. This is the default. |
+| TChicagoTheme | Windows 95. |
+| TGraphiteTheme | Light gray with soft gradients. |
+| TExperienceTheme | Windows XP. |
+| TVistaTheme | Windows 7. |
+| TCupertinoTheme | macOS. |
+
+The package also includes file and picture dialogs built from widgets, with sortable columns and image previews. They are used wherever a host has no dialogs of its own, such as in an SDL window, and your scene keeps running while they are open.
 
 ## Physics
 
-Codebot.Physics wraps the Chipmunk2D physics library in records for spaces, bodies, shapes, joints, and collisions. Codebot.Interop.Chipmunk2D declares the library itself, which is linked statically and must be built at single precision using Chipmunk2D/build-single.sh.
+TPhysicsScene runs a 2D physics world powered by Chipmunk2D, which Codebot.Physics wraps in easy to use records for spaces, bodies, shapes, joints, and collisions. The world is stepped at a fixed rate on its own thread, and the user can drag bodies around with the mouse.
 
-## Hardware
+Physics is simulated in studio coordinates, a fixed area of 1920 by 1080 that is scaled to fill your scene, so your simulation behaves the same no matter how large the window is. You can build your world in Initialize:
 
-Codebot.Hardware plays audio and reads the keyboard, mouse, and joysticks using SDL alone, so it works the same way on both hosts. Audio is held in memory as named sources and is played in banks that are mixed together on the audio thread. The supported audio formats are MP3, Ogg Vorbis, uncompressed WAV, and tracker music.
+```pascal
+procedure TBoxScene.Initialize;
+var
+  Body: TBody;
+  I: Integer;
+begin
+  inherited Initialize;
+  Space.Gravity := Vec2(0, 900);
+  GenerateStudioWalls;
+  for I := 0 to 9 do
+  begin
+    Body := Space.NewBody;
+    Body.Position := Vec2(400 + I * 100, 100);
+    Body.NewBox(80, 80).Density := 1;
+  end;
+end;
 
-## Bindings to C libraries
+procedure TBoxScene.Render;
+begin
+  inherited Render;
+  DrawPhysics;
+  WidgetsRender;
+end;
+```
 
-| Unit | Library |
+The space is shared by the step thread and the render thread. Outside of Simulate, wrap any code that uses the space in Lock and Unlock. DrawPhysics and the mouse handling do this for you.
+
+## Audio and Input
+
+Codebot.Hardware plays audio and reads the keyboard, mouse, and joysticks using SDL, so it works the same in both hosts.
+
+You add sounds and music to Audio by name from files, streams, or your assets, and then play them by name. Each sound plays in a bank with its own volume, pan, position, and loop count, and all the banks are mixed together on the audio thread. MP3, Ogg Vorbis, uncompressed WAV, and tracker music such as MOD, S3M, XM, and IT are supported. Every source must be stereo with 16 bit samples at 44100 Hz.
+
+```pascal
+Audio.AddAsset('jump', 'sounds/jump.ogg');
+Audio.Play('jump');
+```
+
+Keyboard, Mouse, and Joysticks hold the state of the hardware as it was at the start of the frame. You can check whether a key is down, or was just pressed or released, which is often easier than handling key events in a game:
+
+```pascal
+if Keyboard[VK_LEFT] then
+  FShip.X := FShip.X - 5;
+if Keyboard.Pressed[VK_SPACE] then
+  Fire;
+```
+
+When SDL recognizes a joystick as a gamepad, you also get its named buttons and axes.
+
+## OpenGL
+
+If you want to work with OpenGL directly, the package has you covered. Codebot.OpenGL declares OpenGL from version 3.0 to 4.6 and OpenGL ES from 2.0 to 3.2. The render context of your scene, which you can reach anywhere on the render thread through Ctx, owns the shaders, textures, vertex buffers, and fonts you create, and frees any you forget to free yourself.
+
+| Unit | Description |
 | --- | --- |
-| Codebot.Interop.SDL2 | SDL2 |
-| Codebot.Interop.Chipmunk2D | Chipmunk2D, for physics |
-| Codebot.Interop.Assimp | assimp, which loads 3D model formats |
-| Codebot.Interop.MPV | libmpv, which plays video |
-| Codebot.Interop.MiniMp3 | minimp3, which decodes MP3 audio |
-| Codebot.Interop.Vorbis | vorbisfile, which decodes Ogg Vorbis audio |
-| Codebot.Interop.Xmp | libxmp, which plays tracker music |
+| Codebot.Render.Shaders | Compiles and links shaders. Ctx.Shaders loads them by name from the shaders folder of your assets. |
+| Codebot.Render.Textures | Textures loaded from bitmaps, streams, files, or pixels. Ctx.Textures holds them by name. |
+| Codebot.Render.Buffers | Vertex buffers in several layouts, and texture and shadow buffers you can render to. |
+| Codebot.Render.Fonts | Fonts kept in a texture atlas, and blocks of text. Ctx.Fonts loads them by name from the fonts folder of your assets. |
+| Codebot.Render.World | A 3D world with a camera, a grid, and a skybox. |
 
-The three audio libraries are linked statically from libcodebotaudio.a, which is built by audio/build.sh.
+## Assets
+
+Your scenes load their fonts, images, sounds, shaders, and other files from an assets folder beside your program, by their path below that folder, such as `fonts/roboto.ttf`. The canvas, textures, and audio each have a method that loads from an asset by name, and AssetOpen, AssetExists, and AssetText in Codebot.Render.Assets let you read any asset yourself.
+
+If you would rather ship your program with a single file of assets, set AssetKey on your host to a key of four bytes. Your program then reads its assets from an encrypted dat file beside it, named after the program, whenever that file is there. You can build the dat file by starting your program with `--build-dat`.
+
+## Build Options
+
+You can change how the package is built by editing render.inc, or by adding defines to your build:
+
+| Define | Description |
+| --- | --- |
+| gl30 to gl46, gles20 to gles32 | Chooses the version of OpenGL or OpenGL ES. Without one, OpenGL ES 3.1 is used on the Raspberry Pi and OpenGL 4.6 everywhere else, falling back to OpenGL 3.3 when 4.6 is not supported. |
+| videowidget | Includes TVideoWidget, which plays video using libmpv. It is on by default except on macOS. You will need the libmpv development package to build and libmpv to run. Turn it off if you don't need video. |
+
+## Libraries
+
+| Library | Used for |
+| --- | --- |
+| SDL2 and SDL2_image | Windows, OpenGL contexts, input, audio, and images. |
+| Chipmunk2D | 2D physics, linked statically. It must be built at single precision using Chipmunk2D/build-single.sh. |
+| minimp3, vorbisfile, and libxmp | Decoding MP3, Ogg Vorbis, and tracker music, linked statically from libcodebotaudio.a, which is built by audio/build.sh. |
+| assimp | Loading 3D models. It is loaded when you call InitAssimp. |
+| libmpv | Playing video, when videowidget is defined. |
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Render.Scenes | Contains TScene and TSceneHost. |
+| Codebot.Render.Scenes.Widgets | Contains TWidgetScene and TSimpleWidgetScene. |
+| Codebot.Render.Scenes.Physics | Contains TPhysicsScene. |
+| Codebot.Render.Graphics | Contains the canvas and its pens, brushes, fonts, bitmaps, and sprites. |
+| Codebot.Render.NanoVG | A Pascal port of NanoVG, which draws the canvas. |
+| Codebot.Render.FontStash | A Pascal port of fontstash, which lays out text. |
+| Codebot.Render.TrueType | A Pascal port of stb_truetype, which makes the glyphs. |
+| Codebot.Render.SVG | Reads and draws SVG documents. |
+| Codebot.Render.Widgets | Contains the widgets. |
+| Codebot.Render.Widgets.Themes | Contains the widget themes. |
+| Codebot.Render.Widgets.Custom | Contains the graphs and TMarkDownLabel. |
+| Codebot.Render.Widgets.Dialogs | Contains the file and picture dialogs made from widgets. |
+| Codebot.Render.Widgets.Video | Contains TVideoWidget. |
+| Codebot.Render.Contexts | Contains TRenderContext and Ctx. |
+| Codebot.Render.Shaders | Shaders and shader programs. |
+| Codebot.Render.Textures | Textures. |
+| Codebot.Render.Buffers | Vertex, texture, and shadow buffers. |
+| Codebot.Render.Fonts | Texture atlas fonts and text blocks. |
+| Codebot.Render.World | The 3D world, camera, and skybox. |
+| Codebot.Render.Assets | Finds and reads the assets of your program. |
+| Codebot.Physics | Wraps Chipmunk2D in records. |
+| Codebot.Hardware | Audio, keyboard, mouse, and joysticks. |
+| Codebot.OpenGL | The OpenGL and OpenGL ES API. |
+| Codebot.OpenGL.SDL | Creates OpenGL contexts using SDL for both hosts. |
+| Codebot.Interop.SDL2 | SDL2. |
+| Codebot.Interop.Chipmunk2D | Chipmunk2D. |
+| Codebot.Interop.Assimp | assimp. |
+| Codebot.Interop.MPV | libmpv. |
+| Codebot.Interop.MiniMp3 | minimp3. |
+| Codebot.Interop.Vorbis | vorbisfile. |
+| Codebot.Interop.Xmp | libxmp. |
+| Codebot.Interop.MinGW | Links the static libraries built with MinGW-w64 on Windows. |
 
 See goal.txt in this folder for the design of the package and its hosts.

@@ -1,1 +1,3 @@
-The Codebot.Render.World unit defines TWorld, which provides a 2D world within a 3D space and can optionally show a grid. The world is accessed through Ctx.World. TCamera places a point of view in the world and can move it forward, backward, left, and right. TSkybox is a textured cube that faces inward and is drawn as the background.
+# Codebot.Render.World
+
+The Codebot.Render.World unit gives you TWorld, a 2D world within a 3D space, which you reach through Ctx.World. It can draw a grid, and gives you a TCamera, which places a point of view in the world and moves it forward, backward, left, and right, and a TSkybox, a textured cube that faces inward and is drawn as the background.

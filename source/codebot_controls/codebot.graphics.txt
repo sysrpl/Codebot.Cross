@@ -1,3 +1,13 @@
-The Codebot.Graphics unit creates the drawing objects declared in Codebot.Graphics.Types. These include matrices, pens, solid, bitmap, and gradient brushes, fonts, surfaces for a canvas or a window, bitmaps, splash windows, and captures of the screen. Each object is made by the drawing backend of the platform, which is Cairo on Linux and Direct2D on Windows.
+# Codebot.Graphics
 
-The unit also defines TSurfaceBitmap, which is a TGraphic that holds an IBitmap, and TImageStrip, which is a component that holds a series of images of the same size. Finally, it includes routines that fill and outline rectangles, along with TDefaultTheme and TRedmondTheme, which are the themes used to draw controls.
+The Codebot.Graphics unit creates the drawing objects declared in Codebot.Graphics.Types, so this is the unit you use whenever you draw with a surface. NewPen, NewBrush, NewFont, NewSurface, NewBitmap, NewMatrix, NewSplash, and NewScreenCapture create pens, solid, bitmap, and gradient brushes, fonts, surfaces for a canvas or a control, bitmaps, splash windows, and captures of the screen. Each one is made by the drawing backend of the platform, which is Cairo on Linux, Direct2D on Windows, and Quartz on macOS. GraphicsEngine tells you which one is in use.
+
+The unit also gives you:
+
+- TSurfaceBitmap, a TGraphic that holds a bitmap, so you can use one as a published property and edit it in the object inspector.
+- TImageStrip, a component that holds a series of images of the same size for your controls to share.
+- Routines that draw the shapes controls use most, such as FillRectColor, StrokeRectColor, FillRectState, FillRectSelected, and DrawShadow, along with routines that draw hue and saturation boxes for color pickers.
+- A helper that adds drawing methods to every control, such as DrawText, DrawCaption, DrawTextState, and DrawBitmap, which draw in the control's own font and colors.
+- The themes used to draw controls. TDefaultTheme and TRedmondTheme come with the unit, ThemeChange switches every control to a theme by name, and ThemeNames lists them.
+- Brush styles, which you can create by name with StrToBrush and add to with RegisterBrushStyle.
+- CaptureScreen and CaptureScreenRect, which copy the screen into an LCL bitmap.

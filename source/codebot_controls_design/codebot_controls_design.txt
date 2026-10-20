@@ -1,24 +1,86 @@
-The codebot_controls_design package is the design time package of codebot_controls. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot_controls and IDEIntf.
+# Codebot Controls Design
 
-## Registration
+## Introduction
 
-Codebot.Design.Registration adds the following to the IDE:
+The Codebot Controls Design package adds the components of the [Codebot Controls](../codebot_controls) package to the Lazarus IDE, along with editors that make them easier to set up in the form designer and two new kinds of form you can add to your projects. The package is only used by the IDE, so you never need to add it to your own programs.
 
-- The components on the Codebot Controls page of the component palette, which are TImageStrip, TSlideBar, TThinButton, TDrawImage, TDrawBox, TDrawPanel, TIndeterminateProgress, TStepBubbles, THuePicker, TSaturationPicker, TAlphaPicker, TAnglePicker, TBanner, TContentGrid, TSizingPanel, TCaptionBox, THeaderBar, TDrawList, TDrawTextList, TDetailsList, TAnimationTimer, TTextStorage, TSlideEdit, TColorSlideEdit, TAdvancedColorDialog, and TExternalCommand.
-- Two kinds of form that can be created using File New: Render Form, which is a TSurfaceForm, and Banner Form, which is a TBannerForm.
+The package requires the codebot_controls package and IDEIntf.
+
+## Component Palette
+
+You will find the components on the Codebot Controls tab of the component palette:
+
+| Component | Description |
+| --- | --- |
+| TImageStrip | Holds a strip of images for your controls to share. |
+| TSlideBar | A track bar. |
+| TThinButton | A flat button that can show an image. |
+| TDrawImage | Shows an image. |
+| TDrawBox, TDrawPanel | Controls you draw on yourself using a surface. |
+| TIndeterminateProgress | An animated busy indicator. |
+| TStepBubbles | Shows the steps of a process, such as the pages of a wizard. |
+| THuePicker, TSaturationPicker, TAlphaPicker, TAnglePicker | Pick the parts of a color, or an angle. |
+| TColorSlideEdit | An edit for one part of a color, with a slide bar. |
+| TBanner | A header with a title and a description. |
+| TContentGrid | A grid of cells you draw yourself. |
+| TSizingPanel | A panel the user can resize by dragging. |
+| TCaptionBox | A panel with a caption. |
+| THeaderBar | A row of column headers. |
+| TDrawList, TDrawTextList, TDetailsList | Lists that scroll and are drawn using a surface. |
+| TSlideEdit | An edit with a slide bar that pops up. |
+| TAnimationTimer | A timer for animation. |
+| TTextStorage | Holds named blocks of text in your form. |
+| TAdvancedColorDialog | A dialog for choosing a color and its opacity. |
+| TExternalCommand | Runs another program and reads its output. |
 
 ## Editors
 
-Codebot.Design.Editors defines the property and component editors. The property editors handle the image index of a thin button, theme names, surface bitmaps, and the items of a text storage. The component editors are shown when a sizing panel, a draw image, an image strip, or a text storage is double clicked.
+The package adds editors to the object inspector and the form designer for several of the components.
 
-The editors show these forms:
+### Image strips
+
+You can double click a TImageStrip, or right click it and choose Edit images, to open the image strip editor. The editor shows the images in a grid, and lets you add, remove, save, and clear them.
+
+When a TThinButton is linked to an image strip, its ImageIndex property shows a drop down list of the images in the strip, so you can pick an image by sight rather than by number. This drop down is not available with the GTK2 widgetset.
+
+### Images
+
+Any TSurfaceBitmap property, such as the image of a TDrawImage, has an ellipsis button that opens the image editor. The editor shows the image, and lets you load it from a file, save it, or clear it. You can also double click a TDrawImage, or right click it and choose Edit render image, to open the same editor.
+
+### Text storage
+
+You can double click a TTextStorage, or right click it and choose Edit items, to open the text storage editor. You can also click the ellipsis button of its Items property. The editor lists the names of your items, lets you add and delete them, and lets you edit the name and text of the item you select. Your changes are only kept if you click OK.
+
+### Sizing panels
+
+You can double click a TSizingPanel, or right click it and choose Arrange controls, to arrange the controls inside it in a single row.
+
+### Theme names
+
+Any property named ThemeName shows a drop down list of the themes available to the controls, so you don't need to remember their names.
+
+### Colors
+
+Every TColor property in the object inspector uses TAdvancedColorDialog when you click its ellipsis button, in place of the color dialog of the system. The dialog lets you pick a color using hue, saturation, and lightness or red, green, and blue, choose from a grid of common colors, and type the color as text. The row of custom colors along the bottom is saved in the configuration folder of the IDE, so your favorite colors are there every time you need them.
+
+## New Forms
+
+The package adds two kinds of form you can add to your projects. Choose File, New, and you will find them in the Codebot Form category:
+
+| Form | Description |
+| --- | --- |
+| Render Form | A TSurfaceForm, which can draw on a surface and supports themes. |
+| Banner Form | A TBannerForm, which has a header and footer you can customize. |
+
+If you want to add your own kinds of form to the IDE in the same way, you can call RegisterForm from Codebot.Design.Forms in the Register procedure of your own design time package.
+
+## Units
 
 | Unit | Description |
 | --- | --- |
-| Codebot.Design.ImageListEditor | Adds, removes, and saves the images of a TImageStrip. |
-| Codebot.Design.SurfaceBitmapEditor | Loads, saves, and clears a TSurfaceBitmap. |
-| Codebot.Design.TextStorageEditor | Edits the named items of a TTextStorage. |
-
-## Other units
-
-Codebot.Design.Forms registers a form class with File New in the IDE.
+| Codebot.Design.Registration | Registers the components, their editors, and the new kinds of form. |
+| Codebot.Design.Editors | Contains the property and component editors. |
+| Codebot.Design.Forms | Contains RegisterForm, which adds a kind of form to the IDE. |
+| Codebot.Design.ImageListEditor | Contains the image strip editor. |
+| Codebot.Design.SurfaceBitmapEditor | Contains the image editor. |
+| Codebot.Design.TextStorageEditor | Contains the text storage editor. |

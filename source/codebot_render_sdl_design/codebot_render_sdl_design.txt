@@ -1,3 +1,30 @@
-The codebot_render_sdl_design package is the design time package of codebot_render_sdl. It is installed in the Lazarus IDE and is not used by programs. The package requires only IDEIntf, so it can be installed on every system.
+# Codebot Render SDL Design
 
-Codebot.Render.Sdl.Registration adds the Codebot rendering project to the new project dialog of the IDE. The project it creates runs a scene in an SDL window using Codebot.Render.Application.
+## Introduction
+
+The Codebot Render SDL Design package adds the Codebot rendering project to the new project dialog of the Lazarus IDE. It gives you a quick way to start a program that runs a scene in an SDL window using the [Codebot Render SDL](../codebot_render_sdl) package. The package is only used by the IDE, so you never need to add it to your own programs.
+
+The package requires only IDEIntf, so it can be used on any computer, even one without SDL installed.
+
+## Creating a Project
+
+Choose File, New, and then Codebot rendering project. Before the project is created, you are asked whether you want your assets encrypted with a key. Your new project is made of two files:
+
+- The program, which sets the title of the application and runs your scene.
+- The MainScene unit, which holds TMainScene, a scene for you to change into your own.
+
+TMainScene draws a rose on the canvas, which turns, opens and closes its petals, and changes color over time. It needs no assets, so you can press F9 and see it running as soon as your project is created. When you are ready, you can replace its Render method with your own drawing, and use its Initialize, Finalize, and Logic methods to load your assets, free them, and update your scene each frame.
+
+The project requires the codebot, codebot_render, and codebot_render_sdl packages, and has no forms.
+
+## Encrypted Assets
+
+If you choose to encrypt your assets, a random key of four bytes is made up for your project, and your program sets it using Application.AssetKey. Your program then reads its assets from a dat file beside it, and builds that file from your assets folder when you start it with `--build-dat`.
+
+Your choice is also kept in the project file, so a release build on macOS knows whether to place the dat file or the assets folder inside the application bundle.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Render.Sdl.Registration | Adds the Codebot rendering project to the new project dialog and writes the files of new projects. |

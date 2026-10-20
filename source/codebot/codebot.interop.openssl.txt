@@ -1,1 +1,3 @@
-The Codebot.Interop.OpenSSL unit declares the part of the OpenSSL C API that the library uses for secure sockets and hashing. The OpenSSL libraries are loaded when InitSSL and InitCrypto are called.
+# Codebot.Interop.OpenSSL
+
+The Codebot.Interop.OpenSSL unit declares the parts of OpenSSL that the library uses for secure sockets. The library is loaded when it is first needed, rather than linked when your program is built.

@@ -1,7 +1,7 @@
-The Codebot.Themes.Windows.Colors unit replaces the system colors the LCL uses on Windows with the colors of a theme. It is used on Windows only.
+# Codebot.Themes.Windows.Colors
 
-DarkColorsInstall swaps the class of the widgetset object for a descendant which overrides GetSysColor and GetSysColorBrush, so that clBtnFace, clWindow, clWindowText, and the other system colors return the colors of the palette in use. DarkColorsUninstall gives the widgetset its own class back. DarkColorsEnable turns the colors on or off.
+The Codebot.Themes.Windows.Colors unit replaces the system colors the LCL uses on Windows with the colors of a theme.
 
-The palettes are those of Codebot.Themes.Palettes. DarkColorsSetPalette chooses one, and DarkColorsPaletteIsDark tells whether it is dark.
+DarkColorsInstall swaps the class of the widgetset object for a descendant that overrides GetSysColor and GetSysColorBrush, so clBtnFace, clWindow, clWindowText, and the other system colors return the colors of the palette in use. DarkColorsUninstall gives the widgetset its own class back, and DarkColorsEnable turns the colors on or off.
 
-DarkColor and DarkBrush return the color and a brush of a system color in the palette. The brushes belong to the unit. Brushes of a palette no longer in use are kept until the program ends, as they may still be selected or cached, and IsDarkBrush lets a hook of DeleteObject refuse to delete any of them.
+DarkColorsSetPalette chooses the palette, one of the themes of Codebot.Themes.Palettes, and DarkColorsPaletteIsDark tells you whether it is dark. DarkColor and DarkBrush return the color and a brush of a system color in the palette. The brushes belong to the unit, and brushes of a palette no longer in use are kept until the program ends, since they may still be selected or cached. IsDarkBrush lets a hook of DeleteObject refuse to delete any of them.

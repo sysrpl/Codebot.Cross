@@ -1,1 +1,3 @@
-The Codebot.IO.SerialPort unit provides access to serial port devices on Linux and Windows. TSerialPort reads and writes data through a serial port, and TSerialPortOptions holds its line settings, such as the baud rate, parity, and number of stop bits. EnumSerialPorts lists the serial ports that are available, as device paths such as /dev/ttyUSB0 on Linux and port names such as COM3 on Windows.
+# Codebot.IO.SerialPort
+
+The Codebot.IO.SerialPort unit gives you TSerialPort, which reads and writes a serial port on Linux and Windows. TSerialPortOptions holds the line settings of the port, and EnumSerialPorts lists the serial ports on the computer.

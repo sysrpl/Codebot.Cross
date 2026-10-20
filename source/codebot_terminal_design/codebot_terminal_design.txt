@@ -1,5 +1,24 @@
-The codebot_terminal_design package is the design time package of codebot_terminal. It is installed in the Lazarus IDE and is not used by programs. The package requires codebot_terminal and IDEIntf.
+# Codebot Terminal Design
 
-Codebot.Terminal.Registration adds TTerminal to the Codebot Terminal page of the component palette, and adds a Terminal item to the View menu of the IDE.
+## Introduction
 
-Codebot.Terminal.EmulatorDialog defines the window shown by that item, which is a window of the IDE that holds a terminal. Its position is remembered along with the other windows of the IDE, and the shell is started again whenever it ends.
+The Codebot Terminal Design package adds the [Codebot Terminal](../codebot_terminal) package to the Lazarus IDE. It puts TTerminal on the component palette, and it also gives the IDE a terminal window of its own, so you can run commands without leaving Lazarus. The package is only used by the IDE, so you never need to add it to your own programs.
+
+The package requires the codebot_terminal package and IDEIntf.
+
+## Component Palette
+
+You will find TTerminal on the Codebot Terminal tab of the component palette.
+
+## Terminal Window
+
+You can open a terminal inside the IDE by choosing Terminal from the View menu. The window runs your shell in the same way a TTerminal does in your own programs, so you can use it to run build scripts, use git, or check on files without switching to another program.
+
+The terminal window is laid out along with the other windows of the IDE, so it remembers where you put it, and you can dock it if you use a docked IDE. If you type exit or the shell ends for any other reason, the window starts a new shell for you.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Terminal.Registration | Registers TTerminal on the component palette and adds the Terminal item to the View menu. |
+| Codebot.Terminal.EmulatorDialog | Contains the terminal window of the IDE. |

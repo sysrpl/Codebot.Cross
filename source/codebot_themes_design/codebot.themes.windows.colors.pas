@@ -13,6 +13,7 @@
   the colors of the palette in use, the colors of one of the themes of
   Codebot.Themes.Palettes. }
 
+{ <include docs/codebot.themes.windows.colors.txt> }
 unit Codebot.Themes.Windows.Colors;
 
 {$mode delphi}

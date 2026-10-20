@@ -19,6 +19,7 @@
   Functions which exist in every assimp 5 release are required by InitAssimp.
   Math helpers and functions added in later releases are optional and are nil
   if the loaded library does not export them. }
+{ <include docs/codebot.interop.assimp.txt> }
 unit Codebot.Interop.Assimp;
 
 {$i render.inc}

@@ -13,6 +13,7 @@
   the colors of the palette after the widgetset reads them again, so that
   the controls the LCL draws itself match the controls GTK draws. }
 
+{ <include docs/codebot.themes.gtk3.txt> }
 unit Codebot.Themes.Gtk3;
 
 {$mode delphi}

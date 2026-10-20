@@ -9,6 +9,7 @@
 { Codebot.Themes.Manager applies the themes of Codebot.Themes.Palettes to
   the IDE, and remembers the theme chosen between sessions of the IDE }
 
+{ <include docs/codebot.themes.manager.txt> }
 unit Codebot.Themes.Manager;
 
 {$mode delphi}

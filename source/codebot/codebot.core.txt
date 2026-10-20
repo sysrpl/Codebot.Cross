@@ -1,1 +1,5 @@
-The Codebot.Core unit is the lowest level unit of the library, and every other unit is built on top of it. It loads and unloads dynamic libraries by name and finds the routines they export, which is how the interop units bind to C libraries. When a library or one of its routines cannot be found, those units invoke LibraryExceptProc. On Unix systems the unit also brings in thread support.
+# Codebot.Core
+
+The Codebot.Core unit loads dynamic libraries and finds the routines they export. LibraryLoad loads a library by name, optionally trying another name if the first can't be found, LibraryGetProc finds an exported routine, and LibraryUnload unloads the library. SharedSuffix is the file extension of libraries on the current system.
+
+On Unix the unit also brings in CThreads, which is how Codebot.System makes sure threads are ready before any other unit starts.

@@ -1,3 +1,5 @@
-The Codebot.Platform.LCL unit provides the Codebot.Platform interfaces using the LCL. Bitmaps are made by Codebot.Graphics, the clipboard and windows are those of the LCL, and the message, file, and picture dialogs are the standard LCL dialogs.
+# Codebot.Platform.LCL
 
-Scenes run on a render thread, but the LCL can only be used on the main thread. Because of this, reads wait for the main thread, while changes and dialogs are queued to it. The platform routines are assigned when this unit is initialized.
+The Codebot.Platform.LCL unit provides the Codebot.Platform interfaces using the LCL. Bitmaps are made by Codebot.Graphics, the clipboard and windows are those of the LCL, and the message, file, and picture dialogs are the standard LCL dialogs. Scenes of the codebot_render package use it when they run inside a form.
+
+Scenes run on a render thread, but the LCL can only be used on the main thread. This unit takes care of that for you, waiting for the main thread when reading and queuing changes and dialogs to it. You don't need to call anything, since the platform routines are set up when the unit is initialized.

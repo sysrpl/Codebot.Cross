@@ -1,33 +1,128 @@
-The codebot_render_sdl package is the SDL host of codebot_render. It runs scenes in an SDL2 window without using the LCL, so a program built with it has no forms. The package requires only codebot_render.
+# Codebot Render SDL
 
-## Running a scene
+## Introduction
 
-Codebot.Render.Application defines TApplication, which is the scene host of an SDL window and is accessed through the global Application function. A program sets the properties of the window and then calls Run with a scene class:
+The Codebot Render SDL package lets you run the scenes of the [Codebot Render](../codebot_render) package in an SDL window, without using the LCL at all. It is the right choice when you are writing a game, a demo, a kiosk, or any full screen program that doesn't need forms or regular controls.
+
+Your program creates no forms. Instead, you set a few properties of the global Application and give it the class of the scene you want to run. Everything else, from creating the window and the OpenGL context to delivering keyboard and mouse input to your scene, is taken care of for you.
+
+Because the package runs the same TScene classes as the [Codebot Render Controls](../codebot_render_controls) package, a scene you write for one host runs in the other without any changes. You can develop a scene inside a form with regular controls around it, and later run the very same scene full screen in its own window.
+
+The package requires only the codebot_render package.
+
+## Quick Start
+
+The easiest way to start is to choose File, New, and then Codebot rendering project, which creates a program and a scene for you. If you would rather write one yourself, all your program needs is this:
 
 ```pascal
-Application.Title := 'Joint Demo';
-Application.Run(TJointScene);
+program Project1;
+
+{$mode delphi}
+
+uses
+  Codebot.System,
+  Codebot.Render.Application,
+  MainScene;
+
+begin
+  Application.Title := 'My Game';
+  Application.Run(TMainScene);
+end.
 ```
 
-Run creates the window, the OpenGL context, the render context, and the canvas. On each frame it does the following:
+Make sure Codebot.System is the first unit in your uses clause, so that threads are ready before any other unit starts.
 
-1. Delivers the window events to the scene as keyboard, text, mouse, and wheel input.
-2. Updates the scene.
-3. Swaps the buffers.
+Your scene is a class that descends from TScene. You can override Initialize to load what your scene needs, Logic to update it once a frame, and Render to draw it:
 
-A scene with a step interval is stepped on its own thread. Unless the scene handles these keys itself, F1 toggles full screen and F2 toggles vertical sync. Run returns when the window is closed.
+```pascal
+type
+  TMainScene = class(TScene)
+  public
+    procedure Render; override;
+  end;
+
+procedure TMainScene.Render;
+var
+  Buffer: IBackBuffer;
+begin
+  inherited Render;
+  Buffer := Canvas as IBackBuffer;
+  Buffer.Flip(Width, Height);
+  try
+    Canvas.Rect(0, 0, Width, Height);
+    Canvas.Fill(NewColorF(0.1, 0.1, 0.2));
+    Canvas.Circle(Width / 2, Height / 2, 100 + Sin(Time) * 50);
+    Canvas.Fill(NewHSL(Frac(Time * 0.1), 1, 0.6));
+  finally
+    Buffer.Flip(Width, Height);
+  end;
+end;
+```
+
+Press F9 to run your project, and you will see your scene in its own window. While it is running, you can press F1 to switch between a window and full screen, and F2 to turn vertical sync on or off. If your scene handles those keys itself, it gets them instead.
+
+## TApplication
+
+TApplication is the host of your scene. You never create one yourself. Instead, you use the global Application function, which creates it the first time you use it.
+
+Everything runs on the thread that calls Run. That thread creates the window, the OpenGL context, and the canvas, and then on each frame it delivers the window's events to your scene as keyboard, text, mouse, and wheel input, updates your scene, and shows the result. If your scene has a step interval, it is also stepped at a fixed rate on its own thread, which is useful for physics.
+
+Run returns when the user closes the window, when you call Terminate, or when you set SceneClass to nil. If you want to move from one scene to another, such as from a title screen to the game itself, you can set SceneClass to the new scene class and the switch happens on the next frame.
+
+If you use TThread.Queue from another thread, your queued methods run between frames, so you can safely pass information back to your scene.
+
+### Key Properties
+
+| Property | Description |
+| --- | --- |
+| Title | The caption of the window. |
+| Width, Height | The size of the window. While running, these are its current size. |
+| Fullscreen | Covers the whole desktop with the window. |
+| Sizeable | Lets the user resize the window. This is used when the window is created. |
+| Decorated | Gives the window a border and title bar. This is used when the window is created. |
+| DepthBits, StencilBits | The depth and stencil buffer sizes of the OpenGL context. |
+| MultiSamples | The number of samples used to smooth edges. Use 0 or 1 to turn smoothing off. It is 4 by default, or 0 on the Raspberry Pi. |
+| VSync | Waits for the vertical sync of the display before each frame. |
+| AssetKey | The key of the dat file holding your assets, if you want them encrypted. |
+| SceneClass | The class of the scene running. Setting it switches scenes. |
+| Scene | The scene currently running. |
+| Running | Run is running. |
+| Canvas, Font | The canvas and the default font shared with your scene. |
+| FrameRate | The number of frames drawn in the last second. |
+| Clipboard | The text on the clipboard. |
+
+### Key Methods
+
+| Method | Description |
+| --- | --- |
+| Run | Opens the window and runs a scene until the application is terminated. |
+| Terminate | Stops the application after the current frame. |
+| FilesDropped | Returns True if the user dropped files on the window since the last frame, along with their names. |
+
+## Assets
+
+Your scenes load their fonts, images, and sounds from an assets folder beside your program, by their path below that folder, such as `images/logo.png`. The default font of the canvas is loaded from `fonts/roboto.ttf`.
+
+If you would rather not ship a folder of loose files, you can set Application.AssetKey to a key of four bytes before calling Run. Your program will then read its assets from an encrypted dat file beside it whenever that file is there. You can build the dat file by starting your program with `--build-dat`, which builds it from your assets folder and exits without opening a window.
 
 ## Platform
 
-Codebot.Platform.SDL provides the Codebot.Platform interfaces using SDL2, and takes the place of Codebot.Platform.LCL in programs that do not use the LCL.
+The package provides the bitmaps, clipboard, and dialogs your scenes use through the Codebot.Platform interfaces, so your scenes work the same as they do in an LCL form:
 
 | Feature | Provided by |
 | --- | --- |
-| Bitmaps | SDL_image, which loads and saves them |
-| Clipboard | The SDL clipboard |
-| Message dialogs | SDL message boxes |
-| File and picture dialogs | The dialogs made from widgets in codebot_render, since SDL has no file dialogs |
+| Bitmaps | SDL_image, which loads and saves them. |
+| Clipboard | The SDL clipboard. |
+| Message dialogs | SDL message boxes. |
+| File and picture dialogs | Dialogs built from the widgets of codebot_render, since SDL has no file dialogs of its own. |
 
 ## Requirements
 
 Programs that use this package need the SDL2 and SDL2_image libraries.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Render.Application | Contains TApplication and the global Application function. |
+| Codebot.Platform.SDL | Provides the Codebot.Platform interfaces using SDL2. |

@@ -1,1 +1,3 @@
-The Codebot.Networking.Ftp unit defines TFtpClient, which is a client for FTP servers. After connecting to a server, it can browse and manage remote folders, list their contents using FindFirst and FindNext, and upload or download files while reporting its progress.
+# Codebot.Networking.Ftp
+
+The Codebot.Networking.Ftp unit gives you TFtpClient, which connects to an FTP server and lets you browse, create, and remove folders, and upload, download, rename, delete, and check the size and date of files. All of its operations are synchronous. OnCommand and OnResponse let you see the conversation with the server, and OnProgress reports the progress of transfers.

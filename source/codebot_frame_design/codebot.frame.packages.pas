@@ -10,6 +10,7 @@
   unit of the control and the packages it requires to the package, and opens
   and installs the package in the IDE }
 
+{ <include docs/codebot.frame.packages.txt> }
 unit Codebot.Frame.Packages;
 
 {$mode delphi}

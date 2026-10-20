@@ -6,6 +6,7 @@
 (*                                                      *)
 (********************************************************)
 
+{ <include docs/codebot.render.scenes.physics.txt> }
 unit Codebot.Render.Scenes.Physics;
 
 {$i render.inc}

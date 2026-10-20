@@ -1,1 +1,3 @@
-The Codebot.Design.ImageListEditor unit defines the form used to edit a TImageStrip at design time. The form shows the images in a grid and allows them to be added, removed, saved, and cleared. Call EditImageStrip to show the editor.
+# Codebot.Design.ImageListEditor
+
+The Codebot.Design.ImageListEditor unit gives you the editor of a TImageStrip. It shows the images in a grid and lets you add, remove, save, and clear them. Call EditImageStrip to show the editor for an image strip yourself.

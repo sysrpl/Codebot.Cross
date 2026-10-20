@@ -1,9 +1,17 @@
-The Codebot.Windows.Explorer unit defines controls which host the parts of Windows Explorer. They show the same folders, icons, columns, context menus, and previews as Windows Explorer, and work with any shell folder, including virtual folders such as This PC, Control Panel, and the Recycle Bin.
+# Codebot.Windows.Explorer
 
-TExplorerView shows the items of a folder using the explorer browser. It has the view modes, columns, sorting, grouping, filtering, and search of Windows Explorer, keeps a history of the folders shown for GoBack and GoForward, and has methods to copy, paste, rename, and delete the selected items. TExplorerTree shows the folder tree of the navigation pane, optionally with checkboxes. TExplorerEdit shows the path of a folder as an edit with autocomplete, as a breadcrumb with a menu of subfolders for each folder, or as an edit with a drop down tree. TExplorerPreview shows a file using the preview handlers of Windows, and for files without one shows their thumbnail and details such as their size, version, dimensions, or duration.
+The Codebot.Windows.Explorer unit gives you controls that host the parts of Windows Explorer itself. They show the same folders, icons, columns, context menus, and previews as Windows Explorer, and they work with any shell folder, including virtual folders such as This PC, Control Panel, and the Recycle Bin.
 
-TExplorerBinding links views, trees, edits, and previews. When one of them moves to a folder the others follow, and previews show the item selected in a view.
+| Control | Description |
+| --- | --- |
+| TExplorerView | Shows the items of a folder using the explorer browser, with the view modes, columns, sorting, grouping, filtering, and search of Windows Explorer. It keeps a history for GoBack and GoForward, and can copy, paste, rename, and delete the selected items. |
+| TExplorerTree | Shows the folder tree of the navigation pane, optionally with checkboxes. |
+| TExplorerEdit | Shows the path of a folder as an edit with autocomplete, as a breadcrumb with a menu of subfolders for each folder, or as an edit with a drop down tree. |
+| TExplorerPreview | Shows a file using the preview handlers of Windows. For files without one, it shows their thumbnail and details such as their size, version, dimensions, or duration. |
+| TExplorerBinding | Keeps views, trees, edits, and previews in sync. When one of them moves to a folder the others follow, and previews show the item selected in a view. |
 
-Paths are file system paths, shell parsing names such as ::{20D04FE0-3AEA-1069-A2D8-08002B30309D} for This PC, or known folders such as shell:Downloads, and the empty path is the desktop. ShellPathToIDList and ShellIDListToPath convert paths to item lists and back. A path is kept as it is given, such as shell:Downloads, while it names the folder shown.
+You can give any of these controls a file system path, a shell parsing name such as `::{20D04FE0-3AEA-1069-A2D8-08002B30309D}` for This PC, or a known folder such as `shell:Downloads`. The empty path is the desktop. A path is kept as you give it, so a view set to `shell:Downloads` reports `shell:Downloads` while it shows that folder. If you need item ID lists, ShellPathToIDList and ShellIDListToPath convert paths to them and back.
 
-The windows Windows creates inside the explorer controls pass their mouse and keyboard input to the control, so the usual events such as OnMouseDown, OnKeyDown, OnContextPopup, and OnDragOver work. At design time those windows are transparent to the mouse so the form designer can select the controls. The unit is for Windows only.
+The windows Windows creates inside these controls pass their mouse and keyboard input on to the control, so the usual events such as OnMouseDown, OnKeyDown, OnContextPopup, and OnDragOver work just as you would expect. At design time those windows let the mouse pass through, so you can select the controls in the form designer.
+
+The unit is for Windows only.

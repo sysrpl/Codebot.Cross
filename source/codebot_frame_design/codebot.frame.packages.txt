@@ -1,5 +1,7 @@
-The Codebot.Frame.Packages unit creates the package of a converted control, adds the unit of the control and the packages it requires to the package, and opens and installs the package in the IDE.
+# Codebot.Frame.Packages
 
-CreatePackageFile writes a new package file. The package is a run and design time package which requires the LCL, and its name is the name of the file without its extension. WriteTextFile writes the unit of the control. AddUnitToPackage adds the unit to the package file as a unit with a Register procedure, and AddRequiredPackages adds the installed packages which hold the units the control uses. Package files in both the older format, which numbers its items, and the newer format are supported.
+The Codebot.Frame.Packages unit creates or changes the package of a converted control, and opens and installs it in the IDE.
 
-An existing package is changed on disk, so PackageIsSaved first makes sure the package has no unsaved changes in the IDE. OpenPackage then opens the package, or loads it again from its file if it is already open. InstallPackage installs the package, which an IDE built from dynamic packages loads without being rebuilt. Each of these routines tells the user when it fails.
+CreatePackageFile writes a new run and design time package that requires the LCL, named after its file. WriteTextFile writes the unit of the control. AddUnitToPackage adds the unit to the package as a unit with a Register procedure, and AddRequiredPackages adds the installed packages that hold the units the control uses. Package files in both the older format, which numbers its items, and the newer format are supported.
+
+Since an existing package is changed on disk, PackageIsSaved first makes sure the package has no unsaved changes in the IDE. OpenPackage then opens the package, or loads it again from its file if it is already open, and InstallPackage installs it. An IDE built from dynamic packages loads it without being rebuilt. Each of these routines tells the user when it fails.

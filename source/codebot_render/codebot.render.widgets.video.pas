@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.widgets.video.txt> }
 unit Codebot.Render.Widgets.Video;
 
 {$i render.inc}

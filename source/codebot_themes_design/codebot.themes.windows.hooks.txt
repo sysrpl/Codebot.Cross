@@ -1,4 +1,6 @@
-The Codebot.Themes.Windows.Hooks unit themes every window of the program by intercepting the routines Windows and the LCL draw with, rather than changing one control at a time. It is used on Windows only.
+# Codebot.Themes.Windows.Hooks
+
+The Codebot.Themes.Windows.Hooks unit themes every window of the program on Windows by intercepting the routines Windows and the LCL draw with, rather than changing one control at a time.
 
 DarkHooksInstall patches the import tables of every loaded module outside the Windows folder, which covers the program, the LCL, and the libraries of the IDE, and of comctl32.dll, which draws the common controls. The routine variables of the UxTheme unit, which the LCL draws with, are pointed at the same hooks. The hooks replace these routines:
 
@@ -9,10 +11,8 @@ DarkHooksInstall patches the import tables of every loaded module outside the Wi
 - DrawEdge, which draws edges such as the separators of menus in the colors of the palette.
 - SystemParametersInfo, which gives the LCL the menu font of the theme.
 - DeleteObject, which refuses to delete the brushes of the palette.
-- LoadLibrary and LoadLibraryEx, which patch each library loaded after the hooks were installed, along with the libraries it brings with it.
+- LoadLibrary and LoadLibraryEx, which patch each library loaded later, along with the libraries it brings with it.
 
-Two hooks of the thread watch the messages of windows. One subclasses the windows of popup menus, which Windows creates itself, and adds the menu bar subclass to forms once the LCL has subclassed them. A popup menu is painted into a bitmap, its items by Windows and the LCL and its separators by the hook, and then copied to the window, so that the light background and separators Windows draws are never seen. The other repaints the sunken borders of edits and lists after Windows paints them.
+Two thread hooks watch the messages of windows. One subclasses the popup menus Windows creates itself, and paints them into a bitmap before copying them to the window, so the light background and separators Windows draws are never seen. The other repaints the sunken borders of edits and lists after Windows paints them.
 
-DarkHooksSetTheme switches the theme while the program runs and themes every window again, which is also how windows that existed before the hooks are themed. DarkHooksSetMenuFont sets the name of the menu font.
-
-Every patched slot of an import table is recorded with its module and its old routine. DarkHooksUninstall puts back every slot whose module is still loaded, restores the routine variables of the UxTheme unit, removes the hooks of the thread and the subclasses of every window, and sets the mode of the program back to the default, so that nothing calls into the unit again. DarkHooksModuleUnloaded forgets the slots of a library which is being unloaded, so that they are not written to after it is gone. When the program ends without DarkHooksUninstall, the finalization of the unit puts back the slots and the routine variables.
+DarkHooksSetTheme switches the theme while the program runs and themes every window again, and DarkHooksSetMenuFont sets the name of the menu font. DarkHooksUninstall puts back every patched routine whose module is still loaded, restores the routine variables of the UxTheme unit, and removes the hooks and subclasses, so nothing calls into the unit again. DarkHooksModuleUnloaded forgets the routines of a library being unloaded. If the program ends without DarkHooksUninstall, the unit puts everything back as it finalizes.

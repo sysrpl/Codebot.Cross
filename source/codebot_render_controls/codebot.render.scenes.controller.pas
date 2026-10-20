@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.scenes.controller.txt> }
 unit Codebot.Render.Scenes.Controller;
 
 {$i ../codebot_render/render.inc}

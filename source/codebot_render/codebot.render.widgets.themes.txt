@@ -1,10 +1,14 @@
-The Codebot.Render.Widgets.Themes unit defines the themes that draw widgets on a canvas. TCanvasTheme is the base class of the themes and draws the parts they have in common. Themes load their fonts from the fonts folder of the assets.
+# Codebot.Render.Widgets.Themes
+
+The Codebot.Render.Widgets.Themes unit holds the themes that draw widgets on a canvas. Create one with NewTheme, such as `NewTheme(Canvas, TChicagoTheme)`, and give it to the Theme of a widget, or override DefaultTheme in your widget scene. Themes load their fonts from the fonts folder of your assets.
 
 | Theme | Appearance |
 | --- | --- |
-| TArcDarkTheme | A flat dark theme, and the default theme of a widget scene |
-| TChicagoTheme | Windows 95 |
-| TGraphiteTheme | Light gray with soft gradients |
-| TExperienceTheme | Windows XP |
-| TVistaTheme | Windows 7 |
-| TCupertinoTheme | macOS |
+| TArcDarkTheme | A flat dark theme, and the default theme of a widget scene. |
+| TChicagoTheme | Windows 95. |
+| TGraphiteTheme | Light gray with soft gradients. |
+| TExperienceTheme | Windows XP. |
+| TVistaTheme | Windows 7. |
+| TCupertinoTheme | macOS. |
+
+TCanvasTheme is the base class of the themes and draws what they share, and TDesktopTheme holds what the desktop styled themes share. Neither is a theme on its own.

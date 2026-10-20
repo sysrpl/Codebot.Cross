@@ -1,1 +1,3 @@
-The Codebot.Design.SurfaceBitmapEditor unit defines the form used to edit a TSurfaceBitmap at design time. The form shows the image and allows it to be loaded, saved, and cleared. Call EditSurfaceBitmap or EditRenderImage to show the editor.
+# Codebot.Design.SurfaceBitmapEditor
+
+The Codebot.Design.SurfaceBitmapEditor unit gives you the image editor of a TSurfaceBitmap. It shows the image and lets you load it from a file, save it, or clear it. Call EditSurfaceBitmap to edit a surface bitmap yourself, or EditRenderImage to edit the image of a TDrawImage.

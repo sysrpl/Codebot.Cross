@@ -1,1 +1,5 @@
-The Codebot.OpenGL.SDL unit provides the platform routines of Codebot.OpenGL using SDL2, so they work the same way everywhere SDL does. Every OpenGL context is created by this unit, both for the window of an SDL application and for the SDL window that a TGraphicsBox places inside an LCL form. OpenGLSetAttributes sets the SDL attributes for the OpenGL version chosen in render.inc, and it must be called before the window is created.
+# Codebot.OpenGL.SDL
+
+The Codebot.OpenGL.SDL unit creates every OpenGL context using SDL2, both for the window of an SDL application and for the SDL window a TGraphicsBox places inside a form, so it works the same on every platform SDL supports. A window must be created with SDL_WINDOW_OPENGL after calling OpenGLSetAttributes, since SDL chooses the pixel format of a window when it is created.
+
+OpenGLInfo creates a hidden window and context to find out what the hardware supports. When glfallback is defined in render.inc and the selected version can't be created, it tries OpenGL 3.3 instead, and every context created after that uses 3.3.

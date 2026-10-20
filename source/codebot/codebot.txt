@@ -1,64 +1,200 @@
-The codebot package contains the core units of the Codebot library, and every other Codebot package is built on top of it. It provides the basic types, collections, text and data formats, geometry, animation, and networking, along with the types and interfaces used for graphics and for the platform a program runs on. Because the package does not use the LCL, it can be used by programs that have no forms. The only package it requires is LazUtils.
+# Codebot
 
-## System
+## Introduction
+
+The Codebot package is the core of the Codebot library, and every other Codebot package is built on top of it. It gives you the everyday tools you reach for in almost every program: better arrays and collections, string and file routines, JSON and XML, hashing and encoding, 2D and 3D math, animation, threads and asynchronous tasks, networking, and the interfaces the other packages use for graphics and for the platform your program runs on.
+
+The package does not use the LCL, so you can use it in any kind of program, from a command line tool or a service to a desktop application or a game. The only package it requires is LazUtils.
+
+## Getting Started
+
+Add the codebot package to the required packages of your project, and make Codebot.System the first unit in the uses clause of your program, in place of the cthreads block that Lazarus generates:
+
+```pascal
+program Project1;
+
+{$mode delphi}
+
+uses
+  Codebot.System,
+  Codebot.Text.Json;
+
+var
+  N: TJsonNode;
+begin
+  N := TJsonNode.Create;
+  try
+    N.Parse('{ "name": "Codebot", "version": 2 }');
+    WriteLn(N.Find('name').AsString, ' version ', N.Find('version').AsNumber:0:0);
+  finally
+    N.Free;
+  end;
+end.
+```
+
+Codebot.System brings in the thread manager on Unix before any other unit starts, which the threads, asynchronous tasks, and queued calls of the library all depend on.
+
+## The Basics
+
+Codebot.System holds the types and routines that the rest of the library is written in, and you will use it in nearly every unit you write.
+
+Float is the floating point type used everywhere in the library. TArrayList<T> extends dynamic arrays so they can push and pop, sort, search, filter, reverse, and join their items, while still being plain arrays you can index and pass around. StringArray, IntArray, Int64Array, and FloatArray are array lists that already know how to sort and join their items:
+
+```pascal
+var
+  Names: StringArray;
+begin
+  Names.Push('Pear');
+  Names.Push('Apple');
+  Names.Push('Cherry');
+  Names.Sort;
+  WriteLn(Names.Join(', '));
+end;
+```
+
+You will also find routines for math, time, strings, and files, and helpers that add methods to strings, numbers, and TStrings, so you can write things like `S.Trim.ToUpper` or `S.Split(',')`. Named values and named strings are simple dictionaries keyed by name.
+
+When you want an event to have more than one listener, you can use a delegate, which publishes an event to any number of subscribers. TChangeNotifier tells its owners when something changes.
+
+When a TArrayList is not enough, Codebot.Collections gives you generic lists, indexed lists, object lists that can own their items, dictionaries, and reference counted lists of objects and interfaces.
+
+## Threads and Tasks
+
+The library makes it easy to do work in the background. Codebot.System includes mutexes, events, TSimpleThread, which runs a method on its own thread, and routines that wait. Asynchronous tasks let you start work on another thread and find out its progress and result when it completes, and Codebot.Support provides the classes that run them.
+
+If you need to run another program, Codebot.Process gives you TExternalCommand, a component that runs a program and reads its output one line at a time as it arrives, and RunCommand, which runs a program, waits for it, and collects its output:
+
+```pascal
+var
+  Output: TStringList;
+begin
+  Output := TStringList.Create;
+  try
+    RunCommand('git', 'status', '--short', Output);
+    WriteLn(Output.Text);
+  finally
+    Output.Free;
+  end;
+end;
+```
+
+If you want only one copy of your program running at a time, call UniqueInstance with a key when your program starts. Original tells you whether yours is the first copy, and later copies can use SendMessage to pass their command line to it, which receives it through OnMessage.
+
+## Text and Data
+
+| Unit | What you can do with it |
+| --- | --- |
+| Codebot.Text.Json | Parse, build, navigate, and write JSON using TJsonNode. You can find nodes by path, such as `N.Find('server/port')`, and loop over children with for in. |
+| Codebot.Text.Xml | Read and write XML documents through simple interfaces. It uses libxml2 on Linux and macOS, and MSXML on Windows. |
+| Codebot.Text.Formats | Tell JSON from XML, and convert between the two. |
+| Codebot.Text | Step through UTF-8 characters, manage blocks of memory with TBuffer, and encode to and from hexadecimal and base64. |
+| Codebot.Text.Store | Store named blocks of text in your forms with TTextStorage, such as the source of shaders or templates. |
+| Codebot.Cryptography | Compute MD5, SHA1, SHA256, and SHA512 hashes of strings, memory, streams, and files, and keyed HMAC hashes for authentication. |
+
+Codebot.Text.Xml also gives you an easy way to remember your program's settings. SettingsLoad returns a filer for the settings file of your application, which you can read and write by key, and SettingsSave saves it:
+
+```pascal
+var
+  Settings: IFiler;
+begin
+  Settings := SettingsLoad;
+  Width := Settings.ReadInt('window/width', 800);
+  Settings.WriteStr('recent/file', FileName);
+  SettingsSave(Settings);
+end;
+```
+
+Codebot.Cryptography also includes Encrypt and Decrypt, which obscure a string using a simple method. They are not secure, so don't use them to protect sensitive data.
+
+## Math and Animation
+
+Codebot.Geometry has the types you need for 2D and 3D math. TVec2, TVec3, and TVec4 are vectors built using the Vec routines, TMatrix4x4 transforms points in 3D, TMatrix2x2 and TMatrix2x3 are matrices for 2D, and TQuaternion represents a rotation. There are also 2D lines and bezier curves, and Triangulate, which cuts a simple polygon into triangles.
+
+Codebot.Animation lets you move values smoothly over time. You can ask the Animator to move a Float property toward a target over a duration using an easing, and then call Animator.Step regularly, such as from a TAnimationTimer, which ticks 60 times a second:
+
+```pascal
+Animator.Animate(FPosition, 100, 'Bounce', 0.5);
+```
+
+The easings that come with the library are Linear, Easy, EasySlow, Extend, Drop, DropSlow, Snap, Bounce, Bouncy, Rubber, Spring, and Boing, and you can register your own. TVec1Prop through TVec4Prop are vector properties that can be animated independently of the objects that own them.
+
+## Networking
+
+| Unit | What you can do with it |
+| --- | --- |
+| Codebot.Networking | Resolve host names with TAddressName, and connect, listen, read, and write with TSocket. Set Secure to True to use a secure connection through OpenSSL. |
+| Codebot.Networking.Web | Parse URLs with TUrl, make HTTP requests with THttpClient, send multipart posts with THttpPost, or use WebGet and WebPost for quick requests. |
+| Codebot.Networking.Ftp | Browse, upload, download, rename, and delete files and folders on FTP servers using TFtpClient. |
+| Codebot.Networking.Storage | Work with buckets and files in Amazon S3 and compatible cloud storage. Amazon, Wasabi, DigitalOcean, Google, IBM, Scaleway, OVH, and Hetzner are built in, and each reads its keys from environment variables unless you set them yourself. |
+| Codebot.Networking.Unix | Connect to Unix domain sockets with TUnixClientSocket. |
+| Codebot.IO.SerialPort | Read and write serial ports on Linux and Windows with TSerialPort. |
+
+Getting a web page takes just one call:
+
+```pascal
+var
+  Page: string;
+begin
+  if WebGet('https://www.example.com', Page) then
+    WriteLn(Page);
+end;
+```
+
+## Graphics and the Platform
+
+The codebot package declares interfaces that other packages implement, so code written against them works the same no matter which package provides them.
+
+Codebot.Graphics.Types describes 2D drawing, with colors, points, rectangles, and the drawing interfaces ISurface, IPen, IBrush, IFont, IPath, IMatrix, and IBitmap. The [Codebot Controls](../codebot_controls) package implements them using Cairo, Direct2D, or Quartz.
+
+Codebot.Platform describes what scenes and applications need from the system they run on, including virtual key codes, bitmaps, the clipboard, windows, and message, file, and picture dialogs. They are provided by Codebot.Platform.LCL in the Codebot Controls package, or by Codebot.Platform.SDL in the [Codebot Render SDL](../codebot_render_sdl) package, and safe defaults are used until one of them is loaded.
+
+Codebot.Binding lets you link components so that a change in one of them is passed on to the others, without you writing the code that connects them. TComponentBinding is the base class of bindings such as TExplorerBinding in the [Codebot Windows Shell](../codebot_windows_shell) package.
+
+## Libraries
+
+Most of the package is plain Pascal, but a few features use libraries of the system:
+
+| Library | Used for |
+| --- | --- |
+| OpenSSL | Secure sockets. |
+| libxml2 | XML documents on Linux and macOS. |
+| MSXML | XML documents on Windows. |
+
+The package also declares Direct2D, DirectWrite, and the Windows Imaging Component, which the Codebot Controls package uses to draw on Windows.
+
+## Units
 
 | Unit | Description |
 | --- | --- |
+| Codebot.System | The basic types and routines, array lists, helpers, delegates, and threading. |
 | Codebot.Core | Loads dynamic libraries and finds the routines they export. |
-| Codebot.System | The types and routines used throughout the library, including Float, array lists, string and file routines, named values, delegates that publish events to subscribers, change notification, stopwatches, mutexes, events, threads, and asynchronous tasks. |
-| Codebot.Collections | Generic lists, object lists, dictionaries, and reference counted lists of objects and interfaces. |
-| Codebot.Support | The classes that run asynchronous tasks on threads and report their progress and result. |
-| Codebot.Constants | The error messages shared by the units of the library. |
-| Codebot.Process | TExternalCommand and RunCommand, which run another program and read its output one line at a time. |
-| Codebot.Unique | TUniqueInstance, which detects whether the program is already running and sends messages to that instance. |
+| Codebot.Collections | Generic lists, object lists, dictionaries, and reference counted lists. |
+| Codebot.Support | The classes that run asynchronous tasks. |
+| Codebot.Constants | The error messages shared by the library. |
+| Codebot.Process | TExternalCommand and RunCommand. |
+| Codebot.Unique | TUniqueInstance and UniqueInstance. |
+| Codebot.Binding | TComponentBinding. |
+| Codebot.Text | UTF-8 routines, TBuffer, and hexadecimal and base64 encoding. |
+| Codebot.Text.Json | TJsonNode. |
+| Codebot.Text.Xml | XML documents, filers, and settings. |
+| Codebot.Text.Formats | Converts between JSON and XML. |
+| Codebot.Text.Store | TTextStorage. |
+| Codebot.Cryptography | Hashes, keyed hashes, and simple encryption. |
+| Codebot.Geometry | Vectors, matrices, quaternions, lines, and curves. |
+| Codebot.Animation | Easings, animated properties, TAnimationTimer, and the Animator. |
+| Codebot.Graphics.Types | Colors, points, rectangles, and the drawing interfaces. |
+| Codebot.Platform | The platform interfaces. |
+| Codebot.Networking | TAddressName and TSocket. |
+| Codebot.Networking.Web | TUrl, THttpClient, THttpPost, WebGet, and WebPost. |
+| Codebot.Networking.Ftp | TFtpClient. |
+| Codebot.Networking.Storage | S3 compatible cloud storage. |
+| Codebot.Networking.Unix | TUnixClientSocket. |
+| Codebot.IO.SerialPort | TSerialPort. |
+| Codebot.Interop.Sockets | The sockets API of the system. |
+| Codebot.Interop.OpenSSL | OpenSSL. |
+| Codebot.Interop.Linux.Xml2 | libxml2. |
+| Codebot.Interop.Windows.Msxml | MSXML. |
+| Codebot.Interop.Windows.Direct2D | Direct2D and DirectWrite. |
+| Codebot.Interop.Windows.ImageCodecs | The Windows Imaging Component. |
 
-## Text and data
-
-| Unit | Description |
-| --- | --- |
-| Codebot.Text | UTF-8 routines, memory buffers, and hexadecimal and base64 encoding. |
-| Codebot.Text.Json | TJsonNode, which parses, builds, and writes JSON. |
-| Codebot.Text.Xml | XML documents, nodes, and node lists as interfaces, and filers that read and write settings. It uses libxml2 on Linux and MSXML on Windows. |
-| Codebot.Text.Formats | Routines that tell JSON from XML and convert between the two. |
-| Codebot.Text.Store | TTextStorage, a component that holds named blocks of text. |
-| Codebot.Cryptography | MD5, SHA1, SHA256, and SHA512 hashes of strings, buffers, streams, and files, keyed hashes for authentication, and simple encryption. |
-
-## Math and animation
-
-| Unit | Description |
-| --- | --- |
-| Codebot.Geometry | Vectors of two, three, and four components, matrices, and the other types used for 2D and 3D math. |
-| Codebot.Animation | Easing functions, interpolation, vector properties that can be animated, TAnimationTimer, and the Animator, which animates properties over time. |
-
-## Graphics and the platform
-
-| Unit | Description |
-| --- | --- |
-| Codebot.Graphics.Types | Colors, points, rectangles, color names and conversions, and the drawing interfaces IMatrix, IPen, IBrush, IFont, IPath, ISurface, IBitmap, and ISplash. These interfaces are implemented by Codebot.Graphics in the codebot_controls package. |
-| Codebot.Platform | The interfaces for what scenes and applications need from a backend, including virtual key codes, bitmap data, the clipboard, windows, message, file, and picture dialogs, and system colors. They are provided by Codebot.Platform.LCL in codebot_controls or by Codebot.Platform.SDL in codebot_render_sdl, and safe defaults are used until one of those is initialized. |
-
-## Networking and devices
-
-| Unit | Description |
-| --- | --- |
-| Codebot.Networking | TAddressName, which resolves host names, and TSocket, a client or server socket that can be secured using OpenSSL. |
-| Codebot.Networking.Web | TUrl, THttpClient, THttpPost, and the WebGet and WebPost routines. |
-| Codebot.Networking.Ftp | TFtpClient, a client for FTP servers. |
-| Codebot.Networking.Storage | Access to cloud storage held by Amazon S3 and compatible providers. |
-| Codebot.Networking.Unix | TUnixClientSocket, which connects to a Unix domain socket. |
-| Codebot.IO.SerialPort | TSerialPort, which reads and writes serial ports on Linux and Windows. |
-
-## Bindings to system libraries
-
-| Unit | Library |
-| --- | --- |
-| Codebot.Interop.Sockets | The sockets API of the operating system |
-| Codebot.Interop.OpenSSL | OpenSSL |
-| Codebot.Interop.Linux.Xml2 | libxml2 |
-| Codebot.Interop.Windows.Msxml | MSXML |
-| Codebot.Interop.Windows.Direct2D | Direct2D and DirectWrite |
-| Codebot.Interop.Windows.ImageCodecs | The Windows Imaging Component |
-
-## Compiler settings
-
-Every unit of the library includes codebot.inc, which sets the Delphi mode of the compiler, turns on macros, and defines the calling convention of the platform.
+Every unit of the library includes codebot.inc, which sets Delphi mode, turns on macros, and defines the calling convention of the platform.

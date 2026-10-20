@@ -1,3 +1,4 @@
+{ <include docs/codebot.render.shaders.txt> }
 unit Codebot.Render.Shaders;
 
 {$i render.inc}
