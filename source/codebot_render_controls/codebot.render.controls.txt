@@ -1,5 +1,3 @@
-# Codebot.Render.Controls
-
 The Codebot.Render.Controls unit gives you TGraphicsBox, a windowed control for showing OpenGL graphics inside your forms. When it is first shown, it creates an SDL window that fills the control, and SDL creates the OpenGL context for that window. At design time nothing is created, and the control paints an OpenGL logo instead.
 
 All rendering happens on a render thread of its own, with the context current. OnRenderStart is invoked once so you can create your OpenGL resources, OnRender is invoked for every frame with the size of the rendering area, and OnRenderStop is invoked once before the context is destroyed so you can free them. Canvas lets you draw vector graphics between BeginFrame and EndFrame. Because these events run on the render thread, they must not touch other controls directly, so use TThread.Queue or TThread.Synchronize when you need the main thread.

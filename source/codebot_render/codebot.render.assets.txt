@@ -1,5 +1,3 @@
-# Codebot.Render.Assets
-
 The Codebot.Render.Assets unit finds the assets of your program, the fonts, images, sounds, and other files it loads while it runs. An asset is named by its path below the assets folder, with forward slashes, such as `fonts/roboto.ttf`. On macOS the folders above your program are searched for the assets folder too.
 
 Normally assets are files in the assets folder beside your program. If you set an AssetKey on your host, your program keeps its assets in one dat file beside it instead, named after the program, such as cardgames.dat, whenever that file is there. An asset that isn't in the dat file is still looked for in the assets folder. Every byte of a dat file is changed with xor by the four bytes of the key, so it can't be read without the key. Your program builds its own dat file when you start it with `--build-dat`, which the hosts handle before opening a window.

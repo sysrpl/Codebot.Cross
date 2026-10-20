@@ -1,3 +1,1 @@
-# Codebot.Render.Textures
-
 The Codebot.Render.Textures unit gives you TTexture, an OpenGL texture owned by a render context. You can load a texture from a bitmap, a stream, a file, an asset, or raw RGBA pixels, and choose its filtering, wrapping, and mipmaps. Ctx.Textures holds textures by name.

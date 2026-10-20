@@ -1,7 +1,3 @@
-# Codebot WebKit
-
-## Introduction
-
 The Codebot WebKit package gives you TWebBrowser, a web browser control you can place on your forms, along with an address bar, a status indicator, and a developer tools inspector that work alongside it. You can use it to show web pages and online help, to build a user interface out of HTML, or to write a complete web browser of your own.
 
 On Linux the browser embeds WebKitGTK, the engine used by GNOME Web, and on Windows it embeds Microsoft Edge WebView2. The package builds with the GTK3 and Win32 widgetsets, and requires the codebot_controls package and the LCL.
@@ -10,7 +6,7 @@ The browser engine is loaded when your program runs rather than linked when it i
 
 ## Quick Start
 
-Create a new Lazarus application. From the Codebot Webview tab of the component palette, place a TWebAddressBar on your form and set its Align property to alTop. Place a TWebStatusIndicator and set its Align to alBottom, then place a TWebBrowser and set its Align to alClient. Set the WebBrowser property of the address bar and the status indicator to your browser, and set the Location of the browser to a web page such as https://www.lazarus-ide.org. Press F9 to run your project, and you will have a working web browser.
+Create a new Lazarus application. From the Codebot Webview tab of the component palette, place a TWebAddressBar on your form and set its Align property to alTop. Place a TWebStatusIndicator and set its Align to alBottom, then place a TWebBrowser and set its Align to alClient. Set the WebBrowser property of the address bar and the status indicator to your browser, and set the Location of the browser to a web page. Press F9 to run your project, and you will have a working web browser.
 
 ## TWebBrowser
 
@@ -146,5 +142,3 @@ A few features work differently on Windows:
 | Codebot.WebKit.Controls.Extras | Contains TWebAddressBar and TWebStatusIndicator. |
 | Codebot.WebKit.Controls.Gtk3 | Implements the controls for the GTK3 widgetset using WebKitGTK. |
 | Codebot.WebKit.Controls.Win | Implements the controls for the Win32 widgetset using WebView2. |
-| Codebot.Interop.WebKit | Declares the part of the WebKitGTK API that the package uses. |
-| Codebot.Interop.WebView2 | Declares the part of the WebView2 API that the package uses. |

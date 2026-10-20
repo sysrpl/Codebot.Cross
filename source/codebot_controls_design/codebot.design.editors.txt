@@ -1,5 +1,3 @@
-# Codebot.Design.Editors
-
 The Codebot.Design.Editors unit gives you the property and component editors of the codebot_controls package.
 
 | Editor | Description |

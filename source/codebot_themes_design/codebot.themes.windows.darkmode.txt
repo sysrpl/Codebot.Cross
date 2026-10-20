@@ -1,5 +1,3 @@
-# Codebot.Themes.Windows.DarkMode
-
 The Codebot.Themes.Windows.DarkMode unit calls the routines of uxtheme.dll that switch the native controls of Windows 10 1809 and later between their light and dark visual styles. These routines are not documented, so they are found by their ordinals.
 
 DarkModeLoad finds the routines, and returns False on older versions of Windows or when one is missing. SetAppMode sets the mode of the whole program, SetTitleBarDark switches the title bar of a window, ThemeWindow gives one window the dark parts of its visual style, and SetWindowDarkMode does all of this for a window and its child windows. WindowsBuild reads the build number of Windows, and IsComboBoxClass recognizes the classes of combo boxes, including the one the LCL registers.

@@ -1,7 +1,3 @@
-# Codebot Render
-
-## Introduction
-
 The Codebot Render package is a cross platform graphics and game engine drawn using OpenGL. It gives you everything you need to write games, simulations, visual tools, and animated user interfaces: a fast 2D vector canvas, text and fonts, images and sprites, shaders and textures, a complete widget toolkit with several themes, 2D physics, audio, and keyboard, mouse, and joystick input.
 
 A program written with this package is made of scenes. A scene draws each frame and handles input, and a host gives it a window to run in. The package does not use the LCL, so the very same scene can run inside a form of your desktop application or full screen in its own window, without changing a line of its code. You choose where your scene runs by choosing a host package:
@@ -260,13 +256,3 @@ You can change how the package is built by editing render.inc, or by adding defi
 | Codebot.Hardware | Audio, keyboard, mouse, and joysticks. |
 | Codebot.OpenGL | The OpenGL and OpenGL ES API. |
 | Codebot.OpenGL.SDL | Creates OpenGL contexts using SDL for both hosts. |
-| Codebot.Interop.SDL2 | SDL2. |
-| Codebot.Interop.Chipmunk2D | Chipmunk2D. |
-| Codebot.Interop.Assimp | assimp. |
-| Codebot.Interop.MPV | libmpv. |
-| Codebot.Interop.MiniMp3 | minimp3. |
-| Codebot.Interop.Vorbis | vorbisfile. |
-| Codebot.Interop.Xmp | libxmp. |
-| Codebot.Interop.MinGW | Links the static libraries built with MinGW-w64 on Windows. |
-
-See goal.txt in this folder for the design of the package and its hosts.

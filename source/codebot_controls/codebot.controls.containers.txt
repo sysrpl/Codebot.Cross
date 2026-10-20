@@ -1,5 +1,3 @@
-# Codebot.Controls.Containers
-
 The Codebot.Controls.Containers unit gives you controls that hold other controls.
 
 TSizingPanel pads its edges, paints a background, and has a splitter the user can drag to resize it. You can double click it in the form designer to arrange its controls in a row.

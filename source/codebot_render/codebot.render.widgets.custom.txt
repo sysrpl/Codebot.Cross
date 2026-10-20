@@ -1,5 +1,3 @@
-# Codebot.Render.Widgets.Custom
-
 The Codebot.Render.Widgets.Custom unit gives you widgets that draw themselves rather than being drawn by the theme, while still taking their colors and font from it.
 
 TCustomGraph is a scrolling line graph with a label to its left. To graph a value of your own, descend from it and override DataPoint, DefaultMax, and InfoText. TPerformanceGraph graphs the number of frames drawn each second, and needs nothing more than adding it to a window and giving it a Width and Height. TMarkDownLabel is a label whose text is written in markdown.

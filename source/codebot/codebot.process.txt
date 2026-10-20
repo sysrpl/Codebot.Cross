@@ -1,5 +1,3 @@
-# Codebot.Process
-
 The Codebot.Process unit runs other programs.
 
 TExternalCommand is a component that runs a program, reads its output one line at a time through OnLineRead, and invokes OnComplete when the program ends. With BufferOutput, which is on by default, every line is also kept in Output. You can stop the program with Kill, and EExternalCommandException is raised if it can't be run.

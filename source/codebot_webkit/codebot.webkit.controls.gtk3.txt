@@ -1,5 +1,3 @@
-# Codebot.WebKit.Controls.Gtk3
-
 The Codebot.WebKit.Controls.Gtk3 unit implements TWebBrowser and TWebInspector for the GTK3 widgetset using WebKitGTK. It creates the web view and the inspector, carries out the requests of the controls, and passes the signals of WebKitGTK on to them.
 
 A control has no web view at design time, or when WebKitGTK is not installed.

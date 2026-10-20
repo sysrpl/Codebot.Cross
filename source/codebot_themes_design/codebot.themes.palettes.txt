@@ -1,5 +1,3 @@
-# Codebot.Themes.Palettes
-
 The Codebot.Themes.Palettes unit holds the themes of the IDE, with the colors and font of each one. It has no platform code, so the colors of a theme can be shown anywhere.
 
 A theme is a TThemeInfo, with a name, a palette of system colors, whether it is dark, the names of its fonts, and the size of its font. The theme named System Default uses the colors and visual styles of the system, and SystemColors holds the colors the dialog shows for it.

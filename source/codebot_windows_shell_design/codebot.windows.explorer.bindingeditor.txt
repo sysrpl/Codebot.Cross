@@ -1,5 +1,3 @@
-# Codebot.Windows.Explorer.BindingEditor
-
 The Codebot.Windows.Explorer.BindingEditor unit gives you the editor that chooses which explorer controls a TExplorerBinding keeps in sync. It opens when you double click a TExplorerBinding in the form designer, or right click it and choose Edit bindings.
 
 The editor lists the TExplorerView, TExplorerTree, TExplorerEdit, and TExplorerPreview controls on your form in two lists, the available controls and the bound controls. You can move the selected controls between the lists with the > and < buttons, move all of them with >> and <<, or double click a control to move it. If you want to open the editor from your own code, call EditExplorerBinding, which returns True if the bound controls were changed.

@@ -1,5 +1,3 @@
-# Codebot.Forms.ColorDialog
-
 The Codebot.Forms.ColorDialog unit gives you TAdvancedColorDialog, a dialog for picking a color and its opacity. Set Color and Alpha before calling Execute, and read them after it returns True.
 
 The dialog has a hue and saturation picker, an alpha picker, and slide edits that switch between red, green, and blue and hue, saturation, and lightness. A grid of common colors sits on the right, and below it the color is shown as text you can edit, in Delphi, HTML, or CSS form. A row of custom colors along the bottom is saved between uses. Click one to use it, or right click it to store the current color there.

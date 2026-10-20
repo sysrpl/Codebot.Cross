@@ -1,5 +1,3 @@
-# Codebot.Networking.Web
-
 The Codebot.Networking.Web unit makes HTTP requests.
 
 - TUrl parses a URL into its parts, and converts to and from a string.

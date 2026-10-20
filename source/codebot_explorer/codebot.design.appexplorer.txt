@@ -1,5 +1,3 @@
-# Codebot.Design.AppExplorer
-
 The Codebot.Design.AppExplorer unit gives you the Application Explorer, a window that shows a tree of every component owned by the Application variable, and every component those components own. You can use it to explore the Lazarus IDE itself, or one of your own programs by calling ShowAppExplorer.
 
 When you select a component, the Edit tab shows a property grid where you can change its properties while the program runs, and the Text tab describes it, including its class and unit, its parents and owners, its component state, the classes it inherits from, and the values of its properties. You can type in the Find box to search the tree, and step between matches with the arrow buttons. Double click a control or press the space bar to make it flash red on the screen, so you can see where it is.

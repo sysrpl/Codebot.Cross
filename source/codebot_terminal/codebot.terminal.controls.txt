@@ -1,5 +1,3 @@
-# Codebot.Terminal.Controls
-
 The Codebot.Terminal.Controls unit gives you TTerminal, a terminal emulator control that runs the user's shell inside your form using VTE, the library of the GNOME terminal.
 
 The shell starts the first time the control is shown. OnReady tells you when the shell has written its prompt, and OnTerminate tells you when it ends, such as when the user types exit. If you want the terminal to keep going, call Restart from OnTerminate to clear the terminal and start a new shell. HasTerminal tells you whether the control is showing a running terminal.

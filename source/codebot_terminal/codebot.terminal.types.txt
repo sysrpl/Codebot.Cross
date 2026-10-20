@@ -1,5 +1,3 @@
-# Codebot.Terminal.Types
-
 The Codebot.Terminal.Types unit holds what the terminal control shares with the units that implement it for each widgetset. You will mostly use it for TTerminalPalette and the TerminalPalettes array, which hold the sixteen numbered colors of the Tango, Linux, Xterm, and Solarized palettes as $RRGGBB values. tpDefault leaves the choice to the VTE library.
 
 TTerminalElement names the parts of a terminal that have a color of their own, and ITerminalEvents is how the widgetset units tell the control that its terminal is ready or that its shell has ended.

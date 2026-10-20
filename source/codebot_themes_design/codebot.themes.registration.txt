@@ -1,5 +1,3 @@
-# Codebot.Themes.Registration
-
 The Codebot.Themes.Registration unit starts the themes when the Lazarus IDE loads the package. By then the windows of the IDE already exist, so it applies your saved theme to every one of them right away. It then adds a Themes item to the Tools menu, which shows the dialog of Codebot.Themes.Dialog, applies and saves the theme you choose, and applies the color scheme and font of the source editor you choose when they change. Nothing is added when themes can't be used on your system.
 
 An IDE built from dynamic packages can unload a package while it runs, so the unit adds a handler that takes the theme away, along with everything that was installed, before the package is unloaded, since nothing may call into it once it is gone. Before any other library is unloaded, the handler forgets the routines that were patched in it.

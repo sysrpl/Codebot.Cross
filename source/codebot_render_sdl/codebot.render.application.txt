@@ -1,5 +1,3 @@
-# Codebot.Render.Application
-
 The Codebot.Render.Application unit runs your scenes in an SDL2 window without the LCL. Your program creates no forms. Instead, you set the properties of the global Application and call Run with your scene class:
 
 ```pascal

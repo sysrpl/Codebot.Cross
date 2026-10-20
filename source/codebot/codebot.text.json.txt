@@ -1,5 +1,3 @@
-# Codebot.Text.Json
-
 The Codebot.Text.Json unit reads and writes JSON. TJsonNode parses, builds, and navigates a JSON document. Each node is an object, array, boolean, null, number, or string, and you can reach the nodes inside an object or array by name or index, by a path such as `N.Find('server/port')`, or by looping over them with for in. You only create and free the root node, which looks after all its children.
 
 You can load and save documents with Parse, LoadFromFile, SaveToFile, and the stream methods, read and write values with AsString, AsNumber, AsBoolean, and the others, and turn a node back into text with AsJson or ToString.

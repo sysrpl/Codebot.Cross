@@ -1,5 +1,3 @@
-# Codebot.Controls.Colors
-
 The Codebot.Controls.Colors unit gives you controls that let the user pick a color, or part of one, with the mouse.
 
 | Control | Description |

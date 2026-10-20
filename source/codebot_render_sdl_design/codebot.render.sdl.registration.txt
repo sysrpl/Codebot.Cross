@@ -1,5 +1,3 @@
-# Codebot.Render.Sdl.Registration
-
 The Codebot.Render.Sdl.Registration unit adds the Codebot rendering project to the new project dialog of the Lazarus IDE. Choose File, New, and then Codebot rendering project to create a program that runs a scene in an SDL window.
 
 Your new project is made of two files. The program sets the title of the application and runs your scene. The MainScene unit holds TMainScene, a scene for you to change into your own, which draws a rose on the canvas that turns, opens and closes its petals, and changes color over time. It needs no assets, so it runs as soon as you build it. The project requires the codebot, codebot_render, and codebot_render_sdl packages, and has no forms.

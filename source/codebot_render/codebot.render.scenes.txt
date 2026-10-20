@@ -1,5 +1,3 @@
-# Codebot.Render.Scenes
-
 The Codebot.Render.Scenes unit gives you TScene, the base class of everything a host shows. You descend from TScene and override Initialize to load what your scene needs, Logic to update it once a frame, Render to draw it, and Finalize to free what you created. Calling inherited Render clears the scene for you. While your scene runs you have its Canvas, its default Font, Time, Width, Height, and Context.
 
 Input arrives through DoKeyDown, DoKeyUp, DoTextInput, DoMouseDown, DoMouseMove, DoMouseUp, and DoMouseWheel, each with an argument record you can mark as Handled. Key codes are the VK_ virtual key codes of Codebot.Platform.

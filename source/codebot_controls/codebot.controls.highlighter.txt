@@ -1,3 +1,1 @@
-# Codebot.Controls.Highlighter
-
 The Codebot.Controls.Highlighter unit gives you TControlHighlighter, a component that draws an animated outline around a control to draw the user's attention to it, such as in a tutorial or after a validation error. The outline is drawn in a floating window, and you can choose its color, opacity, radius, and thickness.

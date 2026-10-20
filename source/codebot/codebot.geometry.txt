@@ -1,5 +1,3 @@
-# Codebot.Geometry
-
 The Codebot.Geometry unit gives you the types you need for 2D and 3D math.
 
 - TVec2, TVec3, and TVec4 are vectors of two, three, and four components, which you build with the Vec, Vec2, Vec3, and Vec4 routines.

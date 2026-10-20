@@ -1,3 +1,1 @@
-# Codebot.Networking
-
 The Codebot.Networking unit gives you network sockets. TAddressName resolves a host name to an internet address, and TSocket lets you connect, listen, accept, read, and write. Set Secure to True to use a secure connection through OpenSSL. TSocket can also write whole files, streams, and text, reporting its progress through an asynchronous task. If you just need to send something quickly, SocketSend sends data to a port on a host.

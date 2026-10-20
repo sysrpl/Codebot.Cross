@@ -1,5 +1,3 @@
-# Codebot.Windows.Explorer
-
 The Codebot.Windows.Explorer unit gives you controls that host the parts of Windows Explorer itself. They show the same folders, icons, columns, context menus, and previews as Windows Explorer, and they work with any shell folder, including virtual folders such as This PC, Control Panel, and the Recycle Bin.
 
 | Control | Description |

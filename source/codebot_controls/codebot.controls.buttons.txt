@@ -1,5 +1,3 @@
-# Codebot.Controls.Buttons
-
 The Codebot.Controls.Buttons unit gives you TThinButton, a flat button that draws itself using the current theme and can show an image from an image strip. Its Kind decides how it behaves:
 
 | Kind | Description |

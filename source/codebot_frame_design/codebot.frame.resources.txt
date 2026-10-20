@@ -1,5 +1,3 @@
-# Codebot.Frame.Resources
-
 The Codebot.Frame.Resources unit stores the properties of a converted control that cannot be written as code, such as images, in a resource file.
 
 PropertyToBinary converts the text of a property from a form file into the binary form a form file uses, which is the name of the property followed by its value. WriteResourceFile writes these as raw data resources to a .res file, which the unit of the control links. The control reads each one back with TReader.ReadProperty, so a component reads its own data just as it does when a form is loaded.

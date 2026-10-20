@@ -1,5 +1,3 @@
-# Codebot.Frame.Converter
-
 The Codebot.Frame.Converter unit turns a form or frame of the designer into the source of a control. TFrameConverter starts with a copy of the unit of your form and changes it:
 
 - The unit is renamed, and your form class becomes a TCustomControl descendant with the new class name.

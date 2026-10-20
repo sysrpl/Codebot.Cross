@@ -1,7 +1,3 @@
-# Codebot Render SDL Design
-
-## Introduction
-
 The Codebot Render SDL Design package adds the Codebot rendering project to the new project dialog of the Lazarus IDE. It gives you a quick way to start a program that runs a scene in an SDL window using the [Codebot Render SDL](../codebot_render_sdl) package. The package is only used by the IDE, so you never need to add it to your own programs.
 
 The package requires only IDEIntf, so it can be used on any computer, even one without SDL installed.

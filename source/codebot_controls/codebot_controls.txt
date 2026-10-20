@@ -1,7 +1,3 @@
-# Codebot Controls
-
-## Introduction
-
 The Codebot Controls package brings antialiased vector graphics and a collection of custom controls to your Lazarus applications. At its heart is a single drawing API, ISurface, which lets you draw smooth lines, curves, shapes, gradients, images, and text that look the same on every platform. The package uses Cairo on Linux, Direct2D on Windows, and Quartz on macOS to do the drawing, so your code never needs to know which one is in use.
 
 The controls in this package are drawn using that same API rather than the native widgets of the platform. That gives them a consistent look everywhere and lets them follow a theme. You get color pickers, slide bars and slide edits, flat buttons, banners, scrolling lists with column headers, content grids, sizing panels, step indicators, and animated progress icons, along with floating forms, popup forms, desktop widgets, and an advanced color dialog.
@@ -192,7 +188,6 @@ Codebot.Platform.LCL provides the bitmaps, clipboard, windows, and dialogs used 
 | Codebot.Forms.Widget | Contains TWidget. |
 | Codebot.Input.Hotkeys | Contains HotkeyCapture. |
 | Codebot.Input.MouseMonitor | Contains MouseMonitor. |
-| Codebot.Interop.Linux.NetWM | Contains WindowManager. |
 | Codebot.Debug | Contains Bugout and TDebugServer. |
 | Codebot.Platform.LCL | Provides the Codebot.Platform interfaces using the LCL. |
 | Codebot.Graphics.Linux.SurfaceCairo | The Cairo drawing backend for Linux. |

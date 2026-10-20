@@ -1,3 +1,1 @@
-# Codebot.Support
-
 The Codebot.Support unit gives you the classes that run the asynchronous tasks of Codebot.System. TAsyncTaskRunner<T> implements IAsyncTask and invokes OnComplete with a result of type T when the task finishes. TThreadRunner<T> runs OnExecute on a background thread with a set of parameters, and then runs OnComplete on the main thread. A worker reports its final status and result through IAsyncRunner<T>.

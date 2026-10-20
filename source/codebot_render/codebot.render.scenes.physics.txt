@@ -1,5 +1,3 @@
-# Codebot.Render.Scenes.Physics
-
 The Codebot.Render.Scenes.Physics unit gives you TPhysicsScene, a widget scene that runs a Chipmunk2D space, which you reach through its Space property. The space is stepped every PhysicsStep seconds on the step thread of the host, which starts after your scene is created, so you can build your world in Initialize without locking it.
 
 Physics is simulated in studio coordinates, a fixed area of 1920 by 1080 that is scaled to fill your scene, so your simulation behaves the same at any size. GenerateStudioWalls adds walls around the studio, PointToStudio converts a point of the scene, and DrawPhysics draws the shapes, bodies, and joints. You can override DrawCustomBody, DrawCustomShape, and DrawCustomJoint to draw some of them yourself. When GrabBodies is True, the user can drag bodies with the left mouse button.

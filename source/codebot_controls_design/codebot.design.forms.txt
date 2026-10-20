@@ -1,5 +1,3 @@
-# Codebot.Design.Forms
-
 The Codebot.Design.Forms unit gives you RegisterForm, which adds a form class to the Codebot Form category of File, New in the Lazarus IDE, along with a caption, a description, and the unit that declares the class. Once a form class is registered, you can add new forms of that class to your projects. New forms require the LCL, codebot, and codebot_controls packages.
 
 You can call RegisterForm from the Register procedure of your own design time package to add your own kinds of form.

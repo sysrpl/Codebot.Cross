@@ -1,5 +1,3 @@
-# Codebot.Windows.Shell.Registration
-
 The Codebot.Windows.Shell.Registration unit adds the components of the codebot_windows_shell package to the Lazarus IDE. You will find TExplorerTree, TExplorerView, TExplorerEdit, TExplorerPreview, TExplorerBinding, TShellFileOperation, TShellNotify, and TShellLink on the Codebot Windows Shell tab of the component palette.
 
 The unit also registers the editors you use in the object inspector. TExplorerPathPropertyEditor edits the Path of a TExplorerView, TExplorerEdit, or TShellNotify and the Root of a TExplorerTree, a file name editor lets you browse for the FileName of a TShellLink, and TExplorerBindingEditor opens when you double click a TExplorerBinding.

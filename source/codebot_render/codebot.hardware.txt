@@ -1,5 +1,3 @@
-# Codebot.Hardware
-
 The Codebot.Hardware unit plays audio and reads the keyboard, mouse, and joysticks using SDL alone, so it works the same in both hosts.
 
 You add sounds and music to Audio as named sources from files, streams, or assets, and they are kept in memory. To play a source it is loaded into one of a fixed number of banks, each with its own volume, pan, position, and loop count, and the banks that are playing are mixed together on the audio thread. MP3, Ogg Vorbis, uncompressed WAV, and tracker music such as MOD, S3M, XM, and IT are supported. Every source must be stereo with 16 bit samples at 44100 Hz, and a source in any other format is refused when you add it. If no audio device can be opened, sources and banks still work but nothing is heard.

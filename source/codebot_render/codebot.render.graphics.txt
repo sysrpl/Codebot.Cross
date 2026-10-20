@@ -1,5 +1,3 @@
-# Codebot.Render.Graphics
-
 The Codebot.Render.Graphics unit gives you ICanvas, which draws smooth antialiased 2D vector graphics with OpenGL using Codebot.Render.NanoVG. You build up a path with MoveTo, LineTo, Rect, RoundRect, Circle, Ellipse, and the other path methods, and then Fill or Stroke it with a color, a pen, or a brush. The canvas also draws images, sprites, and text, and its matrix lets you rotate, scale, and move what you draw. Drawing happens between two calls to Flip on the canvas's IBackBuffer.
 
 | Interface | Description |

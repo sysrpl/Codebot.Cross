@@ -1,5 +1,3 @@
-# Codebot.Physics
-
 The Codebot.Physics unit makes the Chipmunk2D physics library easy to use from Pascal by wrapping it in records.
 
 | Record | Description |

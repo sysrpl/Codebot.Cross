@@ -1,3 +1,1 @@
-# Codebot.IO.SerialPort
-
 The Codebot.IO.SerialPort unit gives you TSerialPort, which reads and writes a serial port on Linux and Windows. TSerialPortOptions holds the line settings of the port, and EnumSerialPorts lists the serial ports on the computer.

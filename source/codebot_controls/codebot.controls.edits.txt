@@ -1,5 +1,3 @@
-# Codebot.Controls.Edits
-
 The Codebot.Controls.Edits unit gives you TSlideEdit, an edit for a number between Min and Max with a spin button on its right. The user can type a number, press the up and down arrow keys to change it by Step, or press the button to pop up a slide bar under the mouse and drag it. The text is formatted when the edit loses focus, and you can handle OnFormat to choose how.
 
 The unit also holds TCustomRenderEdit, an edit control drawn using a surface, which is not finished yet.

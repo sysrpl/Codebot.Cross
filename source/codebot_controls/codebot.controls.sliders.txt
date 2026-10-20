@@ -1,3 +1,1 @@
-# Codebot.Controls.Sliders
-
 The Codebot.Controls.Sliders unit gives you TSlideBar, a vertical or horizontal track bar whose thumb the user drags to choose a value between Min and Max.

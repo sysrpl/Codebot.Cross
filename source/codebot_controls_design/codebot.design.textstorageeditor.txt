@@ -1,3 +1,1 @@
-# Codebot.Design.TextStorageEditor
-
 The Codebot.Design.TextStorageEditor unit gives you the editor of the named items of a TTextStorage. It lists the names of the items, lets you add and delete them, and edits the name and text of the item you select. The editor works on a copy of the items, so nothing changes unless you click OK. Call EditTextStorage to show it yourself, which returns True if the items were changed.

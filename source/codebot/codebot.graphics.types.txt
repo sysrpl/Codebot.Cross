@@ -1,5 +1,3 @@
-# Codebot.Graphics.Types
-
 The Codebot.Graphics.Types unit describes 2D drawing without depending on any particular way of doing it. It gives you colors, points, rectangles, and matrices, with routines to blend, lighten, darken, fade, and convert colors and to look up colors by name, along with the drawing interfaces:
 
 | Interface | Description |

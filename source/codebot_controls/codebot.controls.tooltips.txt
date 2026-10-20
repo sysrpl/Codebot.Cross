@@ -1,3 +1,1 @@
-# Codebot.Controls.Tooltips
-
 The Codebot.Controls.Tooltips unit gives you Tipify, which shows the hint of a control in a tooltip window that fades in and out. If you set UseTipify to True, controls show their hints this way instead of using the default hint window.

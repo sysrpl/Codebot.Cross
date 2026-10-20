@@ -1,3 +1,1 @@
-# Codebot.Forms.Management
-
 The Codebot.Forms.Management unit gives you FormManager, which helps you work with the forms of your application. Current returns the form in the foreground, or nil if it doesn't belong to your program. ParentForm returns the form that holds a control. Activate brings a form to the foreground and activates it, and DefaulFont returns the default font used by forms.

@@ -1,7 +1,3 @@
-# Codebot Render Controls
-
-## Introduction
-
 The Codebot Render Controls package lets you show OpenGL graphics inside your Lazarus forms. It gives you TGraphicsBox, a control that hosts OpenGL rendering, and TSceneController, which runs the scenes of the [Codebot Render](../codebot_render) package inside a graphics box. It is the right choice when you are writing a desktop application and want graphics, animation, or a game view alongside regular controls such as menus, buttons, and lists.
 
 Because the package runs the same TScene classes as the [Codebot Render SDL](../codebot_render_sdl) package, a scene you write for one host runs in the other without any changes. You can build and test a scene inside a form with tools around it, and later run the very same scene full screen in its own window.

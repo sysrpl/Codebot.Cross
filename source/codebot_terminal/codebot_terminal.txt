@@ -1,7 +1,3 @@
-# Codebot Terminal
-
-## Introduction
-
 The Codebot Terminal package gives you TTerminal, a terminal emulator control that runs the user's shell right inside your form. You can use it to add a command line to your own tools and editors, to give users a place to run build scripts, or to show the output of programs that expect a real terminal.
 
 The control is built on VTE, the same library the GNOME terminal uses, so you get what you would expect from a real terminal, including colors, scrolling back through output, selecting text with the mouse, and full screen programs such as top, vim, and less.

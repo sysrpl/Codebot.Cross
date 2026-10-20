@@ -1,5 +1,3 @@
-# Codebot.Platform.SDL
-
 The Codebot.Platform.SDL unit provides the Codebot.Platform interfaces using SDL2, for programs that run their scenes without the LCL. Bitmaps are loaded and saved using SDL_image, the clipboard is the SDL clipboard, and message dialogs are SDL message boxes. SDL has no file dialogs of its own, so the file and picture dialogs are the ones built from widgets in Codebot.Render.Widgets.Dialogs.
 
 You don't need to call anything. The platform routines are set up when this unit is initialized.

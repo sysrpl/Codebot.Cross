@@ -1,3 +1,1 @@
-# Codebot.Render.Buffers
-
 The Codebot.Render.Buffers unit gives you the buffers you draw with in OpenGL. TTextureBuffer and TShadowBuffer let you render into a texture or a shadow map, and the vertex buffers hold vertices in several layouts, from flat vertices to colored, textured, lit, and skinned vertices.

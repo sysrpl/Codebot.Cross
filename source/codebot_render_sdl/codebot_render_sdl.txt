@@ -1,12 +1,8 @@
-# Codebot Render SDL
-
-## Introduction
-
-The Codebot Render SDL package lets you run the scenes of the [Codebot Render](../codebot_render) package in an SDL window, without using the LCL at all. It is the right choice when you are writing a game, a demo, a kiosk, or any full screen program that doesn't need forms or regular controls.
+The Codebot Render SDL package lets you run the scenes of the [Codebot Render](./?page=codebot_render) package in an SDL window, without using the LCL at all. It is the right choice when you are writing a game, a demo, a kiosk, or any full screen program that doesn't need forms or regular controls.
 
 Your program creates no forms. Instead, you set a few properties of the global Application and give it the class of the scene you want to run. Everything else, from creating the window and the OpenGL context to delivering keyboard and mouse input to your scene, is taken care of for you.
 
-Because the package runs the same TScene classes as the [Codebot Render Controls](../codebot_render_controls) package, a scene you write for one host runs in the other without any changes. You can develop a scene inside a form with regular controls around it, and later run the very same scene full screen in its own window.
+Because the package runs the same TScene classes as the [Codebot Render Controls](./?page=codebot_render_controls) package, a scene you write for one host runs in the other without any changes. You can develop a scene inside a form with regular controls around it, and later run the very same scene full screen in its own window.
 
 The package requires only the codebot_render package.
 

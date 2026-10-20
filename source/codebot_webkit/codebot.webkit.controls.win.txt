@@ -1,5 +1,3 @@
-# Codebot.WebKit.Controls.Win
-
 The Codebot.WebKit.Controls.Win unit implements TWebBrowser and TWebInspector for the Win32 widgetset using Microsoft Edge WebView2. The web view is created in the background once the control's window exists, and any requests made before it is ready are kept and carried out when it is. Its events are passed on to the controls using the same values as WebKitGTK, so your code works the same on both platforms.
 
 WebView2 can only show its developer tools in a window of their own, so TWebInspector shows the developer tools page of the WebView2 debugging server instead. The server only listens on the local computer, and is only started when an inspector control is created before the first web view. Without one, the developer tools open in their own window.

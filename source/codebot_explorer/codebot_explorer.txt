@@ -1,7 +1,3 @@
-# Codebot Explorer
-
-## Introduction
-
 The Codebot Explorer package adds the Application Explorer to the Lazarus IDE. The Application Explorer shows you every component inside a running application as a tree, and lets you look at and change the properties of any of them while the application runs.
 
 You can use it to learn how the Lazarus IDE itself is put together, to find the name and class of a window or control you see on the screen, or to try out property changes without rebuilding anything. If you want to do the same with your own programs, you can show the Application Explorer from your own code too.

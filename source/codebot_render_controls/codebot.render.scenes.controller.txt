@@ -1,5 +1,3 @@
-# Codebot.Render.Scenes.Controller
-
 The Codebot.Render.Scenes.Controller unit gives you TSceneController, which runs a TScene inside a TGraphicsBox and acts as its scene host. Call OpenScene with a graphics box and a scene class to start a scene, and call it again whenever you want to switch scenes. CloseScene frees the running scene on the next frame.
 
 The controller creates, updates, and frees your scene on the render thread with the context current. It delivers keyboard and mouse input from the SDL window of the graphics box to your scene on the render thread, so your scene's methods only ever run on that thread, one at a time. If your scene has a step interval, the controller runs a step thread for it and stops it before the scene is freed.

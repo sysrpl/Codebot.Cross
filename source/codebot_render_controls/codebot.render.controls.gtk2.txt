@@ -1,3 +1,1 @@
-# Codebot.Render.Controls.Gtk2
-
 The Codebot.Render.Controls.Gtk2 unit is the GTK2 widgetset class of TGraphicsBox. It creates the handle of the control and provides two native windows: the window of the control, which the SDL window is placed inside, and the window of the form that holds the control.

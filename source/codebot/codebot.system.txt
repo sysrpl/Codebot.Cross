@@ -1,5 +1,3 @@
-# Codebot.System
-
 The Codebot.System unit holds the types and routines the rest of the library is written in, and you will use it in nearly every unit you write. List it first in the uses clause of your program, in place of the cthreads block Lazarus generates, so threads are ready before any other unit starts.
 
 It gives you:

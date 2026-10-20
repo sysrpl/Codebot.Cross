@@ -1,3 +1,1 @@
-# Codebot.Input.MouseMonitor
-
 The Codebot.Input.MouseMonitor unit gives you MouseMonitor, which reports mouse movements and button presses anywhere on the screen, even outside the windows of your program. Positions are reported in screen coordinates.

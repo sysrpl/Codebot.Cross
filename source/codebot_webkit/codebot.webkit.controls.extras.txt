@@ -1,5 +1,3 @@
-# Codebot.WebKit.Controls.Extras
-
 The Codebot.WebKit.Controls.Extras unit gives you controls that work alongside a TWebBrowser.
 
 TWebAddressBar is a bar for navigating a browser. Its edit shows the location of the page, and when the user types an address and presses Enter the browser loads it, while Escape puts the location back. You choose its buttons with Buttons: back, forward, home, refresh, history, inspector, print, capture, downloads, and settings. The navigation buttons sit to the left of the edit and the tool buttons to the right. By default it shows back, forward, and refresh. OnButtonClick is invoked before the bar acts on a click, so you can set Handled to True to do something else, and the settings button does nothing unless you handle it.

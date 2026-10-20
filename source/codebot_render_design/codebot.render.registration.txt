@@ -1,3 +1,1 @@
-# Codebot.Render.Registration
-
 The Codebot.Render.Registration unit adds TGraphicsBox, along with its palette icon, to the Codebot Render tab of the component palette.

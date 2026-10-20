@@ -1,5 +1,3 @@
-# Codebot.Controls.Extras
-
 The Codebot.Controls.Extras unit gives you a collection of useful controls.
 
 | Control | Description |

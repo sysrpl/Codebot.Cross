@@ -1,5 +1,3 @@
-# Codebot.WebKit.Controls
-
 The Codebot.WebKit.Controls unit gives you TWebBrowser, a web browser control that embeds WebKitGTK on Linux and Microsoft Edge WebView2 on Windows.
 
 You can load a page by setting Location or calling Load, or show HTML of your own with LoadHtml. You can also stop and reload pages, move back and forward in the history, run JavaScript with ExecuteScript, zoom, make the page editable, print, capture the page to the clipboard, and show the developer tools. Changes you make before the control's window exists, such as setting Location, are kept and applied once the browser is ready.

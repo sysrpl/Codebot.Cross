@@ -1,5 +1,3 @@
-# Codebot.Themes.Editor
-
 The Codebot.Themes.Editor unit chooses the color scheme and the font of the source editor of the IDE. The schemes are the ones the IDE knows, such as Default, Twilight, or Ocean, including any schemes you made in the editor options.
 
 EditorSchemeNames lists the schemes, and EditorSchemeCurrent returns the scheme Pascal source is shown with. EditorSchemeStyle reads the colors and font style of one kind of text in a scheme, such as comments, strings, or reserved words, which the dialog uses to draw its preview. EditorFontName and EditorFontSize return the font of the source editor, and EditorMonospaceFonts lists the fonts whose characters all have the same width.

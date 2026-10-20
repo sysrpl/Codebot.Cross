@@ -1,5 +1,3 @@
-# Codebot.Themes.Windows.Hooks
-
 The Codebot.Themes.Windows.Hooks unit themes every window of the program on Windows by intercepting the routines Windows and the LCL draw with, rather than changing one control at a time.
 
 DarkHooksInstall patches the import tables of every loaded module outside the Windows folder, which covers the program, the LCL, and the libraries of the IDE, and of comctl32.dll, which draws the common controls. The routine variables of the UxTheme unit, which the LCL draws with, are pointed at the same hooks. The hooks replace these routines:

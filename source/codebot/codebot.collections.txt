@@ -1,5 +1,3 @@
-# Codebot.Collections
-
 The Codebot.Collections unit gives you generic collections for when a TArrayList is not enough.
 
 | Class | Description |

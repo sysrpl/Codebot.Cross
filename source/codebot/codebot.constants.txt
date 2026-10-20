@@ -1,3 +1,1 @@
-# Codebot.Constants
-
 The Codebot.Constants unit holds the error messages shared by the units of the library, as resource strings so they can be translated.

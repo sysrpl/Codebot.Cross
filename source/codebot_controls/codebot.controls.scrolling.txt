@@ -1,5 +1,3 @@
-# Codebot.Controls.Scrolling
-
 The Codebot.Controls.Scrolling unit gives you lists that scroll and are drawn using a surface.
 
 | Control | Description |

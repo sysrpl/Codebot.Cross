@@ -1,5 +1,3 @@
-# Codebot.Render.Widgets.Themes
-
 The Codebot.Render.Widgets.Themes unit holds the themes that draw widgets on a canvas. Create one with NewTheme, such as `NewTheme(Canvas, TChicagoTheme)`, and give it to the Theme of a widget, or override DefaultTheme in your widget scene. Themes load their fonts from the fonts folder of your assets.
 
 | Theme | Appearance |

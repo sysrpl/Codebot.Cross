@@ -1,5 +1,3 @@
-# Codebot.Render.Widgets
-
 The Codebot.Render.Widgets unit gives you a user interface drawn on a canvas inside a scene, with no help from the LCL or the system. TWidget is the base class of every widget, and TMainWidget is the parent of a layout and also shows message boxes. You add widgets to a parent with Add, such as `Window.Add<TPushButton>`, and freeing a widget frees its children.
 
 | Widgets | Description |

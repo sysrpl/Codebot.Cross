@@ -1,3 +1,1 @@
-# Codebot.WebKit.Registration
-
 The Codebot.WebKit.Registration unit adds TWebBrowser, TWebAddressBar, TWebStatusIndicator, and TWebInspector, along with their palette icons, to the Codebot Webview tab of the component palette.

@@ -1,5 +1,3 @@
-# Codebot.Core
-
 The Codebot.Core unit loads dynamic libraries and finds the routines they export. LibraryLoad loads a library by name, optionally trying another name if the first can't be found, LibraryGetProc finds an exported routine, and LibraryUnload unloads the library. SharedSuffix is the file extension of libraries on the current system.
 
 On Unix the unit also brings in CThreads, which is how Codebot.System makes sure threads are ready before any other unit starts.

@@ -1,5 +1,3 @@
-# Codebot.Graphics
-
 The Codebot.Graphics unit creates the drawing objects declared in Codebot.Graphics.Types, so this is the unit you use whenever you draw with a surface. NewPen, NewBrush, NewFont, NewSurface, NewBitmap, NewMatrix, NewSplash, and NewScreenCapture create pens, solid, bitmap, and gradient brushes, fonts, surfaces for a canvas or a control, bitmaps, splash windows, and captures of the screen. Each one is made by the drawing backend of the platform, which is Cairo on Linux, Direct2D on Windows, and Quartz on macOS. GraphicsEngine tells you which one is in use.
 
 The unit also gives you:

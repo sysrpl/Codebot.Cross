@@ -1,3 +1,1 @@
-# Codebot.Networking.Unix
-
 The Codebot.Networking.Unix unit gives you TUnixClientSocket, which connects to a Unix domain socket so you can talk to local services that listen on one.

@@ -1,5 +1,3 @@
-# Codebot.Render.Widgets.Video
-
 The Codebot.Render.Widgets.Video unit gives you TVideoWidget, which plays a video from a file or a URL using libmpv. Set FileName and call Play. The video is scaled to fit the widget and keeps its shape, with black bars where it doesn't fill it.
 
 Pause holds the video where it is, Play continues it, and Stop unloads it so Play starts again from the beginning. Position is where the video is in seconds and can be set to seek, and Duration is how long it is. When the video ends OnPlayComplete is invoked, and if AutoRestart is True the video plays again from the start. Pictures and events are taken from the player when the widget is painted, so OnPlayComplete doesn't fire while the widget is hidden, though the sound keeps playing.

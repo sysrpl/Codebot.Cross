@@ -1,5 +1,3 @@
-# Codebot.Animation
-
 The Codebot.Animation unit lets you move values smoothly over time.
 
 An easing describes how a value changes over time. Easings gives you the easings that come with the library by name, which are Linear, Easy, EasySlow, Extend, Drop, DropSlow, Snap, Bounce, Bouncy, Rubber, Spring, and Boing, and you can add your own. Interpolate applies an easing to a value.

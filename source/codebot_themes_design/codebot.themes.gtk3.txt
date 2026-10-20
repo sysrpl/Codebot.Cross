@@ -1,5 +1,3 @@
-# Codebot.Themes.Gtk3
-
 The Codebot.Themes.Gtk3 unit themes every window of the program with the GTK3 widgetset by adding one style sheet to the screen. GTK styles every widget again when the style sheet changes, including widgets created later, so nothing is patched and nothing is hooked.
 
 Gtk3ThemesInstall adds an empty style sheet to the screen, and returns False if the widgetset is not GTK3. Before that, it saves the system colors the widgetset reads from the GTK theme into SystemColors, so the dialog shows System Default as it really looks. The style sheet sits above the GTK theme and below the style sheets the widgetset gives single widgets, so a control with a color or font of its own keeps it.

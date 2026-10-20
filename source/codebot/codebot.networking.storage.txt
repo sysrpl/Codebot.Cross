@@ -1,5 +1,3 @@
-# Codebot.Networking.Storage
-
 The Codebot.Networking.Storage unit lets you work with buckets and files in Amazon S3 and compatible cloud storage. TS3Config holds the end points, regions, and credentials of a provider. These providers are built in, and each reads its keys from environment variables unless you set AccessId and SecretKey yourself:
 
 | Provider | Environment variables |

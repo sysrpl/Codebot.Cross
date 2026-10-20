@@ -1,5 +1,3 @@
-# Codebot.Render.Scenes.Widgets
-
 The Codebot.Render.Scenes.Widgets unit gives you TWidgetScene, a scene with a user interface of widgets, which you add to its Widget property. Input goes to the widgets first and is only passed on to your scene when no widget handles it. Call WidgetsRender from your Render method to draw the widgets, and override DefaultTheme if you want to change the theme of every widget. WidgetMatrix lets you transform all the widgets at once.
 
 The unit also gives you TSimpleWidgetScene, a widget scene that needs no Render method. It clears the scene and draws the widgets each frame, and the first time it draws it places the widgets you added in the middle of the scene, where a window can still be dragged from. Its CloseHandler method can be given to the OnClick of a button or the OnClose of a window to close the program.

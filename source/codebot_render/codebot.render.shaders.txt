@@ -1,5 +1,3 @@
-# Codebot.Render.Shaders
-
 The Codebot.Render.Shaders unit compiles and links OpenGL shaders. TVertexShader and TFragmentShader compile a shader from source, and TShaderProgram links the two together into a program you draw with. ErrorString tells you what went wrong when a shader doesn't compile or link. If your source has no #version directive, one is added to match the OpenGL version chosen in render.inc.
 
 Ctx.Shaders holds shader programs by name, loading name.vert and name.frag from the shaders folder of your assets.

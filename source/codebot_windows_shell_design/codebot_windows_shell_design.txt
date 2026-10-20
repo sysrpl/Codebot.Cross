@@ -1,7 +1,3 @@
-# Codebot Windows Shell Design
-
-## Introduction
-
 The Codebot Windows Shell Design package adds the components of the [Codebot Windows Shell](../codebot_windows_shell) package to the Lazarus IDE, along with editors that make it easier to set them up in the form designer. The package is only used by the IDE, so you never need to add it to your own programs.
 
 The package is for Windows only and requires the codebot_windows_shell package and IDEIntf.

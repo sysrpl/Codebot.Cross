@@ -1,5 +1,3 @@
-# Codebot.Frame.Packages
-
 The Codebot.Frame.Packages unit creates or changes the package of a converted control, and opens and installs it in the IDE.
 
 CreatePackageFile writes a new run and design time package that requires the LCL, named after its file. WriteTextFile writes the unit of the control. AddUnitToPackage adds the unit to the package as a unit with a Register procedure, and AddRequiredPackages adds the installed packages that hold the units the control uses. Package files in both the older format, which numbers its items, and the newer format are supported.

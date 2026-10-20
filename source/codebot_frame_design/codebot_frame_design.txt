@@ -1,7 +1,3 @@
-# Codebot Frame Design
-
-## Introduction
-
 The Codebot Frame Design package lets you turn a form or frame you designed in the Lazarus form designer into a brand new control that you can place on the component palette. You get to design your control visually, with all the components, event handlers, and code you are used to, and the package writes the control for you.
 
 The new control is a TCustomControl descendant that holds all the components of your form or frame. Its layout is created in code by its constructor, rather than loaded from a form file, so the control behaves like any other component, and you can drop as many copies of it as you like on your forms. The control is placed in a new or existing package, along with a Register procedure that adds it to the component palette, and the package can be installed in the IDE for you as soon as the control is written.

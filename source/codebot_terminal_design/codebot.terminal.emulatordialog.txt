@@ -1,5 +1,3 @@
-# Codebot.Terminal.EmulatorDialog
-
 The Codebot.Terminal.EmulatorDialog unit gives the Lazarus IDE a terminal window of its own, which you open by choosing Terminal from the View menu. The window holds a TTerminal running your shell, so you can run commands without leaving the IDE.
 
 The window is registered with the IDE, so it is laid out and remembered along with the other windows of the IDE. Whenever the shell ends, the window starts a new one for you.

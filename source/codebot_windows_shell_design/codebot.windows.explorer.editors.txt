@@ -1,5 +1,3 @@
-# Codebot.Windows.Explorer.Editors
-
 The Codebot.Windows.Explorer.Editors unit gives you TExplorerPathPropertyEditor, the editor of the Path of a TExplorerView, TExplorerEdit, or TShellNotify and the Root of a TExplorerTree.
 
 You can pick a folder from its drop down list, which holds common shell places such as This PC and Network and special folders such as Documents and Downloads. Shell places are stored by their shell parsing names, and special folders by their known folder names such as `shell:Downloads`, so they work for whichever user runs your program. Desktop is stored as the empty path. When a property holds one of these places, the object inspector shows its name rather than the stored path.

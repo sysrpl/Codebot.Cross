@@ -1,3 +1,1 @@
-# Codebot.Text.Formats
-
 The Codebot.Text.Formats unit tells you whether a string holds JSON or XML with IsJson and IsXml, and converts XML to JSON with XmlToJson. JsonToXml, which goes the other way, is in Codebot.Text.Json.

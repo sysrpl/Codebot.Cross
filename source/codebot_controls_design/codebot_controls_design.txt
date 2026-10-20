@@ -1,7 +1,3 @@
-# Codebot Controls Design
-
-## Introduction
-
 The Codebot Controls Design package adds the components of the [Codebot Controls](../codebot_controls) package to the Lazarus IDE, along with editors that make them easier to set up in the form designer and two new kinds of form you can add to your projects. The package is only used by the IDE, so you never need to add it to your own programs.
 
 The package requires the codebot_controls package and IDEIntf.

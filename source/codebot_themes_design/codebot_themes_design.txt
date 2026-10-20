@@ -1,12 +1,22 @@
-# Codebot Themes Design
-
-## Introduction
+<div style="padding: 1em; margin-bottom: 1em; background: #F5DEB3; border: 1px solid #CFA558; border-radius: 10px; width: 70%"><strong>Note:</strong> The themes package requries a Lazarus with <a class="extern" href="//gitlab.com/sysrpl/laz/-/commit/30f00e7bdf9cf325660fcefb34e1a3249d82e6a2">patched files</a> to allow perferences to be saved.<br>
+The <a href="/setup"<>setup scripts</a> on this site give you this package with and a patched IDE.</div>
 
 The Codebot Themes Design package lets you change the look of the whole Lazarus IDE. A theme recolors every window of the IDE, including its menus, tabs, lists, edits, buttons, scroll bars, and title bars, and can change the font of its windows and menus too. The same dialog also lets you choose the color scheme and the font of the source editor, so you can make the editor match the rest of the IDE in one place.
 
-Themes are plain JSON files, so you can change the themes that come with the package or write your own without rebuilding anything.
+Themes are defined as plain JSON files, so you can change the themes that come with the package or write your own without rebuilding anything.
 
-The themes work on Windows and with the GTK3 widgetset on Linux. The package is only used by the IDE, so you never need to add it to your own programs. It requires the codebot package, which reads the theme files, and IDEIntf.
+The themes work on Windows and with the GTK3 widgetset on Linux. The package is only used by the IDE, so you never need to add it to your own programs. It requires the codebot package, which reads the theme files, and the ide intf package.
+
+<center>
+<div class="vodbox" style="clear: both;">
+  <div class="title">Video: Custom Themes</div>
+  <video width="800" height="450" class="vod" preload="none" poster="//cache.getlazarus.org/videos/windows-themes.jpg">
+    <source src="//cache.getlazarus.org/videos/windows-themes.mp4" type="video/mp4" />
+  </video>
+</div>
+</center>
+
+
 
 ## Choosing a Theme
 
@@ -18,7 +28,7 @@ The Editor tab lists the color schemes of the source editor, such as Default, Tw
 
 You can double click a theme or a scheme to choose it, click Apply if you want to see your choice on the IDE while keeping the dialog open, or click OK to apply your choice and close the dialog. Your theme is remembered, so the IDE starts with it the next time you open Lazarus. The editor scheme and font are saved along with the other editor options of the IDE.
 
-Choosing the editor scheme and font needs a version of Lazarus whose IDEIntf has the GetColorSchemeName and SetColorSchemeName methods and the EditorFontName and EditorFontSize properties of TIDEEditorOptions, so the package needs a Lazarus that has them.
+Choosing the editor scheme and font needs a version of Lazarus whose `IDEIntf` has the `GetColorSchemeName` and `SetColorSchemeName` methods and the <div class="snip">EditorFontName</div> and <div class="snip">EditorFontSize</div> properties of <div class="snip">TIDEEditorOptions</div>, so the package needs a Lazarus that a patch allowing access to these methods.
 
 ## Themes
 
@@ -42,7 +52,7 @@ Dark themes also switch on the dark parts of the system where they exist. On Win
 
 You can add your own themes by placing JSON files in the codebotthemes folder inside the configuration folder of the IDE. If one of your themes has the same name as a theme that comes with the package, yours replaces it, so you can change a theme without touching the package itself.
 
-A theme file looks like this, with colors written as #RRGGBB:
+A theme file looks like this, with colors written as `#RRGGBB`:
 
 ```json
 {
@@ -71,8 +81,12 @@ A theme file looks like this, with colors written as #RRGGBB:
 
 These are the names of the colors you can set:
 
-scrollBar, background, activeCaption, inactiveCaption, menu, window, windowFrame, menuText, windowText, captionText, activeBorder, inactiveBorder, appWorkspace, highlight, highlightText, btnFace, btnShadow, grayText, btnText, inactiveCaptionText, btnHighlight, 3dDkShadow, 3dLight, infoText, infoBk, hotLight, gradientActiveCaption, gradientInactiveCaption, menuHilight, menuBar, and form.
-
+```pascal
+scrollBar, background, activeCaption, inactiveCaption, menu, window, windowFrame, menuText, windowText,
+captionText, activeBorder, inactiveBorder, appWorkspace, highlight, highlightText, btnFace, btnShadow,
+grayText, btnText, inactiveCaptionText, btnHighlight, 3dDkShadow, 3dLight, infoText, infoBk, hotLight,
+gradientActiveCaption, gradientInactiveCaption, menuHilight, menuBar, form
+```
 ## How It Works
 
 On Windows, the package themes the IDE by intercepting the routines that Windows and the LCL draw with, rather than changing one control at a time. That way every window is themed, including windows the IDE creates later and parts Windows draws itself, such as menus, tabs, headers, and the borders of edits.

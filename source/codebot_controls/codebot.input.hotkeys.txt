@@ -1,3 +1,1 @@
-# Codebot.Input.Hotkeys
-
 The Codebot.Input.Hotkeys unit gives you HotkeyCapture, which registers hotkeys that work across the whole system, even when your program is not in the foreground. Call RegisterNotify with a key, a shift state, and an event to invoke when the hotkey is pressed, and UnregisterNotify to remove it.

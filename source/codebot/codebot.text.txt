@@ -1,3 +1,1 @@
-# Codebot.Text
-
 The Codebot.Text unit helps you work with text and its encodings. UnicodeParse steps through the UTF-8 characters of a string, UnicodeLength counts them, and UnicodeToStr and UnicodeToChar convert a character code to text. TBuffer is a managed block of memory, and TBufferStream lets you read a buffer as a stream. HexEncode, HexDecode, Base64Encode, and Base64Decode convert memory, buffers, and strings to and from hexadecimal and base64.

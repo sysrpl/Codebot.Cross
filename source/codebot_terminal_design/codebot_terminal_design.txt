@@ -1,7 +1,3 @@
-# Codebot Terminal Design
-
-## Introduction
-
 The Codebot Terminal Design package adds the [Codebot Terminal](../codebot_terminal) package to the Lazarus IDE. It puts TTerminal on the component palette, and it also gives the IDE a terminal window of its own, so you can run commands without leaving Lazarus. The package is only used by the IDE, so you never need to add it to your own programs.
 
 The package requires the codebot_terminal package and IDEIntf.

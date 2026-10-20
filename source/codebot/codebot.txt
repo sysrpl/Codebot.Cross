@@ -1,7 +1,3 @@
-# Codebot
-
-## Introduction
-
 The Codebot package is the core of the Codebot library, and every other Codebot package is built on top of it. It gives you the everyday tools you reach for in almost every program: better arrays and collections, string and file routines, JSON and XML, hashing and encoding, 2D and 3D math, animation, threads and asynchronous tasks, networking, and the interfaces the other packages use for graphics and for the platform your program runs on.
 
 The package does not use the LCL, so you can use it in any kind of program, from a command line tool or a service to a desktop application or a game. The only package it requires is LazUtils.

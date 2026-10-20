@@ -1,5 +1,3 @@
-# Codebot.Frame.ConvertDialog
-
 The Codebot.Frame.ConvertDialog unit gives you the dialog that asks for the details of the control a form or frame is converted into. You choose the class name of the new control, the name of its unit, and the page of the component palette it is added to. The unit name is made from the class name for you, so TMyCrazyGrid is placed in MyCrazyGridCtrls, but you can change it.
 
 You also choose whether the control goes in a new package, whose file you pick with a save dialog and whose name is the name of that file, or in an existing package. The unit is written to the folder of the package, in a file named after the unit in lowercase, such as mycrazygridctrls.pas. If that unit already exists, because you are converting a changed form again, the dialog asks before replacing it. Finally, you choose whether the package is installed and whether the new unit is opened once the control is created.
