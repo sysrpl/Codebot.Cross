@@ -23,14 +23,6 @@
         <UnitName Value="Codebot.Themes.Registration"/>
       </Item>
       <Item>
-        <Filename Value="codebot.themes.palettes.pas"/>
-        <UnitName Value="Codebot.Themes.Palettes"/>
-      </Item>
-      <Item>
-        <Filename Value="codebot.themes.manager.pas"/>
-        <UnitName Value="Codebot.Themes.Manager"/>
-      </Item>
-      <Item>
         <Filename Value="codebot.themes.editor.pas"/>
         <UnitName Value="Codebot.Themes.Editor"/>
       </Item>
@@ -39,20 +31,12 @@
         <UnitName Value="Codebot.Themes.Dialog"/>
       </Item>
       <Item>
-        <Filename Value="codebot.themes.windows.darkmode.pas"/>
-        <UnitName Value="Codebot.Themes.Windows.DarkMode"/>
+        <Filename Value="codebot.themes.install.pas"/>
+        <UnitName Value="Codebot.Themes.Install"/>
       </Item>
       <Item>
-        <Filename Value="codebot.themes.windows.colors.pas"/>
-        <UnitName Value="Codebot.Themes.Windows.Colors"/>
-      </Item>
-      <Item>
-        <Filename Value="codebot.themes.windows.hooks.pas"/>
-        <UnitName Value="Codebot.Themes.Windows.Hooks"/>
-      </Item>
-      <Item>
-        <Filename Value="codebot.themes.gtk3.pas"/>
-        <UnitName Value="Codebot.Themes.Gtk3"/>
+        <Filename Value="codebot.themes.picker.pas"/>
+        <UnitName Value="Codebot.Themes.Picker"/>
       </Item>
       <Item>
         <Filename Value="codebotthemesdesignpackage.pas"/>
@@ -62,7 +46,7 @@
     </Files>
     <RequiredPkgs>
       <Item>
-        <PackageName Value="codebot"/>
+        <PackageName Value="codebot_themes"/>
       </Item>
       <Item>
         <PackageName Value="IDEIntf"/>

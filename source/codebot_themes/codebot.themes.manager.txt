@@ -1,0 +1,35 @@
+The Codebot.Themes.Manager unit applies the themes of Codebot.Themes.Palettes to every window of your program, and holds TThemeManager, the component that chooses the theme of your program from a form.
+
+The unit only builds on 64 bit Windows with the win32 widgetset and on Linux with the GTK3 widgetset. On any other target it stops the build with an error, so a program is never shipped believing it is themed when it isn't.
+
+## TThemeManager
+
+Place a TThemeManager on your main form, check the themes you want in Themes, and set Theme to the one your program starts with, such as Midnight or Paper. The JSON of every theme in Themes is stored in the form, so your program carries its themes and needs no theme files. Choosing a theme for Theme while you design the form adds it to Themes. When your program runs, the stored themes are added to ThemeList, and every window of your program is drawn in the colors and font of the theme, including windows created later. The theme belongs to the whole program rather than to the form the component is on, so you only need one.
+
+While you design the form nothing is themed, so the IDE keeps its own theme, and the stored themes are not added to the themes of the IDE. While the form is designed, the JSON stored for a theme is taken from the theme the IDE has, so a theme you changed is stored again the next time you save the form.
+
+You can change Theme while your program runs to switch to another stored theme. If Theme is empty, System Default, or names a theme that isn't stored, your program is left with the look of the system.
+
+```pascal
+procedure TForm1.DarkMenuItemClick(Sender: TObject);
+begin
+  ThemeManager1.Theme := 'Midnight';
+end;
+```
+
+## Routines
+
+If you would rather not use the component, you can call the routines yourself. ThemesStart installs what the themes need and applies the theme at an index of ThemeList. It returns False if themes can't be used, which is when the widgetset is neither the Windows widgetset nor the GTK3 widgetset. ThemesApply switches to another theme while your program runs, including its colors, its menu font, and the font of every form, even forms created later. ThemesCurrent returns the index of the theme in use, and ThemesStarted tells you whether ThemesStart has been called. ThemesStop takes the theme away and everything ThemesStart installed, and gives the forms back the font of the system.
+
+```pascal
+begin
+  RequireDerivedFormResource := True;
+  Application.Initialize;
+  ThemesLoad([ExtractFilePath(ParamStr(0)) + 'themes']);
+  ThemesStart(FindTheme('Paper'));
+  Application.CreateForm(TForm1, Form1);
+  Application.Run;
+end.
+```
+
+Without the component, your program has only System Default and the Dark theme until you load more. Call ThemesLoad with the folders that hold the JSON files of your themes before you start the themes, or add a theme with ThemeAdd.

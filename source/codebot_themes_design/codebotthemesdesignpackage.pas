@@ -8,16 +8,14 @@ unit CodebotThemesDesignPackage;
 interface
 
 uses
-  Codebot.Themes.Registration, Codebot.Themes.Palettes,
-  Codebot.Themes.Manager, Codebot.Themes.Editor, Codebot.Themes.Dialog,
-  Codebot.Themes.Windows.DarkMode, Codebot.Themes.Windows.Colors,
-  Codebot.Themes.Windows.Hooks, Codebot.Themes.Gtk3, LazarusPackageIntf;
+  Codebot.Themes.Registration, Codebot.Themes.Editor, Codebot.Themes.Dialog, 
+  Codebot.Themes.Install, Codebot.Themes.Picker, LazarusPackageIntf;
 
 implementation
 
 procedure Register;
 begin
-  RegisterUnit('Codebot.Themes.Registration',
+  RegisterUnit('Codebot.Themes.Registration', 
     @Codebot.Themes.Registration.Register);
 end;
 

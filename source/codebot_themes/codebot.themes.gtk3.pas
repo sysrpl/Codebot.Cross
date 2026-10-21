@@ -178,7 +178,9 @@ const
 var
   Installed: Boolean;
   Provider: PGtkCssProvider;
-  Current: Integer;
+  { A copy of the theme in use, as themes added to ThemeList or taken out of
+    it move the others }
+  Current: TThemeInfo;
   { The system colors and the dark setting as they were when the style sheet
     was added }
   SavedColors: array[0..MAX_SYS_COLORS] of DWORD;
@@ -387,10 +389,11 @@ begin
   if not Installed then
     Exit;
   ReadSysColors;
-  if ThemeList[Current].Custom then
+  if Current.Custom then
     for I := 0 to MAX_SYS_COLORS do
-      if ThemeList[Current].Colors[I] <> NoColor then
-        SysColorMap[I] := DWORD(ThemeColor(Current, I));
+      if Current.Colors[I] <> NoColor then
+        SysColorMap[I] := DWORD(RGBToColor((Current.Colors[I] shr 16) and $FF,
+          (Current.Colors[I] shr 8) and $FF, Current.Colors[I] and $FF));
   UpdateBrushes;
   UpdatePens;
   UpdateControls;
@@ -428,7 +431,7 @@ begin
   Provider := gtk_css_provider_new;
   gtk_style_context_add_provider_for_screen(gdk_screen_get_default,
     PGtkStyleProvider(Provider), ThemePriority);
-  Current := 0;
+  Current := ThemeList[0];
   Installed := True;
   Result := True;
 end;
@@ -465,7 +468,7 @@ var
 begin
   if (not Installed) or (Index < Low(ThemeList)) or (Index > High(ThemeList)) then
     Exit;
-  Current := Index;
+  Current := ThemeList[Index];
   { Colors the widgetset does not read again keep the colors of the system }
   for I := 0 to MAX_SYS_COLORS do
     SysColorMap[I] := SavedColors[I];

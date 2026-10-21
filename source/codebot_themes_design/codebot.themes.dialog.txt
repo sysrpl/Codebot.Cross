@@ -4,4 +4,8 @@ The Theme tab lists the themes. Beside the list, a preview draws a window of the
 
 The Editor tab lists the color schemes of the source editor, with a font and a font size above them. Only fonts whose characters all have the same width are listed. Beside the list, a preview draws Pascal source with line numbers in the colors of the selected scheme and the chosen font, with its comments, directives, strings, numbers, and reserved words each in their own colors. The tab is hidden when the IDE has no color schemes.
 
+Install from URL asks for the link of a theme or a color scheme from getlazarus.org, downloads it, and asks you whether to install it, naming it and saying whether it replaces one of yours. It is ready to choose right away, without restarting the IDE. Remove takes away the selected theme or scheme, and is only enabled for the ones you installed. See Codebot.Themes.Install.
+
 You can double click a theme or a scheme to choose it, and the Apply button applies your choices so far while leaving the dialog open. TThemeChoice holds what the dialog chooses, and ShowThemesDialog shows the dialog and returns True along with the choice made if you pressed OK. The Apply button calls the TThemeApplyProc you give to ShowThemesDialog.
+
+ThemePaintPreview draws the preview of the Theme tab on any canvas, with the title you give it in its title bar. The dialog of Codebot.Themes.Picker uses it to show the themes of a TThemeManager.

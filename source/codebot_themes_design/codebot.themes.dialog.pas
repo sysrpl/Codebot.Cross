@@ -16,6 +16,9 @@ unit Codebot.Themes.Dialog;
 
 interface
 
+uses
+  Types, Graphics;
+
 { TThemeChoice is what the dialog chooses: the index of a theme in
   ThemeList, and the color scheme and the font of the source editor }
 
@@ -36,14 +39,20 @@ type
   so far, leaving the dialog open. }
 function ShowThemesDialog(var Choice: TThemeChoice;
   Apply: TThemeApplyProc): Boolean;
+{ Draws a window in the colors and the font of the theme at Theme in
+  ThemeList, with Title in its title bar }
+procedure ThemePaintPreview(Canvas: TCanvas; const R: TRect; Theme: Integer;
+  const Title: string);
 
 implementation
 
 uses
-  Classes, SysUtils, Types, Forms, Controls, Graphics, StdCtrls, ExtCtrls,
-  ComCtrls, Spin, LCLType,
+  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
+  ComCtrls, Spin, Dialogs, LCLType,
   Codebot.Themes.Palettes,
-  Codebot.Themes.Editor;
+  Codebot.Themes.Manager,
+  Codebot.Themes.Editor,
+  Codebot.Themes.Install;
 
 const
   { The range of the font size of the source editor }
@@ -64,9 +73,16 @@ type
     FFonts: TComboBox;
     FSize: TSpinEdit;
     FCode: TPaintBox;
+    FRemove: TButton;
     function GetChoice: TThemeChoice;
     procedure SetChoice(const Value: TThemeChoice);
+    procedure FillThemes(const Select: string);
+    procedure FillSchemes(const Select: string);
+    procedure UpdateRemove;
     procedure ApplyClick(Sender: TObject);
+    procedure InstallClick(Sender: TObject);
+    procedure RemoveClick(Sender: TObject);
+    procedure PagesChange(Sender: TObject);
     procedure ListSelectionChange(Sender: TObject; User: Boolean);
     procedure ListDblClick(Sender: TObject);
     procedure PreviewPaint(Sender: TObject);
@@ -154,6 +170,26 @@ begin
   Button.BorderSpacing.Around := 8;
   Button.OnClick := ApplyClick;
   Button.Enabled := Assigned(Apply);
+  { Themes are installed from getlazarus.org, and the ones installed can be
+    removed. These buttons are on the left of the panel. }
+  Button := TButton.Create(Self);
+  Button.Parent := Panel;
+  Button.Caption := 'Install from URL ...';
+  Button.Width := 140;
+  Button.Left := 0;
+  Button.Align := alLeft;
+  Button.BorderSpacing.Around := 8;
+  Button.OnClick := InstallClick;
+  FRemove := TButton.Create(Self);
+  FRemove.Parent := Panel;
+  FRemove.Caption := 'Remove';
+  FRemove.Width := 88;
+  FRemove.Left := 200;
+  FRemove.Align := alLeft;
+  FRemove.BorderSpacing.Top := 8;
+  FRemove.BorderSpacing.Bottom := 8;
+  FRemove.OnClick := RemoveClick;
+  FRemove.Enabled := False;
   FPages := TPageControl.Create(Self);
   FPages.Parent := Self;
   FPages.Align := alClient;
@@ -221,6 +257,7 @@ begin
   FCode.OnPaint := CodePaint;
   Sheet.TabVisible := FSchemes.Count > 0;
   FPages.ActivePageIndex := 0;
+  FPages.OnChange := PagesChange;
 end;
 
 function TThemesDialog.GetChoice: TThemeChoice;
@@ -254,15 +291,150 @@ begin
     FSize.Value := DefaultFontSize;
 end;
 
+{ The lists are filled again after a theme or a scheme is installed or
+  removed, as the themes in ThemeList move }
+
+procedure TThemesDialog.FillThemes(const Select: string);
+var
+  I: Integer;
+begin
+  FList.Items.BeginUpdate;
+  try
+    FList.Items.Clear;
+    for I := Low(ThemeList) to High(ThemeList) do
+      FList.Items.Add(ThemeList[I].Name);
+  finally
+    FList.Items.EndUpdate;
+  end;
+  FList.ItemIndex := FList.Items.IndexOf(Select);
+  if FList.ItemIndex < 0 then
+    FList.ItemIndex := ThemesCurrent;
+  FPreview.Invalidate;
+end;
+
+procedure TThemesDialog.FillSchemes(const Select: string);
+begin
+  FSchemes.Items.BeginUpdate;
+  try
+    FSchemes.Items.Clear;
+    EditorSchemeNames(FSchemes.Items);
+  finally
+    FSchemes.Items.EndUpdate;
+  end;
+  FSchemes.ItemIndex := FSchemes.Items.IndexOf(Select);
+  if FSchemes.ItemIndex < 0 then
+    FSchemes.ItemIndex := FSchemes.Items.IndexOf(EditorSchemeCurrent);
+  FPages.Pages[1].TabVisible := FSchemes.Count > 0;
+  FCode.Invalidate;
+end;
+
+{ Only themes and schemes the user installed can be removed }
+
+procedure TThemesDialog.UpdateRemove;
+begin
+  if FPages.ActivePageIndex = 0 then
+    FRemove.Enabled := (FList.ItemIndex >= 0) and
+      ThemeInstalled(FList.Items[FList.ItemIndex])
+  else
+    FRemove.Enabled := (FSchemes.ItemIndex >= 0) and
+      SchemeInstalled(FSchemes.Items[FSchemes.ItemIndex]);
+end;
+
 procedure TThemesDialog.ApplyClick(Sender: TObject);
 begin
   if Assigned(FApply) and (FList.ItemIndex >= 0) then
     FApply(Choice);
 end;
 
+{ The theme is downloaded before it is installed, so the user knows its name
+  and whether it replaces one of theirs when they are asked }
+
+procedure TThemesDialog.InstallClick(Sender: TObject);
+var
+  Download: TThemeDownload;
+  Link, Error, Kind, Question: string;
+  Downloaded: Boolean;
+begin
+  Link := '';
+  if not InputQuery('Install Theme', 'Link of a theme from getlazarus.org', Link) then
+    Exit;
+  Screen.Cursor := crHourGlass;
+  try
+    Downloaded := ThemeDownload(Link, Download, Error);
+  finally
+    Screen.Cursor := crDefault;
+  end;
+  if not Downloaded then
+  begin
+    MessageDlg(Error, mtError, [mbOK], 0);
+    Exit;
+  end;
+  if Download.Scheme then
+    Kind := 'color scheme'
+  else
+    Kind := 'theme';
+  if Download.Replaces then
+    Question := Format('Replace your %s "%s" with the one downloaded?', [Kind, Download.Name])
+  else
+    Question := Format('Install the %s "%s"?', [Kind, Download.Name]);
+  if MessageDlg(Question, mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
+    Exit;
+  if not ThemeInstall(Download, Error) then
+  begin
+    MessageDlg(Error, mtError, [mbOK], 0);
+    Exit;
+  end;
+  if Download.Scheme then
+  begin
+    FillSchemes(Download.Name);
+    FPages.ActivePageIndex := 1;
+  end
+  else
+  begin
+    FillThemes(Download.Name);
+    FPages.ActivePageIndex := 0;
+  end;
+  UpdateRemove;
+end;
+
+procedure TThemesDialog.RemoveClick(Sender: TObject);
+var
+  Name: string;
+begin
+  if FPages.ActivePageIndex = 0 then
+  begin
+    if FList.ItemIndex < 0 then
+      Exit;
+    Name := FList.Items[FList.ItemIndex];
+    if MessageDlg(Format('Remove the theme "%s"?', [Name]), mtConfirmation,
+      [mbYes, mbNo], 0) <> mrYes then
+      Exit;
+    ThemeRemove(Name);
+    FillThemes(Name);
+  end
+  else
+  begin
+    if FSchemes.ItemIndex < 0 then
+      Exit;
+    Name := FSchemes.Items[FSchemes.ItemIndex];
+    if MessageDlg(Format('Remove the color scheme "%s"?', [Name]), mtConfirmation,
+      [mbYes, mbNo], 0) <> mrYes then
+      Exit;
+    SchemeRemove(Name);
+    FillSchemes('');
+  end;
+  UpdateRemove;
+end;
+
+procedure TThemesDialog.PagesChange(Sender: TObject);
+begin
+  UpdateRemove;
+end;
+
 procedure TThemesDialog.ListSelectionChange(Sender: TObject; User: Boolean);
 begin
   FPreview.Invalidate;
+  UpdateRemove;
 end;
 
 procedure TThemesDialog.FontChange(Sender: TObject);
@@ -279,16 +451,21 @@ end;
 procedure TThemesDialog.SchemesSelectionChange(Sender: TObject; User: Boolean);
 begin
   FCode.Invalidate;
+  UpdateRemove;
 end;
 
-{ Draws a window of the IDE in the colors and the font of the theme: a title
-  bar, a menu bar, tabs, a list, an edit, buttons, a check box, and a status
-  bar }
-
 procedure TThemesDialog.PreviewPaint(Sender: TObject);
-var
-  Theme: Integer;
-  Canvas: TCanvas;
+begin
+  if FList.ItemIndex >= 0 then
+    ThemePaintPreview(FPreview.Canvas, FPreview.ClientRect, FList.ItemIndex,
+      'Lazarus IDE');
+end;
+
+{ Draws a title bar, a menu bar, tabs, a list, an edit, buttons, a check box,
+  and a status bar }
+
+procedure ThemePaintPreview(Canvas: TCanvas; const R: TRect; Theme: Integer;
+  const Title: string);
 
   function C(Index: Integer): TColor;
   begin
@@ -344,23 +521,20 @@ const
   ListItems: array[0..5] of string = ('TForm1', 'Button1', 'Edit1', 'Label1',
     'ListBox1', 'Panel1');
 var
-  R, Bar, Page, Item: TRect;
+  Bar, Page, Item: TRect;
   H, X, Y, I, Middle: Integer;
 begin
-  Theme := FList.ItemIndex;
-  if Theme < 0 then
+  if (Theme < Low(ThemeList)) or (Theme > High(ThemeList)) then
     Exit;
-  Canvas := FPreview.Canvas;
   Canvas.Font.Name := ThemeFontName(Theme);
   Canvas.Font.Size := ThemeList[Theme].FontSize;
-  R := FPreview.ClientRect;
   H := Canvas.TextHeight('Wg');
   { The window }
   Fill(R, COLOR_BTNFACE);
   { The title bar }
   Bar := Rect(R.Left, R.Top, R.Right, R.Top + H + 12);
   Fill(Bar, COLOR_ACTIVECAPTION);
-  Text(Bar.Left + 10, Bar.Top + 6, 'Lazarus IDE', COLOR_CAPTIONTEXT);
+  Text(Bar.Left + 10, Bar.Top + 6, Title, COLOR_CAPTIONTEXT);
   { The menu bar, with the item under the mouse highlighted }
   Bar := Rect(R.Left, Bar.Bottom, R.Right, Bar.Bottom + H + 8);
   Fill(Bar, COLOR_MENUBAR);

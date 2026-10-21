@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="6">
+    <Name Value="codebot_themes"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+      <Other>
+        <CompilerMessages>
+          <IgnoredMessages idx5024="True"/>
+        </CompilerMessages>
+      </Other>
+    </CompilerOptions>
+    <SupportedWidgetsets Value="gtk3,win32"/>
+    <SupportedTargetOS Value="linux,win64"/>
+    <Files>
+      <Item>
+        <Filename Value="codebot.themes.palettes.pas"/>
+        <UnitName Value="Codebot.Themes.Palettes"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.themes.manager.pas"/>
+        <UnitName Value="Codebot.Themes.Manager"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.themes.windows.darkmode.pas"/>
+        <UnitName Value="Codebot.Themes.Windows.DarkMode"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.themes.windows.colors.pas"/>
+        <UnitName Value="Codebot.Themes.Windows.Colors"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.themes.windows.hooks.pas"/>
+        <UnitName Value="Codebot.Themes.Windows.Hooks"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.themes.gtk3.pas"/>
+        <UnitName Value="Codebot.Themes.Gtk3"/>
+      </Item>
+      <Item>
+        <Filename Value="codebotthemespackage.pas"/>
+        <Type Value="Main Unit"/>
+        <UnitName Value="CodebotThemesPackage"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="codebot"/>
+      </Item>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

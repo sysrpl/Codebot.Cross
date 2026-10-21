@@ -21,6 +21,7 @@ codebot                         the core, which needs only LazUtils
  │    ├── codebot_render_controls   runs scenes inside an LCL form
  │    └── codebot_render_sdl        runs scenes in an SDL window
  ├── codebot_terminal           a terminal emulator control
+ ├── codebot_themes             themes for every window of a program
  └── codebot_windows_shell      controls built from Windows Explorer
 ```
 
@@ -85,6 +86,7 @@ The [codebot_windows_shell](codebot_windows_shell) package gives you controls bu
 
 A few packages exist only to make the Lazarus IDE nicer to work in:
 
+- [codebot_themes](codebot_themes) themes every window of the programs you build, with the TThemeManager component, on Windows and with the GTK3 widgetset.
 - [codebot_themes_design](codebot_themes_design) themes every window of the IDE and lets you choose the color scheme and font of the source editor, on Windows and with the GTK3 widgetset.
 - [codebot_explorer](codebot_explorer) adds the Application Explorer, which browses the components of the running IDE and edits their properties.
 - [codebot_frame_design](codebot_frame_design) turns a form or frame you designed into a new control on the component palette.
@@ -145,7 +147,8 @@ Programs that use the library should list Codebot.System first in their uses cla
 | [codebot_render_sdl_design](codebot_render_sdl_design) | Adds the Codebot rendering project to the new project dialog of the IDE. | IDEIntf | Design time |
 | [codebot_terminal](codebot_terminal) | TTerminal, a terminal emulator control built on VTE. | codebot, LCL | Runtime |
 | [codebot_terminal_design](codebot_terminal_design) | Adds TTerminal to the IDE, along with a Terminal window inside the IDE. | codebot_terminal, IDEIntf | Design time |
-| [codebot_themes_design](codebot_themes_design) | Themes every window of the IDE and chooses the color scheme and font of the source editor, from the Tools menu. Themes are loaded from JSON files, and work on Windows and with GTK3. | codebot, IDEIntf | Design time |
+| [codebot_themes](codebot_themes) | TThemeManager, which themes every window of a program with themes stored in its form, and the units that apply themes on Windows and with GTK3. | codebot, LCL | Runtime |
+| [codebot_themes_design](codebot_themes_design) | Themes every window of the IDE and chooses the color scheme and font of the source editor, from the Tools menu, and adds TThemeManager to the component palette. Themes are loaded from JSON files, and work on Windows and with GTK3. | codebot_themes, IDEIntf | Design time |
 | [codebot_webkit](codebot_webkit) | TWebBrowser, a web browser control built on WebKitGTK and WebView2, with an address bar, a status indicator, and an inspector. | codebot_controls, LCL | Runtime |
 | [codebot_webkit_design](codebot_webkit_design) | Adds the web browser controls to the IDE. | codebot_webkit | Design time |
 | [codebot_windows_shell](codebot_windows_shell) | Controls built from Windows Explorer, along with file operations, change notifications, and shortcuts. Windows only. | codebot, LCL | Runtime |

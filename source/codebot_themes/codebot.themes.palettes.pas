@@ -6,10 +6,10 @@
 (*                                                      *)
 (********************************************************)
 
-{ Codebot.Themes.Palettes holds the themes of the IDE, with the palette of
-  system colors and the font of each one. The themes are loaded from JSON
-  files. It has no code of a platform, so that the colors of a theme can be
-  shown anywhere. }
+{ Codebot.Themes.Palettes holds the themes, with the palette of system colors
+  and the font of each one. The themes are read from JSON files or text, and
+  can be written back as JSON text. It has no code of a platform, so that
+  the colors of a theme can be shown anywhere. }
 
 { <include docs/codebot.themes.palettes.txt> }
 unit Codebot.Themes.Palettes;
@@ -33,7 +33,9 @@ type
   the fonts of the theme in the order they are preferred, so that one theme
   can name a font of each system. A theme with no font names and a size of
   0 uses the font of the system. ButtonRadius is the radius of the corners
-  of buttons in pixels, or -1 to leave them as the system has them. }
+  of buttons in pixels, or -1 to leave them as the system has them. Json is
+  the text the theme was read from, which keeps the font sizes of both
+  systems, or empty for a theme made in code. }
 
   TThemeInfo = record
     Name: string;
@@ -43,6 +45,7 @@ type
     FontNames: array of string;
     FontSize: Integer;
     ButtonRadius: Integer;
+    Json: string;
   end;
 
 const
@@ -138,15 +141,27 @@ var
     then the others by name }
   ThemeList: array of TThemeInfo;
 
+{ Reads a theme from JSON text, returning false if the text can not be
+  parsed or has no name. A color the text leaves out is left as it is. }
+function ThemeLoadText(const Json: string; out Theme: TThemeInfo): Boolean;
 { Reads a theme from a JSON file, returning false if the file can not be
-  read or has no name. A color the file leaves out is left as it is. }
+  read or has no name }
 function ThemeLoadFile(const FileName: string; out Theme: TThemeInfo): Boolean;
+{ Writes a theme as JSON text which ThemeLoadText reads back. The text the
+  theme was read from is returned when it has one. }
+function ThemeSaveText(const Theme: TThemeInfo): string;
 { Fills ThemeList with System Default, Dark, and the themes of the JSON files
   in each folder. A theme with the name of one loaded before replaces it, so
   the later folders win. }
 procedure ThemesLoad(const Folders: array of string);
+{ Adds a theme to ThemeList, or replaces the theme with its name. System
+  Default can not be replaced, and the others stay sorted by name. }
+procedure ThemeAdd(const Theme: TThemeInfo);
 { The index of the theme used until another is chosen, which is Dark }
 function DefaultTheme: Integer;
+{ The index of the theme named Name in ThemeList, or -1 if there is no such
+  theme }
+function IndexOfTheme(const Name: string): Integer;
 { The index of the theme named Name in ThemeList, or DefaultTheme if there is
   no such theme }
 function FindTheme(const Name: string): Integer;
@@ -180,6 +195,7 @@ begin
   Result.FontNames := nil;
   Result.FontSize := 0;
   Result.ButtonRadius := -1;
+  Result.Json := '';
 end;
 
 function DarkTheme: TThemeInfo;
@@ -195,6 +211,7 @@ begin
   Result.FontSize := 9;
   {$endif}
   Result.ButtonRadius := -1;
+  Result.Json := '';
 end;
 
 { Colors are written as #RRGGBB }
@@ -243,14 +260,64 @@ begin
     end;
 end;
 
-function ThemeLoadFile(const FileName: string; out Theme: TThemeInfo): Boolean;
+{ Reads the fields of a theme from a parsed document }
+
+function ReadTheme(Doc: TJsonNode; out Theme: TThemeInfo): Boolean;
 var
-  Doc, Node, Item: TJsonNode;
+  Node, Item: TJsonNode;
   I: Integer;
 begin
   Result := False;
   Theme := SystemTheme;
   Theme.Custom := True;
+  if not Doc.Find('name', Node) or (Node.Kind <> nkString) then
+    Exit;
+  Theme.Name := Trim(Node.AsString);
+  if Theme.Name = '' then
+    Exit;
+  if Doc.Find('dark', Node) and (Node.Kind = nkBool) then
+    Theme.Dark := Node.AsBoolean;
+  if Doc.Find('font/name', Node) then
+    ReadFontNames(Node, Theme);
+  if Doc.Find('font/size', Node) and (Node.Kind = nkNumber) then
+    Theme.FontSize := Round(Node.AsNumber);
+  { Fonts of the same size look smaller on Linux than on Windows }
+  {$ifdef linux}
+  if Doc.Find('font/linuxSize', Node) and (Node.Kind = nkNumber) then
+    Theme.FontSize := Round(Node.AsNumber);
+  {$endif}
+  if Doc.Find('buttonRadius', Node) and (Node.Kind = nkNumber) then
+    Theme.ButtonRadius := Round(Node.AsNumber);
+  if Doc.Find('colors', Node) and (Node.Kind = nkObject) then
+    for Item in Node do
+    begin
+      I := ColorIndex(Item.Name);
+      if (I >= 0) and (Item.Kind = nkString) then
+        Theme.Colors[I] := ParseColor(Item.AsString);
+    end;
+  Theme.Json := Doc.AsJson;
+  Result := True;
+end;
+
+function ThemeLoadText(const Json: string; out Theme: TThemeInfo): Boolean;
+var
+  Doc: TJsonNode;
+begin
+  Theme := SystemTheme;
+  Doc := TJsonNode.Create;
+  try
+    Result := Doc.TryParse(Json) and ReadTheme(Doc, Theme);
+  finally
+    Doc.Free;
+  end;
+end;
+
+function ThemeLoadFile(const FileName: string; out Theme: TThemeInfo): Boolean;
+var
+  Doc: TJsonNode;
+begin
+  Result := False;
+  Theme := SystemTheme;
   Doc := TJsonNode.Create;
   try
     try
@@ -258,32 +325,47 @@ begin
     except
       Exit;
     end;
-    if not Doc.Find('name', Node) or (Node.Kind <> nkString) then
-      Exit;
-    Theme.Name := Trim(Node.AsString);
-    if Theme.Name = '' then
-      Exit;
-    if Doc.Find('dark', Node) and (Node.Kind = nkBool) then
-      Theme.Dark := Node.AsBoolean;
-    if Doc.Find('font/name', Node) then
-      ReadFontNames(Node, Theme);
-    if Doc.Find('font/size', Node) and (Node.Kind = nkNumber) then
-      Theme.FontSize := Round(Node.AsNumber);
-    { Fonts of the same size look smaller on Linux than on Windows }
-    {$ifdef linux}
-    if Doc.Find('font/linuxSize', Node) and (Node.Kind = nkNumber) then
-      Theme.FontSize := Round(Node.AsNumber);
-    {$endif}
-    if Doc.Find('buttonRadius', Node) and (Node.Kind = nkNumber) then
-      Theme.ButtonRadius := Round(Node.AsNumber);
-    if Doc.Find('colors', Node) and (Node.Kind = nkObject) then
-      for Item in Node do
+    Result := ReadTheme(Doc, Theme);
+  finally
+    Doc.Free;
+  end;
+end;
+
+{ Only the colors the theme sets are written, so that a color it leaves out
+  is still left out when the text is read back. A theme made in code has one
+  size of font, so it is written as the size of both systems. }
+
+function ThemeSaveText(const Theme: TThemeInfo): string;
+var
+  Doc, Node, Names: TJsonNode;
+  S: string;
+  I: Integer;
+begin
+  if Theme.Json <> '' then
+    Exit(Theme.Json);
+  Doc := TJsonNode.Create;
+  try
+    Doc.Add('name', Theme.Name);
+    Doc.Add('dark', Theme.Dark);
+    if (Length(Theme.FontNames) > 0) or (Theme.FontSize > 0) then
+    begin
+      Node := Doc.Add('font');
+      if Length(Theme.FontNames) > 0 then
       begin
-        I := ColorIndex(Item.Name);
-        if (I >= 0) and (Item.Kind = nkString) then
-          Theme.Colors[I] := ParseColor(Item.AsString);
+        Names := Node.Add('name', nkArray);
+        for S in Theme.FontNames do
+          Names.Add.AsString := S;
       end;
-    Result := True;
+      Node.Add('size', Theme.FontSize);
+      Node.Add('linuxSize', Theme.FontSize);
+    end;
+    if Theme.ButtonRadius >= 0 then
+      Doc.Add('buttonRadius', Theme.ButtonRadius);
+    Node := Doc.Add('colors');
+    for I := Low(Theme.Colors) to High(Theme.Colors) do
+      if (ColorNames[I] <> '') and (Theme.Colors[I] <> NoColor) then
+        Node.Add(ColorNames[I], '#' + IntToHex(Theme.Colors[I], 6));
+    Result := Doc.AsJson;
   finally
     Doc.Free;
   end;
@@ -312,12 +394,40 @@ begin
   ThemeList[I] := Theme;
 end;
 
+{ System Default stays first and the others are sorted by name }
+
+procedure SortThemes;
+var
+  Swap: TThemeInfo;
+  I, J: Integer;
+begin
+  for I := 2 to High(ThemeList) do
+  begin
+    Swap := ThemeList[I];
+    J := I - 1;
+    while (J > 0) and (CompareText(ThemeList[J].Name, Swap.Name) > 0) do
+    begin
+      ThemeList[J + 1] := ThemeList[J];
+      Dec(J);
+    end;
+    ThemeList[J + 1] := Swap;
+  end;
+end;
+
+procedure ThemeAdd(const Theme: TThemeInfo);
+begin
+  if (Theme.Name = '') or SameText(Theme.Name, SystemName) then
+    Exit;
+  AddTheme(Theme);
+  SortThemes;
+end;
+
 procedure ThemesLoad(const Folders: array of string);
 var
   Search: TSearchRec;
-  Theme, Swap: TThemeInfo;
+  Theme: TThemeInfo;
   Folder: string;
-  I, J: Integer;
+  I: Integer;
 begin
   ThemeList := nil;
   AddTheme(SystemTheme);
@@ -339,18 +449,7 @@ begin
       FindClose(Search);
     end;
   end;
-  { System Default stays first and the others are sorted by name }
-  for I := 2 to High(ThemeList) do
-  begin
-    Swap := ThemeList[I];
-    J := I - 1;
-    while (J > 0) and (CompareText(ThemeList[J].Name, Swap.Name) > 0) do
-    begin
-      ThemeList[J + 1] := ThemeList[J];
-      Dec(J);
-    end;
-    ThemeList[J + 1] := Swap;
-  end;
+  SortThemes;
 end;
 
 function DefaultTheme: Integer;

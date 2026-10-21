@@ -1,0 +1,122 @@
+The Codebot Themes package themes the programs you build. A theme recolors every window of your program, including its menus, tabs, lists, edits, buttons, scroll bars, and title bars, and can change the font of its windows and menus too. These are the same themes the [codebot_themes_design](../codebot_themes_design) package uses to theme the Lazarus IDE.
+
+The themes work on 64 bit Windows with the win32 widgetset and on Linux with the GTK3 widgetset, which is the widgetset Lazarus builds Linux programs with. The package won't build for any other target. It requires the codebot package, which reads the theme files, and the LCL.
+
+## Quick Start
+
+Install the codebot_themes_design package, which adds TThemeManager to the Codebot Themes tab of the component palette. Place a TThemeManager on the main form of your program and double click it. Check the themes you want your program to have, choose the one it starts with in the Theme box, and press OK. Press F9, and your program runs in that theme.
+
+## TThemeManager
+
+TThemeManager has two properties. Themes holds the names of the themes stored in the form, and Theme names the theme your program uses. The JSON of every theme in Themes is stored in the form, so your program carries its themes with it and needs no theme files. Any theme the IDE has can be stored, including your own.
+
+Choosing a theme for the Theme property while you design the form stores it in the form too, since your program can only use themes it carries. Unchecking the theme in use sets Theme back to empty, which means the look of the system. While you design the form nothing is themed, so the IDE keeps its own theme.
+
+When your program runs, you can switch between the stored themes by setting Theme, and Themes gives you their names, so you can fill a menu with them:
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+var
+  I: Integer;
+  Item: TMenuItem;
+begin
+  for I := 0 to ThemeManager1.Themes.Count - 1 do
+  begin
+    Item := TMenuItem.Create(Self);
+    Item.Caption := ThemeManager1.Themes[I];
+    Item.OnClick := ThemeItemClick;
+    ThemeMenu.Add(Item);
+  end;
+end;
+
+procedure TForm1.ThemeItemClick(Sender: TObject);
+begin
+  ThemeManager1.Theme := (Sender as TMenuItem).Caption;
+end;
+```
+
+A program whose theme is empty or System Default installs nothing, and is drawn exactly as it would be without the package.
+
+## Programs with Many Windows
+
+A theme belongs to the whole program, not to one form. On Windows the colors of the system that every window asks for are replaced, and with GTK3 one style sheet is given to the whole screen, so every window of your program is themed: the main form, every other form, dialogs, message boxes, hints, and menus, including windows created after the theme was chosen. Switching the theme switches every window that is open.
+
+This means you only need one TThemeManager, on your main form. The main form is created before the other forms of your program, so its theme is in place before they appear. A window can't have a theme of its own that is different from the rest of the program.
+
+If you place a TThemeManager on more than one form, the themes stored in each of them are all added to the themes of the program, and whichever one sets Theme last decides the theme of every window.
+
+## Without the Component
+
+You can also choose a theme in code with the routines of Codebot.Themes.Manager. Load the themes from the folders of your JSON files with ThemesLoad, and start the themes with ThemesStart. ThemesApply switches the theme while your program runs.
+
+```pascal
+begin
+  RequireDerivedFormResource := True;
+  Application.Initialize;
+  ThemesLoad([ExtractFilePath(ParamStr(0)) + 'themes']);
+  ThemesStart(FindTheme('Paper'));
+  Application.CreateForm(TForm1, Form1);
+  Application.Run;
+end.
+```
+
+## Writing Your Own Themes
+
+The themes that come with the package are in its themes folder. A theme file looks like this, with colors written as `#RRGGBB`:
+
+```json
+{
+  "name": "Aqua Dark",
+  "dark": true,
+  "font": { "name": ["Segoe UI", "Ubuntu Sans", "Noto Sans"], "size": 9, "linuxSize": 10 },
+  "buttonRadius": 4,
+  "colors": {
+    "window": "#383838",
+    "windowText": "#DADADA",
+    "btnFace": "#2F2F2F",
+    "highlight": "#1F9EDE"
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| name | The name of the theme. A file without a name is not loaded. |
+| dark | Set this to true if your theme is dark, so the dark parts of the system are used. |
+| font.name | A font name, or a list of names in the order you prefer them. The first one installed is used, so one theme can name a Windows font and the Linux fonts that look like it. |
+| font.size | The size of the font. Leave out the font and use a size of 0 if you want the font of the system. |
+| font.linuxSize | The size of the font on Linux, where fonts of the same size look smaller. You can leave it out. |
+| buttonRadius | The radius of the corners of buttons in pixels. Without it, buttons keep the corners of the system. |
+| colors | The system colors of your theme. Any color you leave out keeps the color of the system. |
+
+These are the names of the colors you can set:
+
+```pascal
+scrollBar, background, activeCaption, inactiveCaption, menu, window, windowFrame, menuText, windowText,
+captionText, activeBorder, inactiveBorder, appWorkspace, highlight, highlightText, btnFace, btnShadow,
+grayText, btnText, inactiveCaptionText, btnHighlight, 3dDkShadow, 3dLight, infoText, infoBk, hotLight,
+gradientActiveCaption, gradientInactiveCaption, menuHilight, menuBar, form
+```
+
+To store a theme of your own in your programs, place its file in the codebotthemes folder inside the configuration folder of the IDE. The IDE then lists it in the dialog of TThemeManager.
+
+## How It Works
+
+On Windows, the package themes your program by intercepting the routines that Windows and the LCL draw with, rather than changing one control at a time. That way every window is themed, including windows your program creates later and parts Windows draws itself, such as menus, tabs, headers, and the borders of edits.
+
+With GTK3, the package adds a single style sheet built from the colors of the theme, and GTK styles every widget with it.
+
+Controls that use the colors of the system, such as clWindow, clBtnFace, and clWindowText, follow the theme. A control you give a color of its own, or a control that draws itself with fixed colors, keeps those colors.
+
+The theme also gives every form its font when the form is created, so a font you set on a form is replaced by the font of the theme. A theme with no font, such as System Default, gives every form the font of the system.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Themes.Manager | Applies a theme to every window of the program, and holds TThemeManager. |
+| Codebot.Themes.Palettes | Holds the themes, and reads and writes them as JSON. |
+| Codebot.Themes.Gtk3 | Themes the program with the GTK3 widgetset using a style sheet. |
+| Codebot.Themes.Windows.Hooks | Themes the program on Windows by intercepting the routines it draws with. |
+| Codebot.Themes.Windows.Colors | Replaces the system colors the LCL uses on Windows with the colors of the theme. |
+| Codebot.Themes.Windows.DarkMode | Switches the native controls of Windows 10 and later between their light and dark styles. |

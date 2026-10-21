@@ -52,6 +52,15 @@ procedure EditorMonospaceFonts(Strings: TStrings);
   every editor is loaded again. An empty scheme or font name is left as it
   is. }
 procedure EditorApply(const Scheme, FontName: string; FontSize: Integer);
+{ Adds the color schemes of a scheme file while the IDE runs, returning false
+  if the file has no scheme the IDE does not have already. Name is the name
+  of the first scheme added. The editors are shown again when the source
+  uses the scheme, as happens when a scheme is replaced. }
+function EditorSchemeAdd(const FileName: string; out Name: string): Boolean;
+{ Takes away a color scheme which was added from a file, returning false for
+  the schemes which come with the IDE. The editors showing it show the
+  default scheme instead. }
+function EditorSchemeRemove(const Name: string): Boolean;
 
 implementation
 
@@ -225,6 +234,36 @@ begin
     Changed := True;
   end;
   if Changed then
+    IDEEditorOptions.DoAfterWrite(False);
+end;
+
+function EditorSchemeAdd(const FileName: string; out Name: string): Boolean;
+var
+  Names: TStringList;
+begin
+  Name := '';
+  Result := False;
+  if IDEEditorOptions = nil then
+    Exit;
+  Names := TStringList.Create;
+  try
+    Result := IDEEditorOptions.AddColorSchemeFile(FileName, Names) and
+      (Names.Count > 0);
+    if Result then
+    begin
+      Name := Names[0];
+      if Names.IndexOf(EditorSchemeCurrent) >= 0 then
+        IDEEditorOptions.DoAfterWrite(False);
+    end;
+  finally
+    Names.Free;
+  end;
+end;
+
+function EditorSchemeRemove(const Name: string): Boolean;
+begin
+  Result := (IDEEditorOptions <> nil) and IDEEditorOptions.RemoveColorScheme(Name);
+  if Result then
     IDEEditorOptions.DoAfterWrite(False);
 end;
 

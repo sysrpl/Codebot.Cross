@@ -5,7 +5,9 @@ The Codebot Themes Design package lets you change the look of the whole Lazarus 
 
 Themes are defined as plain JSON files, so you can change the themes that come with the package or write your own without rebuilding anything.
 
-The themes work on Windows and with the GTK3 widgetset on Linux. The package is only used by the IDE, so you never need to add it to your own programs. It requires the codebot package, which reads the theme files, and the ide intf package.
+The themes work on Windows and with the GTK3 widgetset on Linux. The package is only used by the IDE, so you never need to add it to your own programs. It requires the [codebot_themes](../codebot_themes) package, which holds the themes and applies them, and the ide intf package.
+
+The same themes can theme the programs you build. The package adds TThemeManager to the Codebot Themes tab of the component palette. Place it on your main form, check the themes you want, and choose the one your program starts with. See [codebot_themes](../codebot_themes) for more.
 
 <center>
 <div class="vodbox" style="clear: both;">
@@ -26,9 +28,11 @@ The Theme tab lists the themes. When you select one, a preview beside the list s
 
 The Editor tab lists the color schemes of the source editor, such as Default, Twilight, or Ocean, including any schemes you made yourself in the editor options. Above the list you can choose the font of the editor and its size. Only fonts whose characters all have the same width are listed, since those are the fonts suited to source code. The preview beside the list shows Pascal source in the scheme and font you chose, with its comments, directives, strings, numbers, and reserved words each in their own colors.
 
+Install from URL installs a theme or a color scheme from a link you copy from the theme gallery of the getlazarus.org forums. The theme is downloaded, and you are asked whether to install it, with its name. It is ready to choose right away, without restarting the IDE. Remove takes away a theme or a scheme you installed this way.
+
 You can double click a theme or a scheme to choose it, click Apply if you want to see your choice on the IDE while keeping the dialog open, or click OK to apply your choice and close the dialog. Your theme is remembered, so the IDE starts with it the next time you open Lazarus. The editor scheme and font are saved along with the other editor options of the IDE.
 
-Choosing the editor scheme and font needs a version of Lazarus whose `IDEIntf` has the `GetColorSchemeName` and `SetColorSchemeName` methods and the <div class="snip">EditorFontName</div> and <div class="snip">EditorFontSize</div> properties of <div class="snip">TIDEEditorOptions</div>, so the package needs a Lazarus that a patch allowing access to these methods.
+Choosing the editor scheme and font, and installing color schemes without a restart, needs a version of Lazarus whose `IDEIntf` has the `GetColorSchemeName`, `SetColorSchemeName`, `AddColorSchemeFile`, and `RemoveColorScheme` methods and the <div class="snip">EditorFontName</div> and <div class="snip">EditorFontSize</div> properties of <div class="snip">TIDEEditorOptions</div>, so the package needs a Lazarus that a patch allowing access to these methods.
 
 ## Themes
 
@@ -50,7 +54,7 @@ Dark themes also switch on the dark parts of the system where they exist. On Win
 
 ## Writing Your Own Themes
 
-You can add your own themes by placing JSON files in the codebotthemes folder inside the configuration folder of the IDE. If one of your themes has the same name as a theme that comes with the package, yours replaces it, so you can change a theme without touching the package itself.
+You can add your own themes by placing JSON files in the codebotthemes folder inside the configuration folder of the IDE. If one of your themes has the same name as a theme that comes with the package, yours replaces it, so you can change a theme without touching the package itself. The themes that come with the package are in the themes folder of the codebot_themes package. Your own themes can also be stored in your programs with TThemeManager, just like the themes that come with the package.
 
 A theme file looks like this, with colors written as `#RRGGBB`:
 
@@ -99,12 +103,10 @@ When you uninstall the package, or the IDE unloads it, everything is put back th
 
 | Unit | Description |
 | --- | --- |
-| Codebot.Themes.Registration | Starts the themes when the IDE loads the package, adds the Themes item to the Tools menu, and takes the theme away before the package is unloaded. |
+| Codebot.Themes.Registration | Loads and starts the themes when the IDE loads the package, adds the Themes item to the Tools menu, saves the theme you choose, and takes the theme away before the package is unloaded. Also adds TThemeManager to the component palette with its editors. |
 | Codebot.Themes.Dialog | Contains the dialog that chooses the theme and the editor scheme, with their previews. |
-| Codebot.Themes.Manager | Loads, applies, and saves the theme of the IDE. |
-| Codebot.Themes.Palettes | Holds the themes, and reads them from JSON files. |
+| Codebot.Themes.Picker | Contains the dialog that chooses the themes of a TThemeManager, with a preview. |
+| Codebot.Themes.Install | Loads the themes and remembers the one chosen, and installs and removes themes and color schemes from getlazarus.org while the IDE runs. |
 | Codebot.Themes.Editor | Lists and chooses the color schemes and the font of the source editor. |
-| Codebot.Themes.Gtk3 | Themes the IDE with the GTK3 widgetset using a style sheet. |
-| Codebot.Themes.Windows.Hooks | Themes the IDE on Windows by intercepting the routines it draws with. |
-| Codebot.Themes.Windows.Colors | Replaces the system colors the LCL uses on Windows with the colors of the theme. |
-| Codebot.Themes.Windows.DarkMode | Switches the native controls of Windows 10 and later between their light and dark styles. |
+
+The units that hold the themes and apply them are in the [codebot_themes](../codebot_themes) package.

@@ -1,0 +1,15 @@
+The Codebot.Themes.Install unit loads the themes of the IDE and remembers the one you chose, and installs themes and color schemes of the source editor from getlazarus.org while the IDE runs.
+
+ThemesReload fills ThemeList with the themes in the themes folder of the codebot_themes package and the themes in the codebotthemes folder in the configuration folder of the IDE. Your themes are loaded last, so one of yours with the name of a theme of the package replaces it. ThemesSaveName saves the name of the theme in use to codebotthemes.xml in the configuration folder, and ThemesLoadName reads it back.
+
+## Installing
+
+Themes are only installed from links of getlazarus.org. ThemeDownload requests the link from www.getlazarus.org, which redirects to the file on cache.getlazarus.org with a presigned link. The presigned link is followed exactly as it is given, since changing it would break its signature, and it is never saved, since it expires. A link to any other site, or a redirect away from getlazarus.org, is refused, as is a download larger than 512 KB.
+
+What was downloaded is read to find out what it is. Text starting with { is a theme of the IDE, which must be readable by ThemeLoadText. Text starting with < is a color scheme of the source editor, whose names are read from its Lazarus/ColorSchemes/Names list. A color scheme with the name of a scheme which comes with Lazarus is refused, as is one with the name of a scheme you added yourself without installing it. TThemeDownload holds the name of the theme, whether it is a color scheme, whether it replaces a theme or a scheme you installed before, and its text.
+
+ThemeInstall saves a theme to the codebotthemes folder, or a color scheme to the userschemes folder, naming the file after the theme. A theme is ready to choose right away, and if it replaced the theme in use, the new colors are applied. A color scheme is added to the IDE with AddColorSchemeFile of the editor options of the IDE, so it doesn't need a restart either.
+
+## Removing
+
+ThemeInstalled and SchemeInstalled tell you whether you installed a theme or a color scheme, and ThemeRemove and SchemeRemove remove one, deleting its file. Themes and schemes which come with the package or with Lazarus can't be removed. When the theme in use is removed, the theme of the package with its name is applied, or the default theme if the package has none. Editors showing a removed color scheme show the default scheme instead, but each language keeps its choice, so installing the scheme again brings it back.

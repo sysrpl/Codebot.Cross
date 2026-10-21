@@ -1,8 +1,10 @@
-The Codebot.Themes.Palettes unit holds the themes of the IDE, with the colors and font of each one. It has no platform code, so the colors of a theme can be shown anywhere.
+The Codebot.Themes.Palettes unit holds the themes, with the colors and font of each one. It has no platform code, so the colors of a theme can be shown anywhere.
 
 A theme is a TThemeInfo, with a name, a palette of system colors, whether it is dark, the names of its fonts, and the size of its font. The theme named System Default uses the colors and visual styles of the system, and SystemColors holds the colors the dialog shows for it.
 
-Themes are loaded from JSON files using TJsonNode of Codebot.Text.Json. ThemesLoad fills ThemeList with System Default, the built in Dark theme, and the theme of every .json file in each folder you give it. A theme with the same name as one loaded before replaces it. System Default stays first in the list, and the others are sorted by name. ThemeLoadFile reads one file.
+Themes are read from JSON using TJsonNode of Codebot.Text.Json. ThemesLoad fills ThemeList with System Default, the built in Dark theme, and the theme of every .json file in each folder you give it. A theme with the same name as one loaded before replaces it. System Default stays first in the list, and the others are sorted by name. ThemeLoadFile reads one file, ThemeLoadText reads a theme from JSON text, and ThemeAdd adds one theme to ThemeList, or replaces the theme with its name.
+
+ThemeSaveText writes a theme as JSON text. A theme keeps the text it was read from in its Json field, along with the font sizes of both systems, and ThemeSaveText returns that text when there is one. This is how TThemeManager of Codebot.Themes.Manager stores its themes in a form.
 
 A theme file looks like this, with colors written as #RRGGBB:
 
@@ -25,4 +27,4 @@ ColorNames holds the names of the colors, one for each COLOR_ constant: scrollBa
 
 The name of the font can be one name, or a list of names in the order you prefer them, so one theme can name a Windows font and the Linux fonts that look like it. ThemeFontName returns the first one that is installed. The font size linuxSize, which you can leave out, replaces size on Linux, where fonts of the same size look smaller. A theme with no font and a size of 0 uses the font of the system.
 
-FindTheme returns the index of a theme by name, or DefaultTheme, the index of the Dark theme, when there is no such theme. ThemeColor returns a system color of a theme.
+IndexOfTheme returns the index of a theme by name, or -1 when there is no such theme. FindTheme does the same, but returns DefaultTheme, the index of the Dark theme, when there is no such theme. ThemeColor returns a system color of a theme.

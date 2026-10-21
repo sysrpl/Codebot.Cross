@@ -1,0 +1,9 @@
+The Codebot.Themes.Picker unit gives you the dialog that chooses the themes of a TThemeManager while you design a form. It opens when you double click the component, or click the button of its Theme or Themes property in the object inspector.
+
+The list on the left holds every theme the IDE has, except System Default, which every program has. Check the themes you want stored in the form. Those are the themes your program can switch between when it runs, and the JSON of each one is stored in the form, so your program needs no theme files. Beside the list, the same preview as the Themes dialog of the IDE shows a window in the colors and font of the selected theme.
+
+The Theme box above the list chooses the theme your program starts with, from System Default and the themes you checked. Choosing a theme shows its preview. If you uncheck the theme that was chosen, System Default is chosen instead.
+
+A theme stored in the form that the IDE doesn't have, such as a theme of your own written on another computer, is still listed and checked so it stays stored, but has no preview.
+
+ShowThemePicker shows the dialog with the names in Themes checked and Theme chosen, and returns True along with the choice made if you pressed OK. An empty Theme means System Default.
