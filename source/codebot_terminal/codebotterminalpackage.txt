@@ -1,0 +1,94 @@
+The Codebot Terminal package gives you TTerminal, a terminal emulator control that runs the user's shell right inside your form. You can use it to add a command line to your own tools and editors, to give users a place to run build scripts, or to show the output of programs that expect a real terminal.
+
+The control is built on VTE, the same library the GNOME terminal uses, so you get what you would expect from a real terminal, including colors, scrolling back through output, selecting text with the mouse, and full screen programs such as top, vim, and less.
+
+Because VTE is a GTK widget, the package builds with the GTK2 and GTK3 widgetsets. It requires the codebot package and the LCL.
+
+## Quick Start
+
+Create a new Lazarus application. From the Codebot Terminal tab of the component palette, place a TTerminal on your form and set its Align property to alClient. Press F9 to run your project, and you will have a working terminal window.
+
+You don't need to start the shell yourself. The terminal starts the user's shell the first time the control is shown.
+
+## TTerminal
+
+TTerminal runs the user's shell and shows its output. While you are designing your form there is no shell running, so the control draws a prompt and a cursor using its colors and font. This lets you see how your terminal will look before you run your program.
+
+When the user types exit, or the shell ends for any other reason, the terminal invokes OnTerminate. If you want the terminal to keep going, you can call Restart from that event to clear the terminal and start a new shell:
+
+```pascal
+procedure TForm1.TerminalTerminate(Sender: TObject);
+begin
+  Terminal.Restart;
+end;
+```
+
+If you would rather close your window when the shell ends, you can call Close from OnTerminate instead.
+
+You can use OnReady if you want to know when the shell has written its prompt and is ready for the user to type.
+
+### Key Properties
+
+| Property | Description |
+| --- | --- |
+| Colors | The colors of the text, background, bold and dim text, cursor, and selection, and the palette of numbered colors. |
+| Font | The font of the terminal. A monospace font works best. |
+| ScrollBar | Shows a vertical scroll bar for scrolling back through output. The mouse wheel scrolls either way. |
+
+### Key Methods
+
+| Method | Description |
+| --- | --- |
+| HasTerminal | Returns True if the control is showing a running terminal, and False if it is drawing its design time prompt. |
+| Restart | Clears the terminal and starts the shell again. |
+
+### Key Events
+
+| Event | Description |
+| --- | --- |
+| OnReady | The shell has written its prompt. |
+| OnTerminate | The shell has ended. |
+
+## Colors
+
+The Colors property lets you choose the colors of each part of the terminal. By default the terminal shows silver text on black, and selected text is shown as black on silver so it stays easy to read.
+
+| Property | Description |
+| --- | --- |
+| Foreground | The color of the text. |
+| Background | The color behind the text. |
+| Bold | The color of bold text. |
+| Dim | The color of dim text. This is not used with GTK3. |
+| Cursor | The color of the cursor. This is not used with GTK2. |
+| Highlight, HighlightText | The colors behind and of selected text. These are not used with GTK2, where a selection swaps the text and background colors. |
+| Palette | The sixteen colors programs ask for by number. |
+
+Programs such as ls and colored prompts ask for colors by number rather than by value. You can choose which sixteen colors they get using the Palette property:
+
+| Palette | Description |
+| --- | --- |
+| tpTango | The palette of the GNOME terminal. This is the default. |
+| tpLinux | The palette of the Linux console. |
+| tpXterm | The palette of xterm. |
+| tpSolarized | The Solarized palette. |
+| tpDefault | Leaves the choice to the VTE library. |
+
+If you want to use the colors of a palette in your own code, such as to draw a preview, you can find them in the TerminalPalettes array of Codebot.Terminal.Types.
+
+## Building
+
+The VTE library is linked when your program is built, so you will need its development package installed on the computer that builds your program:
+
+| Widgetset | VTE version | Development package |
+| --- | --- | --- |
+| GTK3 | 2.91 | libvte-2.91-dev |
+| GTK2 | 0.28 | libvte-dev |
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Terminal.Controls | Contains TTerminal and TTerminalColors. |
+| Codebot.Terminal.Types | Contains the terminal elements, the palettes, and the interface the widgetset units use to tell the control that its shell is ready or has ended. |
+| Codebot.Terminal.Controls.Gtk3 | Implements the terminal for the GTK3 widgetset using VTE 2.91. |
+| Codebot.Terminal.Controls.Gtk2 | Implements the terminal for the GTK2 widgetset using VTE 0.28. |

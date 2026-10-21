@@ -1,0 +1,41 @@
+The Codebot Explorer package adds the Application Explorer to the Lazarus IDE. The Application Explorer shows you every component inside a running application as a tree, and lets you look at and change the properties of any of them while the application runs.
+
+You can use it to learn how the Lazarus IDE itself is put together, to find the name and class of a window or control you see on the screen, or to try out property changes without rebuilding anything. If you want to do the same with your own programs, you can show the Application Explorer from your own code too.
+
+The package requires IDEIntf and RunTimeTypeInfoControls.
+
+## Opening the Application Explorer
+
+In the Lazarus IDE, choose Application Explorer from the Help menu. The explorer opens showing the components of the IDE.
+
+If you want to explore one of your own programs, add the Codebot.Design.AppExplorer unit to your program and call ShowAppExplorer, such as from a menu item or a hidden keyboard shortcut:
+
+```pascal
+uses
+  Codebot.Design.AppExplorer;
+
+procedure TForm1.ExploreMenuItemClick(Sender: TObject);
+begin
+  ShowAppExplorer;
+end;
+```
+
+## Using the Application Explorer
+
+The tree on the left holds every component owned by the Application variable, and every component those components own, all the way down. When you select a component, the panel on the right shows it in two ways:
+
+- The Edit tab shows a property grid, where you can change the published properties of the component while the application is running.
+- The Text tab describes the component, including its class and the unit it is declared in, its parents and owners, its component state, the classes it inherits from, and the values of all of its properties.
+
+If you are looking for a particular component, you can type part of its name or class into the Find box. The explorer selects the first match, and you can use the arrow buttons beside the box to move between the matches.
+
+If you want to find a control on the screen, select it in the tree and double click it or press the space bar. The control flashes red for a moment so you can see where it is.
+
+Components can be created and destroyed at any time while you are exploring. When a component is destroyed, the explorer removes it from the tree, so you never select a component that no longer exists. You can click Refresh at any time to rebuild the tree and pick up new components.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Design.AppExplorer | Contains the Application Explorer and the ShowAppExplorer procedure. |
+| Codebot.Explorer.Registration | Adds the Application Explorer item to the Help menu of the IDE. |

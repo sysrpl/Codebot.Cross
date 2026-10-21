@@ -1,0 +1,197 @@
+The Codebot Controls package brings antialiased vector graphics and a collection of custom controls to your Lazarus applications. At its heart is a single drawing API, ISurface, which lets you draw smooth lines, curves, shapes, gradients, images, and text that look the same on every platform. The package uses Cairo on Linux, Direct2D on Windows, and Quartz on macOS to do the drawing, so your code never needs to know which one is in use.
+
+The controls in this package are drawn using that same API rather than the native widgets of the platform. That gives them a consistent look everywhere and lets them follow a theme. You get color pickers, slide bars and slide edits, flat buttons, banners, scrolling lists with column headers, content grids, sizing panels, step indicators, and animated progress icons, along with floating forms, popup forms, desktop widgets, and an advanced color dialog.
+
+When you want to write controls of your own, the base classes TSurfaceGraphicControl, TSurfaceCustomControl, and TSurfaceForm give you a surface to draw on, so your controls look just as good as the ones that come with the package.
+
+The package requires the codebot package and the LCL.
+
+## Quick Start
+
+Create a new Lazarus application. From the Codebot Controls tab of the component palette, place a TDrawBox on your form and set its Align property to alClient. Then handle its OnDraw event:
+
+```pascal
+uses
+  Codebot.Graphics,
+  Codebot.Graphics.Types;
+
+procedure TForm1.DrawBox1Draw(Sender: TObject; Surface: ISurface);
+var
+  R: TRectF;
+  Brush: ILinearGradientBrush;
+begin
+  R := DrawBox1.ClientRect;
+  R.Inflate(-20, -20);
+  Brush := NewBrush(R.TopLeft, R.BottomRight);
+  Brush.AddStop(clSkyBlue, 0);
+  Brush.AddStop(clNavy, 1);
+  Surface.RoundRectangle(R, 16);
+  Surface.Fill(Brush, True);
+  Surface.Stroke(NewPen(clWhite, 3));
+end;
+```
+
+Press F9 to run your project, and you will see a smooth rounded rectangle filled with a gradient, which redraws itself as you resize the form.
+
+## Drawing
+
+Everything you draw goes through ISurface. A surface works much like a pen plotter. You build up a path with methods such as MoveTo, LineTo, CurveTo, ArcTo, Rectangle, RoundRectangle, and Ellipse, and then you either Stroke the path with a pen to draw its outline, or Fill it with a brush to paint its inside. If you want to do both, pass True for Preserve to keep the path after the first call.
+
+You create the objects you draw with using the New functions of Codebot.Graphics:
+
+| Function | Description |
+| --- | --- |
+| NewPen | Creates a pen of a color or brush and a width, for stroking paths. |
+| NewBrush | Creates a solid brush of a color, a bitmap brush that tiles an image, a linear gradient brush between two points, or a radial gradient brush inside a rectangle. |
+| NewFont | Creates a font by name and size, or from an LCL TFont. |
+| NewBitmap | Creates a bitmap you can load, save, and draw on with its own surface. |
+| NewMatrix | Creates a matrix to rotate, scale, and move what you draw. |
+| NewSurface | Creates a surface for an LCL canvas or a windowed control. |
+| NewScreenCapture | Captures the screen into a bitmap. |
+
+Colors are TColorB values, which hold red, green, blue, and alpha, so everything you draw can be partly transparent. You can use the usual LCL color constants, such as clRed or clBtnFace, wherever a color is expected.
+
+Bitmaps can load and save PNG, JPEG, GIF, BMP, ICO, and TIFF images, and you can draw on them just as you draw on a control. TSurfaceBitmap wraps a bitmap as an LCL TGraphic, so you can use it as a published property and edit it in the object inspector, and TImageStrip holds a strip of images of the same size for your buttons and lists to share.
+
+You can find out which backend is drawing for you by calling GraphicsEngine, which returns Cairo, Direct2D, or Quartz.
+
+| Platform | Backend |
+| --- | --- |
+| Linux | Cairo |
+| Windows | Direct2D |
+| macOS | Quartz |
+
+## Writing Your Own Controls
+
+The easiest way to write a control that draws itself is to descend from TSurfaceGraphicControl, or from TSurfaceCustomControl if your control needs a window of its own, such as to receive the keyboard focus. Instead of overriding Paint, you override Draw, and Surface is ready for you to use while Draw runs:
+
+```pascal
+type
+  TBadge = class(TSurfaceGraphicControl)
+  protected
+    procedure Draw; override;
+  end;
+
+procedure TBadge.Draw;
+begin
+  FillRectColor(Surface, ClientRect, clCrimson, Height / 2);
+  DrawText(Surface, Caption, ClientRect, drCenter);
+end;
+```
+
+Your control also gets a DrawState, which tracks whether it is hot, pressed, focused, or disabled, and a ThemeName, which chooses the theme it is drawn with. The package adds helper methods to every control for drawing captions, text, bitmaps, and state backgrounds in the control's own font and colors, and routines such as FillRectColor, StrokeRectColor, FillRectState, and DrawShadow cover the shapes controls draw most often.
+
+If you want your own form to draw on a surface, you can descend from TSurfaceForm in the same way.
+
+## Themes
+
+Controls draw their buttons, borders, headers, footers, and selections using the current theme. The package comes with two themes, Default and Redmond. You can switch every control to a theme by calling ThemeChange with its name, and ThemeNames lists the themes available. If you want your own controls to redraw when the theme changes, override ThemeAware and return True.
+
+## Controls
+
+| Control | Description |
+| --- | --- |
+| TThinButton | A flat button that can show an image from an image strip. It can be a plain button, a drop down or dialog button with an arrow or ellipsis area, a spin button with up and down areas, or a splitter. |
+| TSlideBar | A vertical or horizontal track bar. |
+| TSlideEdit | An edit for a number between Min and Max with a spin button. The user can type a number, use the arrow keys, or press the button to pop up a slide bar and drag it. |
+| THuePicker | Picks a hue from a bar or a color wheel. |
+| TSaturationPicker | Picks the saturation and lightness of a hue. |
+| TAlphaPicker | Picks the transparency of a color. |
+| TAnglePicker | A round dial with a hand the user drags to pick an angle. |
+| TColorSlideEdit | A slide edit for one part of a color. |
+| TDrawImage | Shows an image centered, fit, filled, stretched, or tiled, and can desaturate or colorize it. |
+| TDrawBox, TDrawPanel | A graphic control and a windowed control that you draw yourself in OnDraw. |
+| TIndeterminateProgress | Shows an animated status icon beside its caption while work is in progress. |
+| TStepBubbles | Shows the steps of a process, such as the pages of a wizard, as a row of numbered arrows, highlighting the steps up to the current one. |
+| TBanner | Draws a background, a logo, a title, and a subtitle across the top of a form. |
+| TSizingPanel | A panel with padding and a background, which the user can resize by dragging its splitter. |
+| TCaptionBox | A panel with a caption along its top, which uses the active caption colors while a control inside it has the focus. |
+| THeaderBar | A row of column headers the user can resize. |
+| TDrawList | A scrolling list you draw yourself in OnDrawItem, whose items can contain buttons. |
+| TDrawTextList | A scrolling list of strings. |
+| TDetailsList | A draw list with a header bar of columns. |
+| TContentGrid | A scrolling grid of cells you draw yourself. With SingleColumn it acts as a list box. |
+| TControlHighlighter | Draws an animated outline around a control to draw the user's attention to it. |
+
+### Drawing lists
+
+TDrawList, TDetailsList, and TContentGrid don't hold any data of their own. You set Count to the number of items, and the list asks you to draw each one as it scrolls into view, so even a list of a million items is fast:
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  DrawList1.Count := FNames.Count;
+end;
+
+procedure TForm1.DrawList1DrawItem(Sender: TObject; Surface: ISurface;
+  Index: Integer; Rect: TRectI; State: TDrawState);
+begin
+  DrawList1.DrawTextState(Surface, FNames[Index], Rect, State);
+end;
+```
+
+## Forms
+
+| Form | Description |
+| --- | --- |
+| TSurfaceForm | A form you can draw on with a surface, which supports themes. |
+| TBannerForm | A form with a banner across its top, above the rest of its controls. |
+| TFloatingForm | A borderless form that can be transparent or faded, and can let the mouse pass through it to whatever is behind it. |
+| TPopupForm | A borderless form shown below a control, such as a drop down list. It closes when the user clicks outside of it. |
+| TWidget | A floating form drawn with a surface, which the user can move by dragging and resize by its corners. Override its Render method to draw it. It can keep its aspect ratio and can contain click boxes. |
+| TAdvancedColorDialog | A dialog for picking a color and its opacity, with hue, saturation, and alpha pickers, a grid of common colors, a row of custom colors, and the color as text in Delphi, HTML, or CSS form. |
+
+FormManager helps you work with the forms of your application. You can use it to find the form in the foreground or the form that holds a control, to bring a form to the foreground, and to get the default font used by forms.
+
+## Input and the Desktop
+
+| Feature | Description |
+| --- | --- |
+| HotkeyCapture | Registers hotkeys that work across the whole system, even when your program is not in the foreground. |
+| MouseMonitor | Reports mouse movements and button presses anywhere on the screen, even outside your windows. |
+| WindowManager | On Linux, identifies the window manager and desktop environment, reports whether compositing is on, finds the foreground window, shows the desktop, and activates windows or makes them sticky across workspaces. |
+| Tipify | Shows the hint of a control in a tooltip that fades. Set UseTipify to True if you want all hints shown this way. |
+
+## Debugging
+
+Sometimes the easiest way to see what your program is doing is to have it tell you while it runs. You can call Bugout from Codebot.Debug with a line of text, a formatted string, or a number, and it is sent to another program. In that other program, a TDebugServer receives the messages and passes them to your code on the main thread, so you can show them in a list as they arrive.
+
+```pascal
+Bugout('Loaded %d records in %.2f seconds', [Count, Elapsed]);
+```
+
+## Scenes
+
+Codebot.Platform.LCL provides the bitmaps, clipboard, windows, and dialogs used by the scenes of the [Codebot Render](../codebot_render) package when they run inside an LCL form. Scenes run on their own render thread, so this unit takes care of reaching the main thread for you, waiting for reads and queuing changes and dialogs.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Graphics | Creates the drawing objects, and contains TSurfaceBitmap, TImageStrip, the themes, and the drawing helpers. |
+| Codebot.Controls | Contains TSurfaceGraphicControl, TSurfaceCustomControl, TSurfaceForm, and ArrangeControls. |
+| Codebot.Controls.Banner | Contains TBanner and TBannerForm. |
+| Codebot.Controls.Buttons | Contains TThinButton. |
+| Codebot.Controls.Colors | Contains the color and angle pickers and TColorSlideEdit. |
+| Codebot.Controls.Containers | Contains TSizingPanel and TCaptionBox. |
+| Codebot.Controls.Edits | Contains TSlideEdit. |
+| Codebot.Controls.Extras | Contains TDrawImage, TDrawBox, TDrawPanel, TIndeterminateProgress, and TStepBubbles. |
+| Codebot.Controls.Grids | Contains TScrollWindow and TContentGrid. |
+| Codebot.Controls.Highlighter | Contains TControlHighlighter. |
+| Codebot.Controls.Scrolling | Contains THeaderBar, TDrawList, TDrawTextList, and TDetailsList. |
+| Codebot.Controls.Sliders | Contains TSlideBar. |
+| Codebot.Controls.Tooltips | Contains Tipify. |
+| Codebot.Forms.ColorDialog | Contains TAdvancedColorDialog. |
+| Codebot.Forms.Floating | Contains TFloatingForm. |
+| Codebot.Forms.Management | Contains FormManager. |
+| Codebot.Forms.Popup | Contains TPopupForm. |
+| Codebot.Forms.Widget | Contains TWidget. |
+| Codebot.Input.Hotkeys | Contains HotkeyCapture. |
+| Codebot.Input.MouseMonitor | Contains MouseMonitor. |
+| Codebot.Debug | Contains Bugout and TDebugServer. |
+| Codebot.Platform.LCL | Provides the Codebot.Platform interfaces using the LCL. |
+| Codebot.Graphics.Linux.SurfaceCairo | The Cairo drawing backend for Linux. |
+| Codebot.Graphics.Windows.SurfaceD2D | The Direct2D drawing backend for Windows. |
+| Codebot.Graphics.Windows.ImageBitmap | Loads and saves images on Windows. |
+| Codebot.Graphics.Windows.InterfacedBitmap | The base bitmap of the Direct2D backend. |
+| Codebot.Graphics.MacOS.SurfaceQuartz | The Quartz drawing backend for macOS. |

@@ -1,0 +1,368 @@
+<div style="padding: 1em; margin-bottom: 1em; background: #F5DEB3; border: 1px solid #CFA558; border-radius: 10px; width: 70%"><strong>Note:</strong> This windows shell package is based on my decade old <a class="extern" href="//www.codebot.org/shell/">codebot shell library</a> and includes some new enhancements. New is the preview window, checkboxes, searching, sorting, and other features.</div>
+
+
+The Codebot Windows Shell package gives you an easy to use set of controls and components for working with objects in the Windows shell namespace from your Lazarus applications.
+
+The shell namespace is what you see when you use Windows Explorer. It includes your files and folders, virtual folders such as This PC, Control Panel, Network, and the Recycle Bin, and attached devices such as drives and phones. The controls in this package are built from the same parts of Windows that Windows Explorer uses, so you get the same folders, icons, columns, context menus, and previews, and your application will fit in with the user's computer no matter which version of Windows or which settings they are using.
+
+The package is for Windows only and requires the codebot package and the LCL.
+
+<br>
+<center>
+<div class="vodbox" style="clear: both;">
+  <div class="title">Video: Windopws Shell Cotnrols</div>
+  <video width="800" height="450" class="vod" preload="none" poster="//cache.getlazarus.org/videos/windows-shell.jpg">
+    <source src="//cache.getlazarus.org/videos/windows-shell.mp4" type="video/mp4" />
+  </video>
+</div>
+</center>
+
+
+## Quick Start
+
+Create a new Lazarus application. From the Codebot Windows Shell tab of the component palette, place a `TExplorerEdit`, a `TExplorerTree`, a `TExplorerView`, and a `TExplorerBinding` on your form. Double click the `TExplorerBinding`, move all the controls to the bound controls list, and click OK. Press F9 to run your project, and you will have a working version of Windows Explorer.
+
+You can add a `TExplorerPreview` to your form and binding if you want to show previews of items selected by the view control.
+
+## Paths
+
+Every control and component in this package refers to shell objects using a path string. You can use any of these as a path:
+
+- A file system path such as `C:\Windows`.
+- A shell parsing name such as `::{20D04FE0-3AEA-1069-A2D8-08002B30309D}` for This PC.
+- A known folder such as `shell:Downloads` or `shell:Documents`.
+- An empty string, which means the desktop.
+
+Paths are kept as you give them, so if you set the Path of a view to `shell:Downloads`, the view will report `shell:Downloads` for as long as it shows that folder.
+
+When you edit a Path property in the object inspector, you can click its button to choose from a list of shell places and special folders.
+
+## Component Overview
+
+Here is a brief overview of some of the controls and components in this package.
+
+### TExplorerView
+
+`TExplorerView` hosts a real instance of the explorer browser, which is the content pane you see in Windows Explorer and in the file dialogs. Anything you can do in the content pane of Windows Explorer, you can do in the view, including changing view modes, columns, sorting, grouping, context menus, and drag and drop.
+
+You can use the view to detect when the selection changes, filter which items are shown using Filter and OnIncludeItem, run your own code when the user opens an item, keep a history of folders for back and forward buttons, and search a folder and its subfolders.
+
+For example, you could use the view to build a log file viewer. Place an explorer edit and an explorer view on your form, point the view at your logging folder, and set Filter so that only your log files are shown. You can sort the logs so the most recent ones are first, and show a log in your own viewer when the user opens it.
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  ExplorerView.Path := 'C:\ProgramData\MyApp\Logs';
+  ExplorerView.Filter := '*.log';
+  ExplorerView.SortColumn := 'System.DateModified';
+  ExplorerView.SortDescending := True;
+end;
+
+procedure TForm1.ExplorerViewDefaultAction(Sender: TObject; const Path: string;
+  var Allow: Boolean);
+begin
+  if SameText(ExtractFileExt(Path), '.log') then
+  begin
+    LogMemo.Lines.LoadFromFile(Path);
+    Allow := False;
+  end;
+end;
+```
+
+If you leave `Allow` set to True, Windows will perform its default action and open the log in Notepad.
+
+#### Key Properties
+
+| Property | Description |
+| --- | --- |
+| Columns | The columns of the details view by canonical property name, such as System.Size, each optionally followed by =width. |
+| EmptyText | Text shown when a folder has no items. |
+| Filter | File masks separated by semicolons, such as *.pas;*.lpk. Folders are always shown. |
+| GroupBy | The canonical name of the property the items are grouped by. |
+| IconSize | The size of the icons in pixels. When 0 the view mode chooses the size. |
+| Options | Folder flags such as checkboxes, single selection, full row select, and hiding the column header. |
+| Path | The folder shown. |
+| ShowHidden | Shows hidden and system files. |
+| SortColumn | The canonical name of the property the items are sorted by. |
+| SortDescending | Sorts from the largest to the smallest value. |
+| ViewMode | Selects icons, small icons, list, details, thumbnails, tiles, or thumbstrip. |
+| CanGoBack, CanGoForward | There is a previous or next folder in the history. |
+| FocusedItem | The path of the focused item. |
+| ItemCount, SelectedCount | The number of items and selected items. |
+| Searching | Search results are shown. |
+
+#### Key Methods
+
+| Method | Description |
+| --- | --- |
+| GoBack, GoForward, GoUp | Moves through the history or to the parent folder. |
+| Copy, Cut, Paste, Delete, Rename | Works with the selected items the way the Windows Explorer commands do. |
+| NewFolder | Creates a new folder and edits its name. |
+| Properties | Shows the properties of the selected items. |
+| ExecuteVerb | Invokes a command from the context menu of the selected items or the folder. |
+| GetItems | Returns the paths of the selected items, or of all the items. |
+| Select, SelectAll, ClearSelection | Changes the selection. |
+| Search | Shows the items whose names contain some text, searching a folder and its subfolders. Requires Windows 8 or later. |
+| Refresh | Reloads the items of the folder. |
+
+#### Key Events
+
+| Event | Description |
+| --- | --- |
+| OnDefaultAction | An item was opened. Set Allow to False to stop the default action. |
+| OnIncludeItem | Invoked for each item as the view is populated. Set Allow to False to hide the item. |
+| OnNavigate | Invoked before a folder is shown. Set Allow to False to stay in the current folder. |
+| OnNavigated | Invoked after a folder is shown. |
+| OnNavigationFailed | A folder could not be shown. |
+| OnSelectionChanged | The selected items changed. Use GetItems to inspect them. |
+| OnContextMenuOpen, OnContextMenuClose | The shell context menu is about to be shown or was closed. |
+
+### TExplorerTree
+
+`TExplorerTree` hosts the namespace tree control, which is the navigation pane you see on the left side of Windows Explorer. Its items come from the shell, so you cannot add or change them yourself, and the tree updates itself as files and folders on the computer change.
+
+You can use the tree to create your own browse for folder dialog, or to show the structure of your application's data, project files, and resources under a private root. If you want the user to pick several folders, such as folders to back up, you can turn on the `toCheckBoxes` option to give each item a checkbox.
+
+You can set the root or the selected folder to any location with code like this:
+
+```pascal
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  ExplorerTree.Root := 'C:\Projects';
+  ExplorerTree.Path := 'C:\Projects\Codebot';
+end;
+```
+
+#### Key Properties
+
+| Property | Description |
+| --- | --- |
+| Options | The styles of the tree such as lines, single click expand, full row select, and checkboxes. |
+| Path | The selected folder. |
+| Root | The folder at the top of the tree. When empty it is the desktop. |
+| Roots | More folders shown at the top level after Root, such as This PC and Network. |
+| ShowFiles | Shows files as well as folders. |
+| Checked | The checkbox state of an item when the toCheckBoxes option is set. |
+| Expanded | The expanded state of an item. |
+
+#### Key Methods
+
+| Method | Description |
+| --- | --- |
+| CollapseAll | Collapses all the items. |
+| EnsureVisible | Scrolls the tree so an item is visible. |
+| GetCheckedItems | Returns the paths of the checked items. |
+| ItemAtPos | Returns the path of the item at a point of the control. |
+| Refresh | Builds the tree again. |
+
+#### Key Events
+
+| Event | Description |
+| --- | --- |
+| OnChange | The selected item changed. |
+| OnCheck | The user changed the checkbox of an item. |
+| OnExpanding | Invoked before a folder expands. Set Allow to False to stop it. |
+| OnExpanded | A folder was expanded. |
+| OnIncludeItem | Invoked for each item of the tree. Set Allow to False to hide the item. |
+
+### TExplorerEdit
+
+`TExplorerEdit` shows the path of a folder the way the address bar of Windows Explorer does. You can choose how it looks using its Mode property:
+
+- Use emEdit if you want a plain edit where the user types paths with the help of Windows autocomplete.
+- Use emBreadcrumb if you want each parent folder shown as a button with a menu of its subfolders. The user can click an empty area of the bar to type a path instead.
+- Use emDropDown if you want an edit with a button that opens a tree of folders.
+
+The user can type file system paths, shell parsing names, environment variables, or the names the edit shows, such as This PC\Documents.
+
+#### Key Properties
+
+| Property | Description |
+| --- | --- |
+| AutoComplete | Suggests folders while a path is typed. |
+| DropDownHeight | The height in pixels of the drop down tree. |
+| DroppedDown | The drop down tree is open. |
+| Mode | Shows the folder as an edit, a breadcrumb, or an edit with a drop down tree. |
+| Path | The folder shown. |
+
+#### Key Methods
+
+| Method | Description |
+| --- | --- |
+| BeginEdit | Focuses the edit and selects its text. In breadcrumb mode the edit replaces the breadcrumb until it loses focus. |
+| DropDown, CloseUp | Opens or closes the drop down tree. |
+| GoUp | Moves to the parent folder. |
+
+#### Key Events
+
+| Event | Description |
+| --- | --- |
+| OnChange | The folder changed. |
+| OnNavigate | Invoked before the user moves to a folder. Set Allow to False to stay in the current folder. |
+| OnNavigationFailed | Typed text is not a folder. The text is restored to the current folder. |
+| OnDropDown, OnCloseUp | The drop down tree was opened or closed. |
+
+### TExplorerPreview
+
+`TExplorerPreview` shows a file using the preview handlers of Windows, so you get the same previews you see in the preview pane of Windows Explorer. For items that have no preview handler, such as images and folders, the control shows their thumbnail or icon along with details such as their type, size, and date modified, the version of programs, the dimensions of images, the duration of audio and video, and the free space of drives.
+
+You don't need to worry about the user moving quickly through a list of files. Previews are loaded shortly after FileName changes, so the control does not load a preview for every file the user passes over.
+
+#### Key Properties
+
+| Property | Description |
+| --- | --- |
+| EmptyText | Text shown when there is no file or it cannot be found. |
+| FileName | The file shown. |
+| Previewing | A preview is shown. |
+
+#### Key Methods
+
+| Method | Description |
+| --- | --- |
+| Clear | Removes the preview. |
+| Refresh | Loads the preview again. |
+
+#### Key Events
+
+| Event | Description |
+| --- | --- |
+| OnPreview | Invoked before a preview is loaded. Set Allow to False to show no preview. |
+| OnPreviewFailed | A file has no preview handler or its preview could not be shown. Its thumbnail and details are shown instead. |
+
+### TExplorerBinding
+
+`TExplorerBinding` keeps your explorer controls in sync with each other. You don't have to use it, but it saves you from writing the code that passes changes from one control to the others.
+
+To use it, place your explorer controls and a TExplorerBinding on the same form. Double click the binding to open its editor, move the controls you want to keep in sync to the bound controls list, and click OK. If you bind an edit, a tree, and a view together, selecting a folder in the tree will show it in the view and the edit, and opening a folder in the view will update both the tree and the edit. If you also bind a preview, it will show the item selected in the view.
+
+Without the binding, you would need to write code like this yourself:
+
+```pascal
+procedure TForm1.ExplorerTreeChange(Sender: TObject);
+begin
+  ExplorerView.Path := ExplorerTree.Path;
+  ExplorerEdit.Path := ExplorerTree.Path;
+end;
+
+procedure TForm1.ExplorerViewNavigated(Sender: TObject);
+begin
+  ExplorerTree.Path := ExplorerView.Path;
+  ExplorerEdit.Path := ExplorerView.Path;
+end;
+
+procedure TForm1.ExplorerViewSelectionChanged(Sender: TObject);
+begin
+  ExplorerPreview.FileName := ExplorerView.FocusedItem;
+end;
+```
+
+You can also bind controls in code using the Add and Remove methods.
+
+### TShellFileOperation
+
+`TShellFileOperation` lets you copy, move, rename, delete, and create files and folders the same way Windows Explorer does. Windows shows its progress dialog, asks the user what to do about conflicts, and records your operations so the user can undo them in Windows Explorer. With the foAllowUndo option, which is set by default, deleted items are sent to the recycle bin.
+
+You can perform a single operation right away, or add several operations and perform them together with Execute so they share one progress dialog:
+
+```pascal
+procedure TForm1.BackupButtonClick(Sender: TObject);
+begin
+  ShellFileOperation.AddCopy('C:\Projects\Codebot', 'D:\Backup');
+  ShellFileOperation.AddCopy('C:\Projects\Notes.txt', 'D:\Backup', 'Notes.bak');
+  ShellFileOperation.AddNewFolder('D:\Backup', 'Logs');
+  if not ShellFileOperation.Execute then
+    ShowMessage('The backup was not completed');
+end;
+```
+
+#### Key Properties
+
+| Property | Description |
+| --- | --- |
+| Options | Options such as undo, no confirmation, silent, and renaming on collision. |
+| Aborted | The user cancelled an operation during the last Execute. |
+| Count | The number of operations added. |
+
+#### Key Methods
+
+| Method | Description |
+| --- | --- |
+| AddCopy, AddMove, AddRename, AddDelete, AddNewFolder, AddNewFile | Adds an operation. |
+| Execute | Performs the operations added and then removes them. Returns False if the user cancelled or an operation failed. |
+| Copy, Move, Rename, Delete, NewFolder | Performs an operation at once. |
+| Clear | Removes the operations added. |
+
+### TShellNotify
+
+`TShellNotify` tells you when Windows makes changes to files, folders, and drives, such as when items are created, deleted, or renamed, when drives are added, or when media is inserted. It receives the same notifications Windows Explorer uses to refresh its windows.
+
+To start watching, set Path to the folder you want to watch, set Recursive if you want to include its subfolders, and set Active to True.
+
+```pascal
+procedure TForm1.ShellNotifyChange(Sender: TObject; Change: TShellChange;
+  const Path, NewPath: string);
+begin
+  case Change of
+    scCreate: LogMemo.Lines.Add('Created ' + Path);
+    scDelete: LogMemo.Lines.Add('Deleted ' + Path);
+    scRename: LogMemo.Lines.Add('Renamed ' + Path + ' to ' + NewPath);
+  end;
+end;
+```
+
+#### Key Properties
+
+| Property | Description |
+| --- | --- |
+| Active | Changes are reported while Active is True. |
+| Changes | The kinds of changes reported. |
+| Path | The folder watched. When empty the desktop is watched, which with Recursive reports changes anywhere. |
+| Recursive | Reports changes in the subfolders of Path too. |
+
+#### Key Events
+
+| Event | Description |
+| --- | --- |
+| OnChange | Something changed. NewPath is the new path of a renamed item. |
+
+### TShellLink
+
+`TShellLink` lets you read and write shortcuts, which are the .lnk files you find on the desktop and in the start menu. To create a shortcut, set Target and any other properties you need and call Save. To read a shortcut, call Load and its details will be placed in the properties.
+
+```pascal
+procedure TForm1.CreateShortcut;
+begin
+  ShellLink.Target := Application.ExeName;
+  ShellLink.Description := 'Start My Application';
+  ShellLink.Save(GetEnvironmentVariable('USERPROFILE') + '\Desktop\My Application.lnk');
+end;
+```
+
+#### Key Properties
+
+| Property | Description |
+| --- | --- |
+| Arguments | The command line arguments passed to the target. |
+| Description | The comment shown as the tooltip of the shortcut. |
+| FileName | The .lnk file of the shortcut. |
+| HotKey | The keyboard shortcut which opens the target. |
+| IconLocation, IconIndex | The file holding the icon and the index of the icon in it. |
+| Show | The window state the target starts with. |
+| Target | The file, folder, or shell item the shortcut opens. |
+| WorkingDirectory | The folder the target starts in. |
+
+#### Key Methods
+
+| Method | Description |
+| --- | --- |
+| Load, Save | Reads or writes the shortcut. |
+| Resolve | Finds the target of a shortcut whose target was moved or renamed. |
+| Clear | Clears the properties except FileName. |
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Windows.Explorer | Contains TExplorerView, TExplorerTree, TExplorerEdit, TExplorerPreview, TExplorerBinding, and the ShellPathToIDList and ShellIDListToPath functions, which you can use to convert paths to item ID lists and back. |
+| Codebot.Windows.Shell.Tools | Contains TShellFileOperation, TShellNotify, and TShellLink. |

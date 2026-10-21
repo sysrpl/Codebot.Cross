@@ -1,0 +1,44 @@
+The Codebot Windows Shell Design package adds the components of the [Codebot Windows Shell](../codebot_windows_shell) package to the Lazarus IDE, along with editors that make it easier to set them up in the form designer. The package is only used by the IDE, so you never need to add it to your own programs.
+
+The package is for Windows only and requires the codebot_windows_shell package and IDEIntf.
+
+## Component Palette
+
+You will find the components on the Codebot Windows Shell tab of the component palette. The tab contains TExplorerTree, TExplorerView, TExplorerEdit, TExplorerPreview, TExplorerBinding, TShellFileOperation, TShellNotify, and TShellLink.
+
+## Binding Editor
+
+The binding editor lets you choose which explorer controls a TExplorerBinding keeps in sync. You can open it by double clicking a TExplorerBinding in the form designer, or by right clicking it and choosing Edit bindings.
+
+The editor shows two lists. The available controls list holds the explorer views, trees, edits, and previews on your form which are not bound yet, and the bound controls list holds the ones that are. You can move the selected controls from one list to the other using the > and < buttons, or move all of them at once using the >> and << buttons. You can also double click a control to move it to the other list. When you click OK, the binding is updated with the controls in the bound controls list.
+
+## Path Editor
+
+The path editor is used for the Path property of TExplorerView, TExplorerEdit, and TShellNotify, and for the Root property of TExplorerTree. It gives you three ways to choose a folder in the object inspector.
+
+You can pick a folder from the drop down list if you want one of the common shell places or special folders:
+
+| Place | Path stored |
+| --- | --- |
+| Desktop | The empty path |
+| Home, This PC, Libraries, Network, Control Panel, Recycle Bin | Their shell parsing names, such as `::{20D04FE0-3AEA-1069-A2D8-08002B30309D}` for This PC |
+| User Folder, Documents, Downloads, Pictures, Music, Videos, Favorites, OneDrive | Their known folder names, such as `shell:Downloads` |
+| AppData, Local AppData, Program Files, Windows, Fonts, Start Menu, Startup, Recent | Their known folder names, such as `shell:AppData` |
+
+Special folders are stored by their known folder names rather than by their file system paths, so your program will show the right folder for whichever user runs it. When a property holds one of these places, the object inspector shows its name, such as Downloads, instead of the stored path.
+
+You can click the ellipsis button if you want to browse for a folder using the Windows folder picker. The picker lets you choose virtual folders such as This PC as well as folders on disk.
+
+You can also type a path directly. If what you type is not a folder, the editor tells you so and keeps the previous value.
+
+## Shortcut File Name Editor
+
+The FileName property of TShellLink uses the standard file name editor, so you can click its ellipsis button if you want to browse for a shortcut file.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Windows.Shell.Registration | Registers the components on the component palette, along with their property and component editors. |
+| Codebot.Windows.Explorer.BindingEditor | Contains the binding editor, TExplorerBindingEditor, and the EditExplorerBinding function, which you can use to open the editor for a binding yourself. |
+| Codebot.Windows.Explorer.Editors | Contains the path editor, TExplorerPathPropertyEditor. |

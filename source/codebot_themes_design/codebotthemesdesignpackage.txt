@@ -1,0 +1,110 @@
+<div style="padding: 1em; margin-bottom: 1em; background: #F5DEB3; border: 1px solid #CFA558; border-radius: 10px; width: 70%"><strong>Note:</strong> The themes package requries a Lazarus with <a class="extern" href="//gitlab.com/sysrpl/laz/-/commit/30f00e7bdf9cf325660fcefb34e1a3249d82e6a2">patched files</a> to allow perferences to be saved.<br>
+The <a href="/setup"<>setup scripts</a> on this site give you this package with and a patched IDE.</div>
+
+The Codebot Themes Design package lets you change the look of the whole Lazarus IDE. A theme recolors every window of the IDE, including its menus, tabs, lists, edits, buttons, scroll bars, and title bars, and can change the font of its windows and menus too. The same dialog also lets you choose the color scheme and the font of the source editor, so you can make the editor match the rest of the IDE in one place.
+
+Themes are defined as plain JSON files, so you can change the themes that come with the package or write your own without rebuilding anything.
+
+The themes work on Windows and with the GTK3 widgetset on Linux. The package is only used by the IDE, so you never need to add it to your own programs. It requires the codebot package, which reads the theme files, and the ide intf package.
+
+<center>
+<div class="vodbox" style="clear: both;">
+  <div class="title">Video: Custom Themes</div>
+  <video width="800" height="450" class="vod" preload="none" poster="//cache.getlazarus.org/videos/windows-themes.jpg">
+    <source src="//cache.getlazarus.org/videos/windows-themes.mp4" type="video/mp4" />
+  </video>
+</div>
+</center>
+
+
+
+## Choosing a Theme
+
+Choose Themes from the Tools menu. The dialog has two tabs.
+
+The Theme tab lists the themes. When you select one, a preview beside the list shows a window of the IDE drawn in the colors and font of the theme, with a title bar, a menu bar, tabs, a list, an edit, buttons, a check box, and a status bar, so you can see what you are getting before you choose it.
+
+The Editor tab lists the color schemes of the source editor, such as Default, Twilight, or Ocean, including any schemes you made yourself in the editor options. Above the list you can choose the font of the editor and its size. Only fonts whose characters all have the same width are listed, since those are the fonts suited to source code. The preview beside the list shows Pascal source in the scheme and font you chose, with its comments, directives, strings, numbers, and reserved words each in their own colors.
+
+You can double click a theme or a scheme to choose it, click Apply if you want to see your choice on the IDE while keeping the dialog open, or click OK to apply your choice and close the dialog. Your theme is remembered, so the IDE starts with it the next time you open Lazarus. The editor scheme and font are saved along with the other editor options of the IDE.
+
+Choosing the editor scheme and font needs a version of Lazarus whose `IDEIntf` has the `GetColorSchemeName` and `SetColorSchemeName` methods and the <div class="snip">EditorFontName</div> and <div class="snip">EditorFontSize</div> properties of <div class="snip">TIDEEditorOptions</div>, so the package needs a Lazarus that a patch allowing access to these methods.
+
+## Themes
+
+The package comes with these themes:
+
+| Theme | Style | Font |
+| --- | --- | --- |
+| System Default | The colors and visual styles of your system. | The font of your system. |
+| Aqua Dark | Dark, with blue highlights and rounded buttons. | Segoe UI, Ubuntu Sans, or Noto Sans |
+| Dark | Dark. This is the theme used when none has been chosen. | Segoe UI, Ubuntu Sans, or Noto Sans |
+| Ember | Dark. | Bahnschrift, Nimbus Sans Narrow, or Liberation Sans |
+| Forest | Dark, with rounded buttons. | Tahoma, DejaVu Sans Condensed, or DejaVu Sans |
+| Midnight | Dark. | Segoe UI Variable Text, Ubuntu Sans, or Cantarell |
+| Paper | Light. | Calibri, Carlito, or Ubuntu Sans |
+| Plum | Dark. | Verdana or DejaVu Sans |
+| Sky | Light. | Trebuchet MS, Cantarell, or Ubuntu |
+
+Dark themes also switch on the dark parts of the system where they exist. On Windows that means dark scroll bars, check boxes, and title bars, and with GTK3 it means the dark theme of GTK.
+
+## Writing Your Own Themes
+
+You can add your own themes by placing JSON files in the codebotthemes folder inside the configuration folder of the IDE. If one of your themes has the same name as a theme that comes with the package, yours replaces it, so you can change a theme without touching the package itself.
+
+A theme file looks like this, with colors written as `#RRGGBB`:
+
+```json
+{
+  "name": "Aqua Dark",
+  "dark": true,
+  "font": { "name": ["Segoe UI", "Ubuntu Sans", "Noto Sans"], "size": 9, "linuxSize": 10 },
+  "buttonRadius": 4,
+  "colors": {
+    "window": "#383838",
+    "windowText": "#DADADA",
+    "btnFace": "#2F2F2F",
+    "highlight": "#1F9EDE"
+  }
+}
+```
+
+| Field | Description |
+| --- | --- |
+| name | The name shown in the dialog. A file without a name is not loaded. |
+| dark | Set this to true if your theme is dark, so the dark parts of the system are used. |
+| font.name | A font name, or a list of names in the order you prefer them. The first one installed is used, so one theme can name a Windows font and the Linux fonts that look like it. |
+| font.size | The size of the font. Leave out the font and use a size of 0 if you want the font of the system. |
+| font.linuxSize | The size of the font on Linux, where fonts of the same size look smaller. You can leave it out. |
+| buttonRadius | The radius of the corners of buttons in pixels. Without it, buttons keep the corners of the system. |
+| colors | The system colors of your theme. Any color you leave out keeps the color of the system. |
+
+These are the names of the colors you can set:
+
+```pascal
+scrollBar, background, activeCaption, inactiveCaption, menu, window, windowFrame, menuText, windowText,
+captionText, activeBorder, inactiveBorder, appWorkspace, highlight, highlightText, btnFace, btnShadow,
+grayText, btnText, inactiveCaptionText, btnHighlight, 3dDkShadow, 3dLight, infoText, infoBk, hotLight,
+gradientActiveCaption, gradientInactiveCaption, menuHilight, menuBar, form
+```
+## How It Works
+
+On Windows, the package themes the IDE by intercepting the routines that Windows and the LCL draw with, rather than changing one control at a time. That way every window is themed, including windows the IDE creates later and parts Windows draws itself, such as menus, tabs, headers, and the borders of edits.
+
+With GTK3, the package adds a single style sheet built from the colors of the theme, and GTK styles every widget with it. Controls that have a color or font of their own keep it.
+
+When you uninstall the package, or the IDE unloads it, everything is put back the way it was, so the IDE is left untouched.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Themes.Registration | Starts the themes when the IDE loads the package, adds the Themes item to the Tools menu, and takes the theme away before the package is unloaded. |
+| Codebot.Themes.Dialog | Contains the dialog that chooses the theme and the editor scheme, with their previews. |
+| Codebot.Themes.Manager | Loads, applies, and saves the theme of the IDE. |
+| Codebot.Themes.Palettes | Holds the themes, and reads them from JSON files. |
+| Codebot.Themes.Editor | Lists and chooses the color schemes and the font of the source editor. |
+| Codebot.Themes.Gtk3 | Themes the IDE with the GTK3 widgetset using a style sheet. |
+| Codebot.Themes.Windows.Hooks | Themes the IDE on Windows by intercepting the routines it draws with. |
+| Codebot.Themes.Windows.Colors | Replaces the system colors the LCL uses on Windows with the colors of the theme. |
+| Codebot.Themes.Windows.DarkMode | Switches the native controls of Windows 10 and later between their light and dark styles. |

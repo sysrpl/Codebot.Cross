@@ -1,0 +1,125 @@
+The Codebot Render Controls package lets you show OpenGL graphics inside your Lazarus forms. It gives you TGraphicsBox, a control that hosts OpenGL rendering, and TSceneController, which runs the scenes of the [Codebot Render](../codebot_render) package inside a graphics box. It is the right choice when you are writing a desktop application and want graphics, animation, or a game view alongside regular controls such as menus, buttons, and lists.
+
+Because the package runs the same TScene classes as the [Codebot Render SDL](../codebot_render_sdl) package, a scene you write for one host runs in the other without any changes. You can build and test a scene inside a form with tools around it, and later run the very same scene full screen in its own window.
+
+The package requires the codebot_render and codebot_controls packages and the LCL.
+
+## Quick Start
+
+Create a new Lazarus application. From the Codebot Render tab of the component palette, place a TGraphicsBox on your form and set its Align property to alClient. Then create a TSceneController in the OnCreate event of your form and open your scene in the graphics box:
+
+```pascal
+uses
+  Codebot.Render.Scenes.Controller,
+  MainScene;
+
+procedure TForm1.FormCreate(Sender: TObject);
+begin
+  FController := TSceneController.Create(Self);
+  FController.OpenScene(GraphicsBox, TMainScene);
+end;
+```
+
+Press F9 to run your project, and you will see your scene running inside your form. You can call OpenScene again at any time if you want to switch to another scene.
+
+## TGraphicsBox
+
+TGraphicsBox is a control for hosting OpenGL graphics. When it is first shown, it creates an SDL window that fills the control, and SDL creates the OpenGL context for that window. While you are designing your form nothing is created, and the control paints an OpenGL logo instead.
+
+All rendering happens on a render thread of its own, so drawing never holds up your form. If you are using a TSceneController, you don't need to handle any of the render events yourself. If you would rather draw without a scene, you can handle them directly:
+
+- OnRenderStart is invoked once, when the context is ready, so you can create your shaders, textures, and buffers.
+- OnRender is invoked for every frame with the size of the rendering area.
+- OnRenderStop is invoked once before the context is destroyed, so you can free what you created.
+
+```pascal
+procedure TForm1.GraphicsBoxRender(Sender: TObject; Width, Height: Integer);
+begin
+  GraphicsBox.BeginFrame;
+  try
+    GraphicsBox.Canvas.Rect(0, 0, Width, Height);
+    GraphicsBox.Canvas.Fill(NewColorF(0.1, 0.1, 0.2));
+  finally
+    GraphicsBox.EndFrame;
+  end;
+end;
+```
+
+Because the render events run on the render thread, they must not touch the other controls on your form. If you want to update a label or a status bar from a render event, you can use TThread.Queue to run your code on the main thread.
+
+If something goes wrong, such as the computer not supporting the options you asked for, or one of your render events raising an exception, the render thread stops, Failed becomes True, and OnFailed is invoked on the main thread with ErrorMessage telling you why.
+
+If you need something to happen at a steady rate apart from drawing, such as simulating physics, you can call StartStepping to run a step thread that invokes your step event at a fixed interval.
+
+### Keyboard and mouse input
+
+Because the SDL window covers the control, SDL reads the keyboard and mouse over it rather than the LCL. Before each frame, the graphics box passes that input on to you in three ways:
+
+- The usual LCL events of the control, such as OnKeyDown and OnMouseMove, are invoked on the main thread. The render thread waits for them to finish, so they see the same input as the frame that follows.
+- OnInput is invoked on the render thread with each SDL event.
+- The keyboard, mouse, and joysticks of Codebot.Hardware are updated.
+
+The graphics box takes the keyboard focus when it is clicked or focused. While it has the focus, the LCL does not see keys, so the Tab key and the shortcuts of your form don't work until the user clicks elsewhere. OnMouseEnter and OnMouseLeave are not invoked.
+
+### Key Properties
+
+| Property | Description |
+| --- | --- |
+| Options | The depth bits, stencil bits, and multisampling of the OpenGL context. These are used once, just before the context is created. |
+| Canvas | The canvas for drawing vector graphics. It is only valid on the render thread while rendering. |
+| Context | The OpenGL context. It is only valid on the render thread while rendering. |
+| Rendering | The render thread is running. |
+| Stepping | The step thread is running. |
+| Failed, ErrorMessage | The render thread stopped, and why. |
+
+### Key Methods
+
+| Method | Description |
+| --- | --- |
+| BeginFrame, EndFrame | Begins and ends drawing on the canvas for a frame. |
+| Flip | Alternates between beginning and ending a frame of canvas drawing. |
+| StartStepping, StopStepping | Starts or stops a step thread that invokes an event at a fixed interval. |
+
+### Key Events
+
+| Event | Description |
+| --- | --- |
+| OnRenderStart | The context is ready. Create your OpenGL resources here. |
+| OnRender | Draw a frame. |
+| OnRenderStop | The context is about to be destroyed. Free your OpenGL resources here. |
+| OnInput | An SDL keyboard, text, mouse, or wheel event was read for the control. |
+| OnFailed | The render thread stopped because of an error. |
+
+## TSceneController
+
+TSceneController runs a TScene inside a TGraphicsBox, and acts as the host of that scene. It creates, updates, and frees your scene on the render thread, delivers keyboard and mouse input to it, and gives it the canvas, a default font, and the form holding the graphics box as its window. If your scene has a step interval, the controller runs a step thread for it as well.
+
+The controller hooks the render events of the graphics box, but any handlers you assigned before it are still called, so you can mix your own drawing with a scene if you want to.
+
+Your scene uses the clipboard and dialogs of the LCL, so a file dialog opened by your scene looks just like any other dialog in your application.
+
+The simplest way to use the controller is to create it in the OnCreate event of your form, owned by that form, as shown in the Quick Start. The graphics box must not be rendering when the controller first attaches to it or when the controller is destroyed, and creating it this way takes care of both.
+
+The default font of your scene is loaded from `fonts/roboto.ttf` in your assets folder.
+
+### Key Methods
+
+| Method | Description |
+| --- | --- |
+| OpenScene | Attaches the controller to a graphics box and runs a new scene of a class. Call it again to switch scenes. |
+| CloseScene | Frees the running scene on the next frame. |
+
+## Limitations
+
+Wayland is not supported, so on Linux your program needs to run under X11.
+
+## Units
+
+| Unit | Description |
+| --- | --- |
+| Codebot.Render.Controls | Contains TGraphicsBox and TGraphicsBoxOptions. |
+| Codebot.Render.Scenes.Controller | Contains TSceneController. |
+| Codebot.Render.Controls.Child | Places the SDL window inside the native window of the control, using X11 on Linux and the Windows API on Windows, and moves the keyboard focus between them. |
+| Codebot.Render.Controls.Gtk3 | The GTK3 widgetset class of TGraphicsBox. |
+| Codebot.Render.Controls.Gtk2 | The GTK2 widgetset class of TGraphicsBox. |
+| Codebot.Render.Controls.Windows | The Windows widgetset class of TGraphicsBox. |
