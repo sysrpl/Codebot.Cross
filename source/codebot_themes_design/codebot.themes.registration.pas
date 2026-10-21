@@ -71,6 +71,8 @@ uses
   Codebot.Themes.Dialog,
   Codebot.Themes.Picker;
 
+{$r palette_icons.res}
+
 { Applies and saves the theme chosen. The color scheme and the font of the
   source editor are saved by the IDE with its other editor options, and are
   only applied when they change, as applying them reloads every editor. }
@@ -222,7 +224,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Codebot Themes', [TThemeManager]);
+  RegisterComponents('Codebot Controls', [TThemeManager]);
   RegisterPropertyEditor(TypeInfo(string), TThemeManager, 'Theme',
     TThemeNamePropertyEditor);
   RegisterPropertyEditor(TypeInfo(TStrings), TThemeManager, 'Themes',

@@ -4,7 +4,7 @@ The themes work on 64 bit Windows with the win32 widgetset and on Linux with the
 
 ## Quick Start
 
-Install the codebot_themes_design package, which adds TThemeManager to the Codebot Themes tab of the component palette. Place a TThemeManager on the main form of your program and double click it. Check the themes you want your program to have, choose the one it starts with in the Theme box, and press OK. Press F9, and your program runs in that theme.
+Install the codebot_themes_design package, which adds TThemeManager to the Codebot Controls tab of the component palette. Place a TThemeManager on the main form of your program and double click it. Check the themes you want your program to have, choose the one it starts with in the Theme box, and press OK. Press F9, and your program runs in that theme.
 
 ## TThemeManager
 

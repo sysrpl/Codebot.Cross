@@ -1,0 +1,3 @@
+#!/bin/bash
+../../../../lazarus/tools/lazres ../../source/codebot_themes_design/palette_icons.res \
+	TThemeManager.bmp

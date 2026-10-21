@@ -7,7 +7,7 @@ Themes are defined as plain JSON files, so you can change the themes that come w
 
 The themes work on Windows and with the GTK3 widgetset on Linux. The package is only used by the IDE, so you never need to add it to your own programs. It requires the [codebot_themes](../codebot_themes) package, which holds the themes and applies them, and the ide intf package.
 
-The same themes can theme the programs you build. The package adds TThemeManager to the Codebot Themes tab of the component palette. Place it on your main form, check the themes you want, and choose the one your program starts with. See [codebot_themes](../codebot_themes) for more.
+The same themes can theme the programs you build. The package adds TThemeManager to the Codebot Controls tab of the component palette. Place it on your main form, check the themes you want, and choose the one your program starts with. See [codebot_themes](../codebot_themes) for more.
 
 <center>
 <div class="vodbox" style="clear: both;">
