@@ -61,8 +61,8 @@ const
     'inactiveCaptionText', 'btnHighlight', '3dDkShadow', '3dLight',
     'infoText', 'infoBk', '', 'hotLight', 'gradientActiveCaption',
     'gradientInactiveCaption', 'menuHilight', 'menuBar', 'form');
-  { The colors of the Dark theme, which is used when no theme files are
-    found }
+  { A dark palette, which Codebot.Themes.Windows.Colors starts with until a
+    theme is chosen }
   DarkColors: TPaletteColors = (
     $3E3E42, { COLOR_SCROLLBAR }
     $1E1E1E, { COLOR_BACKGROUND }
@@ -150,14 +150,15 @@ function ThemeLoadFile(const FileName: string; out Theme: TThemeInfo): Boolean;
 { Writes a theme as JSON text which ThemeLoadText reads back. The text the
   theme was read from is returned when it has one. }
 function ThemeSaveText(const Theme: TThemeInfo): string;
-{ Fills ThemeList with System Default, Dark, and the themes of the JSON files
-  in each folder. A theme with the name of one loaded before replaces it, so
+{ Fills ThemeList with System Default and the themes of the JSON files in
+  each folder. A theme with the name of one loaded before replaces it, so
   the later folders win. }
 procedure ThemesLoad(const Folders: array of string);
 { Adds a theme to ThemeList, or replaces the theme with its name. System
   Default can not be replaced, and the others stay sorted by name. }
 procedure ThemeAdd(const Theme: TThemeInfo);
-{ The index of the theme used until another is chosen, which is Dark }
+{ The index of the theme used until another is chosen, which is System
+  Default }
 function DefaultTheme: Integer;
 { The index of the theme named Name in ThemeList, or -1 if there is no such
   theme }
@@ -178,10 +179,8 @@ uses
 
 const
   SystemName = 'System Default';
-  DarkName = 'Dark';
 
-{ The theme of the system, and the Dark theme used when no theme files are
-  found }
+{ The theme of the system }
 
 function SystemTheme: TThemeInfo;
 var
@@ -194,22 +193,6 @@ begin
     Result.Colors[I] := NoColor;
   Result.FontNames := nil;
   Result.FontSize := 0;
-  Result.ButtonRadius := -1;
-  Result.Json := '';
-end;
-
-function DarkTheme: TThemeInfo;
-begin
-  Result.Name := DarkName;
-  Result.Custom := True;
-  Result.Dark := True;
-  Result.Colors := DarkColors;
-  Result.FontNames := ['Segoe UI', 'Ubuntu Sans', 'Noto Sans'];
-  {$ifdef linux}
-  Result.FontSize := 10;
-  {$else}
-  Result.FontSize := 9;
-  {$endif}
   Result.ButtonRadius := -1;
   Result.Json := '';
 end;
@@ -431,7 +414,6 @@ var
 begin
   ThemeList := nil;
   AddTheme(SystemTheme);
-  AddTheme(DarkTheme);
   for I := Low(Folders) to High(Folders) do
   begin
     if Folders[I] = '' then
@@ -454,9 +436,7 @@ end;
 
 function DefaultTheme: Integer;
 begin
-  Result := IndexOfTheme(DarkName);
-  if Result < 0 then
-    Result := 0;
+  Result := 0;
 end;
 
 function FindTheme(const Name: string): Integer;

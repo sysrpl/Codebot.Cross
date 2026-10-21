@@ -8,7 +8,7 @@
 
 { Codebot.Themes.Install loads the themes of the IDE and remembers the one
   chosen, and downloads themes and color schemes of the source editor from
-  getlazarus.org, installing and removing them while the IDE runs }
+  links, installing and removing them while the IDE runs }
 
 { <include docs/codebot.themes.install.txt> }
 unit Codebot.Themes.Install;
@@ -17,7 +17,7 @@ unit Codebot.Themes.Install;
 
 interface
 
-{ Fills ThemeList with the themes of the package and the themes of the user }
+{ Fills ThemeList with System Default and the themes the user installed }
 procedure ThemesReload;
 { The name of the theme saved by ThemesSaveName, or the name of the default
   theme if none was saved }
@@ -38,10 +38,10 @@ type
     Text: string;
   end;
 
-{ Downloads a theme from a link of getlazarus.org, following the redirect to
-  the file. Returns false with the reason in Error if the link is not one of
-  getlazarus.org, the download fails, or the file is neither a theme nor a
-  color scheme which can be installed. }
+{ Downloads a theme from a link, following redirects to the file. Returns
+  false with the reason in Error if the link is not valid, the download
+  fails, or the file is neither a theme nor a color scheme which can be
+  installed. }
 function ThemeDownload(const Link: string; out Download: TThemeDownload;
   out Error: string): Boolean;
 { Saves a downloaded theme with the themes or the color schemes of the user
@@ -51,8 +51,7 @@ function ThemeInstall(const Download: TThemeDownload; out Error: string): Boolea
 { True if the theme of the IDE named Name was installed by the user }
 function ThemeInstalled(const Name: string): Boolean;
 { Removes a theme of the IDE installed by the user. When it is the theme in
-  use, the theme the package has with its name is applied, or the default
-  theme if the package has none. }
+  use, the default theme is applied. }
 function ThemeRemove(const Name: string): Boolean;
 { True if the color scheme named Name was installed by the user }
 function SchemeInstalled(const Name: string): Boolean;
@@ -63,7 +62,7 @@ function SchemeRemove(const Name: string): Boolean;
 implementation
 
 uses
-  SysUtils, Classes, LazConfigStorage, BaseIDEIntf, LazIDEIntf, PackageIntf,
+  SysUtils, Classes, LazConfigStorage, BaseIDEIntf, LazIDEIntf,
   Laz2_DOM, Laz2_XMLRead,
   Codebot.Networking.Web,
   Codebot.Themes.Palettes,
@@ -73,16 +72,10 @@ uses
 const
   ConfigFile = 'codebotthemes.xml';
   ConfigPath = 'Theme/Name';
-  PackageName = 'codebot_themes';
-  { The folder of theme files beside the runtime package, and the folders of
-    the themes and the color schemes of the user in the configuration folder
-    of the IDE }
-  PackageFolder = 'themes';
+  { The folders of the themes and the color schemes of the user in the
+    configuration folder of the IDE }
   UserFolder = 'codebotthemes';
   SchemeFolder = 'userschemes';
-  { Downloads come from the site and are redirected to its cache }
-  Hosts: array[0..2] of string = ('getlazarus.org', 'www.getlazarus.org',
-    'cache.getlazarus.org');
   MaxRedirects = 5;
   MaxSize = 512 * 1024;
   { The color schemes which come with the IDE }
@@ -97,24 +90,12 @@ begin
     Result := IncludeTrailingPathDelimiter(LazarusIDE.GetPrimaryConfigPath) + Name;
 end;
 
-{ The themes of the user are loaded last, so that they replace the themes
-  of the package with the same name }
+{ The package has no themes of its own, so every theme other than System
+  Default is one the user installed }
 
 procedure ThemesReload;
-var
-  Package: TIDEPackage;
-  Folders: array[0..1] of string;
 begin
-  Folders[0] := '';
-  if PackageEditingInterface <> nil then
-  begin
-    Package := PackageEditingInterface.FindPackageWithName(PackageName);
-    if Package <> nil then
-      Folders[0] := IncludeTrailingPathDelimiter(Package.DirectoryExpanded) +
-        PackageFolder;
-  end;
-  Folders[1] := ConfigFolder(UserFolder);
-  ThemesLoad(Folders);
+  ThemesLoad([ConfigFolder(UserFolder)]);
 end;
 
 { A file which is missing or can not be read leaves the default theme }
@@ -346,20 +327,25 @@ end;
 
 { Downloading }
 
-function AllowedHost(const Url: TUrl): Boolean;
+{ A redirect to a path is on the server of the link it came from }
+
+function RedirectUrl(const Url: TUrl; const Location: string): TUrl;
 var
   S: string;
 begin
-  if not (Url.Valid and Url.Secure) then
-    Exit(False);
-  for S in Hosts do
-    if SameText(Url.Domain, S) then
-      Exit(True);
-  Result := False;
+  if (Location = '') or (Location[1] <> '/') then
+    Exit(TUrl.Create(Location));
+  if Url.Secure then
+    S := 'https://' + Url.Domain
+  else
+    S := 'http://' + Url.Domain;
+  if (Url.Port <> 0) and (Url.Port <> 80) and (Url.Port <> 443) then
+    S := S + ':' + IntToStr(Url.Port);
+  Result := TUrl.Create(S + Location);
 end;
 
-{ A presigned link of the cache is used exactly as it is given, as changing
-  it breaks its signature }
+{ A presigned link is used exactly as it is given, as changing it breaks its
+  signature }
 
 function DownloadText(const Link: string; out Text, Error: string): Boolean;
 var
@@ -371,9 +357,9 @@ begin
   Result := False;
   Text := '';
   Url := TUrl.Create(Trim(Link));
-  if not AllowedHost(Url) then
+  if not Url.Valid then
   begin
-    Error := 'Themes can only be installed from links of getlazarus.org.';
+    Error := 'The link is not a valid url.';
     Exit;
   end;
   Client := THttpClient.Create;
@@ -399,19 +385,16 @@ begin
         301, 302, 303, 307, 308:
           begin
             Location := Trim(Client.Values['Location']);
-            if (Location <> '') and (Location[1] = '/') then
-              Location := 'https://' + Url.Domain + Location;
-            Url := TUrl.Create(Location);
-            if not AllowedHost(Url) then
+            Url := RedirectUrl(Url, Location);
+            if not Url.Valid then
             begin
-              Error := 'The link was redirected away from getlazarus.org.';
+              Error := 'The link was redirected to a url which is not valid.';
               Exit;
             end;
           end;
         403, 404:
           begin
-            Error := 'The theme was not found, or its link has expired. ' +
-              'Copy the link from getlazarus.org again.';
+            Error := 'The theme was not found, or its link has expired.';
             Exit;
           end;
       else
@@ -503,10 +486,9 @@ begin
   Result := (not IsBuiltinScheme(Name)) and (SchemeFile(Name) <> '');
 end;
 
-{ The themes are loaded again after a file is added or removed, so that a
-  theme of the package shows again when the theme of the user which replaced
-  it is removed. The theme in use is applied again, as its colors may have
-  changed, or the default theme when it is gone. }
+{ The themes are loaded again after a file is added or removed. The theme in
+  use is applied again, as its colors may have changed, or the default theme
+  when it is gone. }
 
 procedure ThemesChanged(const InUse: string);
 var

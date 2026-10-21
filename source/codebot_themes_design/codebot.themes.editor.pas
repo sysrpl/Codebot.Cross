@@ -249,11 +249,12 @@ begin
   try
     Result := IDEEditorOptions.AddColorSchemeFile(FileName, Names) and
       (Names.Count > 0);
+    { The options are written after every scheme added, as removing does,
+      or the IDE does not add the next scheme }
     if Result then
     begin
       Name := Names[0];
-      if Names.IndexOf(EditorSchemeCurrent) >= 0 then
-        IDEEditorOptions.DoAfterWrite(False);
+      IDEEditorOptions.DoAfterWrite(False);
     end;
   finally
     Names.Free;

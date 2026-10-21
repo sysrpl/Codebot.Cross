@@ -74,6 +74,13 @@ type
     FSize: TSpinEdit;
     FCode: TPaintBox;
     FRemove: TButton;
+    FInstall: TButton;
+    FTimer: TTimer;
+    FLinks: TStringList;
+    FFailed: TStringList;
+    FTotal: Integer;
+    FInstalledTheme: string;
+    FInstalledScheme: string;
     function GetChoice: TThemeChoice;
     procedure SetChoice(const Value: TThemeChoice);
     procedure FillThemes(const Select: string);
@@ -81,6 +88,7 @@ type
     procedure UpdateRemove;
     procedure ApplyClick(Sender: TObject);
     procedure InstallClick(Sender: TObject);
+    procedure InstallTimer(Sender: TObject);
     procedure RemoveClick(Sender: TObject);
     procedure PagesChange(Sender: TObject);
     procedure ListSelectionChange(Sender: TObject; User: Boolean);
@@ -91,6 +99,7 @@ type
     procedure CodePaint(Sender: TObject);
   public
     constructor CreateDialog(Apply: TThemeApplyProc);
+    destructor Destroy; override;
     property Choice: TThemeChoice read GetChoice write SetChoice;
   end;
 
@@ -170,16 +179,25 @@ begin
   Button.BorderSpacing.Around := 8;
   Button.OnClick := ApplyClick;
   Button.Enabled := Assigned(Apply);
-  { Themes are installed from getlazarus.org, and the ones installed can be
+  { Themes are installed from links, and the ones installed can be
     removed. These buttons are on the left of the panel. }
-  Button := TButton.Create(Self);
-  Button.Parent := Panel;
-  Button.Caption := 'Install from URL ...';
-  Button.Width := 140;
-  Button.Left := 0;
-  Button.Align := alLeft;
-  Button.BorderSpacing.Around := 8;
-  Button.OnClick := InstallClick;
+  FInstall := TButton.Create(Self);
+  FInstall.Parent := Panel;
+  FInstall.Caption := 'Install from URL ...';
+  FInstall.Width := 140;
+  FInstall.Left := 0;
+  FInstall.Align := alLeft;
+  FInstall.BorderSpacing.Around := 8;
+  FInstall.OnClick := InstallClick;
+  { The links are installed one on each tick of the timer, half a second
+    after the one before finished, so that the IDE handles its messages
+    between them }
+  FTimer := TTimer.Create(Self);
+  FTimer.Enabled := False;
+  FTimer.Interval := 500;
+  FTimer.OnTimer := InstallTimer;
+  FLinks := TStringList.Create;
+  FFailed := TStringList.Create;
   FRemove := TButton.Create(Self);
   FRemove.Parent := Panel;
   FRemove.Caption := 'Remove';
@@ -258,6 +276,18 @@ begin
   Sheet.TabVisible := FSchemes.Count > 0;
   FPages.ActivePageIndex := 0;
   FPages.OnChange := PagesChange;
+end;
+
+{ The dialog can be closed while links are still being installed }
+
+destructor TThemesDialog.Destroy;
+begin
+  if FTimer.Enabled then
+    Screen.Cursor := crDefault;
+  FTimer.Enabled := False;
+  FFailed.Free;
+  FLinks.Free;
+  inherited Destroy;
 end;
 
 function TThemesDialog.GetChoice: TThemeChoice;
@@ -346,55 +376,182 @@ begin
     FApply(Choice);
 end;
 
-{ The theme is downloaded before it is installed, so the user knows its name
-  and whether it replaces one of theirs when they are asked }
+{ TLineBreaks gives text pasted into a memo the line breaks of the system.
+  The edit control of Windows shows lines ending in a line feed alone as one
+  line. The caret is kept after the same text. }
+
+type
+  TLineBreaks = class
+  public
+    procedure MemoChange(Sender: TObject);
+  end;
+
+procedure TLineBreaks.MemoChange(Sender: TObject);
+var
+  Memo: TMemo;
+  S, T: string;
+  Caret: Integer;
+begin
+  Memo := Sender as TMemo;
+  S := Memo.Text;
+  T := AdjustLineBreaks(S);
+  if T = S then
+    Exit;
+  Caret := Length(AdjustLineBreaks(Copy(S, 1, Memo.SelStart)));
+  Memo.Text := T;
+  Memo.SelStart := Caret;
+end;
+
+{ Asks for the links of themes and color schemes, one on each line,
+  returning false if the user cancelled. The OK button is not the default
+  button, so that Enter starts a new line. }
+
+function LinksQuery(Links: TStrings): Boolean;
+var
+  Form: TForm;
+  Text: TLabel;
+  Memo: TMemo;
+  Panel: TPanel;
+  Button: TButton;
+  Breaks: TLineBreaks;
+begin
+  Breaks := TLineBreaks.Create;
+  Form := TForm.CreateNew(nil);
+  try
+    Form.Caption := 'Install Themes';
+    Form.BorderIcons := [biSystemMenu];
+    Form.Position := poMainFormCenter;
+    { The form sizes itself to its controls, which are stacked from the top,
+      with a fixed width }
+    Form.Constraints.MinWidth := 520;
+    Form.Constraints.MaxWidth := 520;
+    Form.AutoSize := True;
+    Text := TLabel.Create(Form);
+    Text.Parent := Form;
+    Text.Caption := 'Enter theme urls:';
+    Text.Top := 0;
+    Text.Align := alTop;
+    Text.BorderSpacing.Left := 8;
+    Text.BorderSpacing.Top := 8;
+    Text.BorderSpacing.Right := 8;
+    Memo := TMemo.Create(Form);
+    Memo.Parent := Form;
+    Memo.Top := 100;
+    Memo.Height := 100;
+    Memo.Align := alTop;
+    Memo.BorderSpacing.Left := 8;
+    Memo.BorderSpacing.Top := 4;
+    Memo.BorderSpacing.Right := 8;
+    Memo.WordWrap := False;
+    Memo.ScrollBars := ssNone;
+    Memo.OnChange := Breaks.MemoChange;
+    Panel := TPanel.Create(Form);
+    Panel.Parent := Form;
+    Panel.Top := 200;
+    Panel.Align := alTop;
+    Panel.Height := 44;
+    Panel.BevelOuter := bvNone;
+    Button := TButton.Create(Form);
+    Button.Parent := Panel;
+    Button.Caption := 'Cancel';
+    Button.ModalResult := mrCancel;
+    Button.Cancel := True;
+    Button.Width := 88;
+    Button.Left := 500;
+    Button.Align := alRight;
+    Button.BorderSpacing.Around := 8;
+    Button := TButton.Create(Form);
+    Button.Parent := Panel;
+    Button.Caption := 'Install';
+    Button.ModalResult := mrOK;
+    Button.Width := 88;
+    Button.Left := 400;
+    Button.Align := alRight;
+    Button.BorderSpacing.Top := 8;
+    Button.BorderSpacing.Bottom := 8;
+    Form.ActiveControl := Memo;
+    Result := Form.ShowModal = mrOK;
+    { Setting Text splits the lines at any kind of line break }
+    if Result then
+      Links.Text := Memo.Text;
+  finally
+    Form.Free;
+    Breaks.Free;
+  end;
+end;
+
+{ The links are downloaded and installed one at a time by InstallTimer,
+  replacing a theme or a scheme of the user with the same name }
 
 procedure TThemesDialog.InstallClick(Sender: TObject);
 var
-  Download: TThemeDownload;
-  Link, Error, Kind, Question: string;
-  Downloaded: Boolean;
+  I: Integer;
 begin
-  Link := '';
-  if not InputQuery('Install Theme', 'Enter theme url:', Link) then
+  FLinks.Clear;
+  FFailed.Clear;
+  FInstalledTheme := '';
+  FInstalledScheme := '';
+  if not LinksQuery(FLinks) then
     Exit;
+  for I := FLinks.Count - 1 downto 0 do
+    if Trim(FLinks[I]) = '' then
+      FLinks.Delete(I)
+    else
+      FLinks[I] := Trim(FLinks[I]);
+  FTotal := FLinks.Count;
+  if FTotal = 0 then
+    Exit;
+  FInstall.Enabled := False;
   Screen.Cursor := crHourGlass;
-  try
-    Downloaded := ThemeDownload(Link, Download, Error);
-  finally
-    Screen.Cursor := crDefault;
-  end;
-  if not Downloaded then
+  { The first link is installed at once }
+  InstallTimer(FTimer);
+end;
+
+{ Installs the next link. The links which fail are listed together after
+  the last one, so one bad link does not stop the others. }
+
+procedure TThemesDialog.InstallTimer(Sender: TObject);
+var
+  Download: TThemeDownload;
+  Link, Error: string;
+begin
+  FTimer.Enabled := False;
+  if FLinks.Count > 0 then
   begin
-    MessageDlg(Error, mtError, [mbOK], 0);
+    Link := FLinks[0];
+    FLinks.Delete(0);
+    if ThemeDownload(Link, Download, Error) and ThemeInstall(Download, Error) then
+    begin
+      if Download.Scheme then
+        FInstalledScheme := Download.Name
+      else
+        FInstalledTheme := Download.Name;
+    end
+    else
+      FFailed.Add(Link + LineEnding + '  ' + Error);
+  end;
+  if FLinks.Count > 0 then
+  begin
+    FTimer.Enabled := True;
     Exit;
   end;
-  if Download.Scheme then
-    Kind := 'color scheme'
-  else
-    Kind := 'theme';
-  if Download.Replaces then
-    Question := Format('Replace your %s "%s" with the one downloaded?', [Kind, Download.Name])
-  else
-    Question := Format('Install the %s "%s"?', [Kind, Download.Name]);
-  if MessageDlg(Question, mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
-    Exit;
-  if not ThemeInstall(Download, Error) then
+  Screen.Cursor := crDefault;
+  FInstall.Enabled := True;
+  { The last theme or scheme installed is selected }
+  if FInstalledScheme <> '' then
   begin
-    MessageDlg(Error, mtError, [mbOK], 0);
-    Exit;
-  end;
-  if Download.Scheme then
-  begin
-    FillSchemes(Download.Name);
+    FillSchemes(FInstalledScheme);
     FPages.ActivePageIndex := 1;
-  end
-  else
+  end;
+  if FInstalledTheme <> '' then
   begin
-    FillThemes(Download.Name);
+    FillThemes(FInstalledTheme);
     FPages.ActivePageIndex := 0;
   end;
   UpdateRemove;
+  if FFailed.Count > 0 then
+    MessageDlg(Format('%d of %d could not be installed:', [FFailed.Count, FTotal]) +
+      LineEnding + LineEnding + FFailed.Text, mtError, [mbOK], 0);
 end;
 
 procedure TThemesDialog.RemoveClick(Sender: TObject);

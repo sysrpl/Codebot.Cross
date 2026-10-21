@@ -485,6 +485,89 @@ begin
   DeleteObject(Pen);
 end;
 
+{ The box of a check box or the circle of a radio button, as a square centered
+  in R. The states come in groups of four, which are unchecked, checked, and
+  mixed, each one normal, hot, pressed, and disabled. A checked box is filled
+  with the accent color, like the check box of the dialog. }
+
+procedure CheckGlyph(DC: HDC; const R: TRect; Radio: Boolean; State: Integer);
+var
+  Box, Dot: TRect;
+  Group, Look, Face, Edge, S, Y: Integer;
+  Pen: HPEN;
+  OldPen, OldBrush: HGDIOBJ;
+begin
+  Group := (State - 1) div 4;
+  Look := (State - 1) mod 4;
+  { The implicit and excluded states of check boxes look unchecked }
+  if Group > 2 then
+    Group := 0;
+  S := R.Right - R.Left;
+  if R.Bottom - R.Top < S then
+    S := R.Bottom - R.Top;
+  Box.Left := (R.Left + R.Right - S) div 2;
+  Box.Top := (R.Top + R.Bottom - S) div 2;
+  Box.Right := Box.Left + S;
+  Box.Bottom := Box.Top + S;
+  if Group = 0 then
+  begin
+    Face := COLOR_WINDOW;
+    Edge := COLOR_3DLIGHT;
+    case Look of
+      { Hot }
+      1: Edge := COLOR_GRAYTEXT;
+      { Pressed }
+      2:
+        begin
+          Face := COLOR_BTNHIGHLIGHT;
+          Edge := COLOR_GRAYTEXT;
+        end;
+      { Disabled }
+      3: Face := COLOR_BTNFACE;
+    end;
+  end
+  else
+  begin
+    if Look = 3 then
+      Face := COLOR_GRAYTEXT
+    else
+      Face := COLOR_HOTLIGHT;
+    Edge := Face;
+  end;
+  Pen := CreatePen(PS_SOLID, 1, DarkColor(Edge));
+  OldPen := SelectObject(DC, Pen);
+  OldBrush := SelectObject(DC, DarkBrush(Face));
+  if Radio then
+    Ellipse(DC, Box.Left, Box.Top, Box.Right, Box.Bottom)
+  else
+    RoundRect(DC, Box.Left, Box.Top, Box.Right, Box.Bottom, 4, 4);
+  SelectObject(DC, OldBrush);
+  SelectObject(DC, OldPen);
+  DeleteObject(Pen);
+  if Group = 0 then
+    Exit;
+  if Radio then
+  begin
+    { The dot of a radio button, where a null pen leaves out the right and
+      bottom edges }
+    Dot := Box;
+    InflateRect(Dot, -(S div 3), -(S div 3));
+    OldPen := SelectObject(DC, GetStockObject(NULL_PEN));
+    OldBrush := SelectObject(DC, DarkBrush(COLOR_WINDOW));
+    Ellipse(DC, Dot.Left, Dot.Top, Dot.Right + 1, Dot.Bottom + 1);
+    SelectObject(DC, OldBrush);
+    SelectObject(DC, OldPen);
+  end
+  else if Group = 1 then
+    CheckMark(DC, Box, COLOR_WINDOW)
+  else
+  begin
+    { A mixed check box shows a dash }
+    Y := (Box.Top + Box.Bottom) div 2;
+    Line(DC, Box.Left + S div 4, Y - 1, Box.Right - S div 4, Y + 1, COLOR_WINDOW);
+  end;
+end;
+
 procedure ArrowRight(DC: HDC; const R: TRect; Index: Integer);
 var
   Points: array[0..2] of TPoint;
@@ -652,6 +735,9 @@ begin
             else
               PushButton(DC, R, COLOR_BTNHIGHLIGHT, COLOR_3DLIGHT);
             end;
+          { Radio buttons and check boxes }
+          2, 3:
+            CheckGlyph(DC, R, Part = 2, State);
           { The frame of a group box }
           4:
             Frame(DC, R, COLOR_3DLIGHT);
