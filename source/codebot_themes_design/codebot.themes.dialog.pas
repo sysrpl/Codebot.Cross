@@ -48,7 +48,7 @@ implementation
 
 uses
   Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls,
-  ComCtrls, Spin, Dialogs, LCLType,
+  ComCtrls, Spin, Dialogs, LCLType, LCLIntf,
   Codebot.Themes.Palettes,
   Codebot.Themes.Manager,
   Codebot.Themes.Editor,
@@ -402,6 +402,39 @@ begin
   Memo.SelStart := Caret;
 end;
 
+{ The buttons in the bottom left of the dialog open the pages of the forums
+  of getlazarus.org which list the official themes. Their icons are palette
+  $F03D8 and code braces $F0169 from the Material Design Icons font encoded
+  as utf8. }
+
+type
+  TGalleryLink = record
+    Glyph: string;
+    Hint: string;
+    Link: string;
+  end;
+
+const
+  GalleryFont = 'Material Design Icons';
+  GalleryLinks: array[0..1] of TGalleryLink = (
+    (Glyph: #$F3#$B0#$8F#$98; Hint: 'Official theme styles';
+      Link: 'https://www.getlazarus.org/forums/topic/5/'),
+    (Glyph: #$F3#$B0#$85#$A9; Hint: 'Official theme syntax highlighters';
+      Link: 'https://www.getlazarus.org/forums/topic/7/'));
+
+{ TGalleryButtons opens the page of the button clicked in the browser }
+
+type
+  TGalleryButtons = class
+  public
+    procedure ButtonClick(Sender: TObject);
+  end;
+
+procedure TGalleryButtons.ButtonClick(Sender: TObject);
+begin
+  OpenURL(GalleryLinks[(Sender as TButton).Tag].Link);
+end;
+
 { Asks for the links of themes and color schemes, one on each line,
   returning false if the user cancelled. The OK button is not the default
   button, so that Enter starts a new line. }
@@ -414,8 +447,11 @@ var
   Panel: TPanel;
   Button: TButton;
   Breaks: TLineBreaks;
+  Gallery: TGalleryButtons;
+  I: Integer;
 begin
   Breaks := TLineBreaks.Create;
+  Gallery := TGalleryButtons.Create;
   Form := TForm.CreateNew(nil);
   try
     Form.Caption := 'Install Themes';
@@ -469,6 +505,24 @@ begin
     Button.Align := alRight;
     Button.BorderSpacing.Top := 8;
     Button.BorderSpacing.Bottom := 8;
+    for I := Low(GalleryLinks) to High(GalleryLinks) do
+    begin
+      Button := TButton.Create(Form);
+      Button.Parent := Panel;
+      Button.Tag := I;
+      Button.Font.Name := GalleryFont;
+      Button.Font.Size := 14;
+      Button.Caption := GalleryLinks[I].Glyph;
+      Button.Hint := GalleryLinks[I].Hint;
+      Button.ShowHint := True;
+      Button.Width := 36;
+      Button.Left := I * 50;
+      Button.Align := alLeft;
+      Button.BorderSpacing.Left := 8;
+      Button.BorderSpacing.Top := 8;
+      Button.BorderSpacing.Bottom := 8;
+      Button.OnClick := Gallery.ButtonClick;
+    end;
     Form.ActiveControl := Memo;
     Result := Form.ShowModal = mrOK;
     { Setting Text splits the lines at any kind of line break }
@@ -476,6 +530,7 @@ begin
       Links.Text := Memo.Text;
   finally
     Form.Free;
+    Gallery.Free;
     Breaks.Free;
   end;
 end;
