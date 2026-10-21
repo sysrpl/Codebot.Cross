@@ -356,7 +356,7 @@ var
   Downloaded: Boolean;
 begin
   Link := '';
-  if not InputQuery('Install Theme', 'Link of a theme from getlazarus.org', Link) then
+  if not InputQuery('Install Theme', 'Enter theme url:', Link) then
     Exit;
   Screen.Cursor := crHourGlass;
   try
