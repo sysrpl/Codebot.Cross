@@ -1,0 +1,219 @@
+Bundle
+======
+
+Bundle makes the macOS application bundle of a program, such as
+myprogram.app, after the program was compiled. It is run by the Execute after
+command of a Lazarus project, in the IDE and in lazbuild.
+
+On other systems it does nothing and ends with zero, so a project made on
+macOS still builds there.
+
+
+What it does
+------------
+
+  bundle <mode> [--dat] <program>
+
+<program> is the program which was compiled. Its bundle is <program>.app
+beside it, and is made if it is not there yet.
+
+<mode> is the name of the build mode. A name with "release" in it, in any
+case, makes a release bundle. Any other name, such as Default or Debug, makes
+a debug bundle.
+
+A debug bundle
+
+  The program in Contents/MacOS is a link to the program which was compiled.
+  Anything a release left in the bundle is removed. The program finds its
+  libraries through the rpaths it was linked with, and its assets folder
+  above the bundle, so it runs as it was built.
+
+A release bundle stands by itself and can be copied to another Mac:
+
+  1. The program is copied to Contents/MacOS.
+
+  2. The libraries the program loads with @rpath are found in the folders of
+     its rpaths and copied to Contents/Frameworks. These are the libraries it
+     is linked with, such as SDL2 and SDL2_image, the libraries named in it
+     which it loads while it runs, such as assimp, and the same for each
+     library which is copied. Nothing about any library is written into the
+     tool, it only follows the rpaths.
+
+  3. The only rpath left in the program is @executable_path/../Frameworks,
+     so it loads its libraries from inside the bundle. The libraries lose
+     every rpath which is not inside the bundle, and are given @loader_path
+     if they load other libraries with @rpath.
+
+  4. The assets. With --dat the program is started with --build-dat. It
+     finds the assets folder above the bundle and writes its dat file, which
+     is moved to Contents/Resources. Without --dat the assets folder beside
+     the program is copied to Contents/Resources. Either way a link beside
+     the program in Contents/MacOS points to them, so the program finds them
+     beside itself.
+
+  5. The icon is <program>.icns beside the program, or one made from
+     <program>.png. It is put in Contents/Resources and named in Info.plist.
+
+  6. The libraries and then the bundle are signed for this computer with
+     codesign --sign -.
+
+A release bundle looks like this:
+
+  myprogram.app/Contents/
+    Info.plist
+    PkgInfo
+    MacOS/myprogram
+    MacOS/myprogram.dat -> ../Resources/myprogram.dat
+    Frameworks/libSDL2-2.0.0.dylib
+    Frameworks/libSDL2_image-2.0.0.dylib
+    Frameworks/libassimp.5.dylib
+    Resources/myprogram.dat
+    Resources/myprogram.icns
+
+When it worked bundle writes the libraries it copied and the folders they
+came from, and ends with zero. When it did not it writes a line beginning
+with Error: and ends with one, which stops the build. Problems with the icon
+or with signing are only lines beginning with Warning:.
+
+
+Building the tool
+-----------------
+
+Build it once on each computer, before a project uses it:
+
+  lazbuild tools/bundle/bundle.lpi
+
+or
+
+  cd tools/bundle
+  fpc -FUlib/x86_64-darwin bundle.lpr
+
+The program is tools/bundle/bundle, which is where projects look for it.
+
+
+Adding a key to an SDL program
+------------------------------
+
+The assets of a program can be kept in one dat file, which is encrypted with
+a key, instead of in the assets folder. See Codebot.Render.Assets.
+
+A new Codebot rendering project gets a key when "Encrypt the assets with a
+key" is checked in the dialog of the new project. To give a key to a
+program which has none, set AssetKey before the scene is run:
+
+  begin
+    Application.Title := 'My Program';
+    { With a key the assets are read from the dat file beside the program,
+      and from the assets folder when it is not there. The program builds
+      that file and ends when it is started with --build-dat. }
+    Application.AssetKey := $5C1E93A7;
+    Application.Run(TMainScene);
+  end.
+
+Choose your own number for the key. Any value but zero will do, and zero
+means there is no key. Keep the same key for the life of the program, as a
+dat file can only be read with the key it was made with.
+
+Then add --dat to the Execute after command of the project, described below,
+so a release bundle holds the dat file instead of the assets folder.
+
+The program builds its own dat file:
+
+  myprogram --build-dat [file]
+
+Without a file it is written beside the program as myprogram.dat. A program
+without a key builds nothing and ends with one.
+
+
+Running the tool after each build
+---------------------------------
+
+A new Codebot rendering project made on macOS is set up already. For any
+other project:
+
+  1. Open Project, Project Options, Compiler Options, Compiler Commands.
+
+  2. Under Execute after, set the command to
+
+       "$PkgDir(codebot_render)../../tools/bundle/bundle" "$(BuildMode)" "$(TargetFile)"
+
+     or, for a program with a key,
+
+       "$PkgDir(codebot_render)../../tools/bundle/bundle" "$(BuildMode)" --dat "$(TargetFile)"
+
+     $PkgDir(codebot_render) is the folder of the codebot_render package,
+     so the tool is found wherever Codebot is, as long as the project needs
+     codebot_render. $(BuildMode) is the name of the build mode being built,
+     and $(TargetFile) is the full path of the program.
+
+  3. Leave Compile, Build and Run checked, so the bundle is made whenever
+     the program is.
+
+  4. If the project has build modes, the command is the same in each of
+     them. Lazarus copies it when a build mode is made from another. Give
+     the release mode a name with "release" in it, such as Release.
+
+  5. Check Use Application Bundle under Project Options, Application. It is
+     not needed by the tool, which makes the bundle itself, but with it the
+     IDE runs the program from the bundle.
+
+A build of the release mode then makes a release bundle, and a build of any
+other mode puts the debug bundle back.
+
+
+Builds which are not releases
+-----------------------------
+
+The tool runs after every build, not only release builds, so the bundle
+always holds the program which was built last. Only a release copies the
+program, its libraries, and its assets into the bundle. Any other build
+mode makes the debug bundle, whose program is a link to the program which
+was compiled, and removes what a release left in it. A debug build is fast,
+and the program it makes runs from the bundle while it is debugged.
+
+
+Making a release build
+----------------------
+
+A new project has only the build mode Default, which makes debug bundles.
+To add a release mode:
+
+  1. Open Project, Project Options, Compiler Options.
+
+  2. Check Build Modes, then click the button "..." beside the build mode,
+     or use the build mode button on the toolbar of the IDE.
+
+  3. Click "Create Debug and Release modes". This makes the build modes
+     Debug and Release from the current one, with the Execute after command
+     copied into both. Or add a mode yourself, with "release" in its name.
+
+  4. Set the options of the Release mode as you want them, such as
+     optimization -O3 and no debug information.
+
+To make a release in the IDE, choose Release as the active build mode, on
+the toolbar or in the Project Options, and use Run, Build (Shift+F9). The
+Messages window shows what bundle wrote. Choose Debug again to go back to
+debug bundles, which the next build makes.
+
+To make a release with lazbuild:
+
+  lazbuild --build-mode=Release myprogram.lpi
+
+The release is myprogram.app beside the program. It can be copied to
+another Mac and started from the Finder.
+
+
+lazbuild
+--------
+
+lazbuild runs the Execute after command of a project just as the IDE does,
+after the program was compiled, with the same macros. So
+
+  lazbuild --build-mode=Release myprogram.lpi
+
+makes the release bundle, and
+
+  lazbuild myprogram.lpi
+
+makes the bundle of the build mode which was last active. If the tool fails
+lazbuild stops with an error.

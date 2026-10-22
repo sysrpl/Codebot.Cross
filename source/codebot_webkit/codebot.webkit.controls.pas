@@ -15,8 +15,10 @@ interface
 
 uses
   Classes, SysUtils, Graphics, Controls, LMessages, LCLType,
-  {$ifdef lclgtk3}
+  {$if defined(lclgtk3)}
   Codebot.WebKit.Controls.Gtk3;
+  {$elseif defined(lclcocoa)}
+  Codebot.WebKit.Controls.Cocoa;
   {$else}
   Codebot.WebKit.Controls.Win;
   {$endif}
@@ -160,7 +162,8 @@ type
 { TCustomWebBrowser is an embeddable web browser control.
 
   The control hosts a web view once its window is created, which is WebKitGTK
-  on Linux and Microsoft Edge WebView2 on Windows. Changes made before then,
+  on Linux, Microsoft Edge WebView2 on Windows, and the WebKit framework on
+  macOS. Changes made before then,
   such as setting Location, are kept and applied when the window is created.
   If the web view library is not installed the control paints a browser icon
   and a message instead, which can be checked using the Available function.
@@ -244,9 +247,11 @@ type
     procedure PaintWindow(DC: HDC); override;
     procedure Paint; virtual;
     {$ifdef windows}
-    { The web view is a window of its own, which is resized with the control
-      and given the focus when the control receives it }
+    { The web view is a window of its own, which is resized with the control }
     procedure Resize; override;
+    {$endif}
+    {$if defined(windows) or defined(lclcocoa)}
+    { The web view is given the focus when the control receives it }
     procedure DoEnter; override;
     {$endif}
     { HasView is true when the control hosts a web view, and false when it
@@ -306,8 +311,9 @@ type
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
-    { Available is true when the WebKitGTK library is installed on Linux, or
-      when WebView2Loader.dll and the WebView2 runtime are found on Windows }
+    { Available is true when the WebKitGTK library is installed on Linux,
+      when WebView2Loader.dll and the WebView2 runtime are found on Windows,
+      or on macOS 12 or later }
     class function Available: Boolean;
     { Load content by navigating using a protocol such as http: file: or about: }
     procedure Load(const Uri: string);
@@ -427,7 +433,10 @@ type
   On Windows the inspector is the developer tools page of WebView2, served by
   its debugging server. The server is started with the first web view, and
   only when an inspector control was created before it. Otherwise the
-  developer tools open in a window of their own. }
+  developer tools open in a window of their own.
+
+  On macOS the inspector is moved into the control from the window WebKit
+  opens it in, as WebKit has no public way to show it inside another view. }
 
   TWebInspector = class(TWinControl, IWebInspectorEvents)
   private
@@ -511,9 +520,11 @@ begin
   Canvas.Font.Name := 'default';
   Canvas.Font.Size := 0;
   if Missing then
-    {$ifdef windows}
+    {$if defined(windows)}
     Canvas.TextOut(Rect.Left + 5, Rect.Top + 5,
       'WebView2Loader.dll or the Microsoft Edge WebView2 runtime is not installed');
+    {$elseif defined(lclcocoa)}
+    Canvas.TextOut(Rect.Left + 5, Rect.Top + 5, 'The web view requires macOS 12 or later');
     {$else}
     Canvas.TextOut(Rect.Left + 5, Rect.Top + 5, 'The WebKitGTK library is not installed');
     {$endif}
@@ -605,7 +616,9 @@ begin
   if HandleAllocated then
     TWSWebBrowser.UpdateBounds(Self);
 end;
+{$endif}
 
+{$if defined(windows) or defined(lclcocoa)}
 procedure TCustomWebBrowser.DoEnter;
 begin
   inherited DoEnter;

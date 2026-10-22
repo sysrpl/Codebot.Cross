@@ -1,0 +1,7 @@
+The Codebot.WebKit.Controls.Cocoa unit implements TWebBrowser and TWebInspector for the Cocoa widgetset using the WebKit framework of macOS. The web view is added to the view the LCL creates for the control and is resized with it. Its events are passed on to the controls using the same values as WebKitGTK, so your code works the same on every platform.
+
+WebKit on macOS has no public way to report the element under the mouse or the element a context menu is for, so a small script in each page reports them. When a page fails to load, an error page is shown in its place as WebKitGTK does, unless you set Handled to True in OnError.
+
+WebKit has no public way to show its inspector inside another view either. TWebInspector takes the inspector from the window or the browser it opens in and places it in the control, and it keeps it there if the user docks or undocks it. The control is told when the user closes the inspector.
+
+A control has no web view at design time, or on versions of macOS earlier than 12 Monterey.

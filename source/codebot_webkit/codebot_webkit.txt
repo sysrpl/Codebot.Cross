@@ -1,8 +1,8 @@
 The Codebot WebKit package gives you TWebBrowser, a web browser control you can place on your forms, along with an address bar, a status indicator, and a developer tools inspector that work alongside it. You can use it to show web pages and online help, to build a user interface out of HTML, or to write a complete web browser of your own.
 
-On Linux the browser embeds WebKitGTK, the engine used by GNOME Web, and on Windows it embeds Microsoft Edge WebView2. The package builds with the GTK3 and Win32 widgetsets, and requires the codebot_controls package and the LCL.
+On Linux the browser embeds WebKitGTK, the engine used by GNOME Web, on Windows it embeds Microsoft Edge WebView2, and on macOS it embeds the WebKit framework that Safari uses. The package builds with the GTK3, Win32, and Cocoa widgetsets, and requires the codebot_controls package and the LCL.
 
-The browser engine is loaded when your program runs rather than linked when it is built. If the engine is not installed, your program still starts normally and the browser control simply shows a message instead of a page, so you can tell the user what is missing.
+On Linux and Windows the browser engine is loaded when your program runs rather than linked when it is built. If the engine is not installed, your program still starts normally and the browser control simply shows a message instead of a page, so you can tell the user what is missing. On macOS the engine is part of the system.
 
 ## Quick Start
 
@@ -134,6 +134,16 @@ A few features work differently on Windows:
 - The progress of a load moves in steps rather than smoothly.
 - TWebInspector shows the developer tools page of the WebView2 debugging server, which only listens on the local computer. The server only starts if your inspector is created before the first browser, so place the inspector on your form before the browser. Without it, the developer tools open in a window of their own.
 
+## macOS
+
+On macOS your program needs macOS 12 Monterey or later. WebKit is part of the system, so there is nothing to install or place next to your program. On an earlier version of macOS the browser control shows a message instead of a page.
+
+A few features work differently on macOS:
+
+- The element under the mouse and the element a context menu is for are reported by a small script added to each page, so OnHitTest and OnContextMenu only report elements of the page itself, not of frames inside it.
+- WebKit has no public way to show its developer tools inside another control. TWebInspector moves them into itself from the window they open in, and keeps them there if the user docks or undocks them. They may appear in their own window for a moment before they move.
+- ZoomTextOnly and Editable use features of WebKit which Apple does not document. If a future version of macOS removes them, ZoomTextOnly zooms the whole page and Editable falls back to the design mode of the page.
+
 ## Units
 
 | Unit | Description |
@@ -142,3 +152,4 @@ A few features work differently on Windows:
 | Codebot.WebKit.Controls.Extras | Contains TWebAddressBar and TWebStatusIndicator. |
 | Codebot.WebKit.Controls.Gtk3 | Implements the controls for the GTK3 widgetset using WebKitGTK. |
 | Codebot.WebKit.Controls.Win | Implements the controls for the Win32 widgetset using WebView2. |
+| Codebot.WebKit.Controls.Cocoa | Implements the controls for the Cocoa widgetset using the WebKit framework. |

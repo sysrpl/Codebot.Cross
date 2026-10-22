@@ -14,8 +14,8 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <SupportedWidgetsets Value="gtk3,win32"/>
-    <SupportedTargetOS Value="linux,win64"/>
+    <SupportedWidgetsets Value="gtk3,win32,cocoa"/>
+    <SupportedTargetOS Value="linux,win64,darwin"/>
     <Files>
       <Item>
         <Filename Value="webkit.inc"/>
@@ -44,6 +44,14 @@
       <Item>
         <Filename Value="codebot.webkit.controls.win.pas"/>
         <UnitName Value="Codebot.WebKit.Controls.Win"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.interop.wkwebview.pas"/>
+        <UnitName Value="Codebot.Interop.WKWebView"/>
+      </Item>
+      <Item>
+        <Filename Value="codebot.webkit.controls.cocoa.pas"/>
+        <UnitName Value="Codebot.WebKit.Controls.Cocoa"/>
       </Item>
       <Item>
         <Filename Value="codebotwebkitpackage.pas"/>

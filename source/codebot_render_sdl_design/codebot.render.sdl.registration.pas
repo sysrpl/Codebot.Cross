@@ -287,6 +287,9 @@ end;
 function TRenderProjectDescriptor.InitProject(AProject: TLazProject): TModalResult;
 var
   MainFile: TLazProjectFile;
+  {$ifdef darwin}
+  Command: string;
+  {$endif}
 begin
   Result := inherited InitProject(AProject);
   if Result <> mrOk then
@@ -305,6 +308,14 @@ begin
   { A release build makes the dat file of a project which has a key }
   if FUseKey then
     AProject.CustomData[BuildDatName] := BuildDatOn;
+  {$ifdef darwin}
+  { After each build the bundle tool makes the application bundle. A build
+    mode with release in its name makes a bundle which stands by itself. }
+  Command := '"$PkgDir(codebot_render)../../tools/bundle/bundle" "$(BuildMode)"';
+  if FUseKey then
+    Command := Command + ' --dat';
+  AProject.LazCompilerOptions.ExecuteAfter.Command := Command + ' "$(TargetFile)"';
+  {$endif}
   AProject.MainFile.SetSourceText(ProgramSource(FUseKey), True);
 end;
 

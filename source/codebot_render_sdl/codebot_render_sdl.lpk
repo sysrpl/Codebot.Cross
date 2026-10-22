@@ -9,6 +9,14 @@
         <IncludeFiles Value="../codebot_render"/>
         <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Conditionals Value="// On macOS the library of this package, when it is a dynamic package, is
+// linked with SDL2_image and needs the shared libs folder of Codebot to
+// find it, and a run path to load it. Programs get the same run path from
+// codebot_render.
+if TargetOS = 'darwin' then begin
+  LibraryPath += ';$PkgDir(codebot_render)../../shared/libs/$(TargetCPU)-$(TargetOS)';
+  UsageLinkerOptions += ' -rpath $PkgDir(codebot_render)../../shared/libs/$(TargetCPU)-$(TargetOS)';
+end;"/>
       <Other>
         <CompilerMessages>
           <IgnoredMessages idx5091="True" idx5024="True"/>

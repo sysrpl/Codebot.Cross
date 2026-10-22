@@ -1,0 +1,7 @@
+# Codebot.Interop.WKWebView
+
+The Codebot.Interop.WKWebView unit declares the part of the WebKit framework that the codebot_webkit package uses on macOS. The WebKit unit that comes with FPC only completes the WKWebView class, and leaves out its configuration, delegates, and the methods added in newer versions of macOS, so the classes are declared here instead.
+
+WebKit is part of macOS and is linked when your program is built, so there is nothing to install or bundle. The package requires macOS 12 Monterey or later.
+
+A few private methods of WebKit are used, such as the one which shows the inspector. They are called by name with the MsgSend functions, which do nothing and return False when an object does not respond to a method.

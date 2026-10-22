@@ -14,8 +14,8 @@
         </CompilerMessages>
       </Other>
     </CompilerOptions>
-    <SupportedWidgetsets Value="gtk3,win32"/>
-    <SupportedTargetOS Value="linux,win64"/>
+    <SupportedWidgetsets Value="gtk3,win32,cocoa"/>
+    <SupportedTargetOS Value="linux,win64,darwin"/>
     <Files>
       <Item>
         <Filename Value="codebot.webkit.registration.pas"/>
