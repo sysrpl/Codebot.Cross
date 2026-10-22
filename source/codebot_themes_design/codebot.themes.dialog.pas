@@ -816,45 +816,57 @@ begin
 end;
 
 { Draws Pascal source in the colors of the scheme selected, with a gutter of
-  line numbers on its left. The source is split into the kinds of text the
-  highlighter of the IDE knows, such as comments, strings, and reserved
-  words, and each kind is drawn with its attribute in the scheme. }
+  line numbers on its left. The source is the one of the images of the
+  schemes in docs/captures.txt. It is split into the kinds of text the
+  highlighter of the IDE knows, such as comments, strings, reserved words,
+  and the names and types of declarations, and each kind is drawn with its
+  attribute in the scheme. }
 
 const
-  CodeLines: array[0..24] of string = (
-    'unit Shapes;',
-    '',
-    '{$mode delphi}',
-    '',
-    'interface',
+  CodeLines: array[0..23] of string = (
+    'program Shapes;',
+    '{$mode delphi}{$H+}',
     '',
     'type',
-    '  { A shape which draws its name }',
-    '  TShape = class',
-    '  private',
-    '    FName: string;',
-    '  public',
-    '    procedure Draw(Canvas: TCanvas); virtual;',
+    '  { TShape holds a name and a size }',
+    '  TShape = record',
+    '    Name: string;',
+    '    Size: Integer;',
     '  end;',
     '',
-    'implementation',
+    'const',
+    '  Mask = $FF; // The low byte',
     '',
-    'procedure TShape.Draw(Canvas: TCanvas);',
+    'procedure Show(const Shape: TShape; Scale: Double);',
     'var',
     '  I: Integer;',
     'begin',
-    '  // Draw the name ten times',
-    '  for I := 1 to 10 do',
-    '    Canvas.TextOut(I * 12, 8, ''Shape '' + FName);',
-    'end;');
-  ReservedWords = ' begin class do end for implementation interface private ' +
-    'procedure public string to type unit var virtual ';
+    '  for I := 1 to 3 do',
+    '    WriteLn(Shape.Name, '' is '', Shape.Size * I, #9, Scale:0:2);',
+    'end;',
+    '',
+    'begin',
+    '  Show(Default(TShape), 1.5);',
+    'end.');
+  ReservedWords = ' begin class const do end for function implementation ' +
+    'interface private procedure program property public record string to ' +
+    'type unit uses var ';
+  Modifiers = ' virtual override abstract overload reintroduce static ';
+
+{ The parts of a procedure header }
+
+type
+  THeaderPart = (hpNone, hpName, hpParams, hpAfter, hpResult);
 
 procedure TThemesDialog.CodePaint(Sender: TObject);
 var
   Scheme: string;
   Canvas: TCanvas;
   Default: TEditorStyle;
+  { What the words before the one being drawn were part of }
+  Section: string;
+  Header: THeaderPart;
+  ParamType, AfterEqual, AfterColon, AfterProperty: Boolean;
 
   { The look of an attribute, with the colors the scheme leaves to the
     default text filled in }
@@ -868,13 +880,133 @@ var
       Result.Back := Default.Back;
   end;
 
-  procedure Draw(var X: Integer; Y: Integer; const S: string;
-    const Attribute: string);
+  { The look of an attribute which changes the look of another, as the
+    names and types of declarations change identifiers }
+  function LookOver(const Attribute, Base: string): TEditorStyle;
   var
-    Style: TEditorStyle;
+    Over: TEditorStyle;
+  begin
+    Result := Look(Base);
+    if not EditorSchemeStyle(Scheme, Attribute, Over) then
+      Exit;
+    if (Over.Fore <> clNone) and (Over.Fore <> clDefault) then
+      Result.Fore := Over.Fore;
+    if (Over.Back <> clNone) and (Over.Back <> clDefault) then
+      Result.Back := Over.Back;
+    Result.Style := Result.Style + Over.Style;
+  end;
+
+  { The first character after the word ending before J which is not a space }
+  function NextChar(const Line: string; J: Integer): Char;
+  begin
+    while (J <= Length(Line)) and (Line[J] = ' ') do
+      Inc(J);
+    if J <= Length(Line) then
+      Result := Line[J]
+    else
+      Result := #0;
+  end;
+
+  { The attribute of a word which is not a reserved word }
+  function WordAttribute(const Line: string; J: Integer): string;
+  begin
+    Result := 'Identifier';
+    case Header of
+      hpName: Exit('Procedure header name');
+      hpParams:
+        if ParamType then
+          Exit('Procedure header type')
+        else
+          Exit('Procedure header param name');
+      hpResult: Exit('Procedure header result');
+    end;
+    if AfterProperty then
+    begin
+      AfterProperty := False;
+      Exit('Property name');
+    end;
+    if Section = 'type' then
+    begin
+      if AfterEqual or AfterColon then
+        Result := 'Declaration block type'
+      else if NextChar(Line, J) = '=' then
+        Result := 'Declaration block Type name'
+      else
+        Result := 'Declaration block Var Conts name';
+    end
+    else if (Section = 'var') or (Section = 'const') then
+    begin
+      if AfterColon then
+        Result := 'Declaration block type'
+      else if not AfterEqual then
+        Result := 'Declaration block Var Conts name';
+    end;
+  end;
+
+  { Follows the sections and procedure headers through reserved words }
+  procedure ReservedWord(const Word: string);
+  begin
+    if (Word = 'procedure') or (Word = 'function') then
+    begin
+      Header := hpName;
+      Section := '';
+    end
+    else if Header <> hpNone then
+      Exit
+    else if (Word = 'type') or (Word = 'var') or (Word = 'const') then
+      Section := Word
+    else if (Word = 'begin') or (Word = 'implementation') or
+      (Word = 'interface') or (Word = 'uses') then
+      Section := ''
+    else if Word = 'property' then
+      AfterProperty := True;
+  end;
+
+  { Follows the parts of procedure headers and declarations through symbols }
+  procedure Symbol(C: Char);
+  begin
+    case Header of
+      hpName:
+        if C = '(' then
+        begin
+          Header := hpParams;
+          ParamType := False;
+        end
+        else if C = ';' then
+          Header := hpNone;
+      hpParams:
+        if C = ':' then
+          ParamType := True
+        else if C = ';' then
+          ParamType := False
+        else if C = ')' then
+          Header := hpAfter;
+      hpAfter:
+        if C = ':' then
+          Header := hpResult
+        else if C = ';' then
+          Header := hpNone;
+      hpResult:
+        if C = ';' then
+          Header := hpNone;
+    else
+      if C = '=' then
+        AfterEqual := True
+      else if C = ':' then
+        AfterColon := True
+      else if C = ';' then
+      begin
+        AfterEqual := False;
+        AfterColon := False;
+      end;
+    end;
+  end;
+
+  procedure Draw(var X: Integer; Y: Integer; const S: string;
+    const Style: TEditorStyle);
+  var
     W: Integer;
   begin
-    Style := Look(Attribute);
     Canvas.Font.Style := Style.Style;
     W := Canvas.TextWidth(S);
     if Style.Back <> Default.Back then
@@ -895,58 +1027,87 @@ var
   var
     P, J: Integer;
     Word, Attribute: string;
+    Style: TEditorStyle;
   begin
+    if Header = hpNone then
+    begin
+      AfterEqual := False;
+      AfterColon := False;
+    end;
     P := 1;
     while P <= Length(Line) do
     begin
       J := P + 1;
+      Attribute := '';
       if Line[P] = '{' then
       begin
         while (J <= Length(Line)) and (Line[J] <> '}') do
           Inc(J);
         Inc(J);
         if Copy(Line, P, 2) = '{$' then
-          Attribute := 'Directive'
+          Style := Look('Directive')
         else
-          Attribute := 'Comment';
+          Style := Look('Comment');
       end
       else if Copy(Line, P, 2) = '//' then
       begin
         J := Length(Line) + 1;
-        Attribute := 'Comment';
+        Style := Look('Comment');
       end
       else if Line[P] = '''' then
       begin
         while (J <= Length(Line)) and (Line[J] <> '''') do
           Inc(J);
         Inc(J);
-        Attribute := 'String';
+        Style := Look('String');
       end
-      else if Line[P] in ['0'..'9'] then
+      { Characters such as #9 are strings, and $FF and 1.5 are numbers }
+      else if Line[P] in ['#', '$', '0'..'9'] then
       begin
-        while (J <= Length(Line)) and (Line[J] in ['0'..'9']) do
+        while (J <= Length(Line)) and ((Line[J] in ['A'..'Z', 'a'..'z', '0'..'9']) or
+          ((Line[J] = '.') and (J < Length(Line)) and (Line[J + 1] in ['0'..'9']))) do
           Inc(J);
-        Attribute := 'Number';
+        if Line[P] = '#' then
+          Style := Look('String')
+        else
+          Style := Look('Number');
       end
       else if Line[P] in ['A'..'Z', 'a'..'z', '_'] then
       begin
         while (J <= Length(Line)) and (Line[J] in ['A'..'Z', 'a'..'z', '_', '0'..'9']) do
           Inc(J);
-        Word := ' ' + LowerCase(Copy(Line, P, J - P)) + ' ';
-        if Pos(Word, ReservedWords) > 0 then
-          Attribute := 'Reserved word'
+        Word := LowerCase(Copy(Line, P, J - P));
+        if Pos(' ' + Word + ' ', ReservedWords) > 0 then
+        begin
+          ReservedWord(Word);
+          Style := Look('Reserved word');
+        end
+        else if Pos(' ' + Word + ' ', Modifiers) > 0 then
+          Style := LookOver('Modifier', 'Reserved word')
         else
-          Attribute := 'Identifier';
+        begin
+          Attribute := WordAttribute(Line, J);
+          if Attribute = 'Identifier' then
+            Style := Look(Attribute)
+          else
+            Style := LookOver(Attribute, 'Identifier');
+        end;
       end
       else if Line[P] = ' ' then
       begin
         while (J <= Length(Line)) and (Line[J] = ' ') do
           Inc(J);
-        Attribute := 'Space';
+        Style := Look('Space');
       end
       else
-        Attribute := 'Symbol';
-      Draw(X, Y, Copy(Line, P, J - P), Attribute);
+      begin
+        if Copy(Line, P, 2) = ':=' then
+          J := P + 2
+        else
+          Symbol(Line[P]);
+        Style := Look('Symbol');
+      end;
+      Draw(X, Y, Copy(Line, P, J - P), Style);
       P := J;
     end;
   end;
@@ -983,6 +1144,12 @@ begin
   Canvas.Brush.Color := Gutter.Back;
   Canvas.FillRect(Rect(R.Left, R.Top, R.Left + W, R.Bottom));
   Y := R.Top + 4;
+  Section := '';
+  Header := hpNone;
+  ParamType := False;
+  AfterEqual := False;
+  AfterColon := False;
+  AfterProperty := False;
   for I := Low(CodeLines) to High(CodeLines) do
   begin
     if Y + H > R.Bottom then
