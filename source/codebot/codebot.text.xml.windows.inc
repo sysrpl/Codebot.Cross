@@ -43,6 +43,8 @@ type
   private
     FNode: IXMLDOMNode;
     FList: IInterface;
+    function Filtered: Boolean;
+    function Item(Index: Integer): IXMLDOMNode;
   public
     function GetCount: Integer;
     function GetByName(const Name: string): INode; overload;
@@ -261,13 +263,21 @@ begin
   end;
 end;
 
+{ Names match those of libxml2, which are the names of elements and
+  attributes without their namespace prefix }
+
 function TNode.GetName: string;
 begin
   case FNode.nodeType of
-    NODE_ELEMENT:
-      Result := WideToAnsi((FNode as IXMLDOMElement).tagName);
+    NODE_ELEMENT,
     NODE_ATTRIBUTE:
-      Result := WideToAnsi((FNode as IXMLDOMAttribute).name);
+      Result := WideToAnsi(FNode.baseName);
+    NODE_TEXT:
+      Result := 'text';
+    NODE_COMMENT:
+      Result := 'comment';
+    NODE_PROCESSING_INSTRUCTION:
+      Result := WideToAnsi(FNode.nodeName);
     NODE_DOCUMENT:
       Result := 'DOCUMENT';
   else
@@ -365,6 +375,76 @@ end;
 
 { TNodeList }
 
+{ As with libxml2, the child nodes of an element list only its elements, and
+  its attributes do not include namespace declarations. Lists returned by an
+  xpath query, which have no node, hold every node they matched. }
+
+function IsNamespaceDecl(N: IXMLDOMNode): Boolean;
+var
+  S: WideString;
+begin
+  S := N.nodeName;
+  Result := (S = 'xmlns') or (Copy(S, 1, 6) = 'xmlns:');
+end;
+
+function IsListed(N: IXMLDOMNode; Attributes: Boolean): Boolean;
+begin
+  if N = nil then
+    Result := False
+  else if Attributes then
+    Result := not IsNamespaceDecl(N)
+  else
+    Result := N.nodeType = NODE_ELEMENT;
+end;
+
+function ListLength(List: IInterface): Integer;
+begin
+  if Supports(List, IXMLDOMNamedNodeMap) then
+    Result := (List as IXMLDOMNamedNodeMap).length
+  else
+    Result := (List as IXMLDOMNodeList).length;
+end;
+
+function ListItem(List: IInterface; Index: Integer): IXMLDOMNode;
+begin
+  if Supports(List, IXMLDOMNamedNodeMap) then
+    Result := (List as IXMLDOMNamedNodeMap).item[Index]
+  else
+    Result := (List as IXMLDOMNodeList).item[Index];
+end;
+
+function TNodeList.Filtered: Boolean;
+begin
+  Result := FNode <> nil;
+end;
+
+function TNodeList.Item(Index: Integer): IXMLDOMNode;
+var
+  Attributes: Boolean;
+  N: IXMLDOMNode;
+  I: Integer;
+begin
+  Result := nil;
+  if Index < 0 then
+    Exit;
+  if not Filtered then
+  begin
+    if Index < ListLength(FList) then
+      Result := ListItem(FList, Index);
+    Exit;
+  end;
+  Attributes := Supports(FList, IXMLDOMNamedNodeMap);
+  for I := 0 to ListLength(FList) - 1 do
+  begin
+    N := ListItem(FList, I);
+    if not IsListed(N, Attributes) then
+      Continue;
+    if Index = 0 then
+      Exit(N);
+    Dec(Index);
+  end;
+end;
+
 constructor TNodeList.Create(Node: IXMLDOMNode; List: IInterface);
 begin
   inherited Create;
@@ -438,62 +518,61 @@ end;
 procedure TNodeList.Remove(const Name: string);
 var
   Node: INode;
+  N: IXMLDOMNode;
 begin
   if FNode = nil then
     Exit;
   Node := GetByName(Name);
-  if Node <> nil then
-    FNode.removeChild(TNode(Node.Instance).FNode);
+  if Node = nil then
+    Exit;
+  N := TNode(Node.Instance).FNode;
+  if Supports(FList, IXMLDOMNamedNodeMap) then
+    (FList as IXMLDOMNamedNodeMap).removeNamedItem(N.nodeName)
+  else
+    FNode.removeChild(N);
 end;
 
 function TNodeList.GetByIndex(Index: Integer): INode;
-begin
-  if Supports(FList, IXMLDOMNamedNodeMap) then
-    Result := TNode.Create((FList as IXMLDOMNamedNodeMap).item[Index])
-  else
-    Result := TNode.Create((FList as IXMLDOMNodeList).item[Index]);
-end;
-
-function TNodeList.GetByName(const Name: string): INode;
 var
   N: IXMLDOMNode;
-  C: IXMLDOMElement;
-  L: IXMLDOMNodeList;
-  S: WideString;
-  I: Integer;
 begin
-  Result := nil;
-  N := nil;
-  if Supports(FList, IXMLDOMNamedNodeMap) then
-    N := (FList as IXMLDOMNamedNodeMap).getNamedItem(AnsiToWide(Name))
-  else
-  begin
-    S := AnsiToWide(Name);
-    L := FList as IXMLDOMNodeList;
-    for I := 0 to L.length - 1 do
-    begin
-      { Skip text, comment, and other nodes which are not elements }
-      if not Supports(L.item[I], IXMLDOMElement, C) then
-        Continue;
-      if C.tagName = S then
-      begin
-        N := C;
-        Break;
-      end;
-    end;
-  end;
+  N := Item(Index);
   if N <> nil then
     Result := TNode.Create(N)
   else
     Result := nil;
 end;
 
-function TNodeList.GetCount: Integer;
+{ Names are matched without their namespace prefix, as with libxml2 }
+
+function TNodeList.GetByName(const Name: string): INode;
+var
+  N: IXMLDOMNode;
+  S: WideString;
+  I: Integer;
 begin
-  if Supports(FList, IXMLDOMNamedNodeMap) then
-    Result := (FList as IXMLDOMNamedNodeMap).length
-  else
-    Result := (FList as IXMLDOMNodeList).length;
+  Result := nil;
+  S := AnsiToWide(Name);
+  for I := 0 to GetCount - 1 do
+  begin
+    N := Item(I);
+    if (N <> nil) and (N.baseName = S) then
+      Exit(TNode.Create(N));
+  end;
+end;
+
+function TNodeList.GetCount: Integer;
+var
+  Attributes: Boolean;
+  I: Integer;
+begin
+  if not Filtered then
+    Exit(ListLength(FList));
+  Result := 0;
+  Attributes := Supports(FList, IXMLDOMNamedNodeMap);
+  for I := 0 to ListLength(FList) - 1 do
+    if IsListed(ListItem(FList, I), Attributes) then
+      Inc(Result);
 end;
 
 { TDocument }
@@ -628,6 +707,9 @@ begin
         raise;
   end;
   D.async := False;
+  { Text holding only white space is kept, as with libxml2, since it can be
+    the space between two words of mixed content }
+  D.preserveWhiteSpace := True;
   { MSXML 3 uses the older XSLPattern language unless XPath is selected }
   if Supports(D, IXMLDOMDocument2, D2) then
     D2.setProperty('SelectionLanguage', 'XPath');
